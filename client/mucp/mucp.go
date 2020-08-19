@@ -8,15 +8,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/micro/go-micro/v3/broker"
-	"github.com/micro/go-micro/v3/client"
-	"github.com/micro/go-micro/v3/codec"
-	raw "github.com/micro/go-micro/v3/codec/bytes"
-	"github.com/micro/go-micro/v3/errors"
-	"github.com/micro/go-micro/v3/metadata"
-	"github.com/micro/go-micro/v3/transport"
-	"github.com/micro/go-micro/v3/util/buf"
-	"github.com/micro/go-micro/v3/util/pool"
+	"github.com/unistack-org/micro/v3/broker"
+	"github.com/unistack-org/micro/v3/client"
+	"github.com/unistack-org/micro/v3/codec"
+	raw "github.com/unistack-org/micro/v3/codec/bytes"
+	"github.com/unistack-org/micro/v3/errors"
+	"github.com/unistack-org/micro/v3/metadata"
+	"github.com/unistack-org/micro/v3/transport"
+	"github.com/unistack-org/micro/v3/util/buf"
+	"github.com/unistack-org/micro/v3/util/pool"
 )
 
 type rpcClient struct {

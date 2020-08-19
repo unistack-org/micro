@@ -7,12 +7,12 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/micro/go-micro/v3/broker"
-	"github.com/micro/go-micro/v3/errors"
-	"github.com/micro/go-micro/v3/logger"
-	"github.com/micro/go-micro/v3/metadata"
-	"github.com/micro/go-micro/v3/registry"
-	"github.com/micro/go-micro/v3/server"
+	"github.com/unistack-org/micro/v3/broker"
+	"github.com/unistack-org/micro/v3/errors"
+	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/metadata"
+	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/server"
 )
 
 const (

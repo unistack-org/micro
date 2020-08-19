@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/micro/go-micro/v3/events"
+	"github.com/unistack-org/micro/v3/events"
 	"github.com/stretchr/testify/assert"
 )
 

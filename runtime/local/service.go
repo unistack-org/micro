@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/micro/go-micro/v3/build"
-	"github.com/micro/go-micro/v3/logger"
-	"github.com/micro/go-micro/v3/runtime"
-	"github.com/micro/go-micro/v3/runtime/local/process"
-	proc "github.com/micro/go-micro/v3/runtime/local/process/os"
+	"github.com/unistack-org/micro/v3/build"
+	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/runtime"
+	"github.com/unistack-org/micro/v3/runtime/local/process"
+	proc "github.com/unistack-org/micro/v3/runtime/local/process/os"
 )
 
 type service struct {

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/micro/go-micro/v3/logger"
-	"github.com/micro/go-micro/v3/router"
+	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/router"
 )
 
 // table is an in-memory routing table

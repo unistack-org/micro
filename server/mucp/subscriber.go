@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/micro/go-micro/v3/registry"
-	"github.com/micro/go-micro/v3/server"
-	"github.com/micro/go-micro/v3/broker"
-	"github.com/micro/go-micro/v3/transport"
+	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/server"
+	"github.com/unistack-org/micro/v3/broker"
+	"github.com/unistack-org/micro/v3/transport"
 )
 
 const (

@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	log "github.com/micro/go-micro/v3/logger"
-	"github.com/micro/go-micro/v3/metrics"
+	log "github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

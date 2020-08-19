@@ -14,8 +14,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/micro/go-micro/v3/logger"
-	"github.com/micro/go-micro/v3/server"
+	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/server"
 )
 
 var (

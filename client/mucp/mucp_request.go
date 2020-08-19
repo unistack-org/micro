@@ -1,8 +1,8 @@
 package mucp
 
 import (
-	"github.com/micro/go-micro/v3/client"
-	"github.com/micro/go-micro/v3/codec"
+	"github.com/unistack-org/micro/v3/client"
+	"github.com/unistack-org/micro/v3/codec"
 )
 
 type rpcRequest struct {

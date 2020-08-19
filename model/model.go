@@ -2,9 +2,9 @@
 package model
 
 import (
-	"github.com/micro/go-micro/v3/codec"
-	"github.com/micro/go-micro/v3/store"
-	"github.com/micro/go-micro/v3/sync"
+	"github.com/unistack-org/micro/v3/codec"
+	"github.com/unistack-org/micro/v3/store"
+	"github.com/unistack-org/micro/v3/sync"
 )
 
 // Model provides an interface for data modelling

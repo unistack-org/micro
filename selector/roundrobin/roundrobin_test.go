@@ -3,7 +3,7 @@ package roundrobin
 import (
 	"testing"
 
-	"github.com/micro/go-micro/v3/selector"
+	"github.com/unistack-org/micro/v3/selector"
 	"github.com/stretchr/testify/assert"
 )
 

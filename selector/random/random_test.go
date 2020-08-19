@@ -3,7 +3,7 @@ package random
 import (
 	"testing"
 
-	"github.com/micro/go-micro/v3/selector"
+	"github.com/unistack-org/micro/v3/selector"
 )
 
 func TestRandom(t *testing.T) {

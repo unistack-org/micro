@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/micro/go-micro/v3/auth"
-	"github.com/micro/go-micro/v3/util/token"
-	"github.com/micro/go-micro/v3/util/token/jwt"
+	"github.com/unistack-org/micro/v3/auth"
+	"github.com/unistack-org/micro/v3/util/token"
+	"github.com/unistack-org/micro/v3/util/token/jwt"
 )
 
 // NewAuth returns a new instance of the Auth service

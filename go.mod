@@ -1,8 +1,6 @@
-module github.com/micro/go-micro/v3
+module github.com/unistack-org/micro/v3
 
 go 1.13
-
-replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.8
 
 require (
 	github.com/BurntSushi/toml v0.3.1
@@ -55,4 +53,8 @@ require (
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
 
-replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
+replace (
+	github.com/coreos/etcd => github.com/ozonru/etcd v3.3.20-grpc1.27-origmodule+incompatible
+	github.com/imdario/mergo => github.com/imdario/mergo v0.3.8
+	google.golang.org/grpc => google.golang.org/grpc v1.27.0
+)

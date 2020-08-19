@@ -1,5 +1,11 @@
 run:
   deadline: 5m
+  modules-download-mode: readonly
+  skip-dirs:
+    - util/mdns.new
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.pb\\.micro\\.go$"
 linters:
   disable-all: false
   enable-all: false
@@ -24,4 +30,11 @@ linters:
     - interfacer
     - typecheck
     - dupl
-
+output:
+  format: colored-line-number
+  # print lines of code with issue, default is true
+  print-issued-lines: true
+  # print linter name in the end of issue text, default is true
+  print-linter-name: true
+  # make issues output unique by line, default is true
+  uniq-by-line: true

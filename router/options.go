@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/micro/go-micro/v3/registry"
-	"github.com/micro/go-micro/v3/registry/mdns"
+	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/registry/mdns"
 )
 
 // Options are router options

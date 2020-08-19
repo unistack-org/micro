@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/micro/go-micro/v3/client"
-	cmucp "github.com/micro/go-micro/v3/client/mucp"
-	"github.com/micro/go-micro/v3/registry/memory"
-	"github.com/micro/go-micro/v3/router"
-	"github.com/micro/go-micro/v3/router/registry"
-	"github.com/micro/go-micro/v3/server"
-	"github.com/micro/go-micro/v3/server/mucp"
+	"github.com/unistack-org/micro/v3/client"
+	cmucp "github.com/unistack-org/micro/v3/client/mucp"
+	"github.com/unistack-org/micro/v3/registry/memory"
+	"github.com/unistack-org/micro/v3/router"
+	"github.com/unistack-org/micro/v3/router/registry"
+	"github.com/unistack-org/micro/v3/server"
+	"github.com/unistack-org/micro/v3/server/mucp"
 )
 
 type testHandler struct{}

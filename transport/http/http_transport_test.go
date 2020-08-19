@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/micro/go-micro/v3/transport"
+	"github.com/unistack-org/micro/v3/transport"
 )
 
 func expectedPort(t *testing.T, expected string, lsn transport.Listener) {

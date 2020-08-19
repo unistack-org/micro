@@ -2,7 +2,7 @@ package noop
 
 import (
 	"github.com/google/uuid"
-	"github.com/micro/go-micro/v3/auth"
+	"github.com/unistack-org/micro/v3/auth"
 )
 
 func NewAuth(opts ...auth.Option) auth.Auth {

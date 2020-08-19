@@ -4,7 +4,7 @@ package socket
 import (
 	"io"
 
-	"github.com/micro/go-micro/v3/transport"
+	"github.com/unistack-org/micro/v3/transport"
 )
 
 // Socket is our pseudo socket for transport.Socket

@@ -1,7 +1,7 @@
 package static
 
 import (
-	"github.com/micro/go-micro/v3/router"
+	"github.com/unistack-org/micro/v3/router"
 )
 
 // NewRouter returns an initialized static router

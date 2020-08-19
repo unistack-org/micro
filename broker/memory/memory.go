@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/micro/go-micro/v3/broker"
-	maddr "github.com/micro/go-micro/v3/util/addr"
-	mnet "github.com/micro/go-micro/v3/util/net"
+	"github.com/unistack-org/micro/v3/broker"
+	maddr "github.com/unistack-org/micro/v3/util/addr"
+	mnet "github.com/unistack-org/micro/v3/util/net"
 )
 
 type memoryBroker struct {

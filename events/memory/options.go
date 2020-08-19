@@ -1,6 +1,6 @@
 package memory
 
-import "github.com/micro/go-micro/v3/store"
+import "github.com/unistack-org/micro/v3/store"
 
 // Options which are used to configure the in-memory stream
 type Options struct {

@@ -4,8 +4,8 @@ import (
 	"io"
 	"sync"
 
-	"github.com/micro/go-micro/v3/logger"
-	"github.com/micro/go-micro/v3/tunnel"
+	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/tunnel"
 )
 
 type tunListener struct {

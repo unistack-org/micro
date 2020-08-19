@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/micro/go-micro/v3/events"
-	"github.com/micro/go-micro/v3/logger"
-	"github.com/micro/go-micro/v3/store"
-	"github.com/micro/go-micro/v3/store/memory"
+	"github.com/unistack-org/micro/v3/events"
+	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/store"
+	"github.com/unistack-org/micro/v3/store/memory"
 	"github.com/pkg/errors"
 )
 

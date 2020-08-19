@@ -9,7 +9,7 @@ curl -s -o proto/google/api/http.proto -L https://raw.githubusercontent.com/goog
 
 for PROTO in $PROTOS; do
   echo $PROTO
-  protoc -I./proto -I. -I$(dirname $PROTO) --go_out=plugins=grpc,paths=source_relative:. --micro_out=paths=source_relative:. $PROTO
+  protoc -I./proto -I. -I$(dirname $PROTO) --go-grpc_out=paths=source_relative:. --go_out=paths=source_relative:. --micro_out=paths=source_relative:. $PROTO
 done
 
 rm -r proto

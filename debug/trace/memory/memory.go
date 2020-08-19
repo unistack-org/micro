@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/micro/go-micro/v3/debug/trace"
-	"github.com/micro/go-micro/v3/util/ring"
+	"github.com/unistack-org/micro/v3/debug/trace"
+	"github.com/unistack-org/micro/v3/util/ring"
 )
 
 type Tracer struct {

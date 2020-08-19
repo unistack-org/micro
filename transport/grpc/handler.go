@@ -3,15 +3,16 @@ package grpc
 import (
 	"runtime/debug"
 
-	"github.com/micro/go-micro/v3/errors"
-	"github.com/micro/go-micro/v3/logger"
-	"github.com/micro/go-micro/v3/transport"
-	pb "github.com/micro/go-micro/v3/transport/grpc/proto"
+	"github.com/unistack-org/micro/v3/errors"
+	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/transport"
+	pb "github.com/unistack-org/micro/v3/transport/grpc/proto"
 	"google.golang.org/grpc/peer"
 )
 
 // microTransport satisfies the pb.TransportServer inteface
 type microTransport struct {
+	pb.UnimplementedTransportServer
 	addr string
 	fn   func(transport.Socket)
 }

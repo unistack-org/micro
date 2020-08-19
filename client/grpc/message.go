@@ -1,7 +1,7 @@
 package grpc
 
 import (
-	"github.com/micro/go-micro/v3/client"
+	"github.com/unistack-org/micro/v3/client"
 )
 
 type grpcEvent struct {

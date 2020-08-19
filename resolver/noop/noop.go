@@ -2,7 +2,7 @@
 package noop
 
 import (
-	"github.com/micro/go-micro/v3/resolver"
+	"github.com/unistack-org/micro/v3/resolver"
 )
 
 type Resolver struct{}
