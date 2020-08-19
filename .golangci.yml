@@ -1,5 +1,5 @@
 run:
-  deadline: 10m
+  deadline: 5m
 linters:
   disable-all: false
   enable-all: false
@@ -24,3 +24,4 @@ linters:
     - interfacer
     - typecheck
     - dupl
+

@@ -1,6 +1,6 @@
-name: pr test
+name: push test
 on:
-  pull_request:
+ push:
     branches:
     - master
 jobs:
