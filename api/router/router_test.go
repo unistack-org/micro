@@ -15,6 +15,8 @@ import (
 	"github.com/unistack-org/micro/v3/api/router"
 	rregistry "github.com/unistack-org/micro/v3/api/router/registry"
 	rstatic "github.com/unistack-org/micro/v3/api/router/static"
+	"github.com/unistack-org/micro/v3/broker"
+	bmemory "github.com/unistack-org/micro/v3/broker/memory"
 	"github.com/unistack-org/micro/v3/client"
 	gcli "github.com/unistack-org/micro/v3/client/grpc"
 	rmemory "github.com/unistack-org/micro/v3/registry/memory"
@@ -50,10 +52,12 @@ func (s *testServer) CallPcreInvalid(ctx context.Context, req *pb.Request, rsp *
 
 func initial(t *testing.T) (server.Server, client.Client) {
 	r := rmemory.NewRegistry()
+	b := bmemory.NewBroker(broker.Registry(r))
 
 	// create a new client
 	s := gsrv.NewServer(
 		server.Name("foo"),
+		server.Broker(b),
 		server.Registry(r),
 	)
 
@@ -64,6 +68,7 @@ func initial(t *testing.T) (server.Server, client.Client) {
 	// create a new server
 	c := gcli.NewClient(
 		client.Router(rtr),
+		client.Broker(b),
 	)
 
 	h := &testServer{}
