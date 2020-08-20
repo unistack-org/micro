@@ -7,11 +7,11 @@ import (
 	"strings"
 	"sync"
 
+	nats "github.com/nats-io/nats.go"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec/json"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/registry/mdns"
-	nats "github.com/nats-io/nats.go"
 )
 
 type natsBroker struct {

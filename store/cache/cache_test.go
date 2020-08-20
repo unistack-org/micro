@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/unistack-org/micro/v3/store"
 	"github.com/unistack-org/micro/v3/store/file"
-	"github.com/stretchr/testify/assert"
 )
 
 func cleanup(db string, s store.Store) {

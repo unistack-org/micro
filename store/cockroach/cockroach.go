@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+	"github.com/pkg/errors"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/store"
-	"github.com/pkg/errors"
 )
 
 // DefaultDatabase is the namespace that the sql store

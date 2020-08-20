@@ -38,11 +38,6 @@ type fileStore struct {
 	dir     string
 }
 
-type fileHandle struct {
-	key string
-	db  *bolt.DB
-}
-
 // record stored by us
 type record struct {
 	Key       string

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"sync"
 
+	"github.com/oxtoacart/bpool"
+	"github.com/pkg/errors"
 	"github.com/unistack-org/micro/v3/codec"
 	raw "github.com/unistack-org/micro/v3/codec/bytes"
 	"github.com/unistack-org/micro/v3/codec/grpc"
@@ -12,8 +14,6 @@ import (
 	"github.com/unistack-org/micro/v3/codec/proto"
 	"github.com/unistack-org/micro/v3/codec/protorpc"
 	"github.com/unistack-org/micro/v3/transport"
-	"github.com/oxtoacart/bpool"
-	"github.com/pkg/errors"
 )
 
 type rpcCodec struct {

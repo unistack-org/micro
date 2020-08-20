@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	api "github.com/unistack-org/micro/v3/api/proto"
 	"github.com/oxtoacart/bpool"
+	api "github.com/unistack-org/micro/v3/api/proto"
 )
 
 var (

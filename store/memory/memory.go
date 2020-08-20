@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unistack-org/micro/v3/store"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
+	"github.com/unistack-org/micro/v3/store"
 )
 
 // NewStore returns a memory store

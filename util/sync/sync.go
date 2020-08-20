@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/ef-ds/deque"
-	"github.com/unistack-org/micro/v3/store"
 	"github.com/pkg/errors"
+	"github.com/unistack-org/micro/v3/store"
 )
 
 // Sync implements a sync in for stores

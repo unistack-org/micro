@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strings"
 
-	log "github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/metrics"
 )
 
 // Reporter is an implementation of metrics.Reporter:

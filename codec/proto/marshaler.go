@@ -4,8 +4,8 @@ import (
 	"bytes"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/unistack-org/micro/v3/codec"
 	"github.com/oxtoacart/bpool"
+	"github.com/unistack-org/micro/v3/codec"
 )
 
 // create buffer pool with 16 instances each preallocated with 256 bytes

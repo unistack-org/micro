@@ -6,8 +6,8 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 
-	"github.com/unistack-org/micro/v3/tunnel"
 	"github.com/oxtoacart/bpool"
+	"github.com/unistack-org/micro/v3/tunnel"
 )
 
 var (

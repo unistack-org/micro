@@ -30,7 +30,6 @@ type etcdLock struct {
 
 type etcdLeader struct {
 	opts sync.LeaderOptions
-	s    *cc.Session
 	e    *cc.Election
 	id   string
 }

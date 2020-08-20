@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unistack-org/micro/v3/debug/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/unistack-org/micro/v3/debug/log"
 )
 
 func TestKubernetes(t *testing.T) {

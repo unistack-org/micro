@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
+	"github.com/oxtoacart/bpool"
 	"github.com/unistack-org/micro/v3/api"
 	"github.com/unistack-org/micro/v3/api/handler"
 	"github.com/unistack-org/micro/v3/api/internal/proto"
@@ -22,7 +23,6 @@ import (
 	"github.com/unistack-org/micro/v3/util/ctx"
 	"github.com/unistack-org/micro/v3/util/qson"
 	"github.com/unistack-org/micro/v3/util/router"
-	"github.com/oxtoacart/bpool"
 )
 
 const (

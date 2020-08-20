@@ -5,8 +5,8 @@ import (
 	"context"
 	"net"
 
-	"github.com/unistack-org/micro/v3/resolver"
 	"github.com/miekg/dns"
+	"github.com/unistack-org/micro/v3/resolver"
 )
 
 // Resolver is a DNS network resolve

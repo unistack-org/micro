@@ -3,8 +3,8 @@ package registry
 import (
 	"testing"
 
-	"github.com/unistack-org/micro/v3/registry"
 	"github.com/stretchr/testify/assert"
+	"github.com/unistack-org/micro/v3/registry"
 )
 
 func TestStoreRegex(t *testing.T) {

@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/unistack-org/micro/v3/events"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/store"
 	"github.com/unistack-org/micro/v3/store/memory"
-	"github.com/pkg/errors"
 )
 
 // NewStream returns an initialized memory stream

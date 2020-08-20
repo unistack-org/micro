@@ -3,8 +3,8 @@ package sync
 import (
 	"time"
 
-	"github.com/unistack-org/micro/v3/store"
 	"github.com/pkg/errors"
+	"github.com/unistack-org/micro/v3/store"
 )
 
 type operation struct {

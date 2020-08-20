@@ -3,8 +3,8 @@ package roundrobin
 import (
 	"testing"
 
-	"github.com/unistack-org/micro/v3/selector"
 	"github.com/stretchr/testify/assert"
+	"github.com/unistack-org/micro/v3/selector"
 )
 
 func TestRoundRobin(t *testing.T) {

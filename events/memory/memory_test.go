@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/unistack-org/micro/v3/events"
 	"github.com/stretchr/testify/assert"
+	"github.com/unistack-org/micro/v3/events"
 )
 
 type testPayload struct {

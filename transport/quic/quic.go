@@ -45,7 +45,9 @@ func (q *quicSocket) Recv(m *transport.Message) error {
 
 func (q *quicSocket) Send(m *transport.Message) error {
 	// set the write deadline
-	q.st.SetWriteDeadline(time.Now().Add(time.Second * 10))
+	if err := q.st.SetWriteDeadline(time.Now().Add(time.Second * 10)); err != nil {
+		return err
+	}
 	// send the data
 	return q.enc.Encode(m)
 }
