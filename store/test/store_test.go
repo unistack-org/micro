@@ -47,6 +47,10 @@ func cacheCleanup(db string, s store.Store) {
 }
 
 func TestStoreReInit(t *testing.T) {
+	if len(os.Getenv("IN_TRAVIS_CI")) > 0 {
+		t.Skip()
+	}
+
 	tcs := []struct {
 		name    string
 		s       store.Store
@@ -69,6 +73,10 @@ func TestStoreReInit(t *testing.T) {
 }
 
 func TestStoreBasic(t *testing.T) {
+	if len(os.Getenv("IN_TRAVIS_CI")) > 0 {
+		t.Skip()
+	}
+
 	tcs := []struct {
 		name    string
 		s       store.Store
@@ -89,6 +97,10 @@ func TestStoreBasic(t *testing.T) {
 }
 
 func TestStoreTable(t *testing.T) {
+	if len(os.Getenv("IN_TRAVIS_CI")) > 0 {
+		t.Skip()
+	}
+
 	tcs := []struct {
 		name    string
 		s       store.Store
@@ -108,6 +120,10 @@ func TestStoreTable(t *testing.T) {
 }
 
 func TestStoreDatabase(t *testing.T) {
+	if len(os.Getenv("IN_TRAVIS_CI")) > 0 {
+		t.Skip()
+	}
+
 	tcs := []struct {
 		name    string
 		s       store.Store
@@ -127,6 +143,10 @@ func TestStoreDatabase(t *testing.T) {
 }
 
 func TestStoreDatabaseTable(t *testing.T) {
+	if len(os.Getenv("IN_TRAVIS_CI")) > 0 {
+		t.Skip()
+	}
+
 	tcs := []struct {
 		name    string
 		s       store.Store
