@@ -29,7 +29,6 @@ import (
 
 // server is used to implement helloworld.GreeterServer.
 type testServer struct {
-	msgCount int
 }
 
 // TestHello implements helloworld.GreeterServer

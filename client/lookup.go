@@ -40,8 +40,7 @@ func LookupRoute(ctx context.Context, req Request, opts CallOptions) ([]string, 
 		return routes[i].Metric < routes[j].Metric
 	})
 
-	var addrs []string
-
+	addrs := make([]string, 0, len(routes))
 	for _, route := range routes {
 		addrs = append(addrs, route.Address)
 	}

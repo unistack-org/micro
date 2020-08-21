@@ -504,7 +504,7 @@ func (k *kubernetes) Read(opts ...runtime.ReadOption) ([]*runtime.Service, error
 		return nil, err
 	}
 
-	var services []*runtime.Service
+	services := make([]*runtime.Service, 0, len(srvs))
 	for _, service := range srvs {
 		services = append(services, service.Service)
 	}

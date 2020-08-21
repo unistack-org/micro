@@ -1029,14 +1029,11 @@ func (g *grpcServer) Stop() error {
 	ch := make(chan error)
 	g.exit <- ch
 
-	var err error
-	select {
-	case err = <-ch:
-		g.Lock()
-		g.rsvc = nil
-		g.started = false
-		g.Unlock()
-	}
+	err := <-ch
+	g.Lock()
+	g.rsvc = nil
+	g.started = false
+	g.Unlock()
 
 	return err
 }

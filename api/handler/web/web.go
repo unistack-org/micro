@@ -72,10 +72,11 @@ func (wh *webHandler) getService(r *http.Request) (string, error) {
 	}
 
 	// get the nodes
-	var nodes []*registry.Node
+	nodes := make([]*registry.Node, 0, len(service.Services))
 	for _, srv := range service.Services {
 		nodes = append(nodes, srv.Nodes...)
 	}
+
 	if len(nodes) == 0 {
 		return "", errors.New("no route found")
 	}

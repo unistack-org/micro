@@ -123,7 +123,7 @@ func (k *klog) Read() ([]runtime.Log, error) {
 			logParams["tailLines"] = strconv.Itoa(int(k.options.Count))
 		}
 
-		if k.options.Stream == true {
+		if k.options.Stream {
 			logParams["follow"] = "true"
 		}
 

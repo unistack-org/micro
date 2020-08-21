@@ -42,7 +42,7 @@ func (l literal) String() string {
 }
 
 func (v variable) String() string {
-	var segs []string
+	segs := make([]string, 0, len(v.segments))
 	for _, s := range v.segments {
 		segs = append(segs, s.String())
 	}
@@ -50,7 +50,7 @@ func (v variable) String() string {
 }
 
 func (t template) String() string {
-	var segs []string
+	segs := make([]string, 0, len(t.segments))
 	for _, s := range t.segments {
 		segs = append(segs, s.String())
 	}

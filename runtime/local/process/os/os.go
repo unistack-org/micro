@@ -20,7 +20,6 @@ func (p *Process) Exec(exe *process.Binary) error {
 }
 
 func (p *Process) Fork(exe *process.Binary) (*process.PID, error) {
-
 	// create command
 	cmd := exec.Command(exe.Package.Path, exe.Args...)
 

@@ -102,10 +102,10 @@ func TestSQL(t *testing.T) {
 	switch err {
 	case nil:
 		t.Error("Key test should have expired")
-	default:
-		t.Error(err)
 	case store.ErrNotFound:
 		break
+	default:
+		t.Error(err)
 	}
 	sqlStore.Delete("bar")
 	sqlStore.Write(&store.Record{Key: "aaa", Value: []byte("bbb"), Expiry: 10 * time.Second})

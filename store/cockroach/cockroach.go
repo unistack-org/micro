@@ -221,7 +221,7 @@ func (s *sqlStore) List(opts ...store.ListOption) ([]string, error) {
 			pattern = options.Prefix + pattern
 		}
 		if options.Suffix != "" {
-			pattern = pattern + options.Suffix
+			pattern += options.Suffix
 		}
 	}
 	if options.Offset > 0 {
@@ -245,11 +245,11 @@ func (s *sqlStore) List(opts ...store.ListOption) ([]string, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var keys []string
 	records, err := s.rowsToRecords(rows)
 	if err != nil {
 		return nil, err
 	}
+	keys := make([]string, 0, len(records))
 	for _, k := range records {
 		keys = append(keys, k.Key)
 	}
@@ -360,7 +360,7 @@ func (s *sqlStore) read(key string, options store.ReadOptions) ([]*store.Record,
 		pattern = key + pattern
 	}
 	if options.Suffix {
-		pattern = pattern + key
+		pattern += key
 	}
 
 	var rows *sql.Rows

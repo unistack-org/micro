@@ -31,7 +31,7 @@ func (k *klog) podLogStream(podName string, stream *kubeStream) {
 	}, client.LogParams(p))
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
+		fmt.Fprintf(os.Stderr, "%v", err)
 		return
 	}
 
@@ -120,7 +120,7 @@ func (k *klog) Read(options ...log.ReadOption) ([]log.Record, error) {
 			logParams["tailLines"] = strconv.Itoa(opts.Count)
 		}
 
-		if opts.Stream == true {
+		if opts.Stream {
 			logParams["follow"] = "true"
 		}
 

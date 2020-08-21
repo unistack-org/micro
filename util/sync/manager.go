@@ -7,24 +7,6 @@ import (
 	"github.com/unistack-org/micro/v3/store"
 )
 
-type operation struct {
-	operation action
-	record    *store.Record
-	deadline  time.Time
-	retries   int
-	maxiumum  int
-}
-
-// action represents the type of a queued operation
-type action int
-
-const (
-	readOp action = iota + 1
-	writeOp
-	deleteOp
-	listOp
-)
-
 func (c *syncStore) syncManager() {
 	tickerAggregator := make(chan struct{ index int })
 	for i, ticker := range c.pendingWriteTickers {

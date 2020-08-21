@@ -59,8 +59,6 @@ type response struct {
 
 // router represents an RPC router.
 type router struct {
-	name string
-
 	mu         sync.Mutex // protects the serviceMap
 	serviceMap map[string]*service
 
@@ -371,7 +369,12 @@ func (router *router) readRequest(r server.Request) (service *service, mtype *me
 	return
 }
 
-func (router *router) readHeader(cc codec.Reader) (service *service, mtype *methodType, req *request, keepReading bool, err error) {
+func (router *router) readHeader(cc codec.Reader) (*service, *methodType, *request, bool, error) {
+	var err error
+	var service *service
+	var mtype *methodType
+	var req *request
+
 	// Grab the request header.
 	msg := new(codec.Message)
 	msg.Type = codec.Request
@@ -382,34 +385,32 @@ func (router *router) readHeader(cc codec.Reader) (service *service, mtype *meth
 	if err != nil {
 		req = nil
 		if err == io.EOF || err == io.ErrUnexpectedEOF {
-			return
+			return nil, nil, nil, false, err
 		}
-		err = errors.New("rpc: router cannot decode request: " + err.Error())
-		return
+		return nil, nil, nil, false, fmt.Errorf("rpc: router cannot decode request: %v", err)
 	}
 
 	// We read the header successfully. If we see an error now,
 	// we can still recover and move on to the next request.
-	keepReading = true
+	keepReading := true
 
 	serviceMethod := strings.Split(req.msg.Endpoint, ".")
 	if len(serviceMethod) != 2 {
-		err = errors.New("rpc: service/endpoint request ill-formed: " + req.msg.Endpoint)
-		return
+		return nil, nil, nil, keepReading, fmt.Errorf("rpc: service/endpoint request ill-formed: %v", req.msg.Endpoint)
 	}
 	// Look up the request.
 	router.mu.Lock()
 	service = router.serviceMap[serviceMethod[0]]
 	router.mu.Unlock()
 	if service == nil {
-		err = errors.New("rpc: can't find service " + serviceMethod[0])
-		return
+		return nil, nil, nil, keepReading, fmt.Errorf("rpc: can't find service %v", serviceMethod[0])
 	}
 	mtype = service.method[serviceMethod[1]]
 	if mtype == nil {
-		err = errors.New("rpc: can't find method " + serviceMethod[1])
+		return nil, nil, nil, keepReading, fmt.Errorf("rpc: can't find method %v", serviceMethod[1])
 	}
-	return
+
+	return service, mtype, req, keepReading, nil
 }
 
 func (router *router) NewHandler(h interface{}, opts ...server.HandlerOption) server.Handler {

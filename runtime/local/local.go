@@ -377,7 +377,7 @@ func (r *localRuntime) Logs(s *runtime.Service, options ...runtime.LogsOption) (
 
 	t, err := tail.TailFile(fpath, tail.Config{Follow: lopts.Stream, Location: &tail.SeekInfo{
 		Whence: whence,
-		Offset: int64(offset),
+		Offset: offset,
 	}, Logger: tail.DiscardingLogger})
 	if err != nil {
 		return nil, err

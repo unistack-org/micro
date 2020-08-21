@@ -13,7 +13,7 @@ import (
 
 func testPool(t *testing.T, size int, ttl time.Duration, idle int, ms int) {
 	// setup server
-	l, err := net.Listen("tcp", ":0")
+	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("failed to listen: %v", err)
 	}
@@ -24,13 +24,14 @@ func testPool(t *testing.T, size int, ttl time.Duration, idle int, ms int) {
 
 	go s.Serve(l)
 	defer s.Stop()
+	ctx := context.Background()
 
 	// zero pool
 	p := newPool(size, ttl, idle, ms)
 
 	for i := 0; i < 10; i++ {
 		// get a conn
-		cc, err := p.getConn(l.Addr().String(), grpc.WithInsecure())
+		cc, err := p.getConn(ctx, l.Addr().String(), grpc.WithInsecure())
 		if err != nil {
 			t.Fatal(err)
 		}

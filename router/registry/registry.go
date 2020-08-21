@@ -126,7 +126,7 @@ func (r *rtr) manageRoute(route router.Route, action string) error {
 
 // createRoutes turns a service into a list routes basically converting nodes to routes
 func (r *rtr) createRoutes(service *registry.Service, network string) []router.Route {
-	var routes []router.Route
+	routes := make([]router.Route, 0, len(service.Nodes))
 
 	for _, node := range service.Nodes {
 		routes = append(routes, router.Route{

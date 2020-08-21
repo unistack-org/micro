@@ -65,16 +65,17 @@ func (h *httpHandler) getService(r *http.Request) (string, error) {
 		return "", errors.New("no route found")
 	}
 
+	if len(service.Services) == 0 {
+		return "", errors.New("no route found")
+	}
+
 	// get the nodes for this service
-	var nodes []*registry.Node
+	nodes := make([]*registry.Node, 0, len(service.Services))
 	for _, srv := range service.Services {
 		nodes = append(nodes, srv.Nodes...)
 	}
 
 	// select a random node
-	if len(nodes) == 0 {
-		return "", errors.New("no route found")
-	}
 	node := nodes[rand.Int()%len(nodes)]
 
 	return fmt.Sprintf("http://%s", node.Address), nil

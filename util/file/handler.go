@@ -37,7 +37,7 @@ func (h *handler) Open(ctx context.Context, req *proto.OpenRequest, rsp *proto.O
 	path := filepath.Join(h.readDir, req.Filename)
 	flags := os.O_CREATE | os.O_RDWR
 	if req.GetTruncate() {
-		flags = flags | os.O_TRUNC
+		flags |= os.O_TRUNC
 	}
 	file, err := os.OpenFile(path, flags, 0666)
 	if err != nil {

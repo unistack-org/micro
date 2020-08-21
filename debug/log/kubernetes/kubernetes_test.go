@@ -13,11 +13,8 @@ import (
 )
 
 func TestKubernetes(t *testing.T) {
-	// TODO: fix local test running
-	return
-
-	if os.Getenv("IN_TRAVIS_CI") == "yes" {
-		t.Skip("In Travis CI")
+	if len(os.Getenv("IN_TRAVIS_CI")) > 0 {
+		t.Skip()
 	}
 
 	k := NewLog(log.Name("micro-network"))

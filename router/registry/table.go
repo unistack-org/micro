@@ -262,6 +262,8 @@ func filterRoutes(routes map[uint64]*route, opts router.QueryOptions) []router.R
 	// routeMap stores the routes we're going to advertise
 	routeMap := make(map[string][]router.Route)
 
+	var routeCnt int
+
 	for _, rt := range routes {
 		// get the actual route
 		route := rt.route
@@ -270,11 +272,11 @@ func filterRoutes(routes map[uint64]*route, opts router.QueryOptions) []router.R
 			// add matchihg route to the routeMap
 			routeKey := route.Service + "@" + route.Network
 			routeMap[routeKey] = append(routeMap[routeKey], route)
+			routeCnt++
 		}
 	}
 
-	var results []router.Route
-
+	results := make([]router.Route, 0, routeCnt)
 	for _, route := range routeMap {
 		results = append(results, route...)
 	}

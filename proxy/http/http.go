@@ -21,9 +21,6 @@ type Proxy struct {
 
 	// The http backend to call
 	Endpoint string
-
-	// first request
-	first bool
 }
 
 func getMethod(hdr map[string]string) string {

@@ -443,7 +443,7 @@ func CheckoutSource(folder string, source *Source, secrets map[string]string) er
 	if !strings.Contains(repo, "https://") {
 		repo = "https://" + repo
 	}
-	err := gitter.Checkout(source.Repo, source.Ref)
+	err := gitter.Checkout(repo, source.Ref)
 	if err != nil {
 		return err
 	}
@@ -467,10 +467,11 @@ func extractServiceName(fileContent []byte) string {
 // Uncompress is a modified version of: https://gist.github.com/mimoo/25fc9716e0f1353791f5908f94d6e726
 func Uncompress(src string, dst string) error {
 	file, err := os.OpenFile(src, os.O_RDWR|os.O_CREATE, 0666)
-	defer file.Close()
 	if err != nil {
 		return err
 	}
+	defer file.Close()
+
 	// ungzip
 	zr, err := gzip.NewReader(file)
 	if err != nil {

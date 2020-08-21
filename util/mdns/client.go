@@ -86,10 +86,12 @@ func Query(params *QueryParam) error {
 	}
 
 	if params.Context == nil {
+		var cancel context.CancelFunc
 		if params.Timeout == 0 {
 			params.Timeout = time.Second
 		}
-		params.Context, _ = context.WithTimeout(context.Background(), params.Timeout)
+		params.Context, cancel = context.WithTimeout(context.Background(), params.Timeout)
+		defer cancel()
 		if err != nil {
 			return err
 		}

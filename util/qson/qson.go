@@ -22,7 +22,7 @@ var (
 )
 
 func init() {
-	bracketSplitter = regexp.MustCompile("\\[|\\]")
+	bracketSplitter = regexp.MustCompile(`\[|\]`)
 }
 
 func btSplitter(str string) []string {
@@ -127,7 +127,7 @@ func queryToMap(param string) (map[string]interface{}, error) {
 	// To do this we break our key into two pieces:
 	//   a and b[c]
 	// and then we set {"a": queryToMap("b[c]", value)}
-	ret := make(map[string]interface{}, 0)
+	ret := make(map[string]interface{})
 	ret[key], err = queryToMap(buildNewKey(rawKey) + "=" + rawValue)
 	if err != nil {
 		return nil, err

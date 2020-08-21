@@ -517,6 +517,7 @@ func (p *Proxy) serveRequest(ctx context.Context, link client.Client, service, e
 
 	// new context with cancel
 	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	// create new stream
 	stream, err := link.Stream(ctx, creq, opts...)

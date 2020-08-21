@@ -1,7 +1,6 @@
 package qson
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -24,7 +23,8 @@ func ExampleUnmarshal() {
 	if err := Unmarshal(&ex, "a=xyz&b[c]=456"); err != nil {
 		panic(err)
 	}
-	fmt.Printf("%+v\n", ex)
+	_ = ex
+	// fmt.Printf("%+v\n", ex)
 	// Output: {A:xyz B:{C:456}}
 }
 
@@ -56,11 +56,11 @@ func TestUnmarshal(t *testing.T) {
 }
 
 func ExampleToJSON() {
-	b, err := ToJSON("a=xyz&b[c]=456")
+	_, err := ToJSON("a=xyz&b[c]=456")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf(string(b))
+	// fmt.Printf(string(b))
 	// Output: {"a":"xyz","b":{"c":456}}
 }
 

@@ -12,7 +12,6 @@ import (
 	"github.com/unistack-org/micro/v3/codec/proto"
 	"github.com/unistack-org/micro/v3/codec/protorpc"
 	"github.com/unistack-org/micro/v3/errors"
-	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/transport"
 )
 
@@ -61,15 +60,6 @@ var (
 		"application/json-rpc":     jsonrpc.NewCodec,
 		"application/proto-rpc":    protorpc.NewCodec,
 		"application/octet-stream": raw.NewCodec,
-	}
-
-	// TODO: remove legacy codec list
-	defaultCodecs = map[string]codec.NewCodec{
-		"application/json":         jsonrpc.NewCodec,
-		"application/json-rpc":     jsonrpc.NewCodec,
-		"application/protobuf":     protorpc.NewCodec,
-		"application/proto-rpc":    protorpc.NewCodec,
-		"application/octet-stream": protorpc.NewCodec,
 	}
 )
 
@@ -125,30 +115,6 @@ func setHeaders(m *codec.Message, stream string) {
 	if len(stream) > 0 {
 		set("Micro-Stream", stream)
 	}
-}
-
-// setupProtocol sets up the old protocol
-func setupProtocol(msg *transport.Message, node *registry.Node) codec.NewCodec {
-	// get the protocol from node metadata
-	if protocol := node.Metadata["protocol"]; len(protocol) > 0 {
-		return nil
-	}
-
-	// processing topic publishing
-	if len(msg.Header["Micro-Topic"]) > 0 {
-		return nil
-	}
-
-	// no protocol use old codecs
-	switch msg.Header["Content-Type"] {
-	case "application/json":
-		msg.Header["Content-Type"] = "application/json-rpc"
-	case "application/protobuf":
-		msg.Header["Content-Type"] = "application/proto-rpc"
-	}
-
-	// now return codec
-	return defaultCodecs[msg.Header["Content-Type"]]
 }
 
 func newRpcCodec(req *transport.Message, client transport.Client, c codec.NewCodec, stream string) codec.Codec {
