@@ -147,6 +147,7 @@ func Sign(CACrt, CAKey, CSR []byte, opts ...CertOption) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
+//nolint:gocritic
 func decodePEM(PEM []byte) ([]*pem.Block, error) {
 	var blocks []*pem.Block
 	var asn1 *pem.Block

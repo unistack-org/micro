@@ -4,13 +4,14 @@ import (
 	"github.com/unistack-org/micro/v3/selector"
 )
 
-// NewSelector returns an initalised round robin selector
+// NewSelector returns an initialised round robin selector
 func NewSelector(opts ...selector.Option) selector.Selector {
 	return new(roundrobin)
 }
 
 type roundrobin struct{}
 
+// Select return routes based on algo
 func (r *roundrobin) Select(routes []string, opts ...selector.SelectOption) (selector.Next, error) {
 	if len(routes) == 0 {
 		return nil, selector.ErrNoneAvailable

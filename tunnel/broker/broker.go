@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/unistack-org/micro/v3/broker"
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/transport"
 	"github.com/unistack-org/micro/v3/tunnel"
 )
@@ -111,7 +112,10 @@ func (t *tunSubscriber) run() {
 		// receive message
 		m := new(transport.Message)
 		if err := c.Recv(m); err != nil {
-			c.Close()
+			logger.Error(err)
+			if err = c.Close(); err != nil {
+				logger.Error(err)
+			}
 			continue
 		}
 

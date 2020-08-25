@@ -4,10 +4,11 @@ package json
 import (
 	"encoding/json"
 	"io"
+	"io/ioutil"
 
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"github.com/unistack-org/micro/v3/codec"
+	jsonpb "google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 type Codec struct {
@@ -25,7 +26,11 @@ func (c *Codec) ReadBody(b interface{}) error {
 		return nil
 	}
 	if pb, ok := b.(proto.Message); ok {
-		return jsonpb.UnmarshalNext(c.Decoder, pb)
+		buf, err := ioutil.ReadAll(c.Conn)
+		if err != nil {
+			return err
+		}
+		return jsonpb.Unmarshal(buf, pb)
 	}
 	return c.Decoder.Decode(b)
 }

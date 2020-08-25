@@ -163,7 +163,9 @@ func (s *Server) Shutdown() error {
 
 	s.shutdown = true
 	close(s.shutdownCh)
-	s.unregister()
+	if err := s.unregister(); err != nil {
+		return err
+	}
 
 	if s.ipv4List != nil {
 		s.ipv4List.Close()

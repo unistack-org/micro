@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"sync"
 	"time"
 
@@ -176,7 +177,7 @@ func (c *config) Close() error {
 	return nil
 }
 
-func (c *config) Get(path ...string) reader.Value {
+func (c *config) Get(path ...string) (reader.Value, error) {
 	c.RLock()
 	defer c.RUnlock()
 
@@ -186,21 +187,20 @@ func (c *config) Get(path ...string) reader.Value {
 	}
 
 	// no value
-	return newValue()
+	return nil, fmt.Errorf("no value")
 }
 
-func (c *config) Set(val interface{}, path ...string) {
+func (c *config) Set(val interface{}, path ...string) error {
 	c.Lock()
 	defer c.Unlock()
 
 	if c.vals != nil {
 		c.vals.Set(val, path...)
 	}
-
-	return
+	return nil
 }
 
-func (c *config) Del(path ...string) {
+func (c *config) Del(path ...string) error {
 	c.Lock()
 	defer c.Unlock()
 
@@ -208,7 +208,7 @@ func (c *config) Del(path ...string) {
 		c.vals.Del(path...)
 	}
 
-	return
+	return nil
 }
 
 func (c *config) Bytes() []byte {
@@ -246,7 +246,10 @@ func (c *config) Load(sources ...source.Source) error {
 }
 
 func (c *config) Watch(path ...string) (Watcher, error) {
-	value := c.Get(path...)
+	value, err := c.Get(path...)
+	if err != nil {
+		return nil, err
+	}
 
 	w, err := c.opts.Loader.Watch(path...)
 	if err != nil {
@@ -282,8 +285,7 @@ func (w *watcher) Next() (reader.Value, error) {
 			return nil, err
 		}
 
-		w.value = v.Get()
-		return w.value, nil
+		return v.Get()
 	}
 }
 

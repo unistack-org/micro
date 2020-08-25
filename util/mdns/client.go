@@ -122,12 +122,13 @@ func Listen(entries chan<- *ServiceEntry, exit chan struct{}) error {
 
 	ip := make(map[string]*ServiceEntry)
 
+loop:
 	for {
 		select {
 		case <-exit:
-			return nil
+			break loop
 		case <-client.closedCh:
-			return nil
+			break loop
 		case m := <-msgCh:
 			e := messageToEntry(m, ip)
 			if e == nil {

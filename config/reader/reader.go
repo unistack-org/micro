@@ -17,9 +17,9 @@ type Reader interface {
 // Values is returned by the reader
 type Values interface {
 	Bytes() []byte
-	Get(path ...string) Value
-	Set(val interface{}, path ...string)
-	Del(path ...string)
+	Get(path ...string) (Value, error)
+	Set(val interface{}, path ...string) error
+	Del(path ...string) error
 	Map() map[string]interface{}
 	Scan(v interface{}) error
 }

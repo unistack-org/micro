@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/teris-io/shortid"
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -549,10 +550,14 @@ func unzip(src, dest string, skipTopFolder bool) error {
 		return err
 	}
 	defer func() {
-		r.Close()
+		if err = r.Close(); err != nil {
+			logger.Errorf("failed to close reader: %v", err)
+		}
 	}()
 
-	os.MkdirAll(dest, 0755)
+	if err = os.MkdirAll(dest, 0755); err != nil {
+		return err
+	}
 
 	// Closure to address file descriptors issue with all the deferred .Close() methods
 	extractAndWriteFile := func(f *zip.File) error {
@@ -568,15 +573,21 @@ func unzip(src, dest string, skipTopFolder bool) error {
 		}
 		path := filepath.Join(dest, f.Name)
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(path, f.Mode())
+			if err = os.MkdirAll(path, f.Mode()); err != nil {
+				return err
+			}
 		} else {
-			os.MkdirAll(filepath.Dir(path), f.Mode())
+			if err = os.MkdirAll(filepath.Dir(path), f.Mode()); err != nil {
+				return err
+			}
 			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
 				return err
 			}
 			defer func() {
-				f.Close()
+				if err = f.Close(); err != nil {
+					logger.Errorf("failed to close file: %v", err)
+				}
 			}()
 
 			_, err = io.Copy(f, rc)
