@@ -5,15 +5,12 @@ import (
 	"time"
 
 	"github.com/unistack-org/micro/v3/broker"
-	"github.com/unistack-org/micro/v3/broker/http"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/router"
-	regRouter "github.com/unistack-org/micro/v3/router/registry"
 	"github.com/unistack-org/micro/v3/selector"
 	"github.com/unistack-org/micro/v3/selector/random"
 	"github.com/unistack-org/micro/v3/transport"
-	thttp "github.com/unistack-org/micro/v3/transport/http"
 )
 
 type Options struct {
@@ -120,13 +117,10 @@ func NewOptions(options ...Option) Options {
 			RequestTimeout: DefaultRequestTimeout,
 			DialTimeout:    transport.DefaultDialTimeout,
 		},
-		Lookup:    LookupRoute,
-		PoolSize:  DefaultPoolSize,
-		PoolTTL:   DefaultPoolTTL,
-		Broker:    http.NewBroker(),
-		Router:    regRouter.NewRouter(),
-		Selector:  random.NewSelector(),
-		Transport: thttp.NewTransport(),
+		Lookup:   LookupRoute,
+		PoolSize: DefaultPoolSize,
+		PoolTTL:  DefaultPoolTTL,
+		Selector: random.NewSelector(),
 	}
 
 	for _, o := range options {

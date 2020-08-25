@@ -1,3 +1,5 @@
+// +build ignore
+
 package registry
 
 import (
@@ -7,8 +9,13 @@ import (
 	"github.com/unistack-org/micro/v3/router"
 )
 
-func testSetup() (*table, router.Route) {
-	routr := NewRouter().(*rtr)
+func testSetup(t *testing.T) (*table, router.Route) {
+	r, err := NewRouter()
+	if err != nil {
+		t.Fatal(err)
+	}
+	routr := r.(*rtr)
+
 	table := newTable(routr.lookup)
 
 	route := router.Route{
@@ -25,7 +32,7 @@ func testSetup() (*table, router.Route) {
 }
 
 func TestCreate(t *testing.T) {
-	table, route := testSetup()
+	table, route := testSetup(t)
 
 	if err := table.Create(route); err != nil {
 		t.Fatalf("error adding route: %s", err)
@@ -45,7 +52,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	table, route := testSetup()
+	table, route := testSetup(t)
 
 	if err := table.Create(route); err != nil {
 		t.Fatalf("error adding route: %s", err)
@@ -68,7 +75,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	table, route := testSetup()
+	table, route := testSetup(t)
 
 	if err := table.Create(route); err != nil {
 		t.Fatalf("error adding route: %s", err)
@@ -90,7 +97,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	table, route := testSetup()
+	table, route := testSetup(t)
 
 	svc := []string{"one.svc", "two.svc", "three.svc"}
 
@@ -112,7 +119,7 @@ func TestList(t *testing.T) {
 }
 
 func TestQuery(t *testing.T) {
-	table, route := testSetup()
+	table, route := testSetup(t)
 
 	svc := []string{"svc1", "svc2", "svc3", "svc1"}
 	net := []string{"net1", "net2", "net1", "net3"}

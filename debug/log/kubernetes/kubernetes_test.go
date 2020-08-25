@@ -13,7 +13,7 @@ import (
 )
 
 func TestKubernetes(t *testing.T) {
-	if len(os.Getenv("IN_TRAVIS_CI")) > 0 {
+	if len(os.Getenv("INTEGRATION_TESTS")) > 0 {
 		t.Skip()
 	}
 

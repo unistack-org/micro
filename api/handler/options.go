@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/unistack-org/micro/v3/api/router"
 	"github.com/unistack-org/micro/v3/client"
-	"github.com/unistack-org/micro/v3/client/grpc"
 )
 
 var (
@@ -24,10 +23,6 @@ func NewOptions(opts ...Option) Options {
 	var options Options
 	for _, o := range opts {
 		o(&options)
-	}
-
-	if options.Client == nil {
-		WithClient(grpc.NewClient())(&options)
 	}
 
 	// set namespace if blank

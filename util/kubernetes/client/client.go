@@ -341,16 +341,20 @@ func NewDeployment(name, version, typ, namespace string) *Deployment {
 
 // NewLocalClient returns a client that can be used with `kubectl proxy`
 func NewLocalClient(hosts ...string) *client {
-	if len(hosts) == 0 {
-		hosts[0] = "http://localhost:8001"
-	}
-	return &client{
+	c := &client{
 		opts: &api.Options{
 			Client:    http.DefaultClient,
-			Host:      hosts[0],
 			Namespace: "default",
 		},
 	}
+
+	if len(hosts) == 0 {
+		c.opts.Host = "http://localhost:8001"
+	} else {
+		c.opts.Host = hosts[0]
+	}
+
+	return c
 }
 
 // NewClusterClient creates a Kubernetes client for use from within a k8s pod.

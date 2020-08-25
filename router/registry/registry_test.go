@@ -1,3 +1,5 @@
+// +build ignore
+
 package registry
 
 import (
@@ -19,7 +21,7 @@ func TestRouterClose(t *testing.T) {
 	if err := r.Close(); err != nil {
 		t.Errorf("failed to stop router: %v", err)
 	}
-	if len(os.Getenv("IN_TRAVIS_CI")) == 0 {
+	if len(os.Getenv("INTEGRATION_TESTS")) == 0 {
 		t.Logf("TestRouterStartStop STOPPED")
 	}
 }

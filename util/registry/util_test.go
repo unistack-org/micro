@@ -35,7 +35,7 @@ func TestRemove(t *testing.T) {
 	if i := len(servs); i > 0 {
 		t.Errorf("Expected 0 nodes, got %d: %+v", i, servs)
 	}
-	if len(os.Getenv("IN_TRAVIS_CI")) == 0 {
+	if len(os.Getenv("INTEGRATION_TESTS")) == 0 {
 		t.Logf("Services %+v", servs)
 	}
 }
@@ -72,7 +72,7 @@ func TestRemoveNodes(t *testing.T) {
 	if i := len(nodes); i != 1 {
 		t.Errorf("Expected only 1 node, got %d: %+v", i, nodes)
 	}
-	if len(os.Getenv("IN_TRAVIS_CI")) == 0 {
+	if len(os.Getenv("INTEGRATION_TESTS")) == 0 {
 		t.Logf("Nodes %+v", nodes)
 	}
 }

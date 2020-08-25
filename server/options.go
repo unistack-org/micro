@@ -8,13 +8,10 @@ import (
 
 	"github.com/unistack-org/micro/v3/auth"
 	"github.com/unistack-org/micro/v3/broker"
-	"github.com/unistack-org/micro/v3/broker/http"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/debug/trace"
 	"github.com/unistack-org/micro/v3/registry"
-	"github.com/unistack-org/micro/v3/registry/mdns"
 	"github.com/unistack-org/micro/v3/transport"
-	thttp "github.com/unistack-org/micro/v3/transport/http"
 )
 
 type Options struct {
@@ -62,18 +59,6 @@ func newOptions(opt ...Option) Options {
 
 	for _, o := range opt {
 		o(&opts)
-	}
-
-	if opts.Broker == nil {
-		opts.Broker = http.NewBroker()
-	}
-
-	if opts.Registry == nil {
-		opts.Registry = mdns.NewRegistry()
-	}
-
-	if opts.Transport == nil {
-		opts.Transport = thttp.NewTransport()
 	}
 
 	if opts.RegisterCheck == nil {
@@ -228,9 +213,6 @@ func TLSConfig(t *tls.Config) Option {
 
 		// set the default transport if one is not
 		// already set. Required for Init call below.
-		if o.Transport == nil {
-			o.Transport = thttp.NewTransport()
-		}
 
 		// set the transport tls
 		o.Transport.Init(

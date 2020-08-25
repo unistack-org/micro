@@ -8,8 +8,9 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 
-	"github.com/pkg/errors"
+	"errors"
 )
 
 // GenerateKey returns an ed25519 key
@@ -91,36 +92,36 @@ func Sign(CACrt, CAKey, CSR []byte, opts ...CertOption) ([]byte, error) {
 	}
 	asn1CACrt, err := decodePEM(CACrt)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode CA Crt PEM")
+		return nil, fmt.Errorf("failed to decode CA Crt PEM: %w", err)
 	}
 	if len(asn1CACrt) != 1 {
-		return nil, errors.Errorf("expected 1 CA Crt, got %d", len(asn1CACrt))
+		return nil, fmt.Errorf("expected 1 CA Crt, got %d", len(asn1CACrt))
 	}
 	caCrt, err := x509.ParseCertificate(asn1CACrt[0].Bytes)
 	if err != nil {
-		return nil, errors.Wrap(err, "ca is not a valid certificate")
+		return nil, fmt.Errorf("ca is not a valid certificate: %w", err)
 	}
 	asn1CAKey, err := decodePEM(CAKey)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode CA  Key PEM")
+		return nil, fmt.Errorf("failed to decode CA  Key PEM: %w", err)
 	}
 	if len(asn1CAKey) != 1 {
-		return nil, errors.Errorf("expected 1 CA Key, got %d", len(asn1CACrt))
+		return nil, fmt.Errorf("expected 1 CA Key, got %d", len(asn1CACrt))
 	}
 	caKey, err := x509.ParsePKCS8PrivateKey(asn1CAKey[0].Bytes)
 	if err != nil {
-		return nil, errors.Wrap(err, "ca key is not a valid private key")
+		return nil, fmt.Errorf("ca key is not a valid private key: %w", err)
 	}
 	asn1CSR, err := decodePEM(CSR)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode CSR PEM")
+		return nil, fmt.Errorf("failed to decode CSR PEM: %w", err)
 	}
 	if len(asn1CSR) != 1 {
-		return nil, errors.Errorf("expected 1 CSR, got %d", len(asn1CSR))
+		return nil, fmt.Errorf("expected 1 CSR, got %d", len(asn1CSR))
 	}
 	csr, err := x509.ParseCertificateRequest(asn1CSR[0].Bytes)
 	if err != nil {
-		return nil, errors.Wrap(err, "csr is invalid")
+		return nil, fmt.Errorf("csr is invalid: %w", err)
 	}
 	template := &x509.Certificate{
 		SignatureAlgorithm:    x509.PureEd25519,
@@ -137,11 +138,11 @@ func Sign(CACrt, CAKey, CSR []byte, opts ...CertOption) ([]byte, error) {
 
 	x509Cert, err := x509.CreateCertificate(rand.Reader, template, caCrt, caCrt.PublicKey, caKey)
 	if err != nil {
-		return nil, errors.Wrap(err, "Couldn't sign certificate")
+		return nil, fmt.Errorf("Couldn't sign certificate: %w", err)
 	}
 	out := &bytes.Buffer{}
 	if err := pem.Encode(out, &pem.Block{Type: "CERTIFICATE", Bytes: x509Cert}); err != nil {
-		return nil, errors.Wrap(err, "couldn't encode cert")
+		return nil, fmt.Errorf("couldn't encode cert: %w", err)
 	}
 	return out.Bytes(), nil
 }

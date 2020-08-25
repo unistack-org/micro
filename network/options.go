@@ -3,11 +3,8 @@ package network
 import (
 	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/proxy"
-	"github.com/unistack-org/micro/v3/proxy/mucp"
 	"github.com/unistack-org/micro/v3/router"
-	regRouter "github.com/unistack-org/micro/v3/router/registry"
 	"github.com/unistack-org/micro/v3/tunnel"
-	tmucp "github.com/unistack-org/micro/v3/tunnel/mucp"
 )
 
 type Option func(*Options)
@@ -94,8 +91,5 @@ func DefaultOptions() Options {
 		Id:      uuid.New().String(),
 		Name:    "go.micro",
 		Address: ":0",
-		Tunnel:  tmucp.NewTunnel(),
-		Router:  regRouter.NewRouter(),
-		Proxy:   mucp.NewProxy(),
 	}
 }

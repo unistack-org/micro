@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/unistack-org/micro/v3/metadata"
-	"github.com/unistack-org/micro/v3/router/registry"
 	"github.com/unistack-org/micro/v3/selector/random"
 )
 
@@ -46,9 +45,7 @@ func WriteInternalServerError(w http.ResponseWriter, err error) {
 }
 
 func NewRoundTripper(opts ...Option) http.RoundTripper {
-	options := Options{
-		Router: registry.NewRouter(),
-	}
+	options := Options{}
 	for _, o := range opts {
 		o(&options)
 	}

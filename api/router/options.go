@@ -4,7 +4,6 @@ import (
 	"github.com/unistack-org/micro/v3/api/resolver"
 	"github.com/unistack-org/micro/v3/api/resolver/vpath"
 	"github.com/unistack-org/micro/v3/registry"
-	"github.com/unistack-org/micro/v3/registry/mdns"
 )
 
 type Options struct {
@@ -17,8 +16,7 @@ type Option func(o *Options)
 
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Handler:  "meta",
-		Registry: mdns.NewRegistry(),
+		Handler: "meta",
 	}
 
 	for _, o := range opts {

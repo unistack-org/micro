@@ -16,11 +16,10 @@ type Broker interface {
 // Handler is used to process messages via a subscription of a topic.
 type Handler func(*Message) error
 
-type ErrorHandler func(*Message, error)
-
 type Message struct {
 	Header map[string]string
 	Body   []byte
+	Error  error
 }
 
 // Subscriber is a convenience return type for the Subscribe method

@@ -3,7 +3,6 @@ package registry
 
 import (
 	"github.com/unistack-org/micro/v3/registry"
-	"github.com/unistack-org/micro/v3/registry/mdns"
 	"github.com/unistack-org/micro/v3/resolver"
 )
 
@@ -15,12 +14,7 @@ type Resolver struct {
 
 // Resolve assumes ID is a domain name e.g micro.mu
 func (r *Resolver) Resolve(name string) ([]*resolver.Record, error) {
-	reg := r.Registry
-	if reg == nil {
-		reg = mdns.NewRegistry()
-	}
-
-	services, err := reg.GetService(name)
+	services, err := r.Registry.GetService(name)
 	if err != nil {
 		return nil, err
 	}

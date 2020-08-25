@@ -1,3 +1,5 @@
+// +build ignore
+
 // Package test provides a way to run tests against all the various implementations of the Store interface.
 // It can't live in the store package itself because of circular import issues
 package test
@@ -47,7 +49,7 @@ func cacheCleanup(db string, s store.Store) {
 }
 
 func TestStoreReInit(t *testing.T) {
-	if len(os.Getenv("IN_TRAVIS_CI")) > 0 {
+	if len(os.Getenv("INTEGRATION_TESTS")) > 0 {
 		t.Skip()
 	}
 
@@ -73,7 +75,7 @@ func TestStoreReInit(t *testing.T) {
 }
 
 func TestStoreBasic(t *testing.T) {
-	if len(os.Getenv("IN_TRAVIS_CI")) > 0 {
+	if len(os.Getenv("INTEGRATION_TESTS")) > 0 {
 		t.Skip()
 	}
 
@@ -97,7 +99,7 @@ func TestStoreBasic(t *testing.T) {
 }
 
 func TestStoreTable(t *testing.T) {
-	if len(os.Getenv("IN_TRAVIS_CI")) > 0 {
+	if len(os.Getenv("INTEGRATION_TESTS")) > 0 {
 		t.Skip()
 	}
 
@@ -120,7 +122,7 @@ func TestStoreTable(t *testing.T) {
 }
 
 func TestStoreDatabase(t *testing.T) {
-	if len(os.Getenv("IN_TRAVIS_CI")) > 0 {
+	if len(os.Getenv("INTEGRATION_TESTS")) > 0 {
 		t.Skip()
 	}
 
@@ -143,7 +145,7 @@ func TestStoreDatabase(t *testing.T) {
 }
 
 func TestStoreDatabaseTable(t *testing.T) {
-	if len(os.Getenv("IN_TRAVIS_CI")) > 0 {
+	if len(os.Getenv("INTEGRATION_TESTS")) > 0 {
 		t.Skip()
 	}
 
@@ -166,7 +168,7 @@ func TestStoreDatabaseTable(t *testing.T) {
 }
 
 func runStoreTest(s store.Store, t *testing.T) {
-	if len(os.Getenv("IN_TRAVIS_CI")) == 0 {
+	if len(os.Getenv("INTEGRATION_TESTS")) == 0 {
 		t.Logf("Options %s %v\n", s.String(), s.Options())
 	}
 

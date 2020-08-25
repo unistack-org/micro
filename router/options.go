@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/registry"
-	"github.com/unistack-org/micro/v3/registry/mdns"
 )
 
 // Options are router options
@@ -71,9 +70,8 @@ func Precache() Option {
 // DefaultOptions returns router default options
 func DefaultOptions() Options {
 	return Options{
-		Id:       uuid.New().String(),
-		Network:  DefaultNetwork,
-		Registry: mdns.NewRegistry(),
-		Context:  context.Background(),
+		Id:      uuid.New().String(),
+		Network: DefaultNetwork,
+		Context: context.Background(),
 	}
 }

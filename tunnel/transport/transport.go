@@ -3,10 +3,10 @@ package transport
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/unistack-org/micro/v3/transport"
 	"github.com/unistack-org/micro/v3/tunnel"
-	"github.com/unistack-org/micro/v3/tunnel/mucp"
 )
 
 type tunTransport struct {
@@ -32,7 +32,7 @@ func (t *tunTransport) Init(opts ...transport.Option) error {
 	// get the tunnel
 	tun, ok := t.options.Context.Value(tunnelKey{}).(tunnel.Tunnel)
 	if !ok {
-		tun = mucp.NewTunnel()
+		return fmt.Errorf("tunnel not set")
 	}
 
 	// get the transport

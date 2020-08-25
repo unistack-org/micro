@@ -9,9 +9,14 @@ import (
 )
 
 type Options struct {
+	AutoAck bool
+
 	Addrs  []string
 	Secure bool
 	Codec  codec.Marshaler
+
+	// Handler executed when errors occur processing messages
+	ErrorHandler Handler
 
 	TLSConfig *tls.Config
 	// Registry used for clustering
@@ -28,13 +33,16 @@ type PublishOptions struct {
 }
 
 type SubscribeOptions struct {
-	// Handler executed when errors occur processing messages
-	ErrorHandler ErrorHandler
+	// AutoAck ack messages if handler returns nil err
+	AutoAck bool
 
-	// Subscribers with the same queue name
+	// Handler executed when errors occur processing messages
+	ErrorHandler Handler
+
+	// Subscribers with the same group name
 	// will create a shared subscription where each
 	// receives a subset of messages.
-	Queue string
+	Group string
 
 	// Other options for implementations of the interface
 	// can be stored in a context
@@ -81,16 +89,24 @@ func Codec(c codec.Marshaler) Option {
 
 // ErrorHandler will catch all broker errors that cant be handled
 // in normal way, for example Codec errors
-func HandleError(h ErrorHandler) SubscribeOption {
+func ErrorHandler(h Handler) Option {
+	return func(o *Options) {
+		o.ErrorHandler = h
+	}
+}
+
+// SubscribeErrorHandler will catch all broker errors that cant be handled
+// in normal way, for example Codec errors
+func SubscribeErrorHandler(h Handler) SubscribeOption {
 	return func(o *SubscribeOptions) {
 		o.ErrorHandler = h
 	}
 }
 
-// Queue sets the name of the queue to share messages on
-func Queue(name string) SubscribeOption {
+// SubscribeGroup sets the name of the queue to share messages on
+func SubscribeGroup(name string) SubscribeOption {
 	return func(o *SubscribeOptions) {
-		o.Queue = name
+		o.Group = name
 	}
 }
 

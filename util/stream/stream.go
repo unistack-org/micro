@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/unistack-org/micro/v3/client"
-	"github.com/unistack-org/micro/v3/client/mucp"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/server"
@@ -77,12 +76,12 @@ func (s *stream) Error() error {
 
 // New returns a new encapsulated stream
 // Proto stream within a server.Stream
-func New(service, endpoint string, req interface{}, s Stream) server.Stream {
+func New(service, endpoint string, req interface{}, c client.Client, s Stream) server.Stream {
 	return &stream{
 		Stream: s,
 		request: &request{
 			context: s.Context(),
-			Request: mucp.NewClient().NewRequest(service, endpoint, req),
+			Request: c.NewRequest(service, endpoint, req),
 		},
 	}
 }

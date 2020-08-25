@@ -1,9 +1,9 @@
 package sync
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/unistack-org/micro/v3/store"
 )
 
@@ -32,11 +32,11 @@ func (c *syncStore) processQueue(index int) {
 	for i := 0; i < q.Len(); i++ {
 		r, ok := q.PopFront()
 		if !ok {
-			panic(errors.Errorf("retrieved an invalid value from the L%d sync queue", index+1))
+			panic(fmt.Errorf("retrieved an invalid value from the L%d sync queue", index+1))
 		}
 		ir, ok := r.(*internalRecord)
 		if !ok {
-			panic(errors.Errorf("retrieved a non-internal record from the L%d sync queue", index+1))
+			panic(fmt.Errorf("retrieved a non-internal record from the L%d sync queue", index+1))
 		}
 		if !ir.expiresAt.IsZero() && time.Now().After(ir.expiresAt) {
 			continue

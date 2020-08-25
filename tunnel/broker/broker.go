@@ -3,11 +3,11 @@ package broker
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/transport"
 	"github.com/unistack-org/micro/v3/tunnel"
-	"github.com/unistack-org/micro/v3/tunnel/mucp"
 )
 
 type tunBroker struct {
@@ -144,33 +144,38 @@ func (t *tunSubscriber) Unsubscribe() error {
 	}
 }
 
-func NewBroker(opts ...broker.Option) broker.Broker {
+func NewBroker(opts ...broker.Option) (broker.Broker, error) {
 	options := broker.Options{
 		Context: context.Background(),
 	}
 	for _, o := range opts {
 		o(&options)
 	}
+
 	t, ok := options.Context.Value(tunnelKey{}).(tunnel.Tunnel)
 	if !ok {
-		t = mucp.NewTunnel()
+		return nil, fmt.Errorf("tunnel not set")
 	}
 
 	a, ok := options.Context.Value(tunnelAddr{}).(string)
 	if ok {
 		// initialise address
-		t.Init(tunnel.Address(a))
+		if err := t.Init(tunnel.Address(a)); err != nil {
+			return nil, err
+		}
 	}
 
 	if len(options.Addrs) > 0 {
 		// initialise nodes
-		t.Init(tunnel.Nodes(options.Addrs...))
+		if err := t.Init(tunnel.Nodes(options.Addrs...)); err != nil {
+			return nil, err
+		}
 	}
 
 	return &tunBroker{
 		opts:   options,
 		tunnel: t,
-	}
+	}, nil
 }
 
 // WithAddress sets the tunnel address
