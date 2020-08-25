@@ -1,4 +1,4 @@
-name: pr test
+name: prbuild
 on:
   pull_request:
     branches:
