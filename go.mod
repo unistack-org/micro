@@ -16,19 +16,19 @@ require (
 	github.com/gobwas/ws v1.0.3
 	github.com/golang/protobuf v1.4.2
 	github.com/google/uuid v1.1.1
-	github.com/gorilla/handlers v1.4.2
 	github.com/hashicorp/hcl v1.0.0
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/miekg/dns v1.1.27
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_golang v1.7.0
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
+	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	google.golang.org/protobuf v1.25.0
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

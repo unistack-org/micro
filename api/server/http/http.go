@@ -5,12 +5,9 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
-	"os"
 	"sync"
 
-	"github.com/gorilla/handlers"
 	"github.com/unistack-org/micro/v3/api/server"
-	"github.com/unistack-org/micro/v3/api/server/cors"
 	"github.com/unistack-org/micro/v3/logger"
 )
 
@@ -57,14 +54,6 @@ func (s *httpServer) Handle(path string, handler http.Handler) {
 	for _, wrapper := range s.opts.Wrappers {
 		handler = wrapper(handler)
 	}
-
-	// wrap with cors
-	if s.opts.EnableCORS {
-		handler = cors.CombinedCORSHandler(handler)
-	}
-
-	// wrap with logger
-	handler = handlers.CombinedLoggingHandler(os.Stdout, handler)
 
 	s.mux.Handle(path, handler)
 }
