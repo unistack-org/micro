@@ -213,7 +213,7 @@ func NewTokenOptions(opts ...TokenOption) TokenOptions {
 		o(&options)
 	}
 
-	// set defualt expiry of token
+	// set default expiry of token
 	if options.Expiry == 0 {
 		options.Expiry = time.Minute
 	}

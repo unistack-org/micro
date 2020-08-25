@@ -46,7 +46,7 @@ func (r *Resolver) Domain(req *http.Request) string {
 		return ""
 	}
 
-	// check for dev enviroment
+	// check for dev environment
 	if host == "localhost" || host == "127.0.0.1" {
 		return ""
 	}

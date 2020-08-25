@@ -56,7 +56,7 @@ func OnDemand(b bool) Option {
 
 // Cache provides a cache / storage interface to the underlying ACME library
 // as there is no standard, this needs to be validated by the underlying
-// implentation.
+// implementation
 func Cache(c interface{}) Option {
 	return func(o *Options) {
 		o.Cache = c

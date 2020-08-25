@@ -71,7 +71,7 @@ func (t *table) Query(opts ...router.QueryOption) ([]router.Route, error) {
 	options := router.NewQuery(opts...)
 
 	return []router.Route{
-		router.Route{
+		{
 			Address: options.Service,
 			Service: options.Address,
 			Gateway: options.Gateway,

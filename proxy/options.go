@@ -6,6 +6,7 @@ import (
 	"github.com/unistack-org/micro/v3/router"
 )
 
+// Options for proxy
 type Options struct {
 	// Specific endpoint to always call
 	Endpoint string
@@ -17,6 +18,7 @@ type Options struct {
 	Links map[string]client.Client
 }
 
+// Option func signature
 type Option func(o *Options)
 
 // WithEndpoint sets a proxy endpoint

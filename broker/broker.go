@@ -16,6 +16,7 @@ type Broker interface {
 // Handler is used to process messages via a subscription of a topic.
 type Handler func(*Message) error
 
+// Message is used to transfer data
 type Message struct {
 	Header map[string]string
 	Body   []byte

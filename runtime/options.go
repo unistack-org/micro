@@ -157,7 +157,7 @@ func WithArgs(args ...string) CreateOption {
 	}
 }
 
-// WithRetries sets the max retries attemps
+// WithRetries sets the max retries attempts
 func WithRetries(retries int) CreateOption {
 	return func(o *CreateOptions) {
 		o.Retries = retries

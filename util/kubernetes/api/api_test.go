@@ -19,49 +19,49 @@ type testcase struct {
 }
 
 var tests = []testcase{
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).Get().Resource("service")
 		},
 		Method: "GET",
 		URI:    "/api/v1/namespaces/default/services/",
 	},
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).Get().Resource("service").Name("foo")
 		},
 		Method: "GET",
 		URI:    "/api/v1/namespaces/default/services/foo",
 	},
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).Get().Resource("service").Namespace("test").Name("bar")
 		},
 		Method: "GET",
 		URI:    "/api/v1/namespaces/test/services/bar",
 	},
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).Get().Resource("deployment").Name("foo")
 		},
 		Method: "GET",
 		URI:    "/apis/apps/v1/namespaces/default/deployments/foo",
 	},
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).Get().Resource("deployment").Namespace("test").Name("foo")
 		},
 		Method: "GET",
 		URI:    "/apis/apps/v1/namespaces/test/deployments/foo",
 	},
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).Get().Resource("pod").Params(&Params{LabelSelector: map[string]string{"foo": "bar"}})
 		},
 		Method: "GET",
 		URI:    "/api/v1/namespaces/default/pods/?labelSelector=foo%3Dbar",
 	},
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).Post().Resource("service").Name("foo").Body(map[string]string{"foo": "bar"})
 		},
@@ -69,7 +69,7 @@ var tests = []testcase{
 		URI:    "/api/v1/namespaces/default/services/foo",
 		Body:   map[string]string{"foo": "bar"},
 	},
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).Post().Resource("deployment").Namespace("test").Name("foo").Body(map[string]string{"foo": "bar"})
 		},
@@ -77,7 +77,7 @@ var tests = []testcase{
 		URI:    "/apis/apps/v1/namespaces/test/deployments/foo",
 		Body:   map[string]string{"foo": "bar"},
 	},
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).Put().Resource("endpoint").Name("baz").Body(map[string]string{"bam": "bar"})
 		},
@@ -85,7 +85,7 @@ var tests = []testcase{
 		URI:    "/api/v1/namespaces/default/endpoints/baz",
 		Body:   map[string]string{"bam": "bar"},
 	},
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).Patch().Resource("endpoint").Name("baz").Body(map[string]string{"bam": "bar"})
 		},
@@ -93,7 +93,7 @@ var tests = []testcase{
 		URI:    "/api/v1/namespaces/default/endpoints/baz",
 		Body:   map[string]string{"bam": "bar"},
 	},
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).Patch().Resource("endpoint").Name("baz").SetHeader("foo", "bar")
 		},
@@ -101,7 +101,7 @@ var tests = []testcase{
 		URI:    "/api/v1/namespaces/default/endpoints/baz",
 		Header: map[string]string{"foo": "bar"},
 	},
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).Patch().Resource("deployment").Name("baz").SetHeader("foo", "bar")
 		},
@@ -109,7 +109,7 @@ var tests = []testcase{
 		URI:    "/apis/apps/v1/namespaces/default/deployments/baz",
 		Header: map[string]string{"foo": "bar"},
 	},
-	testcase{
+	{
 		ReqFn: func(opts *Options) *Request {
 			return NewRequest(opts).
 				Get().

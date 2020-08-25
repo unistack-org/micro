@@ -13,7 +13,7 @@ type Options struct {
 	Nodes []string
 	// Database allows multiple isolated stores to be kept in one backend, if supported.
 	Database string
-	// Table is analagous to a table in database backends or a key prefix in KV backends
+	// Table is analag for a table in database backends or a key prefix in KV backends
 	Table string
 	// Context should contain all implementation specific options, using context.WithValue.
 	Context context.Context
@@ -38,7 +38,7 @@ func Database(db string) Option {
 	}
 }
 
-// Table is analagous to a table in database backends or a key prefix in KV backends
+// Table is analag for a table in database backends or a key prefix in KV backends
 func Table(t string) Option {
 	return func(o *Options) {
 		o.Table = t

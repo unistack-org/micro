@@ -13,9 +13,9 @@ const (
 )
 
 var (
-	// Not found error when GetService is called
+	// ErrNotFound returned when GetService is called and no services found
 	ErrNotFound = errors.New("service not found")
-	// Watcher stopped error when watcher is stopped
+	// ErrWatcherStopped returned when when watcher is stopped
 	ErrWatcherStopped = errors.New("watcher stopped")
 )
 
@@ -33,6 +33,7 @@ type Registry interface {
 	String() string
 }
 
+// Service holds service registry info
 type Service struct {
 	Name      string            `json:"name"`
 	Version   string            `json:"version"`
@@ -41,12 +42,14 @@ type Service struct {
 	Nodes     []*Node           `json:"nodes"`
 }
 
+// Node holds node registry info
 type Node struct {
 	Id       string            `json:"id"`
 	Address  string            `json:"address"`
 	Metadata map[string]string `json:"metadata"`
 }
 
+// Endpoint holds endpoint registry info
 type Endpoint struct {
 	Name     string            `json:"name"`
 	Request  *Value            `json:"request"`
@@ -54,20 +57,27 @@ type Endpoint struct {
 	Metadata map[string]string `json:"metadata"`
 }
 
+// Valud holds additional kv stuff
 type Value struct {
 	Name   string   `json:"name"`
 	Type   string   `json:"type"`
 	Values []*Value `json:"values"`
 }
 
+// Option func signature
 type Option func(*Options)
 
+// RegisterOption option is used to register service
 type RegisterOption func(*RegisterOptions)
 
+// WatchOption option is used to watch service changes
 type WatchOption func(*WatchOptions)
 
+// DeregisterOption option is used to deregister service
 type DeregisterOption func(*DeregisterOptions)
 
+// GetOption option is used to get service
 type GetOption func(*GetOptions)
 
+// ListOption option is used to list services
 type ListOption func(*ListOptions)

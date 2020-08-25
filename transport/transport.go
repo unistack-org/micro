@@ -16,11 +16,13 @@ type Transport interface {
 	String() string
 }
 
+// Message is used to transfer data
 type Message struct {
 	Header map[string]string
 	Body   []byte
 }
 
+// Socket bastraction interface
 type Socket interface {
 	Recv(*Message) error
 	Send(*Message) error
@@ -29,22 +31,28 @@ type Socket interface {
 	Remote() string
 }
 
+// Client is the socket owner
 type Client interface {
 	Socket
 }
 
+// Listener is the interface for stream oriented messaging
 type Listener interface {
 	Addr() string
 	Close() error
 	Accept(func(Socket)) error
 }
 
+// Option is the option signature
 type Option func(*Options)
 
+// DialOption is the option signature
 type DialOption func(*DialOptions)
 
+// ListenOption is the option signature
 type ListenOption func(*ListenOptions)
 
 var (
+	// Default dial timeout
 	DefaultDialTimeout = time.Second * 5
 )
