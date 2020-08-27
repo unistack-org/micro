@@ -476,8 +476,11 @@ func (r *registryRouter) Route(req *http.Request) (*api.Service, error) {
 	return nil, errors.New("unknown handler")
 }
 
-func newRouter(opts ...router.Option) *registryRouter {
+func newRouter(opts ...router.Option) (*registryRouter, error) {
 	options := router.NewOptions(opts...)
+	if options.Registry == nil {
+		return nil, fmt.Errorf("registry is not set")
+	}
 	r := &registryRouter{
 		exit: make(chan bool),
 		opts: options,
@@ -486,10 +489,10 @@ func newRouter(opts ...router.Option) *registryRouter {
 	}
 	go r.watch()
 	go r.refresh()
-	return r
+	return r, nil
 }
 
 // NewRouter returns the default router
-func NewRouter(opts ...router.Option) router.Router {
+func NewRouter(opts ...router.Option) (router.Router, error) {
 	return newRouter(opts...)
 }
