@@ -38,9 +38,9 @@ func (w *Wrapper) HandlerFunc(handlerFunction server.HandlerFunc) server.Handler
 
 		// Add a result tag:
 		if err != nil {
-			tags["result"] = "failure"
+			tags["status"] = "failure"
 		} else {
-			tags["result"] = "failure"
+			tags["status"] = "success"
 		}
 
 		// Instrument the result (if the DefaultClient has been configured):

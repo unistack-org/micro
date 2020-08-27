@@ -25,6 +25,11 @@ type tunSubscriber struct {
 	listener tunnel.Listener
 }
 
+type tunEvent struct {
+	topic   string
+	message *broker.Message
+}
+
 // used to access tunnel from options context
 type tunnelKey struct{}
 type tunnelAddr struct{}
@@ -123,9 +128,12 @@ func (t *tunSubscriber) run() {
 		c.Close()
 
 		// handle the message
-		go t.handler(&broker.Message{
-			Header: m.Header,
-			Body:   m.Body,
+		go t.handler(&tunEvent{
+			topic: t.topic,
+			message: &broker.Message{
+				Header: m.Header,
+				Body:   m.Body,
+			},
 		})
 	}
 }
@@ -146,6 +154,22 @@ func (t *tunSubscriber) Unsubscribe() error {
 		close(t.closed)
 		return t.listener.Close()
 	}
+}
+
+func (t *tunEvent) Topic() string {
+	return t.topic
+}
+
+func (t *tunEvent) Message() *broker.Message {
+	return t.message
+}
+
+func (t *tunEvent) Ack() error {
+	return nil
+}
+
+func (t *tunEvent) Error() error {
+	return nil
 }
 
 func NewBroker(opts ...broker.Option) (broker.Broker, error) {

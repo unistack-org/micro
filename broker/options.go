@@ -9,8 +9,6 @@ import (
 )
 
 type Options struct {
-	AutoAck bool
-
 	Addrs  []string
 	Secure bool
 	Codec  codec.Marshaler
@@ -24,6 +22,12 @@ type Options struct {
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
+}
+
+func NewOptions() Options {
+	return Options{
+		Context: context.Background(),
+	}
 }
 
 type PublishOptions struct {
@@ -63,7 +67,10 @@ func PublishContext(ctx context.Context) PublishOption {
 type SubscribeOption func(*SubscribeOptions)
 
 func NewSubscribeOptions(opts ...SubscribeOption) SubscribeOptions {
-	opt := SubscribeOptions{}
+	opt := SubscribeOptions{
+		AutoAck: true,
+		Context: context.Background(),
+	}
 
 	for _, o := range opts {
 		o(&opt)
@@ -84,6 +91,14 @@ func Addrs(addrs ...string) Option {
 func Codec(c codec.Marshaler) Option {
 	return func(o *Options) {
 		o.Codec = c
+	}
+}
+
+// SubscribeAutoAck will disable auto acking of messages
+// after they have been handled.
+func SubscribeAutoAck(b bool) SubscribeOption {
+	return func(o *SubscribeOptions) {
+		o.AutoAck = b
 	}
 }
 

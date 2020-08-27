@@ -14,7 +14,15 @@ type Broker interface {
 }
 
 // Handler is used to process messages via a subscription of a topic.
-type Handler func(*Message) error
+type Handler func(Event) error
+
+// Event is given to a subscription handler for processing
+type Event interface {
+	Topic() string
+	Message() *Message
+	Ack() error
+	Error() error
+}
 
 // Message is used to transfer data
 type Message struct {
