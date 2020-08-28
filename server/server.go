@@ -10,6 +10,10 @@ import (
 	"github.com/unistack-org/micro/v3/registry"
 )
 
+var (
+	DefaultServer Server
+)
+
 // Server is a simple micro server abstraction
 type Server interface {
 	// Initialise options

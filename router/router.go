@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	DefaultRouter Router
 	// DefaultNetwork is default micro network
 	DefaultNetwork = "micro"
 	// ErrRouteNotFound is returned when no route was found in the routing table

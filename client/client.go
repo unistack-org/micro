@@ -8,6 +8,10 @@ import (
 	"github.com/unistack-org/micro/v3/codec"
 )
 
+var (
+	DefaultClient Client
+)
+
 // Client is the interface used to make requests to services.
 // It supports Request/Response via Transport and Publishing via the Broker.
 // It also supports bidirectional streaming of requests.

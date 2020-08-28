@@ -8,6 +8,10 @@ import (
 	"github.com/unistack-org/micro/v3/transport"
 )
 
+var (
+	DefaultTunnel Tunnel
+)
+
 const (
 	// send over one link
 	Unicast Mode = iota

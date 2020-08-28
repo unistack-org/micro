@@ -13,6 +13,7 @@ const (
 )
 
 var (
+	DefaultRegistry Registry
 	// ErrNotFound returned when GetService is called and no services found
 	ErrNotFound = errors.New("service not found")
 	// ErrWatcherStopped returned when when watcher is stopped

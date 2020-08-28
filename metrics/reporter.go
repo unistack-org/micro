@@ -6,6 +6,10 @@ import "time"
 // Tags is a map of fields to add to a metric:
 type Tags map[string]string
 
+var (
+	Defaultreporter Reporter
+)
+
 // Reporter is an interface for collecting and instrumenting metrics
 type Reporter interface {
 	Count(id string, value int64, tags Tags) error
