@@ -18,17 +18,20 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/hcl v1.0.0
 	github.com/kr/pretty v0.2.0 // indirect
+	github.com/micro/cli/v2 v2.1.2
+	github.com/micro/go-micro/v2 v2.9.1
 	github.com/miekg/dns v1.1.27
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stretchr/testify v1.5.1
+	github.com/unistack-org/micro-config-cmd v0.0.0-20200828075439-d859b9d7265b
+	github.com/unistack-org/micro-registry-memory v0.0.0-20200827112112-75672cb5f5f7
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	google.golang.org/protobuf v1.25.0
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
