@@ -12,9 +12,9 @@ import (
 	"github.com/gobwas/httphead"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
+	raw "github.com/unistack-org/micro-codec-bytes"
 	"github.com/unistack-org/micro/v3/api"
 	"github.com/unistack-org/micro/v3/client"
-	raw "github.com/unistack-org/micro/v3/codec/bytes"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/util/router"
 )

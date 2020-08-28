@@ -62,6 +62,8 @@ func newOptions(opts ...Option) Options {
 	return opt
 }
 
+type Option func(*Options)
+
 // Broker to be used for service
 func Broker(b broker.Broker) Option {
 	return func(o *Options) {

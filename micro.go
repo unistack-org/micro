@@ -71,8 +71,6 @@ type Event interface {
 // Type alias to satisfy the deprecation
 type Publisher = Event
 
-type Option func(*Options)
-
 var (
 	HeaderPrefix = "Micro-"
 )
