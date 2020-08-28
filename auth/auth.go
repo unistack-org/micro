@@ -17,6 +17,7 @@ const (
 )
 
 var (
+	DefaultAuth Auth
 	// ErrInvalidToken is when the token provided is not valid
 	ErrInvalidToken = errors.New("invalid token provided")
 	// ErrForbidden is when a user does not have the necessary scope to access a resource
