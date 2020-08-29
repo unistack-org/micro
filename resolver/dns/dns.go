@@ -42,29 +42,36 @@ func (r *Resolver) Resolve(name string) ([]*resolver.Record, error) {
 		return records, nil
 	}
 
-	m := new(dns.Msg)
-	m.SetQuestion(dns.Fqdn(host), dns.TypeA)
-	rec, err := dns.ExchangeContext(context.Background(), m, r.Address)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, answer := range rec.Answer {
-		h := answer.Header()
-		// check record type matches
-		if h.Rrtype != dns.TypeA {
-			continue
+	for _, q := range []uint16{dns.TypeA, dns.TypeAAAA} {
+		m := new(dns.Msg)
+		m.SetQuestion(dns.Fqdn(host), q)
+		rec, err := dns.ExchangeContext(context.Background(), m, r.Address)
+		if err != nil {
+			return nil, err
 		}
 
-		arec, _ := answer.(*dns.A)
-		addr := arec.A.String()
+		var addr string
+		for _, answer := range rec.Answer {
+			h := answer.Header()
+			// check record type matches
+			switch h.Rrtype {
+			case dns.TypeA:
+				arec, _ := answer.(*dns.A)
+				addr = arec.A.String()
+			case dns.TypeAAAA:
+				arec, _ := answer.(*dns.AAAA)
+				addr = arec.AAAA.String()
+			default:
+				continue
+			}
 
-		// join resolved record with port
-		address := net.JoinHostPort(addr, port)
-		// append to record set
-		records = append(records, &resolver.Record{
-			Address: address,
-		})
+			// join resolved record with port
+			address := net.JoinHostPort(addr, port)
+			// append to record set
+			records = append(records, &resolver.Record{
+				Address: address,
+			})
+		}
 	}
 
 	// no records returned so just best effort it
