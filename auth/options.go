@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/store"
 )
 
@@ -34,6 +35,8 @@ type Options struct {
 	Store store.Store
 	// Addrs sets the addresses of auth
 	Addrs []string
+	// Logger sets the logger
+	Logger logger.Logger
 	// Context to store other options
 	Context context.Context
 }

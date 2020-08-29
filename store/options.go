@@ -3,6 +3,8 @@ package store
 import (
 	"context"
 	"time"
+
+	"github.com/unistack-org/micro/v3/logger"
 )
 
 // Options contains configuration for the Store
@@ -15,12 +17,21 @@ type Options struct {
 	Database string
 	// Table is analag for a table in database backends or a key prefix in KV backends
 	Table string
+	// Logger
+	Logger logger.Logger
 	// Context should contain all implementation specific options, using context.WithValue.
 	Context context.Context
 }
 
 // Option sets values in Options
 type Option func(o *Options)
+
+// Logger sets the logger
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
+	}
+}
 
 // Nodes contains the addresses or other connection information of the backing storage.
 // For example, an etcd implementation would contain the nodes of the cluster.

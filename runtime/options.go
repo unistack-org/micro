@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/unistack-org/micro/v3/client"
+	"github.com/unistack-org/micro/v3/logger"
 )
 
 type Option func(o *Options)
@@ -21,6 +22,15 @@ type Options struct {
 	Image string
 	// Client to use when making requests
 	Client client.Client
+	// Logger
+	Logger logger.Logger
+}
+
+// WithLogger sets the logger
+func WithLogger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
+	}
 }
 
 // WithSource sets the base image / repository

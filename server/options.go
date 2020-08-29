@@ -10,6 +10,7 @@ import (
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/debug/trace"
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/transport"
 )
@@ -20,6 +21,7 @@ type Options struct {
 	Registry     registry.Registry
 	Tracer       trace.Tracer
 	Auth         auth.Auth
+	Logger       logger.Logger
 	Transport    transport.Transport
 	Metadata     map[string]string
 	Name         string
@@ -95,6 +97,13 @@ func Name(n string) Option {
 func Namespace(n string) Option {
 	return func(o *Options) {
 		o.Namespace = n
+	}
+}
+
+// Logger
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
 	}
 }
 

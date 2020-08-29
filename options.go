@@ -12,6 +12,7 @@ import (
 	"github.com/unistack-org/micro/v3/config"
 	"github.com/unistack-org/micro/v3/debug/profile"
 	"github.com/unistack-org/micro/v3/debug/trace"
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/router"
 	"github.com/unistack-org/micro/v3/runtime"
@@ -25,6 +26,7 @@ import (
 type Options struct {
 	Auth      auth.Auth
 	Broker    broker.Broker
+	Logger    logger.Logger
 	Cmd       cmd.Cmd
 	Config    config.Config
 	Client    client.Client
@@ -51,8 +53,20 @@ type Options struct {
 
 func newOptions(opts ...Option) Options {
 	opt := Options{
-		Context: context.Background(),
-		Signal:  true,
+		Context:   context.Background(),
+		Signal:    true,
+		Server:    server.DefaultServer,
+		Client:    client.DefaultClient,
+		Broker:    broker.DefaultBroker,
+		Registry:  registry.DefaultRegistry,
+		Router:    router.DefaultRouter,
+		Auth:      auth.DefaultAuth,
+		Logger:    logger.DefaultLogger,
+		Config:    config.DefaultConfig,
+		Store:     store.DefaultStore,
+		Transport: transport.DefaultTransport,
+		//Runtime   runtime.Runtime
+		//Profile   profile.Profile
 	}
 
 	for _, o := range opts {
@@ -68,9 +82,13 @@ type Option func(*Options)
 func Broker(b broker.Broker) Option {
 	return func(o *Options) {
 		o.Broker = b
-		// Update Client and Server
-		o.Client.Init(client.Broker(b))
-		o.Server.Init(server.Broker(b))
+		if o.Client != nil {
+			// Update Client and Server
+			o.Client.Init(client.Broker(b))
+		}
+		if o.Server != nil {
+			o.Server.Init(server.Broker(b))
+		}
 	}
 }
 
@@ -125,24 +143,40 @@ func Store(s store.Store) Option {
 	}
 }
 
+// Logger set the logger to use
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
+	}
+}
+
 // Registry sets the registry for the service
 // and the underlying components
 func Registry(r registry.Registry) Option {
 	return func(o *Options) {
 		o.Registry = r
-		// Update router
-		o.Router.Init(router.Registry(r))
-		// Update server
-		o.Server.Init(server.Registry(r))
-		// Update Broker
-		o.Broker.Init(broker.Registry(r))
+		if o.Router != nil {
+			// Update router
+			o.Router.Init(router.Registry(r))
+		}
+		if o.Server != nil {
+			// Update server
+			o.Server.Init(server.Registry(r))
+		}
+		if o.Broker != nil {
+			// Update Broker
+			o.Broker.Init(broker.Registry(r))
+		}
 	}
 }
 
 // Tracer sets the tracer for the service
 func Tracer(t trace.Tracer) Option {
 	return func(o *Options) {
-		o.Server.Init(server.Tracer(t))
+		if o.Server != nil {
+			//todo client trace
+			o.Server.Init(server.Tracer(t))
+		}
 	}
 }
 
@@ -150,7 +184,9 @@ func Tracer(t trace.Tracer) Option {
 func Auth(a auth.Auth) Option {
 	return func(o *Options) {
 		o.Auth = a
-		o.Server.Init(server.Auth(a))
+		if o.Server != nil {
+			o.Server.Init(server.Auth(a))
+		}
 	}
 }
 
@@ -164,7 +200,9 @@ func Config(c config.Config) Option {
 // Selector sets the selector for the service client
 func Selector(s selector.Selector) Option {
 	return func(o *Options) {
-		o.Client.Init(client.Selector(s))
+		if o.Client != nil {
+			o.Client.Init(client.Selector(s))
+		}
 	}
 }
 
@@ -174,8 +212,12 @@ func Transport(t transport.Transport) Option {
 	return func(o *Options) {
 		o.Transport = t
 		// Update Client and Server
-		o.Client.Init(client.Transport(t))
-		o.Server.Init(server.Transport(t))
+		if o.Client != nil {
+			o.Client.Init(client.Transport(t))
+		}
+		if o.Server != nil {
+			o.Server.Init(server.Transport(t))
+		}
 	}
 }
 
@@ -191,7 +233,9 @@ func Router(r router.Router) Option {
 	return func(o *Options) {
 		o.Router = r
 		// Update client
-		o.Client.Init(client.Router(r))
+		if o.Client != nil {
+			o.Client.Init(client.Router(r))
+		}
 	}
 }
 
@@ -200,56 +244,72 @@ func Router(r router.Router) Option {
 // Address sets the address of the server
 func Address(addr string) Option {
 	return func(o *Options) {
-		o.Server.Init(server.Address(addr))
+		if o.Server != nil {
+			o.Server.Init(server.Address(addr))
+		}
 	}
 }
 
 // Name of the service
 func Name(n string) Option {
 	return func(o *Options) {
-		o.Server.Init(server.Name(n))
+		if o.Server != nil {
+			o.Server.Init(server.Name(n))
+		}
 	}
 }
 
 // Version of the service
 func Version(v string) Option {
 	return func(o *Options) {
-		o.Server.Init(server.Version(v))
+		if o.Server != nil {
+			o.Server.Init(server.Version(v))
+		}
 	}
 }
 
 // Metadata associated with the service
 func Metadata(md map[string]string) Option {
 	return func(o *Options) {
-		o.Server.Init(server.Metadata(md))
+		if o.Server != nil {
+			o.Server.Init(server.Metadata(md))
+		}
 	}
 }
 
 // Flags that can be passed to service
 func Flags(flags ...cli.Flag) Option {
 	return func(o *Options) {
-		o.Cmd.App().Flags = append(o.Cmd.App().Flags, flags...)
+		if o.Cmd != nil {
+			o.Cmd.App().Flags = append(o.Cmd.App().Flags, flags...)
+		}
 	}
 }
 
 // Action can be used to parse user provided cli options
 func Action(a func(*cli.Context) error) Option {
 	return func(o *Options) {
-		o.Cmd.App().Action = a
+		if o.Cmd != nil {
+			o.Cmd.App().Action = a
+		}
 	}
 }
 
 // RegisterTTL specifies the TTL to use when registering the service
 func RegisterTTL(t time.Duration) Option {
 	return func(o *Options) {
-		o.Server.Init(server.RegisterTTL(t))
+		if o.Server != nil {
+			o.Server.Init(server.RegisterTTL(t))
+		}
 	}
 }
 
 // RegisterInterval specifies the interval on which to re-register
 func RegisterInterval(t time.Duration) Option {
 	return func(o *Options) {
-		o.Server.Init(server.RegisterInterval(t))
+		if o.Server != nil {
+			o.Server.Init(server.RegisterInterval(t))
+		}
 	}
 }
 

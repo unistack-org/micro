@@ -2,7 +2,35 @@ package sync
 
 import (
 	"time"
+
+	"github.com/unistack-org/micro/v3/logger"
 )
+
+type Options struct {
+	Nodes  []string
+	Prefix string
+	Logger logger.Logger
+}
+
+type Option func(o *Options)
+
+type LeaderOptions struct{}
+
+type LeaderOption func(o *LeaderOptions)
+
+type LockOptions struct {
+	TTL  time.Duration
+	Wait time.Duration
+}
+
+type LockOption func(o *LockOptions)
+
+// Logger sets the logger
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
+	}
+}
 
 // Nodes sets the addresses to use
 func Nodes(a ...string) Option {

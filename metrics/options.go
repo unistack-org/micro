@@ -1,5 +1,7 @@
 package metrics
 
+import "github.com/unistack-org/micro/v3/logger"
+
 var (
 	// The Prometheus metrics will be made available on this port:
 	defaultPrometheusListenAddress = ":9000"
@@ -18,6 +20,7 @@ type Options struct {
 	Path             string
 	DefaultTags      Tags
 	TimingObjectives map[float64]float64
+	Logger           logger.Logger
 }
 
 // NewOptions prepares a set of options:
@@ -61,5 +64,12 @@ func DefaultTags(value Tags) Option {
 func TimingObjectives(value map[float64]float64) Option {
 	return func(o *Options) {
 		o.TimingObjectives = value
+	}
+}
+
+// Logger sets the logger
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
 	}
 }

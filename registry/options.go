@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"time"
+
+	"github.com/unistack-org/micro/v3/logger"
 )
 
 type Options struct {
@@ -11,6 +13,7 @@ type Options struct {
 	Timeout   time.Duration
 	Secure    bool
 	TLSConfig *tls.Config
+	Logger    logger.Logger
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
@@ -71,6 +74,13 @@ func Timeout(t time.Duration) Option {
 func Secure(b bool) Option {
 	return func(o *Options) {
 		o.Secure = b
+	}
+}
+
+// Logger sets the logger
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
 	}
 }
 

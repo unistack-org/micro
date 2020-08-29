@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/transport"
 )
 
@@ -28,6 +29,8 @@ type Options struct {
 	Token string
 	// Transport listens to incoming connections
 	Transport transport.Transport
+	// Logger
+	Logger logger.Logger
 }
 
 type DialOption func(*DialOptions)
@@ -56,6 +59,13 @@ type ListenOptions struct {
 func Id(id string) Option {
 	return func(o *Options) {
 		o.Id = id
+	}
+}
+
+// Logger sets the logger
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
 	}
 }
 

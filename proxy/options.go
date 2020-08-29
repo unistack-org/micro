@@ -3,6 +3,7 @@ package proxy
 
 import (
 	"github.com/unistack-org/micro/v3/client"
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/router"
 )
 
@@ -16,6 +17,8 @@ type Options struct {
 	Router router.Router
 	// Extra links for different clients
 	Links map[string]client.Client
+	// Logger
+	Logger logger.Logger
 }
 
 // Option func signature
@@ -39,6 +42,13 @@ func WithClient(c client.Client) Option {
 func WithRouter(r router.Router) Option {
 	return func(o *Options) {
 		o.Router = r
+	}
+}
+
+// WithLogger specifies the logger to use
+func WithLogger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
 	}
 }
 

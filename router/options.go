@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/registry"
 )
 
@@ -19,10 +20,12 @@ type Options struct {
 	Network string
 	// Registry is the local registry
 	Registry registry.Registry
-	// Context for additional options
-	Context context.Context
 	// Precache routes
 	Precache bool
+	// Logger
+	Logger logger.Logger
+	// Context for additional options
+	Context context.Context
 }
 
 // Id sets Router Id
@@ -50,6 +53,13 @@ func Gateway(g string) Option {
 func Network(n string) Option {
 	return func(o *Options) {
 		o.Network = n
+	}
+}
+
+// Logger sets the logger
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
 	}
 }
 

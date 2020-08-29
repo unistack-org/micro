@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 
 	"github.com/unistack-org/micro/v3/codec"
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/registry"
 )
 
@@ -13,6 +14,8 @@ type Options struct {
 	Secure bool
 	Codec  codec.Marshaler
 
+	// Logger
+	Logger logger.Logger
 	// Handler executed when errors occur processing messages
 	ErrorHandler Handler
 
@@ -142,6 +145,13 @@ func Secure(b bool) Option {
 func TLSConfig(t *tls.Config) Option {
 	return func(o *Options) {
 		o.TLSConfig = t
+	}
+}
+
+// Logger sets the logger
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/router"
 	"github.com/unistack-org/micro/v3/selector"
@@ -25,7 +26,7 @@ type Options struct {
 	Router    router.Router
 	Selector  selector.Selector
 	Transport transport.Transport
-
+	Logger    logger.Logger
 	// Lookup used for looking up routes
 	Lookup LookupFunc
 
@@ -137,6 +138,12 @@ func Broker(b broker.Broker) Option {
 	}
 }
 
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
+	}
+}
+
 // Codec to be used to encode/decode requests for a given content type
 func Codec(contentType string, c codec.NewCodec) Option {
 	return func(o *Options) {
@@ -182,7 +189,9 @@ func Transport(t transport.Transport) Option {
 // Registry sets the routers registry
 func Registry(r registry.Registry) Option {
 	return func(o *Options) {
-		o.Router.Init(router.Registry(r))
+		if o.Router != nil {
+			o.Router.Init(router.Registry(r))
+		}
 	}
 }
 

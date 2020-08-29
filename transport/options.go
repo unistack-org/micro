@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/unistack-org/micro/v3/codec"
+	"github.com/unistack-org/micro/v3/logger"
 )
 
 type Options struct {
@@ -23,6 +24,8 @@ type Options struct {
 	TLSConfig *tls.Config
 	// Timeout sets the timeout for Send/Recv
 	Timeout time.Duration
+	// Logger
+	Logger logger.Logger
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
@@ -56,6 +59,13 @@ type ListenOptions struct {
 func Addrs(addrs ...string) Option {
 	return func(o *Options) {
 		o.Addrs = addrs
+	}
+}
+
+// Logger sets the logger
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
 	}
 }
 

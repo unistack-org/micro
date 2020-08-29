@@ -2,6 +2,7 @@ package network
 
 import (
 	"github.com/google/uuid"
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/proxy"
 	"github.com/unistack-org/micro/v3/router"
 	"github.com/unistack-org/micro/v3/tunnel"
@@ -27,6 +28,8 @@ type Options struct {
 	Router router.Router
 	// Proxy is network proxy
 	Proxy proxy.Proxy
+	// Logger
+	Logger logger.Logger
 }
 
 // Id sets the id of the network node
@@ -82,6 +85,13 @@ func Router(r router.Router) Option {
 func Proxy(p proxy.Proxy) Option {
 	return func(o *Options) {
 		o.Proxy = p
+	}
+}
+
+// Logger sets the network logger
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
 	}
 }
 
