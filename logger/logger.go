@@ -10,6 +10,8 @@ var (
 type Logger interface {
 	// Init initialises options
 	Init(options ...Option) error
+	// V compare provided verbosity level with current log level
+	V(level Level) bool
 	// The Logger options
 	Options() Options
 	// Fields set fields to always be logged

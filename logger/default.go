@@ -39,6 +39,13 @@ func (l *defaultLogger) String() string {
 	return "default"
 }
 
+func (l *defaultLogger) V(level Level) bool {
+	if l.opts.Level.Enabled(level) {
+		return true
+	}
+	return false
+}
+
 func (l *defaultLogger) Fields(fields map[string]interface{}) Logger {
 	l.Lock()
 	l.opts.Fields = copyFields(fields)
@@ -79,8 +86,7 @@ func logCallerfilePath(loggingFilePath string) string {
 }
 
 func (l *defaultLogger) Log(level Level, v ...interface{}) {
-	// TODO decide does we need to write message if log level not used?
-	if !l.opts.Level.Enabled(level) {
+	if !l.V(level) {
 		return
 	}
 
@@ -118,8 +124,7 @@ func (l *defaultLogger) Log(level Level, v ...interface{}) {
 }
 
 func (l *defaultLogger) Logf(level Level, format string, v ...interface{}) {
-	//	 TODO decide does we need to write message if log level not used?
-	if level < l.opts.Level {
+	if !l.V(level) {
 		return
 	}
 
