@@ -1,12 +1,6 @@
 // Package model is an interface for data modelling
 package model
 
-import (
-	"github.com/unistack-org/micro/v3/codec"
-	"github.com/unistack-org/micro/v3/store"
-	"github.com/unistack-org/micro/v3/sync"
-)
-
 // Model provides an interface for data modelling
 type Model interface {
 	// Initialise options
@@ -37,24 +31,3 @@ type Entity interface {
 	// Read a value as a concrete type
 	Read(v interface{}) error
 }
-
-type Options struct {
-	// Database to write to
-	Database string
-	// for serialising
-	Codec codec.Marshaler
-	// for locking
-	Sync sync.Sync
-	// for storage
-	Store store.Store
-}
-
-type Option func(o *Options)
-
-type ReadOptions struct{}
-
-type ReadOption func(o *ReadOptions)
-
-type DeleteOptions struct{}
-
-type DeleteOption func(o *DeleteOptions)
