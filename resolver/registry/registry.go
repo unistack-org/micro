@@ -19,8 +19,7 @@ func (r *Resolver) Resolve(name string) ([]*resolver.Record, error) {
 		return nil, err
 	}
 
-	var records []*resolver.Record
-
+	records := make([]*resolver.Record, 0, len(services))
 	for _, service := range services {
 		for _, node := range service.Nodes {
 			records = append(records, &resolver.Record{
