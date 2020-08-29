@@ -9,6 +9,10 @@ import (
 	"github.com/unistack-org/micro/v3/config/source"
 )
 
+var (
+	DefaultConfig Config
+)
+
 // Config is an interface abstraction for dynamic configuration
 type Config interface {
 	// provide the reader.Values interface
