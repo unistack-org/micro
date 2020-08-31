@@ -1246,7 +1246,7 @@ func (g *Generator) generateImports() {
 	g.P("import (")
 	g.P(g.Pkg["fmt"] + ` "fmt"`)
 	g.P(g.Pkg["math"] + ` "math"`)
-	g.P(g.Pkg["proto"]+" ", GoImportPath(g.ImportPrefix)+"google.golang.org/protobuf/proto")
+	g.P(g.Pkg["proto"]+" ", GoImportPath(g.ImportPrefix)+"github.com/golang/protobuf/proto")
 	for importPath, packageName := range imports {
 		g.P(packageName, " ", GoImportPath(g.ImportPrefix)+importPath)
 	}
