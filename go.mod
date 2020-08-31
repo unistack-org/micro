@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	github.com/BurntSushi/toml v0.3.1
-	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/caddyserver/certmagic v0.10.6
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
