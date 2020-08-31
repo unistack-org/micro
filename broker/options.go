@@ -121,6 +121,12 @@ func SubscribeErrorHandler(h Handler) SubscribeOption {
 	}
 }
 
+func Queue(name string) SubscribeOption {
+	return func(o *SubscribeOptions) {
+		o.Group = name
+	}
+}
+
 // SubscribeGroup sets the name of the queue to share messages on
 func SubscribeGroup(name string) SubscribeOption {
 	return func(o *SubscribeOptions) {
