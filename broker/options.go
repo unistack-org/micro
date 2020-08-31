@@ -97,6 +97,12 @@ func Codec(c codec.Marshaler) Option {
 	}
 }
 
+func DisableAutoAck() SubscribeOption {
+	return func(o *SubscribeOptions) {
+		o.AutoAck = false
+	}
+}
+
 // SubscribeAutoAck will disable auto acking of messages
 // after they have been handled.
 func SubscribeAutoAck(b bool) SubscribeOption {
