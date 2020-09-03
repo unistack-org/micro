@@ -2,7 +2,7 @@
 package broker
 
 var (
-	DefaultBroker Broker
+	DefaultBroker Broker = newBroker()
 )
 
 // Broker is an interface used for asynchronous messaging.

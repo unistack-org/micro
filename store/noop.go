@@ -1,13 +1,26 @@
 package store
 
-type noopStore struct{}
+type noopStore struct {
+	opts Options
+}
+
+func newStore(opts ...Option) Store {
+	options := NewOptions()
+	for _, o := range opts {
+		o(&options)
+	}
+	return &noopStore{opts: options}
+}
 
 func (n *noopStore) Init(opts ...Option) error {
+	for _, o := range opts {
+		o(&n.opts)
+	}
 	return nil
 }
 
 func (n *noopStore) Options() Options {
-	return Options{}
+	return n.opts
 }
 
 func (n *noopStore) String() string {

@@ -9,8 +9,8 @@ import (
 
 var (
 	// ErrNotFound is returned when a key doesn't exist
-	ErrNotFound  = errors.New("not found")
-	DefaultStore Store
+	ErrNotFound        = errors.New("not found")
+	DefaultStore Store = newStore()
 )
 
 // Store is a data storage interface

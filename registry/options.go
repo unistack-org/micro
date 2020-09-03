@@ -19,6 +19,13 @@ type Options struct {
 	Context context.Context
 }
 
+func NewOptions() Options {
+	return Options{
+		Logger:  logger.DefaultLogger,
+		Context: context.Background(),
+	}
+}
+
 type RegisterOptions struct {
 	TTL time.Duration
 	// Other options for implementations of the interface

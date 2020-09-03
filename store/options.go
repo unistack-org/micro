@@ -23,6 +23,13 @@ type Options struct {
 	Context context.Context
 }
 
+func NewOptions() Options {
+	return Options{
+		Logger:  logger.DefaultLogger,
+		Context: context.Background(),
+	}
+}
+
 // Option sets values in Options
 type Option func(o *Options)
 
