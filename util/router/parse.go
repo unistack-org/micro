@@ -102,21 +102,21 @@ type parser struct {
 
 // topLevelSegments is the target of this parser.
 func (p *parser) topLevelSegments() ([]segment, error) {
-	if logger.V(logger.DebugLevel, logger.DefaultLogger) {
+	if logger.V(logger.TraceLevel) {
 		logger.Debugf("Parsing %q", p.tokens)
 	}
 	segs, err := p.segments()
 	if err != nil {
 		return nil, err
 	}
-	if logger.V(logger.DebugLevel, logger.DefaultLogger) {
-		logger.Debugf("accept segments: %q; %q", p.accepted, p.tokens)
+	if logger.V(logger.TraceLevel) {
+		logger.Tracef("accept segments: %q; %q", p.accepted, p.tokens)
 	}
 	if _, err := p.accept(typeEOF); err != nil {
 		return nil, fmt.Errorf("unexpected token %q after segments %q", p.tokens[0], strings.Join(p.accepted, ""))
 	}
-	if logger.V(logger.DebugLevel, logger.DefaultLogger) {
-		logger.Debugf("accept eof: %q; %q", p.accepted, p.tokens)
+	if logger.V(logger.TraceLevel) {
+		logger.Tracef("accept eof: %q; %q", p.accepted, p.tokens)
 	}
 	return segs, nil
 }
@@ -127,8 +127,8 @@ func (p *parser) segments() ([]segment, error) {
 		return nil, err
 	}
 
-	if logger.V(logger.DebugLevel, logger.DefaultLogger) {
-		logger.Debugf("accept segment: %q; %q", p.accepted, p.tokens)
+	if logger.V(logger.TraceLevel) {
+		logger.Tracef("accept segment: %q; %q", p.accepted, p.tokens)
 	}
 	segs := []segment{s}
 	for {
@@ -140,8 +140,8 @@ func (p *parser) segments() ([]segment, error) {
 			return segs, err
 		}
 		segs = append(segs, s)
-		if logger.V(logger.DebugLevel, logger.DefaultLogger) {
-			logger.Debugf("accept segment: %q; %q", p.accepted, p.tokens)
+		if logger.V(logger.TraceLevel) {
+			logger.Tracef("accept segment: %q; %q", p.accepted, p.tokens)
 		}
 	}
 }

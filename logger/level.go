@@ -117,10 +117,6 @@ func Fatalf(template string, args ...interface{}) {
 }
 
 // Returns true if the given level is at or lower the current logger level
-func V(lvl Level, log Logger) bool {
-	l := DefaultLogger
-	if log != nil {
-		l = log
-	}
-	return l.Options().Level <= lvl
+func V(lvl Level) bool {
+	return DefaultLogger.Options().Level <= lvl
 }

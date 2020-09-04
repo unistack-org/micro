@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	DefaultServer Server
+	DefaultServer Server = newServer()
 )
 
 // Server is a simple micro server abstraction
@@ -138,7 +138,7 @@ type Option func(*Options)
 
 var (
 	DefaultAddress          = ":0"
-	DefaultName             = "go.micro.server"
+	DefaultName             = "server"
 	DefaultVersion          = "latest"
 	DefaultId               = uuid.New().String()
 	DefaultRegisterCheck    = func(context.Context) error { return nil }

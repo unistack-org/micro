@@ -53,7 +53,7 @@ func (r *registryRouter) refresh() {
 		services, err := r.opts.Registry.ListServices()
 		if err != nil {
 			attempts++
-			if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+			if logger.V(logger.ErrorLevel) {
 				logger.Errorf("unable to list services: %v", err)
 			}
 			time.Sleep(time.Duration(attempts) * time.Second)
@@ -66,7 +66,7 @@ func (r *registryRouter) refresh() {
 		for _, s := range services {
 			service, err := r.opts.Registry.GetService(s.Name)
 			if err != nil {
-				if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+				if logger.V(logger.ErrorLevel) {
 					logger.Errorf("unable to get service: %v", err)
 				}
 				continue
@@ -94,7 +94,7 @@ func (r *registryRouter) process(res *registry.Result) {
 	// get entry from cache
 	service, err := r.opts.Registry.GetService(res.Service.Name)
 	if err != nil {
-		if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+		if logger.V(logger.ErrorLevel) {
 			logger.Errorf("unable to get %v service: %v", res.Service.Name, err)
 		}
 		return
@@ -129,7 +129,7 @@ func (r *registryRouter) store(services []*registry.Service) {
 			}
 			// if we got nothing skip
 			if err := api.Validate(end); err != nil {
-				if logger.V(logger.TraceLevel, logger.DefaultLogger) {
+				if logger.V(logger.TraceLevel) {
 					logger.Tracef("endpoint validation failed: %v", err)
 				}
 				continue
@@ -176,7 +176,7 @@ func (r *registryRouter) store(services []*registry.Service) {
 			}
 			hostreg, err := regexp.CompilePOSIX(h)
 			if err != nil {
-				if logger.V(logger.TraceLevel, logger.DefaultLogger) {
+				if logger.V(logger.TraceLevel) {
 					logger.Tracef("endpoint have invalid host regexp: %v", err)
 				}
 				continue
@@ -197,7 +197,7 @@ func (r *registryRouter) store(services []*registry.Service) {
 
 			rule, err := util.Parse(p)
 			if err != nil && !pcreok {
-				if logger.V(logger.TraceLevel, logger.DefaultLogger) {
+				if logger.V(logger.TraceLevel) {
 					logger.Tracef("endpoint have invalid path pattern: %v", err)
 				}
 				continue
@@ -208,7 +208,7 @@ func (r *registryRouter) store(services []*registry.Service) {
 			tpl := rule.Compile()
 			pathreg, err := util.NewPattern(tpl.Version, tpl.OpCodes, tpl.Pool, "")
 			if err != nil {
-				if logger.V(logger.TraceLevel, logger.DefaultLogger) {
+				if logger.V(logger.TraceLevel) {
 					logger.Tracef("endpoint have invalid path pattern: %v", err)
 				}
 				continue
@@ -233,7 +233,7 @@ func (r *registryRouter) watch() {
 		w, err := r.opts.Registry.Watch()
 		if err != nil {
 			attempts++
-			if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+			if logger.V(logger.ErrorLevel) {
 				logger.Errorf("error watching endpoints: %v", err)
 			}
 			time.Sleep(time.Duration(attempts) * time.Second)
@@ -258,7 +258,7 @@ func (r *registryRouter) watch() {
 			// process next event
 			res, err := w.Next()
 			if err != nil {
-				if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+				if logger.V(logger.ErrorLevel) {
 					logger.Errorf("error getting next endpoint: %v", err)
 				}
 				close(ch)
@@ -324,7 +324,7 @@ func (r *registryRouter) Endpoint(req *http.Request) (*api.Service, error) {
 		if !mMatch {
 			continue
 		}
-		if logger.V(logger.DebugLevel, logger.DefaultLogger) {
+		if logger.V(logger.DebugLevel) {
 			logger.Debugf("api method match %s", req.Method)
 		}
 
@@ -347,7 +347,7 @@ func (r *registryRouter) Endpoint(req *http.Request) (*api.Service, error) {
 		if !hMatch {
 			continue
 		}
-		if logger.V(logger.DebugLevel, logger.DefaultLogger) {
+		if logger.V(logger.DebugLevel) {
 			logger.Debugf("api host match %s", req.URL.Host)
 		}
 
@@ -355,12 +355,12 @@ func (r *registryRouter) Endpoint(req *http.Request) (*api.Service, error) {
 		for _, pathreg := range cep.pathregs {
 			matches, err := pathreg.Match(path, "")
 			if err != nil {
-				if logger.V(logger.DebugLevel, logger.DefaultLogger) {
+				if logger.V(logger.DebugLevel) {
 					logger.Debugf("api gpath not match %s != %v", path, pathreg)
 				}
 				continue
 			}
-			if logger.V(logger.DebugLevel, logger.DefaultLogger) {
+			if logger.V(logger.DebugLevel) {
 				logger.Debugf("api gpath match %s = %v", path, pathreg)
 			}
 			pMatch = true
@@ -381,12 +381,12 @@ func (r *registryRouter) Endpoint(req *http.Request) (*api.Service, error) {
 			// 4. try path via pcre path matching
 			for _, pathreg := range cep.pcreregs {
 				if !pathreg.MatchString(req.URL.Path) {
-					if logger.V(logger.DebugLevel, logger.DefaultLogger) {
+					if logger.V(logger.DebugLevel) {
 						logger.Debugf("api pcre path not match %s != %v", path, pathreg)
 					}
 					continue
 				}
-				if logger.V(logger.DebugLevel, logger.DefaultLogger) {
+				if logger.V(logger.DebugLevel) {
 					logger.Debugf("api pcre path match %s != %v", path, pathreg)
 				}
 				pMatch = true

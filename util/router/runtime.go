@@ -62,7 +62,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 	}
 
 	if version != 1 {
-		if logger.V(logger.DebugLevel, logger.DefaultLogger) {
+		if logger.V(logger.DebugLevel) {
 			logger.Debugf("unsupported version: %d", version)
 		}
 		return Pattern{}, ErrInvalidPattern
@@ -70,7 +70,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 
 	l := len(ops)
 	if l%2 != 0 {
-		if logger.V(logger.DebugLevel, logger.DefaultLogger) {
+		if logger.V(logger.DebugLevel) {
 			logger.Debugf("odd number of ops codes: %d", l)
 		}
 		return Pattern{}, ErrInvalidPattern
@@ -95,8 +95,8 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 			stack++
 		case OpPushM:
 			if pushMSeen {
-				if logger.V(logger.DebugLevel, logger.DefaultLogger) {
-					logger.Debug("pushM appears twice")
+				if logger.V(logger.TraceLevel) {
+					logger.Trace("pushM appears twice")
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
@@ -104,8 +104,8 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 			stack++
 		case OpLitPush:
 			if op.operand < 0 || len(pool) <= op.operand {
-				if logger.V(logger.DebugLevel, logger.DefaultLogger) {
-					logger.Debugf("negative literal index: %d", op.operand)
+				if logger.V(logger.TraceLevel) {
+					logger.Tracef("negative literal index: %d", op.operand)
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
@@ -115,23 +115,23 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 			stack++
 		case OpConcatN:
 			if op.operand <= 0 {
-				if logger.V(logger.DebugLevel, logger.DefaultLogger) {
-					logger.Debugf("negative concat size: %d", op.operand)
+				if logger.V(logger.TraceLevel) {
+					logger.Tracef("negative concat size: %d", op.operand)
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
 			stack -= op.operand
 			if stack < 0 {
-				if logger.V(logger.DebugLevel, logger.DefaultLogger) {
-					logger.Debug("stack underflow")
+				if logger.V(logger.TraceLevel) {
+					logger.Trace("stack underflow")
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
 			stack++
 		case OpCapture:
 			if op.operand < 0 || len(pool) <= op.operand {
-				if logger.V(logger.DebugLevel, logger.DefaultLogger) {
-					logger.Debugf("variable name index out of bound: %d", op.operand)
+				if logger.V(logger.TraceLevel) {
+					logger.Tracef("variable name index out of bound: %d", op.operand)
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
@@ -140,14 +140,14 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 			vars = append(vars, v)
 			stack--
 			if stack < 0 {
-				if logger.V(logger.DebugLevel, logger.DefaultLogger) {
-					logger.Debug("stack underflow")
+				if logger.V(logger.DebugLevel) {
+					logger.Trace("stack underflow")
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
 		default:
-			if logger.V(logger.DebugLevel, logger.DefaultLogger) {
-				logger.Debugf("invalid opcode: %d", op.code)
+			if logger.V(logger.DebugLevel) {
+				logger.Tracef("invalid opcode: %d", op.code)
 			}
 			return Pattern{}, ErrInvalidPattern
 		}
@@ -171,7 +171,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 // MustPattern is a helper function which makes it easier to call NewPattern in variable initialization.
 func MustPattern(p Pattern, err error) Pattern {
 	if err != nil {
-		if logger.V(logger.DebugLevel, logger.DefaultLogger) {
+		if logger.V(logger.FatalLevel) {
 			logger.Fatalf("Pattern initialization failed: %v", err)
 		}
 	}

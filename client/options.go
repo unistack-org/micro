@@ -105,8 +105,8 @@ type RequestOptions struct {
 	Context context.Context
 }
 
-func NewOptions(options ...Option) Options {
-	opts := Options{
+func NewOptions(opts ...Option) Options {
+	options := Options{
 		Cache:       NewCache(),
 		Context:     context.Background(),
 		ContentType: "application/protobuf",
@@ -122,13 +122,15 @@ func NewOptions(options ...Option) Options {
 		PoolSize: DefaultPoolSize,
 		PoolTTL:  DefaultPoolTTL,
 		Selector: random.NewSelector(),
+		Logger:   logger.DefaultLogger,
+		Broker:   broker.DefaultBroker,
 	}
 
-	for _, o := range options {
-		o(&opts)
+	for _, o := range opts {
+		o(&options)
 	}
 
-	return opts
+	return options
 }
 
 // Broker to be used for pub/sub

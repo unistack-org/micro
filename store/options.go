@@ -23,11 +23,15 @@ type Options struct {
 	Context context.Context
 }
 
-func NewOptions() Options {
-	return Options{
+func NewOptions(opts ...Option) Options {
+	options := Options{
 		Logger:  logger.DefaultLogger,
 		Context: context.Background(),
 	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
 }
 
 // Option sets values in Options

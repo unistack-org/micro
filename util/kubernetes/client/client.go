@@ -227,7 +227,7 @@ func (c *client) Watch(r *Resource, opts ...WatchOption) (Watcher, error) {
 
 // NewService returns default micro kubernetes service definition
 func NewService(name, version, typ, namespace string) *Service {
-	if logger.V(logger.TraceLevel, logger.DefaultLogger) {
+	if logger.V(logger.TraceLevel) {
 		logger.Tracef("kubernetes default service: name: %s, version: %s", name, version)
 	}
 
@@ -270,7 +270,7 @@ func NewService(name, version, typ, namespace string) *Service {
 
 // NewService returns default micro kubernetes deployment definition
 func NewDeployment(name, version, typ, namespace string) *Deployment {
-	if logger.V(logger.TraceLevel, logger.DefaultLogger) {
+	if logger.V(logger.TraceLevel) {
 		logger.Tracef("kubernetes default deployment: name: %s, version: %s", name, version)
 	}
 

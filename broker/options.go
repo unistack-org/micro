@@ -27,10 +27,16 @@ type Options struct {
 	Context context.Context
 }
 
-func NewOptions() Options {
-	return Options{
-		Context: context.Background(),
+func NewOptions(opts ...Option) Options {
+	options := Options{
+		Registry: registry.DefaultRegistry,
+		Logger:   logger.DefaultLogger,
+		Context:  context.Background(),
 	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
 }
 
 type PublishOptions struct {

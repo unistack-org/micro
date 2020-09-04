@@ -51,39 +51,19 @@ type Options struct {
 	Context context.Context
 }
 
-func newOptions(opt ...Option) Options {
-	opts := Options{
+func NewOptions() Options {
+	return Options{
 		Codecs:           make(map[string]codec.NewCodec),
+		Context:          context.Background(),
 		Metadata:         map[string]string{},
 		RegisterInterval: DefaultRegisterInterval,
 		RegisterTTL:      DefaultRegisterTTL,
+		RegisterCheck:    DefaultRegisterCheck,
+		Address:          DefaultAddress,
+		Name:             DefaultName,
+		Version:          DefaultVersion,
+		Id:               DefaultId,
 	}
-
-	for _, o := range opt {
-		o(&opts)
-	}
-
-	if opts.RegisterCheck == nil {
-		opts.RegisterCheck = DefaultRegisterCheck
-	}
-
-	if len(opts.Address) == 0 {
-		opts.Address = DefaultAddress
-	}
-
-	if len(opts.Name) == 0 {
-		opts.Name = DefaultName
-	}
-
-	if len(opts.Id) == 0 {
-		opts.Id = DefaultId
-	}
-
-	if len(opts.Version) == 0 {
-		opts.Version = DefaultVersion
-	}
-
-	return opts
 }
 
 // Server name

@@ -31,7 +31,7 @@ func (a *autocertProvider) TLSConfig(hosts ...string) (*tls.Config, error) {
 	}
 	dir := cacheDir()
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		if logger.V(logger.InfoLevel, logger.DefaultLogger) {
+		if logger.V(logger.InfoLevel) {
 			logger.Infof("warning: autocert not using a cache: %v", err)
 		}
 	} else {

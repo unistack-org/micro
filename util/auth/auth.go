@@ -25,7 +25,7 @@ func Verify(a auth.Auth) error {
 		if err != nil {
 			return err
 		}
-		if logger.V(logger.DebugLevel, logger.DefaultLogger) {
+		if logger.V(logger.DebugLevel) {
 			logger.Debugf("Auth [%v] Generated an auth account", a.String())
 		}
 
@@ -67,7 +67,9 @@ func Verify(a auth.Auth) error {
 				auth.WithExpiry(time.Minute*10),
 			)
 			if err != nil {
-				logger.Warnf("[Auth] Error refreshing token: %v", err)
+				if logger.V(logger.WarnLevel) {
+					logger.Warnf("[Auth] Error refreshing token: %v", err)
+				}
 				continue
 			}
 

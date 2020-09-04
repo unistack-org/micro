@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	DefaultClient Client
+	DefaultClient Client = newClient()
 )
 
 // Client is the interface used to make requests to services.

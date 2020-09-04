@@ -75,7 +75,7 @@ func (s *httpServer) Start() error {
 		return err
 	}
 
-	if logger.V(logger.InfoLevel, logger.DefaultLogger) {
+	if logger.V(logger.InfoLevel) {
 		logger.Infof("HTTP API Listening on %s", l.Addr().String())
 	}
 

@@ -9,6 +9,10 @@ type HandlerOptions struct {
 	Metadata map[string]map[string]string
 }
 
+func NewHandlerOptions() HandlerOptions {
+	return HandlerOptions{}
+}
+
 type SubscriberOption func(*SubscriberOptions)
 
 type SubscriberOptions struct {
@@ -18,6 +22,19 @@ type SubscriberOptions struct {
 	Queue    string
 	Internal bool
 	Context  context.Context
+}
+
+func NewSubscriberOptions(opts ...SubscriberOption) SubscriberOptions {
+	opt := SubscriberOptions{
+		AutoAck: true,
+		Context: context.Background(),
+	}
+
+	for _, o := range opts {
+		o(&opt)
+	}
+
+	return opt
 }
 
 // EndpointMetadata is a Handler option that allows metadata to be added to
@@ -43,18 +60,6 @@ func InternalSubscriber(b bool) SubscriberOption {
 	return func(o *SubscriberOptions) {
 		o.Internal = b
 	}
-}
-func NewSubscriberOptions(opts ...SubscriberOption) SubscriberOptions {
-	opt := SubscriberOptions{
-		AutoAck: true,
-		Context: context.Background(),
-	}
-
-	for _, o := range opts {
-		o(&opt)
-	}
-
-	return opt
 }
 
 // DisableAutoAck will disable auto acking of messages

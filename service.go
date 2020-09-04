@@ -149,7 +149,7 @@ func (s *service) Run() error {
 		defer s.opts.Profile.Stop()
 	}
 
-	if logger.V(logger.InfoLevel, logger.DefaultLogger) {
+	if logger.V(logger.InfoLevel) {
 		logger.Infof("Starting [service] %s", s.Name())
 	}
 

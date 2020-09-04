@@ -49,7 +49,7 @@ func serveWebsocket(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	}
 	payload, err := requestPayload(r)
 	if err != nil {
-		if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+		if logger.V(logger.ErrorLevel) {
 			logger.Error(err)
 		}
 		return
@@ -72,7 +72,7 @@ func serveWebsocket(ctx context.Context, w http.ResponseWriter, r *http.Request,
 
 	conn, rw, _, err := upgrader.Upgrade(r, w)
 	if err != nil {
-		if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+		if logger.V(logger.ErrorLevel) {
 			logger.Error(err)
 		}
 		return
@@ -80,7 +80,7 @@ func serveWebsocket(ctx context.Context, w http.ResponseWriter, r *http.Request,
 
 	defer func() {
 		if err := conn.Close(); err != nil {
-			if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+			if logger.V(logger.ErrorLevel) {
 				logger.Error(err)
 			}
 			return
@@ -116,7 +116,7 @@ func serveWebsocket(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	// create a new stream
 	stream, err := c.Stream(ctx, req, callOpt)
 	if err != nil {
-		if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+		if logger.V(logger.ErrorLevel) {
 			logger.Error(err)
 		}
 		return
@@ -124,7 +124,7 @@ func serveWebsocket(ctx context.Context, w http.ResponseWriter, r *http.Request,
 
 	if request != nil {
 		if err = stream.Send(request); err != nil {
-			if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+			if logger.V(logger.ErrorLevel) {
 				logger.Error(err)
 			}
 			return
@@ -150,7 +150,7 @@ func serveWebsocket(ctx context.Context, w http.ResponseWriter, r *http.Request,
 				if strings.Contains(err.Error(), "context canceled") {
 					return
 				}
-				if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+				if logger.V(logger.ErrorLevel) {
 					logger.Error(err)
 				}
 				return
@@ -158,13 +158,13 @@ func serveWebsocket(ctx context.Context, w http.ResponseWriter, r *http.Request,
 
 			// write the response
 			if err := wsutil.WriteServerMessage(rw, op, buf); err != nil {
-				if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+				if logger.V(logger.ErrorLevel) {
 					logger.Error(err)
 				}
 				return
 			}
 			if err = rw.Flush(); err != nil {
-				if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+				if logger.V(logger.ErrorLevel) {
 					logger.Error(err)
 				}
 				return
@@ -195,7 +195,7 @@ func writeLoop(rw io.ReadWriter, stream client.Stream) {
 						return
 					}
 				}
-				if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+				if logger.V(logger.ErrorLevel) {
 					logger.Error(err)
 				}
 				return
@@ -212,7 +212,7 @@ func writeLoop(rw io.ReadWriter, stream client.Stream) {
 			// if the extracted payload isn't empty lets use it
 			request := &raw.Frame{Data: buf}
 			if err := stream.Send(request); err != nil {
-				if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+				if logger.V(logger.ErrorLevel) {
 					logger.Error(err)
 				}
 				return

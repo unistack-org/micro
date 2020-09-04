@@ -444,7 +444,7 @@ func writeError(w http.ResponseWriter, r *http.Request, err error) {
 
 	_, werr := w.Write([]byte(ce.Error()))
 	if werr != nil {
-		if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+		if logger.V(logger.ErrorLevel) {
 			logger.Error(werr)
 		}
 	}
@@ -470,7 +470,7 @@ func writeResponse(w http.ResponseWriter, r *http.Request, rsp []byte) {
 	// write response
 	_, err := w.Write(rsp)
 	if err != nil {
-		if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
+		if logger.V(logger.ErrorLevel) {
 			logger.Error(err)
 		}
 	}
