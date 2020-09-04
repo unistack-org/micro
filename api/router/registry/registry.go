@@ -324,8 +324,8 @@ func (r *registryRouter) Endpoint(req *http.Request) (*api.Service, error) {
 		if !mMatch {
 			continue
 		}
-		if logger.V(logger.DebugLevel) {
-			logger.Debugf("api method match %s", req.Method)
+		if logger.V(logger.TraceLevel) {
+			logger.Tracef("api method match %s", req.Method)
 		}
 
 		// 2. try host
@@ -347,21 +347,21 @@ func (r *registryRouter) Endpoint(req *http.Request) (*api.Service, error) {
 		if !hMatch {
 			continue
 		}
-		if logger.V(logger.DebugLevel) {
-			logger.Debugf("api host match %s", req.URL.Host)
+		if logger.V(logger.TraceLevel) {
+			logger.Tracef("api host match %s", req.URL.Host)
 		}
 
 		// 3. try path via google.api path matching
 		for _, pathreg := range cep.pathregs {
 			matches, err := pathreg.Match(path, "")
 			if err != nil {
-				if logger.V(logger.DebugLevel) {
-					logger.Debugf("api gpath not match %s != %v", path, pathreg)
+				if logger.V(logger.TraceLevel) {
+					logger.Tracef("api gpath not match %s != %v", path, pathreg)
 				}
 				continue
 			}
-			if logger.V(logger.DebugLevel) {
-				logger.Debugf("api gpath match %s = %v", path, pathreg)
+			if logger.V(logger.TraceLevel) {
+				logger.Tracef("api gpath match %s = %v", path, pathreg)
 			}
 			pMatch = true
 			ctx := req.Context()
@@ -381,13 +381,13 @@ func (r *registryRouter) Endpoint(req *http.Request) (*api.Service, error) {
 			// 4. try path via pcre path matching
 			for _, pathreg := range cep.pcreregs {
 				if !pathreg.MatchString(req.URL.Path) {
-					if logger.V(logger.DebugLevel) {
-						logger.Debugf("api pcre path not match %s != %v", path, pathreg)
+					if logger.V(logger.TraceLevel) {
+						logger.Tracef("api pcre path not match %s != %v", path, pathreg)
 					}
 					continue
 				}
-				if logger.V(logger.DebugLevel) {
-					logger.Debugf("api pcre path match %s != %v", path, pathreg)
+				if logger.V(logger.TraceLevel) {
+					logger.Tracef("api pcre path match %s != %v", path, pathreg)
 				}
 				pMatch = true
 				break

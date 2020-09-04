@@ -15,6 +15,10 @@ import (
 // autoCertACME is the ACME provider from golang.org/x/crypto/acme/autocert
 type autocertProvider struct{}
 
+func (a *autocertProvider) Init(opts ...acme.Option) error {
+	return nil
+}
+
 // Listen implements acme.Provider
 func (a *autocertProvider) Listen(hosts ...string) (net.Listener, error) {
 	return autocert.NewListener(hosts...), nil

@@ -10,7 +10,6 @@ import (
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/server"
-	"github.com/unistack-org/micro/v3/store"
 	signalutil "github.com/unistack-org/micro/v3/util/signal"
 )
 
@@ -62,18 +61,14 @@ func (s *service) Init(opts ...Option) {
 			cmd.Store(&s.opts.Store),
 			cmd.Profile(&s.opts.Profile),
 		); err != nil {
-			logger.Fatal(err)
+			logger.Fatalf("[cmd] init failed: %v", err)
 		}
 
 		// execute the command
 		// TODO: do this in service.Run()
 		if err := s.opts.Cmd.Run(); err != nil {
-			logger.Fatal(err)
+			logger.Fatalf("[cmd] run failed: %v", err)
 		}
-
-		// Explicitly set the table name to the service name
-		name := s.opts.Cmd.App().Name
-		s.opts.Store.Init(store.Table(name))
 	})
 }
 
@@ -94,18 +89,19 @@ func (s *service) String() string {
 }
 
 func (s *service) Start() error {
+	var err error
 	for _, fn := range s.opts.BeforeStart {
-		if err := fn(); err != nil {
+		if err = fn(); err != nil {
 			return err
 		}
 	}
 
-	if err := s.opts.Server.Start(); err != nil {
+	if err = s.opts.Server.Start(); err != nil {
 		return err
 	}
 
 	for _, fn := range s.opts.AfterStart {
-		if err := fn(); err != nil {
+		if err = fn(); err != nil {
 			return err
 		}
 	}
@@ -114,25 +110,24 @@ func (s *service) Start() error {
 }
 
 func (s *service) Stop() error {
-	var gerr error
-
+	var err error
 	for _, fn := range s.opts.BeforeStop {
-		if err := fn(); err != nil {
-			gerr = err
+		if err = fn(); err != nil {
+			return err
 		}
 	}
 
-	if err := s.opts.Server.Stop(); err != nil {
+	if err = s.opts.Server.Stop(); err != nil {
 		return err
 	}
 
 	for _, fn := range s.opts.AfterStop {
-		if err := fn(); err != nil {
-			gerr = err
+		if err = fn(); err != nil {
+			return err
 		}
 	}
 
-	return gerr
+	return nil
 }
 
 func (s *service) Run() error {

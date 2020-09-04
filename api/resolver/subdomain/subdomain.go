@@ -54,7 +54,9 @@ func (r *Resolver) Domain(req *http.Request) string {
 	// extract the top level domain plus one (e.g. 'myapp.com')
 	domain, err := publicsuffix.EffectiveTLDPlusOne(host)
 	if err != nil {
-		logger.Debugf("Unable to extract domain from %v", host)
+		if logger.V(logger.DebugLevel) {
+			logger.Debugf("Unable to extract domain from %v", host)
+		}
 		return ""
 	}
 

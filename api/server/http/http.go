@@ -86,7 +86,10 @@ func (s *httpServer) Start() error {
 	go func() {
 		if err := http.Serve(l, s.mux); err != nil {
 			// temporary fix
-			logger.Error(err)
+			if logger.V(logger.ErrorLevel) {
+				logger.Errorf("serve err: %v", err)
+			}
+			s.Stop()
 		}
 	}()
 

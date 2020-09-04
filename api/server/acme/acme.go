@@ -15,6 +15,7 @@ var (
 
 // Provider is a ACME provider interface
 type Provider interface {
+	Init(...Option) error
 	// Listen returns a new listener
 	Listen(...string) (net.Listener, error)
 	// TLSConfig returns a tls config
