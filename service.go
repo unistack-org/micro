@@ -64,6 +64,30 @@ func (s *service) Init(opts ...Option) {
 			logger.Fatalf("[cmd] init failed: %v", err)
 		}
 
+		if err := s.opts.Registry.Init(); err != nil {
+			logger.Fatalf("[cmd] init failed: %v", err)
+		}
+
+		if err := s.opts.Broker.Init(); err != nil {
+			logger.Fatalf("[cmd] init failed: %v", err)
+		}
+
+		if err := s.opts.Transport.Init(); err != nil {
+			logger.Fatalf("[cmd] init failed: %v", err)
+		}
+
+		if err := s.opts.Store.Init(); err != nil {
+			logger.Fatalf("[cmd] init failed: %v", err)
+		}
+
+		if err := s.opts.Server.Init(); err != nil {
+			logger.Fatalf("[cmd] init failed: %v", err)
+		}
+
+		if err := s.opts.Client.Init(); err != nil {
+			logger.Fatalf("[cmd] init failed: %v", err)
+		}
+
 		// execute the command
 		// TODO: do this in service.Run()
 		if err := s.opts.Cmd.Run(); err != nil {

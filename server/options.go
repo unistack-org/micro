@@ -53,12 +53,15 @@ type Options struct {
 
 func NewOptions() Options {
 	return Options{
+		Auth:             auth.DefaultAuth,
 		Codecs:           make(map[string]codec.NewCodec),
 		Context:          context.Background(),
 		Metadata:         map[string]string{},
 		RegisterInterval: DefaultRegisterInterval,
 		RegisterTTL:      DefaultRegisterTTL,
 		RegisterCheck:    DefaultRegisterCheck,
+		Broker:           broker.DefaultBroker,
+		Registry:         registry.DefaultRegistry,
 		Address:          DefaultAddress,
 		Name:             DefaultName,
 		Version:          DefaultVersion,
