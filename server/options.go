@@ -9,9 +9,9 @@ import (
 	"github.com/unistack-org/micro/v3/auth"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
-	"github.com/unistack-org/micro/v3/debug/trace"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/tracer"
 	"github.com/unistack-org/micro/v3/transport"
 )
 
@@ -19,7 +19,7 @@ type Options struct {
 	Codecs       map[string]codec.NewCodec
 	Broker       broker.Broker
 	Registry     registry.Registry
-	Tracer       trace.Tracer
+	Tracer       tracer.Tracer
 	Auth         auth.Auth
 	Logger       logger.Logger
 	Transport    transport.Transport
@@ -149,7 +149,7 @@ func Registry(r registry.Registry) Option {
 }
 
 // Tracer mechanism for distributed tracking
-func Tracer(t trace.Tracer) Option {
+func Tracer(t tracer.Tracer) Option {
 	return func(o *Options) {
 		o.Tracer = t
 	}

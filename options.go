@@ -11,7 +11,6 @@ import (
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/config"
 	"github.com/unistack-org/micro/v3/debug/profile"
-	"github.com/unistack-org/micro/v3/debug/trace"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/router"
@@ -19,6 +18,7 @@ import (
 	"github.com/unistack-org/micro/v3/selector"
 	"github.com/unistack-org/micro/v3/server"
 	"github.com/unistack-org/micro/v3/store"
+	"github.com/unistack-org/micro/v3/tracer"
 	"github.com/unistack-org/micro/v3/transport"
 )
 
@@ -171,7 +171,7 @@ func Registry(r registry.Registry) Option {
 }
 
 // Tracer sets the tracer for the service
-func Tracer(t trace.Tracer) Option {
+func Tracer(t tracer.Tracer) Option {
 	return func(o *Options) {
 		if o.Server != nil {
 			//todo client trace

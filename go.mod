@@ -1,6 +1,6 @@
 module github.com/unistack-org/micro/v3
 
-go 1.15
+go 1.14
 
 require (
 	github.com/BurntSushi/toml v0.3.1
@@ -24,7 +24,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.5.1
 	github.com/unistack-org/micro-codec-bytes v0.0.0-20200828083432-4e49e953d844
-	github.com/unistack-org/micro-config-cmd v0.0.0-20200828075439-d859b9d7265b
+	github.com/unistack-org/micro-config-cmd v0.0.0-20200909210346-ec89783dc46c
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73
 	google.golang.org/genproto v0.0.0-20200904004341-0bd0a958aa1d

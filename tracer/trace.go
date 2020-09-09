@@ -1,11 +1,15 @@
 // Package trace provides an interface for distributed tracing
-package trace
+package tracer
 
 import (
 	"context"
 	"time"
 
 	"github.com/unistack-org/micro/v3/metadata"
+)
+
+var (
+	DefaultTracer Tracer = newTracer()
 )
 
 // Tracer is an interface for distributed tracing
@@ -74,26 +78,4 @@ func ToContext(ctx context.Context, traceID, parentSpanID string) context.Contex
 		traceIDKey: traceID,
 		spanIDKey:  parentSpanID,
 	}, true)
-}
-
-var (
-	DefaultTracer Tracer = new(noop)
-)
-
-type noop struct{}
-
-func (n *noop) Init(...Option) error {
-	return nil
-}
-
-func (n *noop) Start(ctx context.Context, name string) (context.Context, *Span) {
-	return nil, nil
-}
-
-func (n *noop) Finish(*Span) error {
-	return nil
-}
-
-func (n *noop) Read(...ReadOption) ([]*Span, error) {
-	return nil, nil
 }

@@ -1,4 +1,4 @@
-package trace
+package tracer
 
 type Options struct {
 	// Size is the size of ring buffer
