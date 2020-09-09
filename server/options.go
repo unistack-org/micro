@@ -51,8 +51,8 @@ type Options struct {
 	Context context.Context
 }
 
-func NewOptions() Options {
-	return Options{
+func NewOptions(opts ...Option) Options {
+	options := Options{
 		Auth:             auth.DefaultAuth,
 		Codecs:           make(map[string]codec.NewCodec),
 		Context:          context.Background(),
@@ -66,7 +66,14 @@ func NewOptions() Options {
 		Name:             DefaultName,
 		Version:          DefaultVersion,
 		Id:               DefaultId,
+		Transport:        transport.DefaultTransport,
 	}
+
+	for _, o := range opts {
+		o(&options)
+	}
+
+	return options
 }
 
 // Server name
