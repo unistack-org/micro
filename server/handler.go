@@ -7,10 +7,11 @@ type HandlerOption func(*HandlerOptions)
 type HandlerOptions struct {
 	Internal bool
 	Metadata map[string]map[string]string
+	Context  context.Context
 }
 
 func NewHandlerOptions() HandlerOptions {
-	return HandlerOptions{}
+	return HandlerOptions{Context: context.Background()}
 }
 
 type SubscriberOption func(*SubscriberOptions)
