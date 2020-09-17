@@ -14,7 +14,7 @@ func newStore(opts ...Option) Store {
 	return &noopStore{opts: options}
 }
 
-func (n *noopStore) Init(opts ...Option) error {
+func (n *noopStore) Init(ctx context.Context, opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
@@ -45,6 +45,6 @@ func (n *noopStore) List(ctx context.Context, opts ...ListOption) ([]string, err
 	return []string{}, nil
 }
 
-func (n *noopStore) Close() error {
+func (n *noopStore) Close(ctx context.Context) error {
 	return nil
 }

@@ -17,7 +17,7 @@ var (
 // Store is a data storage interface
 type Store interface {
 	// Init initialises the store. It must perform any required setup on the backing storage implementation and check that it is ready for use, returning any errors.
-	Init(...Option) error
+	Init(ctx context.Context, opts ...Option) error
 	// Options allows you to view the current options.
 	Options() Options
 	// Read takes a single key name and optional ReadOptions. It returns matching []*Record or an error.
@@ -29,7 +29,7 @@ type Store interface {
 	// List returns any keys that match, or an empty list with no error if none matched.
 	List(ctx context.Context, opts ...ListOption) ([]string, error)
 	// Close the store
-	Close() error
+	Close(ctx context.Context) error
 	// String returns the name of the implementation.
 	String() string
 }
