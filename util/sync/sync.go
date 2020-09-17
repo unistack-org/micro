@@ -2,7 +2,7 @@
 package sync
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -42,23 +42,20 @@ func NewSync(opts ...Option) Sync {
 	return c
 }
 
-func (c *syncStore) Close() error {
+func (c *syncStore) Close(ctx context.Context) error {
 	return nil
 }
 
 // Init initialises the storeOptions
-func (c *syncStore) Init(opts ...store.Option) error {
+func (c *syncStore) Init(ctx context.Context, opts ...store.Option) error {
 	for _, o := range opts {
 		o(&c.storeOpts)
 	}
 	if len(c.syncOpts.Stores) == 0 {
-		return errors.New("the sync has no stores")
-	}
-	if c.storeOpts.Context == nil {
-		return errors.New("please provide a context to the sync. Cancelling the context signals that the sync is being disposed and syncs the sync")
+		return fmt.Errorf("the sync has no stores")
 	}
 	for _, s := range c.syncOpts.Stores {
-		if err := s.Init(); err != nil {
+		if err := s.Init(ctx); err != nil {
 			return fmt.Errorf("Store %s failed to Init(): %w", s.String(), err)
 		}
 	}
@@ -87,21 +84,21 @@ func (c *syncStore) String() string {
 	return fmt.Sprintf("sync %v", backends)
 }
 
-func (c *syncStore) List(opts ...store.ListOption) ([]string, error) {
-	return c.syncOpts.Stores[0].List(opts...)
+func (c *syncStore) List(ctx context.Context, opts ...store.ListOption) ([]string, error) {
+	return c.syncOpts.Stores[0].List(ctx, opts...)
 }
 
-func (c *syncStore) Read(key string, opts ...store.ReadOption) ([]*store.Record, error) {
-	return c.syncOpts.Stores[0].Read(key, opts...)
+func (c *syncStore) Read(ctx context.Context, key string, opts ...store.ReadOption) ([]*store.Record, error) {
+	return c.syncOpts.Stores[0].Read(ctx, key, opts...)
 }
 
-func (c *syncStore) Write(r *store.Record, opts ...store.WriteOption) error {
-	return c.syncOpts.Stores[0].Write(r, opts...)
+func (c *syncStore) Write(ctx context.Context, r *store.Record, opts ...store.WriteOption) error {
+	return c.syncOpts.Stores[0].Write(ctx, r, opts...)
 }
 
 // Delete removes a key from the sync
-func (c *syncStore) Delete(key string, opts ...store.DeleteOption) error {
-	return c.syncOpts.Stores[0].Delete(key, opts...)
+func (c *syncStore) Delete(ctx context.Context, key string, opts ...store.DeleteOption) error {
+	return c.syncOpts.Stores[0].Delete(ctx, key, opts...)
 }
 
 func (c *syncStore) Sync() error {

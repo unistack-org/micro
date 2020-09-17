@@ -86,7 +86,7 @@ func (s *service) Init(opts ...Option) {
 	}
 
 	if s.opts.Store != nil {
-		if err := s.opts.Store.Init(); err != nil {
+		if err := s.opts.Store.Init(s.opts.Context); err != nil {
 			logger.Fatalf("[cmd] init failed: %v", err)
 		}
 	}

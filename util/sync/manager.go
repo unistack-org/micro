@@ -50,7 +50,7 @@ func (c *syncStore) processQueue(index int) {
 			nr.Expiry = time.Until(ir.expiresAt)
 		}
 		// Todo = internal queue also has to hold the corresponding store.WriteOptions
-		if err := c.syncOpts.Stores[index+1].Write(nr); err != nil {
+		if err := c.syncOpts.Stores[index+1].Write(c.storeOpts.Context, nr); err != nil {
 			// some error, so queue for retry and bail
 			q.PushBack(ir)
 			return

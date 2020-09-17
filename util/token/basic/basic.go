@@ -1,6 +1,7 @@
 package basic
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -46,7 +47,7 @@ func (b *Basic) Generate(acc *auth.Account, opts ...token.GenerateOption) (*toke
 
 	// write to the store
 	key := uuid.New().String()
-	err = b.store.Write(&store.Record{
+	err = b.store.Write(context.Background(), &store.Record{
 		Key:    fmt.Sprintf("%v%v", StorePrefix, key),
 		Value:  bytes,
 		Expiry: options.Expiry,
@@ -66,7 +67,7 @@ func (b *Basic) Generate(acc *auth.Account, opts ...token.GenerateOption) (*toke
 // Inspect a token
 func (b *Basic) Inspect(t string) (*auth.Account, error) {
 	// lookup the token in the store
-	recs, err := b.store.Read(StorePrefix + t)
+	recs, err := b.store.Read(context.Background(), StorePrefix+t)
 	if err == store.ErrNotFound {
 		return nil, token.ErrInvalidToken
 	} else if err != nil {

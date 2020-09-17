@@ -1,6 +1,7 @@
 package scope
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/unistack-org/micro/v3/store"
@@ -23,22 +24,22 @@ func (s *Scope) Options() store.Options {
 	return o
 }
 
-func (s *Scope) Read(key string, opts ...store.ReadOption) ([]*store.Record, error) {
+func (s *Scope) Read(ctx context.Context, key string, opts ...store.ReadOption) ([]*store.Record, error) {
 	key = fmt.Sprintf("%v/%v", s.prefix, key)
-	return s.Store.Read(key, opts...)
+	return s.Store.Read(ctx, key, opts...)
 }
 
-func (s *Scope) Write(r *store.Record, opts ...store.WriteOption) error {
+func (s *Scope) Write(ctx context.Context, r *store.Record, opts ...store.WriteOption) error {
 	r.Key = fmt.Sprintf("%v/%v", s.prefix, r.Key)
-	return s.Store.Write(r, opts...)
+	return s.Store.Write(ctx, r, opts...)
 }
 
-func (s *Scope) Delete(key string, opts ...store.DeleteOption) error {
+func (s *Scope) Delete(ctx context.Context, key string, opts ...store.DeleteOption) error {
 	key = fmt.Sprintf("%v/%v", s.prefix, key)
-	return s.Store.Delete(key, opts...)
+	return s.Store.Delete(ctx, key, opts...)
 }
 
-func (s *Scope) List(opts ...store.ListOption) ([]string, error) {
+func (s *Scope) List(ctx context.Context, opts ...store.ListOption) ([]string, error) {
 	var lops store.ListOptions
 	for _, o := range opts {
 		o(&lops)
@@ -47,5 +48,5 @@ func (s *Scope) List(opts ...store.ListOption) ([]string, error) {
 	key := fmt.Sprintf("%v/%v", s.prefix, lops.Prefix)
 	opts = append(opts, store.ListPrefix(key))
 
-	return s.Store.List(opts...)
+	return s.Store.List(ctx, opts...)
 }
