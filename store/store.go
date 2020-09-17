@@ -3,6 +3,7 @@
 package store
 
 import (
+	"context"
 	"errors"
 	"time"
 )
@@ -20,13 +21,13 @@ type Store interface {
 	// Options allows you to view the current options.
 	Options() Options
 	// Read takes a single key name and optional ReadOptions. It returns matching []*Record or an error.
-	Read(key string, opts ...ReadOption) ([]*Record, error)
+	Read(ctx context.Context, key string, opts ...ReadOption) ([]*Record, error)
 	// Write() writes a record to the store, and returns an error if the record was not written.
-	Write(r *Record, opts ...WriteOption) error
+	Write(ctx context.Context, r *Record, opts ...WriteOption) error
 	// Delete removes the record with the corresponding key from the store.
-	Delete(key string, opts ...DeleteOption) error
+	Delete(ctx context.Context, key string, opts ...DeleteOption) error
 	// List returns any keys that match, or an empty list with no error if none matched.
-	List(opts ...ListOption) ([]string, error)
+	List(ctx context.Context, opts ...ListOption) ([]string, error)
 	// Close the store
 	Close() error
 	// String returns the name of the implementation.
