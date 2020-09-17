@@ -77,11 +77,17 @@ func Precache() Option {
 	}
 }
 
-// DefaultOptions returns router default options
-func DefaultOptions() Options {
-	return Options{
-		Id:      uuid.New().String(),
-		Network: DefaultNetwork,
-		Context: context.Background(),
+// NewOptions returns router default options
+func NewOptions(opts ...Option) Options {
+	options := Options{
+		Id:       uuid.New().String(),
+		Network:  DefaultNetwork,
+		Registry: registry.DefaultRegistry,
+		Logger:   logger.DefaultLogger,
+		Context:  context.Background(),
 	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
 }
