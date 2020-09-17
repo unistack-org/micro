@@ -236,7 +236,7 @@ func (g *micro) generateService(file *generator.FileDescriptor, service *pb.Serv
 		outType := g.typeName(method.GetOutputType())
 
 		if !method.GetServerStreaming() && !method.GetClientStreaming() {
-			g.P(methName, "(ctx ", contextPkg, ".Context, in *", inType, ", out *", outType, ") error")
+			g.P(methName, "(ctx ", contextPkg, ".Context, req *", inType, ", rsp *", outType, ") error")
 			continue
 		}
 		g.P(methName, "(ctx ", contextPkg, ".Context, stream server.Stream) error")
@@ -322,7 +322,7 @@ func (g *micro) generateClientSignature(servName string, method *pb.MethodDescri
 	if reservedClientName[methName] {
 		methName += "_"
 	}
-	reqArg := ", in *" + g.typeName(method.GetInputType())
+	reqArg := ", req *" + g.typeName(method.GetInputType())
 	if method.GetClientStreaming() {
 		reqArg = ""
 	}
@@ -349,23 +349,21 @@ func (g *micro) generateClientMethod(reqServ, servName, serviceDescVar string, m
 
 	g.P("func (c *", unexport(servAlias), ") ", g.generateClientSignature(servName, method), "{")
 	if !method.GetServerStreaming() && !method.GetClientStreaming() {
-		g.P(`req := c.c.NewRequest(c.name, "`, reqMethod, `", in)`)
-		g.P("out := new(", outType, ")")
+		g.P("rsp := &", outType, "{}")
 		// TODO: Pass descExpr to Invoke.
-		g.P("err := ", `c.c.Call(ctx, req, out, opts...)`)
+		g.P(`err := c.c.Call(ctx, c.c.NewRequest(c.name, "`, reqMethod, `", req), rsp, opts...)`)
 		g.P("if err != nil { return nil, err }")
-		g.P("return out, nil")
+		g.P("return rsp, nil")
 		g.P("}")
 		g.P()
 		return
 	}
 	streamType := unexport(servAlias) + methName
-	g.P(`req := c.c.NewRequest(c.name, "`, reqMethod, `", &`, inType, `{})`)
-	g.P("stream, err := c.c.Stream(ctx, req, opts...)")
+	g.P(`stream, err := c.c.Stream(ctx, c.c.NewRequest(c.name, "`, reqMethod, `", &`, inType, `{}), opts...)`)
 	g.P("if err != nil { return nil, err }")
 
 	if !method.GetClientStreaming() {
-		g.P("if err := stream.Send(in); err != nil { return nil, err }")
+		g.P("if err := stream.Send(req); err != nil { return nil, err }")
 	}
 
 	g.P("return &", streamType, "{stream}, nil")
@@ -426,7 +424,7 @@ func (g *micro) generateClientMethod(reqServ, servName, serviceDescVar string, m
 
 	if genRecv {
 		g.P("func (x *", streamType, ") Recv() (*", outType, ", error) {")
-		g.P("m := new(", outType, ")")
+		g.P("m := &", outType, "{}")
 		g.P("err := x.stream.Recv(m)")
 		g.P("if err != nil {")
 		g.P("return nil, err")
@@ -469,8 +467,8 @@ func (g *micro) generateServerMethod(servName string, method *pb.MethodDescripto
 	outType := g.typeName(method.GetOutputType())
 
 	if !method.GetServerStreaming() && !method.GetClientStreaming() {
-		g.P("func (h *", unexport(servName), "Handler) ", methName, "(ctx ", contextPkg, ".Context, in *", inType, ", out *", outType, ") error {")
-		g.P("return h.", serveType, ".", methName, "(ctx, in, out)")
+		g.P("func (h *", unexport(servName), "Handler) ", methName, "(ctx ", contextPkg, ".Context, req *", inType, ", rsp *", outType, ") error {")
+		g.P("return h.", serveType, ".", methName, "(ctx, req, rsp)")
 		g.P("}")
 		g.P()
 		return hname
@@ -478,7 +476,7 @@ func (g *micro) generateServerMethod(servName string, method *pb.MethodDescripto
 	streamType := unexport(servName) + methName + "Stream"
 	g.P("func (h *", unexport(servName), "Handler) ", methName, "(ctx ", contextPkg, ".Context, stream server.Stream) error {")
 	if !method.GetClientStreaming() {
-		g.P("m := new(", inType, ")")
+		g.P("m := &", inType, "{}")
 		g.P("if err := stream.Recv(m); err != nil { return err }")
 		g.P("return h.", serveType, ".", methName, "(ctx, m, &", streamType, "{stream})")
 	} else {
@@ -542,7 +540,7 @@ func (g *micro) generateServerMethod(servName string, method *pb.MethodDescripto
 
 	if genRecv {
 		g.P("func (x *", streamType, ") Recv() (*", inType, ", error) {")
-		g.P("m := new(", inType, ")")
+		g.P("m := &", inType, "{}")
 		g.P("if err := x.stream.Recv(m); err != nil { return nil, err }")
 		g.P("return m, nil")
 		g.P("}")
