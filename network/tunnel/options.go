@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/transport"
+	"github.com/unistack-org/micro/v3/network/transport"
 )
 
 var (

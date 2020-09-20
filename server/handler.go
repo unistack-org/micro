@@ -10,8 +10,16 @@ type HandlerOptions struct {
 	Context  context.Context
 }
 
-func NewHandlerOptions() HandlerOptions {
-	return HandlerOptions{Context: context.Background()}
+func NewHandlerOptions(opts ...HandlerOption) HandlerOptions {
+	options := HandlerOptions{
+		Context: context.Background(),
+	}
+
+	for _, o := range opts {
+		o(&options)
+	}
+
+	return options
 }
 
 type SubscriberOption func(*SubscriberOptions)
@@ -26,16 +34,16 @@ type SubscriberOptions struct {
 }
 
 func NewSubscriberOptions(opts ...SubscriberOption) SubscriberOptions {
-	opt := SubscriberOptions{
+	options := SubscriberOptions{
 		AutoAck: true,
 		Context: context.Background(),
 	}
 
 	for _, o := range opts {
-		o(&opt)
+		o(&options)
 	}
 
-	return opt
+	return options
 }
 
 // EndpointMetadata is a Handler option that allows metadata to be added to

@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/unistack-org/micro/v3/transport"
-	"github.com/unistack-org/micro/v3/tunnel"
+	"github.com/unistack-org/micro/v3/network/transport"
+	"github.com/unistack-org/micro/v3/network/tunnel"
 )
 
 type tunTransport struct {

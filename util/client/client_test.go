@@ -15,7 +15,7 @@ import (
 	rtreg "github.com/unistack-org/micro/v3/router/registry"
 	"github.com/unistack-org/micro/v3/server"
 	grpcsrv "github.com/unistack-org/micro/v3/server/grpc"
-	tmemory "github.com/unistack-org/micro/v3/transport/memory"
+	tmemory "github.com/unistack-org/micro/v3/network/transport/memory"
 	cw "github.com/unistack-org/micro/v3/util/client"
 )
 

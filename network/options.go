@@ -5,7 +5,7 @@ import (
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/proxy"
 	"github.com/unistack-org/micro/v3/router"
-	"github.com/unistack-org/micro/v3/tunnel"
+	"github.com/unistack-org/micro/v3/network/tunnel"
 )
 
 type Option func(*Options)

@@ -4,7 +4,7 @@ package io
 import (
 	"io"
 
-	"github.com/unistack-org/micro/v3/transport"
+	"github.com/unistack-org/micro/v3/network/transport"
 )
 
 type rwc struct {

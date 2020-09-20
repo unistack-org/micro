@@ -11,7 +11,7 @@ import (
 	"github.com/unistack-org/micro/v3/router"
 	"github.com/unistack-org/micro/v3/selector"
 	"github.com/unistack-org/micro/v3/selector/random"
-	"github.com/unistack-org/micro/v3/transport"
+	"github.com/unistack-org/micro/v3/network/transport"
 )
 
 type Options struct {

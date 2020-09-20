@@ -3,7 +3,7 @@ package pool
 import (
 	"time"
 
-	"github.com/unistack-org/micro/v3/transport"
+	"github.com/unistack-org/micro/v3/network/transport"
 )
 
 type Options struct {

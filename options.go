@@ -19,7 +19,7 @@ import (
 	"github.com/unistack-org/micro/v3/server"
 	"github.com/unistack-org/micro/v3/store"
 	"github.com/unistack-org/micro/v3/tracer"
-	"github.com/unistack-org/micro/v3/transport"
+	"github.com/unistack-org/micro/v3/network/transport"
 )
 
 // Options for micro service

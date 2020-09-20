@@ -4,7 +4,7 @@ package socket
 import (
 	"io"
 
-	"github.com/unistack-org/micro/v3/transport"
+	"github.com/unistack-org/micro/v3/network/transport"
 )
 
 // Socket is our pseudo socket for transport.Socket

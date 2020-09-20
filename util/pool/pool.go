@@ -4,7 +4,7 @@ package pool
 import (
 	"time"
 
-	"github.com/unistack-org/micro/v3/transport"
+	"github.com/unistack-org/micro/v3/network/transport"
 )
 
 // Pool is an interface for connection pooling

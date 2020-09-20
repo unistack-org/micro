@@ -7,8 +7,8 @@ import (
 
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/transport"
-	"github.com/unistack-org/micro/v3/tunnel"
+	"github.com/unistack-org/micro/v3/network/transport"
+	"github.com/unistack-org/micro/v3/network/tunnel"
 )
 
 type tunBroker struct {
