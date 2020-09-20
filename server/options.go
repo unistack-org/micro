@@ -46,6 +46,7 @@ type Options struct {
 	// TLSConfig specifies tls.Config for secure serving
 	TLSConfig *tls.Config
 
+	Wait *sync.WaitGroup
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
@@ -234,13 +235,10 @@ func WithRouter(r Router) Option {
 // wait against it on stop.
 func Wait(wg *sync.WaitGroup) Option {
 	return func(o *Options) {
-		if o.Context == nil {
-			o.Context = context.Background()
-		}
 		if wg == nil {
 			wg = new(sync.WaitGroup)
 		}
-		o.Context = context.WithValue(o.Context, "wait", wg)
+		o.Wait = wg
 	}
 }
 
