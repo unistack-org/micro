@@ -31,6 +31,19 @@ type Options struct {
 	Context context.Context
 }
 
+func NewOptions(opts ...Option) Options {
+	options := Options{
+		Logger:  logger.DefaultLogger,
+		Context: context.Background(),
+	}
+
+	for _, o := range opts {
+		o(&options)
+	}
+
+	return options
+}
+
 type DialOptions struct {
 	// Tells the transport this is a streaming connection with
 	// multiple calls to send/recv and that send may not even be called
@@ -46,6 +59,18 @@ type DialOptions struct {
 	Context context.Context
 }
 
+func NewDialOptions(opts ...DialOption) DialOptions {
+	options := DialOptions{
+		Context: context.Background(),
+	}
+
+	for _, o := range opts {
+		o(&options)
+	}
+
+	return options
+}
+
 type ListenOptions struct {
 	// TODO: add tls options when listening
 	// Currently set in global options
@@ -53,6 +78,18 @@ type ListenOptions struct {
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
+}
+
+func NewListenOptions(opts ...ListenOption) ListenOptions {
+	options := ListenOptions{
+		Context: context.Background(),
+	}
+
+	for _, o := range opts {
+		o(&options)
+	}
+
+	return options
 }
 
 // Addrs to use for transport
