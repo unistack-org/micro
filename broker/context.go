@@ -25,8 +25,8 @@ func SetSubscribeOption(k, v interface{}) SubscribeOption {
 	}
 }
 
-// SetBrokerOption returns a function to setup a context with given value
-func SetBrokerOption(k, v interface{}) Option {
+// SetOption returns a function to setup a context with given value
+func SetOption(k, v interface{}) Option {
 	return func(o *Options) {
 		if o.Context == nil {
 			o.Context = context.Background()
