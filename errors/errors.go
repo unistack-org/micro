@@ -8,6 +8,21 @@ import (
 	"net/http"
 )
 
+var (
+	ErrBadRequest          = &Error{Code: 400}
+	ErrUnauthorized        = &Error{Code: 401}
+	ErrForbidden           = &Error{Code: 403}
+	ErrNotFound            = &Error{Code: 404}
+	ErrMethodNotAllowed    = &Error{Code: 405}
+	ErrTimeout             = &Error{Code: 408}
+	ErrConflict            = &Error{Code: 409}
+	ErrInternalServerError = &Error{Code: 500}
+	ErNotImplemented       = &Error{Code: 501}
+	ErrBadGateway          = &Error{Code: 502}
+	ErrServiceUnavailable  = &Error{Code: 503}
+	ErrGatewayTimeout      = &Error{Code: 504}
+)
+
 type Error struct {
 	Id     string
 	Code   int32
