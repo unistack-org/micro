@@ -28,7 +28,13 @@ func (md Metadata) Set(key, val string) {
 }
 
 func (md Metadata) Del(key string) {
-	delete(md, textproto.CanonicalMIMEHeaderKey(key))
+	// fast path
+	if _, ok := md[key]; ok {
+		delete(md, key)
+	} else {
+		// slow path
+		delete(md, textproto.CanonicalMIMEHeaderKey(key))
+	}
 }
 
 // Copy makes a copy of the metadata
