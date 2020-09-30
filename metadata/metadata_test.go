@@ -25,7 +25,7 @@ func TestMetadataDelete(t *testing.T) {
 	}
 
 	ctx := NewContext(context.TODO(), md)
-	ctx = Delete(ctx, "Baz")
+	ctx = Del(ctx, "Baz")
 
 	emd, ok := FromContext(ctx)
 	if !ok {

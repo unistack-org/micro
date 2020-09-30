@@ -3,7 +3,7 @@ package metadata
 
 import (
 	"context"
-	"strings"
+	"net/textproto"
 )
 
 type metadataKey struct{}
@@ -14,53 +14,48 @@ type metadataKey struct{}
 type Metadata map[string]string
 
 func (md Metadata) Get(key string) (string, bool) {
-	// attempt to get as is
+	// fast path
 	val, ok := md[key]
-	if ok {
-		return val, ok
+	if !ok {
+		// slow path
+		val, ok = md[textproto.CanonicalMIMEHeaderKey(key)]
 	}
-
-	// attempt to get lower case
-	val, ok = md[strings.Title(key)]
 	return val, ok
 }
 
 func (md Metadata) Set(key, val string) {
-	md[key] = val
+	md[textproto.CanonicalMIMEHeaderKey(key)] = val
 }
 
-func (md Metadata) Delete(key string) {
-	// delete key as-is
-	delete(md, key)
-	// delete also Title key
-	delete(md, strings.Title(key))
+func (md Metadata) Del(key string) {
+	delete(md, textproto.CanonicalMIMEHeaderKey(key))
 }
 
 // Copy makes a copy of the metadata
 func Copy(md Metadata) Metadata {
-	cmd := make(Metadata, len(md))
+	nmd := make(Metadata, len(md))
 	for k, v := range md {
-		cmd[k] = v
+		nmd[k] = v
 	}
-	return cmd
+	return nmd
 }
 
-// Delete key from metadata
-func Delete(ctx context.Context, k string) context.Context {
-	return Set(ctx, k, "")
-}
-
-// Set add key with val to metadata
-func Set(ctx context.Context, k, v string) context.Context {
+func Del(ctx context.Context, key string) context.Context {
 	md, ok := FromContext(ctx)
 	if !ok {
 		md = make(Metadata)
 	}
-	if v == "" {
-		delete(md, k)
-	} else {
-		md[k] = v
+	md.Del(key)
+	return context.WithValue(ctx, metadataKey{}, md)
+}
+
+// Set add key with val to metadata
+func Set(ctx context.Context, key, val string) context.Context {
+	md, ok := FromContext(ctx)
+	if !ok {
+		md = make(Metadata)
 	}
+	md.Set(key, val)
 	return context.WithValue(ctx, metadataKey{}, md)
 }
 
@@ -70,32 +65,13 @@ func Get(ctx context.Context, key string) (string, bool) {
 	if !ok {
 		return "", ok
 	}
-	// attempt to get as is
-	val, ok := md[key]
-	if ok {
-		return val, ok
-	}
-
-	// attempt to get lower case
-	val, ok = md[strings.Title(key)]
-
-	return val, ok
+	return md.Get(key)
 }
 
 // FromContext returns metadata from the given context
 func FromContext(ctx context.Context) (Metadata, bool) {
 	md, ok := ctx.Value(metadataKey{}).(Metadata)
-	if !ok {
-		return nil, ok
-	}
-
-	// capitalise all values
-	newMD := make(Metadata, len(md))
-	for k, v := range md {
-		newMD[strings.Title(k)] = v
-	}
-
-	return newMD, ok
+	return md, ok
 }
 
 // NewContext creates a new context with the given metadata
@@ -104,23 +80,26 @@ func NewContext(ctx context.Context, md Metadata) context.Context {
 }
 
 // MergeContext merges metadata to existing metadata, overwriting if specified
-func MergeContext(ctx context.Context, patchMd Metadata, overwrite bool) context.Context {
+func MergeContext(ctx context.Context, pmd Metadata, overwrite bool) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	md, _ := ctx.Value(metadataKey{}).(Metadata)
-	cmd := make(Metadata, len(md))
-	for k, v := range md {
-		cmd[k] = v
+	md, ok := FromContext(ctx)
+	if !ok {
+		md = make(Metadata)
 	}
-	for k, v := range patchMd {
-		if _, ok := cmd[k]; ok && !overwrite {
+	nmd := make(Metadata, len(md))
+	for key, val := range md {
+		nmd.Set(key, val)
+	}
+	for key, val := range pmd {
+		if _, ok := nmd[key]; ok && !overwrite {
 			// skip
-		} else if v != "" {
-			cmd[k] = v
+		} else if val != "" {
+			nmd.Set(key, val)
 		} else {
-			delete(cmd, k)
+			nmd.Del(key)
 		}
 	}
-	return context.WithValue(ctx, metadataKey{}, cmd)
+	return context.WithValue(ctx, metadataKey{}, nmd)
 }
