@@ -40,8 +40,8 @@ func (md Metadata) Del(key string) {
 // Copy makes a copy of the metadata
 func Copy(md Metadata) Metadata {
 	nmd := make(Metadata, len(md))
-	for k, v := range md {
-		nmd[k] = v
+	for key, val := range md {
+		nmd.Set(key, val)
 	}
 	return nmd
 }
@@ -77,7 +77,11 @@ func Get(ctx context.Context, key string) (string, bool) {
 // FromContext returns metadata from the given context
 func FromContext(ctx context.Context) (Metadata, bool) {
 	md, ok := ctx.Value(metadataKey{}).(Metadata)
-	return md, ok
+	if !ok {
+		return nil, ok
+	}
+	nmd := Copy(md)
+	return nmd, ok
 }
 
 // NewContext creates a new context with the given metadata
@@ -92,12 +96,9 @@ func MergeContext(ctx context.Context, pmd Metadata, overwrite bool) context.Con
 	}
 	md, ok := FromContext(ctx)
 	if !ok {
-		md = make(Metadata)
+		md = make(Metadata, len(pmd))
 	}
-	nmd := make(Metadata, len(md))
-	for key, val := range md {
-		nmd.Set(key, val)
-	}
+	nmd := Copy(md)
 	for key, val := range pmd {
 		if _, ok := nmd[key]; ok && !overwrite {
 			// skip
