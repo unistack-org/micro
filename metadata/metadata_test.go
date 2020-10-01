@@ -42,7 +42,7 @@ func TestMetadataDelete(t *testing.T) {
 func TestMetadataCopy(t *testing.T) {
 	md := Metadata{
 		"Foo": "bar",
-		"bar": "baz",
+		"Bar": "baz",
 	}
 
 	cp := Copy(md)
