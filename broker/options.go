@@ -45,6 +45,18 @@ type PublishOptions struct {
 	Context context.Context
 }
 
+func NewPublishOptions(opts ...PublishOption) PublishOptions {
+	opt := PublishOptions{
+		Context: context.Background(),
+	}
+
+	for _, o := range opts {
+		o(&opt)
+	}
+
+	return opt
+}
+
 type SubscribeOptions struct {
 	// AutoAck ack messages if handler returns nil err
 	AutoAck bool
