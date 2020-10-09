@@ -12,6 +12,7 @@ import (
 	"github.com/unistack-org/micro/v3/config"
 	"github.com/unistack-org/micro/v3/debug/profile"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/network/transport"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/router"
 	"github.com/unistack-org/micro/v3/runtime"
@@ -19,7 +20,6 @@ import (
 	"github.com/unistack-org/micro/v3/server"
 	"github.com/unistack-org/micro/v3/store"
 	"github.com/unistack-org/micro/v3/tracer"
-	"github.com/unistack-org/micro/v3/network/transport"
 )
 
 // Options for micro service
@@ -47,14 +47,11 @@ type Options struct {
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
-
-	Signal bool
 }
 
 func newOptions(opts ...Option) Options {
 	opt := Options{
 		Context:   context.Background(),
-		Signal:    true,
 		Server:    server.DefaultServer,
 		Client:    client.DefaultClient,
 		Broker:    broker.DefaultBroker,
@@ -110,15 +107,6 @@ func Client(c client.Client) Option {
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
 		o.Context = ctx
-	}
-}
-
-// HandleSignal toggles automatic installation of the signal handler that
-// traps TERM, INT, and QUIT.  Users of this feature to disable the signal
-// handler, should control liveness of the service through the context.
-func HandleSignal(b bool) Option {
-	return func(o *Options) {
-		o.Signal = b
 	}
 }
 

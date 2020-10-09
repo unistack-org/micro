@@ -1,8 +1,6 @@
 package micro
 
 import (
-	"os"
-	"os/signal"
 	rtime "runtime"
 	"sync"
 
@@ -10,7 +8,6 @@ import (
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/server"
-	signalutil "github.com/unistack-org/micro/v3/util/signal"
 )
 
 type service struct {
@@ -20,11 +17,9 @@ type service struct {
 }
 
 func newService(opts ...Option) Service {
-	service := &service{}
 	options := newOptions(opts...)
 
-	// set opts
-	service.opts = options
+	service := &service{opts: options}
 
 	return service
 }
@@ -127,6 +122,10 @@ func (s *service) String() string {
 }
 
 func (s *service) Start() error {
+	if logger.V(logger.InfoLevel) {
+		logger.Infof("Starting [service] %s", s.Name())
+	}
+
 	var err error
 	for _, fn := range s.opts.BeforeStart {
 		if err = fn(); err != nil {
@@ -148,6 +147,10 @@ func (s *service) Start() error {
 }
 
 func (s *service) Stop() error {
+	if logger.V(logger.InfoLevel) {
+		logger.Infof("Stoppping [service] %s", s.Name())
+	}
+
 	var err error
 	for _, fn := range s.opts.BeforeStop {
 		if err = fn(); err != nil {
@@ -182,22 +185,11 @@ func (s *service) Run() error {
 		defer s.opts.Profile.Stop()
 	}
 
-	if logger.V(logger.InfoLevel) {
-		logger.Infof("Starting [service] %s", s.Name())
-	}
-
 	if err := s.Start(); err != nil {
 		return err
 	}
 
-	ch := make(chan os.Signal, 1)
-	if s.opts.Signal {
-		signal.Notify(ch, signalutil.Shutdown()...)
-	}
-
 	select {
-	// wait on kill signal
-	case <-ch:
 	// wait on context cancel
 	case <-s.opts.Context.Done():
 	}
