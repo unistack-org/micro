@@ -1,14 +1,12 @@
-package server
+package registry
 
 import (
 	"fmt"
 	"reflect"
 	"strings"
-
-	"github.com/unistack-org/micro/v3/registry"
 )
 
-func extractValue(v reflect.Type, d int) *registry.Value {
+func ExtractValue(v reflect.Type, d int) *Value {
 	if d == 3 {
 		return nil
 	}
@@ -20,7 +18,7 @@ func extractValue(v reflect.Type, d int) *registry.Value {
 		v = v.Elem()
 	}
 
-	arg := &registry.Value{
+	arg := &Value{
 		Name: v.Name(),
 		Type: v.Name(),
 	}
@@ -29,7 +27,7 @@ func extractValue(v reflect.Type, d int) *registry.Value {
 	case reflect.Struct:
 		for i := 0; i < v.NumField(); i++ {
 			f := v.Field(i)
-			val := extractValue(f.Type, d+1)
+			val := ExtractValue(f.Type, d+1)
 			if val == nil {
 				continue
 			}
@@ -61,7 +59,7 @@ func extractValue(v reflect.Type, d int) *registry.Value {
 	return arg
 }
 
-func extractEndpoint(method reflect.Method) *registry.Endpoint {
+func ExtractEndpoint(method reflect.Method) *Endpoint {
 	if method.PkgPath != "" {
 		return nil
 	}
@@ -87,10 +85,10 @@ func extractEndpoint(method reflect.Method) *registry.Endpoint {
 		stream = true
 	}
 
-	request := extractValue(reqType, 0)
-	response := extractValue(rspType, 0)
+	request := ExtractValue(reqType, 0)
+	response := ExtractValue(rspType, 0)
 
-	ep := &registry.Endpoint{
+	ep := &Endpoint{
 		Name:     method.Name,
 		Request:  request,
 		Response: response,

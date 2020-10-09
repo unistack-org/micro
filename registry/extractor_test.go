@@ -1,11 +1,9 @@
-package server
+package registry
 
 import (
 	"context"
 	"reflect"
 	"testing"
-
-	"github.com/unistack-org/micro/v3/registry"
 )
 
 type testHandler struct{}
@@ -22,10 +20,10 @@ func TestExtractEndpoint(t *testing.T) {
 	handler := &testHandler{}
 	typ := reflect.TypeOf(handler)
 
-	var endpoints []*registry.Endpoint
+	var endpoints []*Endpoint
 
 	for m := 0; m < typ.NumMethod(); m++ {
-		if e := extractEndpoint(typ.Method(m)); e != nil {
+		if e := ExtractEndpoint(typ.Method(m)); e != nil {
 			endpoints = append(endpoints, e)
 		}
 	}
