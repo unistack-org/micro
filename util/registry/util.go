@@ -1,7 +1,11 @@
 package registry
 
 import (
+	"net"
+
 	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/server"
+	"github.com/unistack-org/micro/v3/util/addr"
 )
 
 func addNodes(old, neu []*registry.Node) []*registry.Node {
@@ -145,4 +149,43 @@ func Remove(old, del []*registry.Service) []*registry.Service {
 	}
 
 	return services
+}
+
+func NewService(s server.Server) (*registry.Service, error) {
+	opts := s.Options()
+
+	advt := opts.Address
+	if len(opts.Advertise) > 0 {
+		advt = opts.Advertise
+	}
+
+	host, port, err := net.SplitHostPort(advt)
+	if err != nil {
+		return nil, err
+	}
+
+	addr, err := addr.Extract(host)
+	if err != nil {
+		addr = host
+	}
+
+	node := &registry.Node{
+		Id:       opts.Name + "-" + opts.Id,
+		Address:  net.JoinHostPort(addr, port),
+		Metadata: opts.Metadata,
+	}
+
+	if node.Metadata == nil {
+		node.Metadata = make(map[string]string, 3)
+	}
+
+	node.Metadata["server"] = s.String()
+	node.Metadata["broker"] = opts.Broker.String()
+	node.Metadata["registry"] = opts.Registry.String()
+
+	return &registry.Service{
+		Name:    opts.Name,
+		Version: opts.Version,
+		Nodes:   []*registry.Node{node},
+	}, nil
 }
