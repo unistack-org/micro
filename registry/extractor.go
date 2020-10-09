@@ -103,3 +103,18 @@ func ExtractEndpoint(method reflect.Method) *Endpoint {
 
 	return ep
 }
+
+func ExtractSubValue(typ reflect.Type) *Value {
+	var reqType reflect.Type
+	switch typ.NumIn() {
+	case 1:
+		reqType = typ.In(0)
+	case 2:
+		reqType = typ.In(1)
+	case 3:
+		reqType = typ.In(2)
+	default:
+		return nil
+	}
+	return ExtractValue(reqType, 0)
+}
