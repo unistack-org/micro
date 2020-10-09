@@ -3,6 +3,7 @@ package registry
 import (
 	"net"
 
+	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/server"
 	"github.com/unistack-org/micro/v3/util/addr"
@@ -170,14 +171,10 @@ func NewService(s server.Server) (*registry.Service, error) {
 	}
 
 	node := &registry.Node{
-		Id:       opts.Name + "-" + opts.Id,
-		Address:  net.JoinHostPort(addr, port),
-		Metadata: opts.Metadata,
+		Id:      opts.Name + "-" + opts.Id,
+		Address: net.JoinHostPort(addr, port),
 	}
-
-	if node.Metadata == nil {
-		node.Metadata = make(map[string]string, 3)
-	}
+	node.Metadata = metadata.Copy(opts.Metadata)
 
 	node.Metadata["server"] = s.String()
 	node.Metadata["broker"] = opts.Broker.String()
