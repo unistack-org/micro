@@ -43,10 +43,7 @@ func (md Metadata) Del(key string) {
 
 // Copy makes a copy of the metadata
 func Copy(md Metadata) Metadata {
-	if len(md) == 0 {
-		return make(Metadata, DefaultMetadataSize)
-	}
-	nmd := make(Metadata, len(md))
+	nmd := New(len(md))
 	for key, val := range md {
 		nmd.Set(key, val)
 	}
@@ -56,7 +53,7 @@ func Copy(md Metadata) Metadata {
 func Del(ctx context.Context, key string) context.Context {
 	md, ok := FromContext(ctx)
 	if !ok {
-		md = make(Metadata, DefaultMetadataSize)
+		md = New(0)
 	}
 	md.Del(key)
 	return context.WithValue(ctx, metadataKey{}, md)
@@ -66,7 +63,7 @@ func Del(ctx context.Context, key string) context.Context {
 func Set(ctx context.Context, key, val string) context.Context {
 	md, ok := FromContext(ctx)
 	if !ok {
-		md = make(Metadata, DefaultMetadataSize)
+		md = New(0)
 	}
 	md.Set(key, val)
 	return context.WithValue(ctx, metadataKey{}, md)
