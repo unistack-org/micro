@@ -13,6 +13,10 @@ type metadataKey struct{}
 // from Transport headers.
 type Metadata map[string]string
 
+var (
+	DefaultMetadataSize = 6
+)
+
 func (md Metadata) Get(key string) (string, bool) {
 	// fast path
 	val, ok := md[key]
@@ -39,6 +43,9 @@ func (md Metadata) Del(key string) {
 
 // Copy makes a copy of the metadata
 func Copy(md Metadata) Metadata {
+	if len(md) == 0 {
+		return make(Metadata, DefaultMetadataSize)
+	}
 	nmd := make(Metadata, len(md))
 	for key, val := range md {
 		nmd.Set(key, val)
@@ -49,7 +56,7 @@ func Copy(md Metadata) Metadata {
 func Del(ctx context.Context, key string) context.Context {
 	md, ok := FromContext(ctx)
 	if !ok {
-		md = make(Metadata)
+		md = make(Metadata, DefaultMetadataSize)
 	}
 	md.Del(key)
 	return context.WithValue(ctx, metadataKey{}, md)
@@ -59,7 +66,7 @@ func Del(ctx context.Context, key string) context.Context {
 func Set(ctx context.Context, key, val string) context.Context {
 	md, ok := FromContext(ctx)
 	if !ok {
-		md = make(Metadata)
+		md = make(Metadata, DefaultMetadataSize)
 	}
 	md.Set(key, val)
 	return context.WithValue(ctx, metadataKey{}, md)
@@ -84,9 +91,17 @@ func FromContext(ctx context.Context) (Metadata, bool) {
 	return nmd, ok
 }
 
+// New return new sized metadata
+func New(size int) Metadata {
+	if size == 0 {
+		size = DefaultMetadataSize
+	}
+	return make(Metadata, size)
+}
+
 // NewContext creates a new context with the given metadata
 func NewContext(ctx context.Context, md Metadata) context.Context {
-	return context.WithValue(ctx, metadataKey{}, md)
+	return context.WithValue(ctx, metadataKey{}, Copy(md))
 }
 
 // MergeContext merges metadata to existing metadata, overwriting if specified
@@ -96,7 +111,7 @@ func MergeContext(ctx context.Context, pmd Metadata, overwrite bool) context.Con
 	}
 	md, ok := FromContext(ctx)
 	if !ok {
-		md = make(Metadata, len(pmd))
+		return context.WithValue(ctx, metadataKey{}, Copy(pmd))
 	}
 	nmd := Copy(md)
 	for key, val := range pmd {

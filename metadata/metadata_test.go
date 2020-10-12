@@ -6,6 +6,30 @@ import (
 	"testing"
 )
 
+func TestMedataCanonicalKey(t *testing.T) {
+	ctx := Set(context.TODO(), "x-request-id", "12345")
+	v, ok := Get(ctx, "x-request-id")
+	if !ok {
+		t.Fatalf("failed to get x-request-id")
+	} else if v != "12345" {
+		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
+	}
+
+	v, ok = Get(ctx, "X-Request-Id")
+	if !ok {
+		t.Fatalf("failed to get x-request-id")
+	} else if v != "12345" {
+		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
+	}
+	v, ok = Get(ctx, "X-Request-ID")
+	if !ok {
+		t.Fatalf("failed to get x-request-id")
+	} else if v != "12345" {
+		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
+	}
+
+}
+
 func TestMetadataSet(t *testing.T) {
 	ctx := Set(context.TODO(), "Key", "val")
 
