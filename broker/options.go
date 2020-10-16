@@ -39,6 +39,12 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+func Context(ctx context.Context) Option {
+	return func(o *Options) {
+		o.Context = ctx
+	}
+}
+
 type PublishOptions struct {
 	// Other options for implementations of the interface
 	// can be stored in a context

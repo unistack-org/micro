@@ -106,6 +106,12 @@ func Logger(l logger.Logger) Option {
 	}
 }
 
+func Context(ctx context.Context) Option {
+	return func(o *Options) {
+		o.Context = ctx
+	}
+}
+
 // Codec sets the codec used for encoding where the transport
 // does not support message headers
 func Codec(c codec.Marshaler) Option {

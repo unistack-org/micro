@@ -65,7 +65,7 @@ func QueryLink(link string) QueryOption {
 // NewQuery creates new query and returns it
 func NewQuery(opts ...QueryOption) QueryOptions {
 	// default options
-	qopts := QueryOptions{
+	options := QueryOptions{
 		Service: "*",
 		Address: "*",
 		Gateway: "*",
@@ -75,8 +75,8 @@ func NewQuery(opts ...QueryOption) QueryOptions {
 	}
 
 	for _, o := range opts {
-		o(&qopts)
+		o(&options)
 	}
 
-	return qopts
+	return options
 }

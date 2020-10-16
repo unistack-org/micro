@@ -2,17 +2,16 @@ package client
 
 import (
 	"context"
-	"sync/atomic"
 
 	raw "github.com/unistack-org/micro-codec-bytes"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
+	"github.com/unistack-org/micro/v3/codec/json"
 	"github.com/unistack-org/micro/v3/errors"
 	"github.com/unistack-org/micro/v3/metadata"
 )
 
-type noopClient struct {
-	once atomic.Value
+type NoopClient struct {
 	opts Options
 }
 
@@ -119,30 +118,30 @@ func (n *noopMessage) ContentType() string {
 	return n.opts.ContentType
 }
 
-func (n *noopClient) Init(opts ...Option) error {
+func (n *NoopClient) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
 	return nil
 }
 
-func (n *noopClient) Options() Options {
+func (n *NoopClient) Options() Options {
 	return n.opts
 }
 
-func (n *noopClient) String() string {
+func (n *NoopClient) String() string {
 	return "noop"
 }
 
-func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error {
+func (n *NoopClient) Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error {
 	return nil
 }
 
-func (n *noopClient) NewRequest(service, endpoint string, req interface{}, opts ...RequestOption) Request {
+func (n *NoopClient) NewRequest(service, endpoint string, req interface{}, opts ...RequestOption) Request {
 	return &noopRequest{}
 }
 
-func (n *noopClient) NewMessage(topic string, msg interface{}, opts ...MessageOption) Message {
+func (n *NoopClient) NewMessage(topic string, msg interface{}, opts ...MessageOption) Message {
 	options := MessageOptions{}
 	for _, o := range opts {
 		o(&options)
@@ -151,25 +150,18 @@ func (n *noopClient) NewMessage(topic string, msg interface{}, opts ...MessageOp
 	return &noopMessage{topic: topic, payload: msg, opts: options}
 }
 
-func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error) {
+func (n *NoopClient) Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error) {
 	return &noopStream{}, nil
 }
 
-func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOption) error {
-	var options PublishOptions
+func (n *NoopClient) Publish(ctx context.Context, p Message, opts ...PublishOption) error {
 	var body []byte
 
-	// fail early on connect error
-	if !n.once.Load().(bool) {
-		if err := n.opts.Broker.Connect(); err != nil {
-			return errors.InternalServerError("go.micro.client", err.Error())
-		}
-		n.once.Store(true)
+	if err := n.opts.Broker.Connect(ctx); err != nil {
+		return errors.InternalServerError("go.micro.client", err.Error())
 	}
 
-	for _, o := range opts {
-		o(&options)
-	}
+	options := NewPublishOptions(opts...)
 
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
@@ -182,6 +174,11 @@ func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOpti
 	if d, ok := p.Payload().(*raw.Frame); ok {
 		body = d.Data
 	} else {
+		cf := n.opts.Broker.Options().Codec
+		if cf == nil {
+			cf = json.Marshaler{}
+		}
+
 		/*
 			// use codec for payload
 			cf, err := n.opts.Codecs[p.ContentType()]
@@ -190,7 +187,7 @@ func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOpti
 			}
 		*/
 		// set the body
-		b, err := n.opts.Broker.Options().Codec.Marshal(p.Payload())
+		b, err := cf.Marshal(p.Payload())
 		if err != nil {
 			return errors.InternalServerError("go.micro.client", err.Error())
 		}
@@ -204,7 +201,7 @@ func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOpti
 		topic = options.Exchange
 	}
 
-	return n.opts.Broker.Publish(topic, &broker.Message{
+	return n.opts.Broker.Publish(ctx, topic, &broker.Message{
 		Header: md,
 		Body:   body,
 	}, broker.PublishContext(options.Context))
@@ -217,5 +214,5 @@ func newClient(opts ...Option) Client {
 	for _, o := range opts {
 		o(&options)
 	}
-	return &noopClient{opts: options}
+	return &NoopClient{opts: options}
 }

@@ -1,8 +1,10 @@
 // Package broker is an interface used for asynchronous messaging
 package broker
 
+import "context"
+
 var (
-	DefaultBroker Broker = newBroker()
+	DefaultBroker Broker = &NoopBroker{opts: NewOptions()}
 )
 
 // Broker is an interface used for asynchronous messaging.
@@ -10,10 +12,10 @@ type Broker interface {
 	Init(...Option) error
 	Options() Options
 	Address() string
-	Connect() error
-	Disconnect() error
-	Publish(topic string, m *Message, opts ...PublishOption) error
-	Subscribe(topic string, h Handler, opts ...SubscribeOption) (Subscriber, error)
+	Connect(context.Context) error
+	Disconnect(context.Context) error
+	Publish(context.Context, string, *Message, ...PublishOption) error
+	Subscribe(context.Context, string, Handler, ...SubscribeOption) (Subscriber, error)
 	String() string
 }
 
@@ -39,5 +41,5 @@ type Message struct {
 type Subscriber interface {
 	Options() SubscribeOptions
 	Topic() string
-	Unsubscribe() error
+	Unsubscribe(context.Context) error
 }

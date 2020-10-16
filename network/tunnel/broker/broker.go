@@ -49,15 +49,15 @@ func (t *tunBroker) Address() string {
 	return t.tunnel.Address()
 }
 
-func (t *tunBroker) Connect() error {
+func (t *tunBroker) Connect(ctx context.Context) error {
 	return t.tunnel.Connect()
 }
 
-func (t *tunBroker) Disconnect() error {
+func (t *tunBroker) Disconnect(ctx context.Context) error {
 	return t.tunnel.Close()
 }
 
-func (t *tunBroker) Publish(topic string, m *broker.Message, opts ...broker.PublishOption) error {
+func (t *tunBroker) Publish(ctx context.Context, topic string, m *broker.Message, opts ...broker.PublishOption) error {
 	// TODO: this is probably inefficient, we might want to just maintain an open connection
 	// it may be easier to add broadcast to the tunnel
 	c, err := t.tunnel.Dial(topic, tunnel.DialMode(tunnel.Multicast))
@@ -72,21 +72,16 @@ func (t *tunBroker) Publish(topic string, m *broker.Message, opts ...broker.Publ
 	})
 }
 
-func (t *tunBroker) Subscribe(topic string, h broker.Handler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
+func (t *tunBroker) Subscribe(ctx context.Context, topic string, h broker.Handler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
 	l, err := t.tunnel.Listen(topic, tunnel.ListenMode(tunnel.Multicast))
 	if err != nil {
 		return nil, err
 	}
 
-	var options broker.SubscribeOptions
-	for _, o := range opts {
-		o(&options)
-	}
-
 	tunSub := &tunSubscriber{
 		topic:    topic,
 		handler:  h,
-		opts:     options,
+		opts:     broker.NewSubscribeOptions(opts...),
 		closed:   make(chan bool),
 		listener: l,
 	}
@@ -150,7 +145,7 @@ func (t *tunSubscriber) Topic() string {
 	return t.topic
 }
 
-func (t *tunSubscriber) Unsubscribe() error {
+func (t *tunSubscriber) Unsubscribe(ctx context.Context) error {
 	select {
 	case <-t.closed:
 		return nil
@@ -177,12 +172,7 @@ func (t *tunEvent) Error() error {
 }
 
 func NewBroker(opts ...broker.Option) (broker.Broker, error) {
-	options := broker.Options{
-		Context: context.Background(),
-	}
-	for _, o := range opts {
-		o(&options)
-	}
+	options := broker.NewOptions(opts...)
 
 	t, ok := options.Context.Value(tunnelKey{}).(tunnel.Tunnel)
 	if !ok {

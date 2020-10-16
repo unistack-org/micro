@@ -5,9 +5,13 @@ import (
 	"sync"
 
 	cmd "github.com/unistack-org/micro-config-cmd"
+	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/network/transport"
+	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/server"
+	"github.com/unistack-org/micro/v3/store"
 )
 
 type service struct {
@@ -31,82 +35,92 @@ func (s *service) Name() string {
 // Init initialises options. Additionally it calls cmd.Init
 // which parses command line flags. cmd.Init is only called
 // on first Init.
-func (s *service) Init(opts ...Option) {
+func (s *service) Init(opts ...Option) error {
 	// process options
 	for _, o := range opts {
 		o(&s.opts)
 	}
 
-	s.once.Do(func() {
-		if s.opts.Cmd != nil {
-			// set cmd name
-			if len(s.opts.Cmd.App().Name) == 0 {
-				s.opts.Cmd.App().Name = s.Server().Options().Name
-			}
-
-			// Initialise the command options
-			if err := s.opts.Cmd.Init(
-				cmd.Auth(&s.opts.Auth),
-				cmd.Broker(&s.opts.Broker),
-				cmd.Registry(&s.opts.Registry),
-				cmd.Runtime(&s.opts.Runtime),
-				cmd.Transport(&s.opts.Transport),
-				cmd.Client(&s.opts.Client),
-				cmd.Config(&s.opts.Config),
-				cmd.Server(&s.opts.Server),
-				cmd.Store(&s.opts.Store),
-				cmd.Profile(&s.opts.Profile),
-			); err != nil {
-				logger.Fatalf("[cmd] init failed: %v", err)
-			}
+	if s.opts.Cmd != nil {
+		// set cmd name
+		if len(s.opts.Cmd.App().Name) == 0 {
+			s.opts.Cmd.App().Name = s.Server().Options().Name
 		}
-	})
+
+		// Initialise the command options
+		if err := s.opts.Cmd.Init(
+			cmd.Auth(&s.opts.Auth),
+			cmd.Broker(&s.opts.Broker),
+			cmd.Registry(&s.opts.Registry),
+			cmd.Runtime(&s.opts.Runtime),
+			cmd.Transport(&s.opts.Transport),
+			cmd.Client(&s.opts.Client),
+			cmd.Config(&s.opts.Config),
+			cmd.Server(&s.opts.Server),
+			cmd.Store(&s.opts.Store),
+			cmd.Profile(&s.opts.Profile),
+		); err != nil {
+			return err
+		}
+	}
 
 	if s.opts.Registry != nil {
-		if err := s.opts.Registry.Init(); err != nil {
-			logger.Fatalf("[cmd] init failed: %v", err)
+		if err := s.opts.Registry.Init(
+			registry.Context(s.opts.Context),
+		); err != nil {
+			return err
 		}
 	}
 
 	if s.opts.Broker != nil {
-		if err := s.opts.Broker.Init(); err != nil {
-			logger.Fatalf("[cmd] init failed: %v", err)
+		if err := s.opts.Broker.Init(
+			broker.Context(s.opts.Context),
+		); err != nil {
+			return err
 		}
 	}
 
 	if s.opts.Transport != nil {
-		if err := s.opts.Transport.Init(); err != nil {
-			logger.Fatalf("[cmd] init failed: %v", err)
+		if err := s.opts.Transport.Init(
+			transport.Context(s.opts.Context),
+		); err != nil {
+			return err
 		}
 	}
 
 	if s.opts.Store != nil {
-		if err := s.opts.Store.Init(s.opts.Context); err != nil {
-			logger.Fatalf("[cmd] init failed: %v", err)
+		if err := s.opts.Store.Init(
+			store.Context(s.opts.Context),
+		); err != nil {
+			return err
 		}
 	}
 
 	if s.opts.Server != nil {
-		if err := s.opts.Server.Init(); err != nil {
-			logger.Fatalf("[cmd] init failed: %v", err)
+		if err := s.opts.Server.Init(
+			server.Context(s.opts.Context),
+		); err != nil {
+			return err
 		}
 	}
 
 	if s.opts.Client != nil {
-		if err := s.opts.Client.Init(); err != nil {
-			logger.Fatalf("[cmd] init failed: %v", err)
+		if err := s.opts.Client.Init(
+			client.Context(s.opts.Context),
+		); err != nil {
+			return err
 		}
 	}
 
-	// execute the command
-	// TODO: do this in service.Run()
-	if err := s.opts.Cmd.Run(); err != nil {
-		logger.Fatalf("[cmd] run failed: %v", err)
-	}
+	return nil
 }
 
 func (s *service) Options() Options {
 	return s.opts
+}
+
+func (s *service) Broker() broker.Broker {
+	return s.opts.Broker
 }
 
 func (s *service) Client() client.Client {
@@ -183,6 +197,12 @@ func (s *service) Run() error {
 			return err
 		}
 		defer s.opts.Profile.Stop()
+	}
+
+	if s.opts.Cmd != nil {
+		if err := s.opts.Cmd.Run(); err != nil {
+			return err
+		}
 	}
 
 	if err := s.Start(); err != nil {

@@ -20,6 +20,14 @@ type Options struct {
 	Context context.Context
 }
 
+func NewOptions(opts ...Option) Options {
+	options := Options{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 // WithFields set default fields for the logger
 func WithFields(fields map[string]interface{}) Option {
 	return func(args *Options) {

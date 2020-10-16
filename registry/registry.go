@@ -2,6 +2,7 @@
 package registry
 
 import (
+	"context"
 	"errors"
 )
 
@@ -13,7 +14,7 @@ const (
 )
 
 var (
-	DefaultRegistry Registry = newRegistry()
+	DefaultRegistry Registry = NewRegistry()
 	// ErrNotFound returned when GetService is called and no services found
 	ErrNotFound = errors.New("service not found")
 	// ErrWatcherStopped returned when when watcher is stopped
@@ -26,6 +27,8 @@ var (
 type Registry interface {
 	Init(...Option) error
 	Options() Options
+	Connect(context.Context) error
+	Disconnect(context.Context) error
 	Register(*Service, ...RegisterOption) error
 	Deregister(*Service, ...DeregisterOption) error
 	GetService(string, ...GetOption) ([]*Service, error)

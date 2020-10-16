@@ -4,12 +4,10 @@ package tracer
 import (
 	"context"
 	"time"
-
-	"github.com/unistack-org/micro/v3/metadata"
 )
 
 var (
-	DefaultTracer Tracer = newTracer()
+	DefaultTracer Tracer = NewTracer()
 )
 
 // Tracer is an interface for distributed tracing
@@ -50,32 +48,4 @@ type Span struct {
 	Metadata map[string]string
 	// Type
 	Type SpanType
-}
-
-const (
-	traceIDKey = "Micro-Trace-Id"
-	spanIDKey  = "Micro-Span-Id"
-)
-
-// FromContext returns a span from context
-func FromContext(ctx context.Context) (traceID string, parentSpanID string, isFound bool) {
-	traceID, traceOk := metadata.Get(ctx, traceIDKey)
-	microID, microOk := metadata.Get(ctx, "Micro-Id")
-	if !traceOk && !microOk {
-		isFound = false
-		return
-	}
-	if !traceOk {
-		traceID = microID
-	}
-	parentSpanID, ok := metadata.Get(ctx, spanIDKey)
-	return traceID, parentSpanID, ok
-}
-
-// ToContext saves the trace and span ids in the context
-func ToContext(ctx context.Context, traceID, parentSpanID string) context.Context {
-	return metadata.MergeContext(ctx, map[string]string{
-		traceIDKey: traceID,
-		spanIDKey:  parentSpanID,
-	}, true)
 }

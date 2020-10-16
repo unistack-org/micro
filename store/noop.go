@@ -2,49 +2,45 @@ package store
 
 import "context"
 
-type noopStore struct {
+type NoopStore struct {
 	opts Options
 }
 
-func newStore(opts ...Option) Store {
-	options := NewOptions()
-	for _, o := range opts {
-		o(&options)
-	}
-	return &noopStore{opts: options}
-}
-
-func (n *noopStore) Init(ctx context.Context, opts ...Option) error {
+func (n *NoopStore) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
 	return nil
 }
 
-func (n *noopStore) Options() Options {
+func (n *NoopStore) Options() Options {
 	return n.opts
 }
 
-func (n *noopStore) String() string {
+func (n *NoopStore) String() string {
 	return "noop"
 }
 
-func (n *noopStore) Read(ctx context.Context, key string, opts ...ReadOption) ([]*Record, error) {
+func (n *NoopStore) Read(ctx context.Context, key string, opts ...ReadOption) ([]*Record, error) {
 	return []*Record{}, nil
 }
 
-func (n *noopStore) Write(ctx context.Context, r *Record, opts ...WriteOption) error {
+func (n *NoopStore) Write(ctx context.Context, r *Record, opts ...WriteOption) error {
 	return nil
 }
 
-func (n *noopStore) Delete(ctx context.Context, key string, opts ...DeleteOption) error {
+func (n *NoopStore) Delete(ctx context.Context, key string, opts ...DeleteOption) error {
 	return nil
 }
 
-func (n *noopStore) List(ctx context.Context, opts ...ListOption) ([]string, error) {
+func (n *NoopStore) List(ctx context.Context, opts ...ListOption) ([]string, error) {
 	return []string{}, nil
 }
 
-func (n *noopStore) Close(ctx context.Context) error {
+func (n *NoopStore) Connect(ctx context.Context) error {
+	return nil
+}
+
+func (n *NoopStore) Disconnect(ctx context.Context) error {
 	return nil
 }

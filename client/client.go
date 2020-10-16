@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	DefaultClient Client = newClient()
+	DefaultClient Client = &NoopClient{opts: NewOptions()}
 )
 
 // Client is the interface used to make requests to services.

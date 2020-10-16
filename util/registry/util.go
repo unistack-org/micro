@@ -1,12 +1,7 @@
 package registry
 
 import (
-	"net"
-
-	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/registry"
-	"github.com/unistack-org/micro/v3/server"
-	"github.com/unistack-org/micro/v3/util/addr"
 )
 
 func addNodes(old, neu []*registry.Node) []*registry.Node {
@@ -60,13 +55,13 @@ func delNodes(old, del []*registry.Node) []*registry.Node {
 // CopyService make a copy of service
 func CopyService(service *registry.Service) *registry.Service {
 	// copy service
-	s := new(registry.Service)
+	s := &registry.Service{}
 	*s = *service
 
 	// copy nodes
 	nodes := make([]*registry.Node, len(service.Nodes))
 	for j, node := range service.Nodes {
-		n := new(registry.Node)
+		n := &registry.Node{}
 		*n = *node
 		nodes[j] = n
 	}
@@ -75,7 +70,7 @@ func CopyService(service *registry.Service) *registry.Service {
 	// copy endpoints
 	eps := make([]*registry.Endpoint, len(service.Endpoints))
 	for j, ep := range service.Endpoints {
-		e := new(registry.Endpoint)
+		e := &registry.Endpoint{}
 		*e = *ep
 		eps[j] = e
 	}
@@ -100,7 +95,7 @@ func Merge(olist []*registry.Service, nlist []*registry.Service) []*registry.Ser
 		var seen bool
 		for _, o := range olist {
 			if o.Version == n.Version {
-				sp := new(registry.Service)
+				sp := &registry.Service{}
 				// make copy
 				*sp = *o
 				// set nodes
@@ -111,7 +106,7 @@ func Merge(olist []*registry.Service, nlist []*registry.Service) []*registry.Ser
 				srv = append(srv, sp)
 				break
 			} else {
-				sp := new(registry.Service)
+				sp := &registry.Service{}
 				// make copy
 				*sp = *o
 				srv = append(srv, sp)
@@ -129,7 +124,7 @@ func Remove(old, del []*registry.Service) []*registry.Service {
 	var services []*registry.Service
 
 	for _, o := range old {
-		srv := new(registry.Service)
+		srv := &registry.Service{}
 		*srv = *o
 
 		var rem bool
@@ -150,39 +145,4 @@ func Remove(old, del []*registry.Service) []*registry.Service {
 	}
 
 	return services
-}
-
-func NewService(s server.Server) (*registry.Service, error) {
-	opts := s.Options()
-
-	advt := opts.Address
-	if len(opts.Advertise) > 0 {
-		advt = opts.Advertise
-	}
-
-	host, port, err := net.SplitHostPort(advt)
-	if err != nil {
-		return nil, err
-	}
-
-	addr, err := addr.Extract(host)
-	if err != nil {
-		addr = host
-	}
-
-	node := &registry.Node{
-		Id:      opts.Name + "-" + opts.Id,
-		Address: net.JoinHostPort(addr, port),
-	}
-	node.Metadata = metadata.Copy(opts.Metadata)
-
-	node.Metadata["server"] = s.String()
-	node.Metadata["broker"] = opts.Broker.String()
-	node.Metadata["registry"] = opts.Registry.String()
-
-	return &registry.Service{
-		Name:    opts.Name,
-		Version: opts.Version,
-		Nodes:   []*registry.Node{node},
-	}, nil
 }

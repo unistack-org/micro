@@ -11,20 +11,20 @@ type Profile interface {
 }
 
 var (
-	DefaultProfile Profile = new(noop)
+	DefaultProfile Profile = &NoopProfile{}
 )
 
-type noop struct{}
+type NoopProfile struct{}
 
-func (p *noop) Start() error {
+func (p *NoopProfile) Start() error {
 	return nil
 }
 
-func (p *noop) Stop() error {
+func (p *NoopProfile) Stop() error {
 	return nil
 }
 
-func (p *noop) String() string {
+func (p *NoopProfile) String() string {
 	return "noop"
 }
 

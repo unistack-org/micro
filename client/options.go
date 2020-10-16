@@ -7,11 +7,11 @@ import (
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/network/transport"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/router"
 	"github.com/unistack-org/micro/v3/selector"
 	"github.com/unistack-org/micro/v3/selector/random"
-	"github.com/unistack-org/micro/v3/network/transport"
 )
 
 type Options struct {
@@ -46,6 +46,14 @@ type Options struct {
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
+}
+
+func NewCallOptions(opts ...CallOption) CallOptions {
+	options := CallOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
 }
 
 type CallOptions struct {
@@ -84,6 +92,20 @@ type CallOptions struct {
 	Context context.Context
 }
 
+func Context(ctx context.Context) Option {
+	return func(o *Options) {
+		o.Context = ctx
+	}
+}
+
+func NewPublishOptions(opts ...PublishOption) PublishOptions {
+	options := PublishOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 type PublishOptions struct {
 	// Exchange is the routing exchange for the message
 	Exchange string
@@ -92,8 +114,24 @@ type PublishOptions struct {
 	Context context.Context
 }
 
+func NewMessageOptions(opts ...MessageOption) MessageOptions {
+	options := MessageOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 type MessageOptions struct {
 	ContentType string
+}
+
+func NewRequestOptions(opts ...RequestOption) RequestOptions {
+	options := RequestOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
 }
 
 type RequestOptions struct {

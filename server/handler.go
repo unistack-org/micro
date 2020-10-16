@@ -1,94 +1,59 @@
 package server
 
-import "context"
+import (
+	"reflect"
 
-type HandlerOption func(*HandlerOptions)
+	"github.com/unistack-org/micro/v3/registry"
+)
 
-type HandlerOptions struct {
-	Internal bool
-	Metadata map[string]map[string]string
-	Context  context.Context
+type rpcHandler struct {
+	name      string
+	handler   interface{}
+	endpoints []*registry.Endpoint
+	opts      HandlerOptions
 }
 
-func NewHandlerOptions(opts ...HandlerOption) HandlerOptions {
-	options := HandlerOptions{
-		Context: context.Background(),
+func newRpcHandler(handler interface{}, opts ...HandlerOption) Handler {
+	options := NewHandlerOptions(opts...)
+
+	typ := reflect.TypeOf(handler)
+	hdlr := reflect.ValueOf(handler)
+	name := reflect.Indirect(hdlr).Type().Name()
+
+	var endpoints []*registry.Endpoint
+
+	for m := 0; m < typ.NumMethod(); m++ {
+		if e := registry.ExtractEndpoint(typ.Method(m)); e != nil {
+			e.Name = name + "." + e.Name
+
+			for k, v := range options.Metadata[e.Name] {
+				e.Metadata[k] = v
+			}
+
+			endpoints = append(endpoints, e)
+		}
 	}
 
-	for _, o := range opts {
-		o(&options)
-	}
-
-	return options
-}
-
-type SubscriberOption func(*SubscriberOptions)
-
-type SubscriberOptions struct {
-	// AutoAck defaults to true. When a handler returns
-	// with a nil error the message is acked.
-	AutoAck  bool
-	Queue    string
-	Internal bool
-	Context  context.Context
-}
-
-func NewSubscriberOptions(opts ...SubscriberOption) SubscriberOptions {
-	options := SubscriberOptions{
-		AutoAck: true,
-		Context: context.Background(),
-	}
-
-	for _, o := range opts {
-		o(&options)
-	}
-
-	return options
-}
-
-// EndpointMetadata is a Handler option that allows metadata to be added to
-// individual endpoints.
-func EndpointMetadata(name string, md map[string]string) HandlerOption {
-	return func(o *HandlerOptions) {
-		o.Metadata[name] = md
+	return &rpcHandler{
+		name:      name,
+		handler:   handler,
+		endpoints: endpoints,
+		opts:      options,
 	}
 }
 
-// Internal Handler options specifies that a handler is not advertised
-// to the discovery system. In the future this may also limit request
-// to the internal network or authorised user.
-func InternalHandler(b bool) HandlerOption {
-	return func(o *HandlerOptions) {
-		o.Internal = b
-	}
+func (r *rpcHandler) Name() string {
+	return r.name
 }
 
-// Internal Subscriber options specifies that a subscriber is not advertised
-// to the discovery system.
-func InternalSubscriber(b bool) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.Internal = b
-	}
+func (r *rpcHandler) Handler() interface{} {
+	return r.handler
 }
 
-// DisableAutoAck will disable auto acking of messages
-// after they have been handled.
-func DisableAutoAck() SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.AutoAck = false
-	}
+func (r *rpcHandler) Endpoints() []*registry.Endpoint {
+	return r.endpoints
 }
 
-// Shared queue name distributed messages across subscribers
-func SubscriberQueue(n string) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.Queue = n
-	}
-}
-
-// SubscriberContext set context options to allow broker SubscriberOption passed
-func SubscriberContext(ctx context.Context) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.Context = ctx
-	}
+func (r *rpcHandler) Options() HandlerOptions {
+	return r.opts
 }

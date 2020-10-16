@@ -37,6 +37,8 @@ type RegisterOptions struct {
 	Context context.Context
 	// Domain to register the service in
 	Domain string
+	// Attempts specify attempts for register
+	Attempts int
 }
 
 type WatchOptions struct {
@@ -54,6 +56,8 @@ type DeregisterOptions struct {
 	Context context.Context
 	// Domain the service was registered in
 	Domain string
+	// Atempts specify max attempts for deregister
+	Attempts int
 }
 
 type GetOptions struct {
@@ -95,10 +99,23 @@ func Logger(l logger.Logger) Option {
 	}
 }
 
+// Context sets the context
+func Context(ctx context.Context) Option {
+	return func(o *Options) {
+		o.Context = ctx
+	}
+}
+
 // Specify TLS Config
 func TLSConfig(t *tls.Config) Option {
 	return func(o *Options) {
 		o.TLSConfig = t
+	}
+}
+
+func RegisterAttempts(t int) RegisterOption {
+	return func(o *RegisterOptions) {
+		o.Attempts = t
 	}
 }
 
@@ -136,6 +153,12 @@ func WatchContext(ctx context.Context) WatchOption {
 func WatchDomain(d string) WatchOption {
 	return func(o *WatchOptions) {
 		o.Domain = d
+	}
+}
+
+func DeregisterTimeout(t int) DeregisterOption {
+	return func(o *DeregisterOptions) {
+		o.Attempts = t
 	}
 }
 

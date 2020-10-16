@@ -21,6 +21,14 @@ type Options struct {
 	Wrappers     []Wrapper
 }
 
+func NewOptions(opts ...Option) Options {
+	options := Options{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 type Wrapper func(h http.Handler) http.Handler
 
 func WrapHandler(w ...Wrapper) Option {

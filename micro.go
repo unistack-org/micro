@@ -4,6 +4,7 @@ package micro
 import (
 	"context"
 
+	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/server"
 )
@@ -17,13 +18,15 @@ type Service interface {
 	// The service name
 	Name() string
 	// Init initialises options
-	Init(...Option)
+	Init(...Option) error
 	// Options returns the current options
 	Options() Options
 	// Client is used to call services
 	Client() client.Client
 	// Server is for handling requests and events
 	Server() server.Server
+	// Broker is for broker usage
+	Broker() broker.Broker
 	// Run the service
 	Run() error
 	// The service implementation

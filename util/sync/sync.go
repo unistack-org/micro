@@ -42,12 +42,20 @@ func NewSync(opts ...Option) Sync {
 	return c
 }
 
+func (c *syncStore) Connect(ctx context.Context) error {
+	return nil
+}
+
+func (c *syncStore) Disconnect(ctx context.Context) error {
+	return nil
+}
+
 func (c *syncStore) Close(ctx context.Context) error {
 	return nil
 }
 
 // Init initialises the storeOptions
-func (c *syncStore) Init(ctx context.Context, opts ...store.Option) error {
+func (c *syncStore) Init(opts ...store.Option) error {
 	for _, o := range opts {
 		o(&c.storeOpts)
 	}
@@ -55,7 +63,7 @@ func (c *syncStore) Init(ctx context.Context, opts ...store.Option) error {
 		return fmt.Errorf("the sync has no stores")
 	}
 	for _, s := range c.syncOpts.Stores {
-		if err := s.Init(ctx); err != nil {
+		if err := s.Init(); err != nil {
 			return fmt.Errorf("Store %s failed to Init(): %w", s.String(), err)
 		}
 	}

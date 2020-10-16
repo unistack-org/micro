@@ -25,12 +25,13 @@ func (c *Codec) ReadBody(b interface{}) error {
 	if b == nil {
 		return nil
 	}
-	if pb, ok := b.(proto.Message); ok {
+	switch m := b.(type) {
+	case proto.Message:
 		buf, err := ioutil.ReadAll(c.Conn)
 		if err != nil {
 			return err
 		}
-		return jsonpb.Unmarshal(buf, pb)
+		return jsonpb.Unmarshal(buf, m)
 	}
 	return c.Decoder.Decode(b)
 }

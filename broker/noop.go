@@ -1,6 +1,8 @@
 package broker
 
-type noopBroker struct {
+import "context"
+
+type NoopBroker struct {
 	opts Options
 }
 
@@ -9,7 +11,7 @@ type noopSubscriber struct {
 	opts  SubscribeOptions
 }
 
-func (n *noopBroker) Init(opts ...Option) error {
+func (n *NoopBroker) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
@@ -17,27 +19,27 @@ func (n *noopBroker) Init(opts ...Option) error {
 	return nil
 }
 
-func (n *noopBroker) Options() Options {
+func (n *NoopBroker) Options() Options {
 	return n.opts
 }
 
-func (n *noopBroker) Address() string {
+func (n *NoopBroker) Address() string {
 	return ""
 }
 
-func (n *noopBroker) Connect() error {
+func (n *NoopBroker) Connect(ctx context.Context) error {
 	return nil
 }
 
-func (n *noopBroker) Disconnect() error {
+func (n *NoopBroker) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (n *noopBroker) Publish(topic string, m *Message, opts ...PublishOption) error {
+func (n *NoopBroker) Publish(ctx context.Context, topic string, m *Message, opts ...PublishOption) error {
 	return nil
 }
 
-func (n *noopBroker) Subscribe(topic string, h Handler, opts ...SubscribeOption) (Subscriber, error) {
+func (n *NoopBroker) Subscribe(ctx context.Context, topic string, h Handler, opts ...SubscribeOption) (Subscriber, error) {
 	options := NewSubscribeOptions()
 
 	for _, o := range opts {
@@ -47,7 +49,7 @@ func (n *noopBroker) Subscribe(topic string, h Handler, opts ...SubscribeOption)
 	return &noopSubscriber{topic: topic, opts: options}, nil
 }
 
-func (n *noopBroker) String() string {
+func (n *NoopBroker) String() string {
 	return "noop"
 }
 
@@ -59,16 +61,6 @@ func (n *noopSubscriber) Topic() string {
 	return n.topic
 }
 
-func (n *noopSubscriber) Unsubscribe() error {
+func (n *noopSubscriber) Unsubscribe(ctx context.Context) error {
 	return nil
-}
-
-// newBroker returns a new noop broker
-func newBroker(opts ...Option) Broker {
-	options := NewOptions()
-
-	for _, o := range opts {
-		o(&options)
-	}
-	return &noopBroker{opts: options}
 }

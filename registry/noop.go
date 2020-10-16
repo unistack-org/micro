@@ -1,53 +1,59 @@
 package registry
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
-type noopRegistry struct {
+type NoopRegistry struct {
 	opts Options
 }
 
-func (n *noopRegistry) Init(opts ...Option) error {
+func (n *NoopRegistry) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
 	return nil
 }
 
-func (n *noopRegistry) Options() Options {
+func (n *NoopRegistry) Options() Options {
 	return n.opts
 }
 
-func (n *noopRegistry) Register(*Service, ...RegisterOption) error {
+func (n *NoopRegistry) Connect(ctx context.Context) error {
 	return nil
 }
 
-func (n *noopRegistry) Deregister(*Service, ...DeregisterOption) error {
+func (n *NoopRegistry) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (n *noopRegistry) GetService(string, ...GetOption) ([]*Service, error) {
+func (n *NoopRegistry) Register(*Service, ...RegisterOption) error {
+	return nil
+}
+
+func (n *NoopRegistry) Deregister(*Service, ...DeregisterOption) error {
+	return nil
+}
+
+func (n *NoopRegistry) GetService(string, ...GetOption) ([]*Service, error) {
 	return []*Service{}, nil
 }
 
-func (n *noopRegistry) ListServices(...ListOption) ([]*Service, error) {
+func (n *NoopRegistry) ListServices(...ListOption) ([]*Service, error) {
 	return []*Service{}, nil
 }
 
-func (n *noopRegistry) Watch(...WatchOption) (Watcher, error) {
+func (n *NoopRegistry) Watch(...WatchOption) (Watcher, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (n *noopRegistry) String() string {
+func (n *NoopRegistry) String() string {
 	return "noop"
 }
 
-// newRegistry returns a new noop registry
-func newRegistry(opts ...Option) Registry {
-	options := NewOptions()
-
-	for _, o := range opts {
-		o(&options)
-	}
-
-	return &noopRegistry{opts: options}
+// NewRegistry returns a new noop registry
+func NewRegistry(opts ...Option) Registry {
+	options := NewOptions(opts...)
+	return &NoopRegistry{opts: options}
 }

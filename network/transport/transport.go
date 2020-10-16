@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	DefaultTransport Transport
+	DefaultTransport Transport = &NoopTransport{opts: NewOptions()}
 )
 
 // Transport is an interface which is used for communication between

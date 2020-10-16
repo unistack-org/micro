@@ -21,13 +21,8 @@ type httpServer struct {
 }
 
 func NewServer(address string, opts ...server.Option) server.Server {
-	var options server.Options
-	for _, o := range opts {
-		o(&options)
-	}
-
 	return &httpServer{
-		opts:    options,
+		opts:    server.NewOptions(opts...),
 		mux:     http.NewServeMux(),
 		address: address,
 		exit:    make(chan chan error),

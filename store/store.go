@@ -11,13 +11,14 @@ import (
 var (
 	// ErrNotFound is returned when a key doesn't exist
 	ErrNotFound        = errors.New("not found")
-	DefaultStore Store = newStore()
+	DefaultStore Store = &NoopStore{opts: NewOptions()}
 )
 
 // Store is a data storage interface
 type Store interface {
 	// Init initialises the store. It must perform any required setup on the backing storage implementation and check that it is ready for use, returning any errors.
-	Init(ctx context.Context, opts ...Option) error
+	Init(opts ...Option) error
+	Connect(ctx context.Context) error
 	// Options allows you to view the current options.
 	Options() Options
 	// Read takes a single key name and optional ReadOptions. It returns matching []*Record or an error.
@@ -28,8 +29,8 @@ type Store interface {
 	Delete(ctx context.Context, key string, opts ...DeleteOption) error
 	// List returns any keys that match, or an empty list with no error if none matched.
 	List(ctx context.Context, opts ...ListOption) ([]string, error)
-	// Close the store
-	Close(ctx context.Context) error
+	// Disconnect the store
+	Disconnect(ctx context.Context) error
 	// String returns the name of the implementation.
 	String() string
 }
