@@ -164,14 +164,6 @@ func (s *service) Start() error {
 		}
 	}
 
-	/*
-		if s.opts.Transport != nil {
-			if err := s.opts.Transport.Connect(s.opts.Context); err != nil {
-				return err
-			}
-		}
-	*/
-
 	if s.opts.Store != nil {
 		if err := s.opts.Store.Connect(s.opts.Context); err != nil {
 			return err
@@ -209,6 +201,24 @@ func (s *service) Stop() error {
 
 	for _, fn := range s.opts.AfterStop {
 		if err = fn(); err != nil {
+			return err
+		}
+	}
+
+	if s.opts.Registry != nil {
+		if err := s.opts.Registry.Disconnect(s.opts.Context); err != nil {
+			return err
+		}
+	}
+
+	if s.opts.Broker != nil {
+		if err := s.opts.Broker.Disconnect(s.opts.Context); err != nil {
+			return err
+		}
+	}
+
+	if s.opts.Store != nil {
+		if err := s.opts.Store.Disconnect(s.opts.Context); err != nil {
 			return err
 		}
 	}
