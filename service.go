@@ -5,7 +5,6 @@ import (
 	rtime "runtime"
 	"sync"
 
-	cmd "github.com/unistack-org/micro-config-cmd"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/logger"
@@ -22,10 +21,7 @@ type service struct {
 }
 
 func newService(opts ...Option) Service {
-	options := newOptions(opts...)
-
-	service := &service{opts: options}
-
+	service := &service{opts: NewOptions(opts...)}
 	return service
 }
 
@@ -37,6 +33,8 @@ func (s *service) Name() string {
 // which parses command line flags. cmd.Init is only called
 // on first Init.
 func (s *service) Init(opts ...Option) error {
+	//var once sync.Once
+
 	// process options
 	for _, o := range opts {
 		o(&s.opts)
@@ -48,21 +46,13 @@ func (s *service) Init(opts ...Option) error {
 			s.opts.Cmd.App().Name = s.Server().Options().Name
 		}
 
+		//once.Do(func() {
 		// Initialise the command options
-		if err := s.opts.Cmd.Init(
-			cmd.Auth(&s.opts.Auth),
-			cmd.Broker(&s.opts.Broker),
-			cmd.Registry(&s.opts.Registry),
-			cmd.Runtime(&s.opts.Runtime),
-			cmd.Transport(&s.opts.Transport),
-			cmd.Client(&s.opts.Client),
-			cmd.Config(&s.opts.Config),
-			cmd.Server(&s.opts.Server),
-			cmd.Store(&s.opts.Store),
-			cmd.Profile(&s.opts.Profile),
-		); err != nil {
-			return err
-		}
+		//	if err := s.opts.Cmd.Init(); err != nil {
+		//		logger.Fatal(err)
+		//return err
+		//	}
+		//})
 	}
 
 	if s.opts.Registry != nil {

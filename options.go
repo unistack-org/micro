@@ -49,8 +49,8 @@ type Options struct {
 	Context context.Context
 }
 
-func newOptions(opts ...Option) Options {
-	opt := Options{
+func NewOptions(opts ...Option) Options {
+	options := Options{
 		Context:   context.Background(),
 		Server:    server.DefaultServer,
 		Client:    client.DefaultClient,
@@ -67,10 +67,10 @@ func newOptions(opts ...Option) Options {
 	}
 
 	for _, o := range opts {
-		o(&opt)
+		o(&options)
 	}
 
-	return opt
+	return options
 }
 
 type Option func(*Options)
