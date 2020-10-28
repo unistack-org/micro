@@ -1,6 +1,7 @@
 package micro
 
 import (
+	"fmt"
 	rtime "runtime"
 	"sync"
 
@@ -136,13 +137,43 @@ func (s *service) String() string {
 }
 
 func (s *service) Start() error {
+	var err error
 	if logger.V(logger.InfoLevel) {
 		logger.Infof("Starting [service] %s", s.Name())
 	}
 
-	var err error
 	for _, fn := range s.opts.BeforeStart {
 		if err = fn(); err != nil {
+			return err
+		}
+	}
+
+	if s.opts.Server == nil {
+		return fmt.Errorf("cant start nil server")
+	}
+
+	if s.opts.Registry != nil {
+		if err := s.opts.Registry.Connect(s.opts.Context); err != nil {
+			return err
+		}
+	}
+
+	if s.opts.Broker != nil {
+		if err := s.opts.Broker.Connect(s.opts.Context); err != nil {
+			return err
+		}
+	}
+
+	/*
+		if s.opts.Transport != nil {
+			if err := s.opts.Transport.Connect(s.opts.Context); err != nil {
+				return err
+			}
+		}
+	*/
+
+	if s.opts.Store != nil {
+		if err := s.opts.Store.Connect(s.opts.Context); err != nil {
 			return err
 		}
 	}
