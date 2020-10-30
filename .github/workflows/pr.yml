@@ -34,7 +34,10 @@ jobs:
         path: micro-tests
         fetch-depth: 1
     - name: micro deps
-      run: cd micro-tests && go get -v -t -d ./...
+      run: |
+        cd micro-tests
+        go mod edit -replace="github.com/unistack-org/micro/v3=../"
+        go get -v -t -d ./...
     - name: micro test
       env:
         INTEGRATION_TESTS: yes
