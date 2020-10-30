@@ -20,12 +20,25 @@ jobs:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: ${{ runner.os }}-go-
-    - name: deps
+    - name: sdk deps
       run: go get -v -t -d ./...
-    - name: test
+    - name: sdk test
       env:
         INTEGRATION_TESTS: yes
       run: go test -mod readonly -v ./...
+    - name: checkout tests
+      uses: actions/checkout@v2
+      with:
+        repository: unistack-org/micro-tests
+        ref: refs/heads/master
+        path: micro-tests
+        fetch-depth: 1
+    - name: micro deps
+      run: cd micro-tests && go get -v -t -d ./...
+    - name: micro test
+      env:
+        INTEGRATION_TESTS: yes
+      run: cd micro-tests && go test -mod readonly -v ./...
   lint:
     name: lint
     runs-on: ubuntu-latest
