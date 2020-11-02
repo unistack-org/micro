@@ -1,5 +1,7 @@
 package transport
 
+import "context"
+
 type noopTransport struct {
 	opts Options
 }
@@ -19,12 +21,12 @@ func (t *noopTransport) Options() Options {
 	return t.opts
 }
 
-func (t *noopTransport) Dial(addr string, opts ...DialOption) (Client, error) {
+func (t *noopTransport) Dial(ctx context.Context, addr string, opts ...DialOption) (Client, error) {
 	options := NewDialOptions(opts...)
 	return &noopClient{opts: options}, nil
 }
 
-func (t *noopTransport) Listen(addr string, opts ...ListenOption) (Listener, error) {
+func (t *noopTransport) Listen(ctx context.Context, addr string, opts ...ListenOption) (Listener, error) {
 	options := NewListenOptions(opts...)
 	return &noopListener{opts: options}, nil
 }

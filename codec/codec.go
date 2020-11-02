@@ -14,12 +14,14 @@ const (
 )
 
 var (
+	// ErrInvalidMessage returned when invalid messge passed to codec
 	ErrInvalidMessage = errors.New("invalid message")
 )
 
+// MessageType
 type MessageType int
 
-// Takes in a connection/buffer and returns a new Codec
+// NewCodec takes in a connection/buffer and returns a new Codec
 type NewCodec func(io.ReadWriteCloser) Codec
 
 // Codec encodes/decodes various types of messages used within go-micro.
@@ -34,11 +36,13 @@ type Codec interface {
 	String() string
 }
 
+// Reader interface
 type Reader interface {
 	ReadHeader(*Message, MessageType) error
 	ReadBody(interface{}) error
 }
 
+// Writer interface
 type Writer interface {
 	Write(*Message, interface{}) error
 }

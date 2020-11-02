@@ -12,7 +12,7 @@ import (
 
 var (
 	// DefaultRegisterFunc uses backoff to register service
-	DefaultRegisterFunc = func(service *registry.Service, config Options) error {
+	DefaultRegisterFunc = func(svc *registry.Service, config Options) error {
 		var err error
 
 		opts := []registry.RegisterOption{
@@ -21,7 +21,7 @@ var (
 		}
 
 		for i := 0; i <= config.RegisterAttempts; i++ {
-			err = config.Registry.Register(service, opts...)
+			err = config.Registry.Register(config.Context, svc, opts...)
 			if err == nil {
 				break
 			}
@@ -32,7 +32,7 @@ var (
 		return err
 	}
 	// DefaultDeregisterFunc uses backoff to deregister service
-	DefaultDeregisterFunc = func(service *registry.Service, config Options) error {
+	DefaultDeregisterFunc = func(svc *registry.Service, config Options) error {
 		var err error
 
 		opts := []registry.DeregisterOption{
@@ -40,7 +40,7 @@ var (
 		}
 
 		for i := 0; i <= config.DeregisterAttempts; i++ {
-			err = config.Registry.Deregister(service, opts...)
+			err = config.Registry.Deregister(config.Context, svc, opts...)
 			if err == nil {
 				break
 			}

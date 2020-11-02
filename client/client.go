@@ -9,6 +9,7 @@ import (
 )
 
 var (
+	// DefaultClient is the global default client
 	DefaultClient Client = NewClient()
 )
 

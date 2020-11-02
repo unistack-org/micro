@@ -31,6 +31,7 @@ type Options struct {
 	Context context.Context
 }
 
+// NewOptions returns new options
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Logger:  logger.DefaultLogger,
@@ -44,6 +45,7 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+// DialOptions struct
 type DialOptions struct {
 	// Tells the transport this is a streaming connection with
 	// multiple calls to send/recv and that send may not even be called
@@ -59,6 +61,7 @@ type DialOptions struct {
 	Context context.Context
 }
 
+// NewDialOptions returns new DialOptions
 func NewDialOptions(opts ...DialOption) DialOptions {
 	options := DialOptions{
 		Context: context.Background(),
@@ -71,6 +74,7 @@ func NewDialOptions(opts ...DialOption) DialOptions {
 	return options
 }
 
+// ListenOptions struct
 type ListenOptions struct {
 	// TODO: add tls options when listening
 	// Currently set in global options
@@ -80,6 +84,7 @@ type ListenOptions struct {
 	Context context.Context
 }
 
+// NewListenOptions returns new ListenOptions
 func NewListenOptions(opts ...ListenOption) ListenOptions {
 	options := ListenOptions{
 		Context: context.Background(),
@@ -106,6 +111,7 @@ func Logger(l logger.Logger) Option {
 	}
 }
 
+// Context sets the context
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
 		o.Context = ctx
@@ -142,14 +148,14 @@ func TLSConfig(t *tls.Config) Option {
 	}
 }
 
-// Indicates whether this is a streaming connection
+// WithStream indicates whether this is a streaming connection
 func WithStream() DialOption {
 	return func(o *DialOptions) {
 		o.Stream = true
 	}
 }
 
-// Timeout used when dialling the remote side
+// WithTimeout used when dialling the remote side
 func WithTimeout(d time.Duration) DialOption {
 	return func(o *DialOptions) {
 		o.Timeout = d

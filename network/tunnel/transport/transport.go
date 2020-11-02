@@ -26,7 +26,7 @@ func (t *tunTransport) Init(opts ...transport.Option) error {
 
 	// close the existing tunnel
 	if t.tunnel != nil {
-		t.tunnel.Close()
+		t.tunnel.Close(context.TODO())
 	}
 
 	// get the tunnel
@@ -47,12 +47,12 @@ func (t *tunTransport) Init(opts ...transport.Option) error {
 	return nil
 }
 
-func (t *tunTransport) Dial(addr string, opts ...transport.DialOption) (transport.Client, error) {
-	if err := t.tunnel.Connect(); err != nil {
+func (t *tunTransport) Dial(ctx context.Context, addr string, opts ...transport.DialOption) (transport.Client, error) {
+	if err := t.tunnel.Connect(ctx); err != nil {
 		return nil, err
 	}
 
-	c, err := t.tunnel.Dial(addr)
+	c, err := t.tunnel.Dial(ctx, addr)
 	if err != nil {
 		return nil, err
 	}
@@ -60,12 +60,12 @@ func (t *tunTransport) Dial(addr string, opts ...transport.DialOption) (transpor
 	return c, nil
 }
 
-func (t *tunTransport) Listen(addr string, opts ...transport.ListenOption) (transport.Listener, error) {
-	if err := t.tunnel.Connect(); err != nil {
+func (t *tunTransport) Listen(ctx context.Context, addr string, opts ...transport.ListenOption) (transport.Listener, error) {
+	if err := t.tunnel.Connect(ctx); err != nil {
 		return nil, err
 	}
 
-	l, err := t.tunnel.Listen(addr)
+	l, err := t.tunnel.Listen(ctx, addr)
 	if err != nil {
 		return nil, err
 	}

@@ -4,9 +4,9 @@ import (
 	"context"
 
 	raw "github.com/unistack-org/micro-codec-bytes"
+	json "github.com/unistack-org/micro-codec-json"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
-	"github.com/unistack-org/micro/v3/codec/json"
 	"github.com/unistack-org/micro/v3/errors"
 	"github.com/unistack-org/micro/v3/metadata"
 )

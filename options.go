@@ -91,6 +91,7 @@ func Broker(b broker.Broker) Option {
 	}
 }
 
+// Cmd to be used for service
 func Cmd(c cmd.Cmd) Option {
 	return func(o *Options) {
 		o.Cmd = c

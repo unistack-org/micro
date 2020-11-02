@@ -2,6 +2,8 @@
 package registry
 
 import (
+	"context"
+
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/resolver"
 )
@@ -14,7 +16,7 @@ type Resolver struct {
 
 // Resolve assumes ID is a domain name e.g micro.mu
 func (r *Resolver) Resolve(name string) ([]*resolver.Record, error) {
-	services, err := r.Registry.GetService(name)
+	services, err := r.Registry.GetService(context.TODO(), name)
 	if err != nil {
 		return nil, err
 	}

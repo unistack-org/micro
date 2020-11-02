@@ -50,7 +50,7 @@ func (r *registryRouter) refresh() {
 	var attempts int
 
 	for {
-		services, err := r.opts.Registry.ListServices()
+		services, err := r.opts.Registry.ListServices(r.opts.Context)
 		if err != nil {
 			attempts++
 			if logger.V(logger.ErrorLevel) {
@@ -64,7 +64,7 @@ func (r *registryRouter) refresh() {
 
 		// for each service, get service and store endpoints
 		for _, s := range services {
-			service, err := r.opts.Registry.GetService(s.Name)
+			service, err := r.opts.Registry.GetService(r.opts.Context, s.Name)
 			if err != nil {
 				if logger.V(logger.ErrorLevel) {
 					logger.Errorf("unable to get service: %v", err)
@@ -92,7 +92,7 @@ func (r *registryRouter) process(res *registry.Result) {
 	}
 
 	// get entry from cache
-	service, err := r.opts.Registry.GetService(res.Service.Name)
+	service, err := r.opts.Registry.GetService(r.opts.Context, res.Service.Name)
 	if err != nil {
 		if logger.V(logger.ErrorLevel) {
 			logger.Errorf("unable to get %v service: %v", res.Service.Name, err)
@@ -230,7 +230,7 @@ func (r *registryRouter) watch() {
 		}
 
 		// watch for changes
-		w, err := r.opts.Registry.Watch()
+		w, err := r.opts.Registry.Watch(r.opts.Context)
 		if err != nil {
 			attempts++
 			if logger.V(logger.ErrorLevel) {
@@ -432,7 +432,7 @@ func (r *registryRouter) Route(req *http.Request) (*api.Service, error) {
 	name := rp.Name
 
 	// get service
-	services, err := r.opts.Registry.GetService(name, registry.GetDomain(rp.Domain))
+	services, err := r.opts.Registry.GetService(r.opts.Context, name, registry.GetDomain(rp.Domain))
 	if err != nil {
 		return nil, err
 	}

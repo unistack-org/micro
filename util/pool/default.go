@@ -1,6 +1,7 @@
 package pool
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -57,7 +58,7 @@ func (p *poolConn) Created() time.Time {
 	return p.created
 }
 
-func (p *pool) Get(addr string, opts ...transport.DialOption) (Conn, error) {
+func (p *pool) Get(ctx context.Context, addr string, opts ...transport.DialOption) (Conn, error) {
 	p.Lock()
 	conns := p.conns[addr]
 
@@ -83,7 +84,7 @@ func (p *pool) Get(addr string, opts ...transport.DialOption) (Conn, error) {
 	p.Unlock()
 
 	// create new conn
-	c, err := p.tr.Dial(addr, opts...)
+	c, err := p.tr.Dial(ctx, addr, opts...)
 	if err != nil {
 		return nil, err
 	}

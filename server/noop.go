@@ -8,12 +8,12 @@ import (
 	"time"
 
 	craw "github.com/unistack-org/micro-codec-bytes"
+	cjson "github.com/unistack-org/micro-codec-json"
+	cjsonrpc "github.com/unistack-org/micro-codec-jsonrpc"
+	cproto "github.com/unistack-org/micro-codec-proto"
+	cprotorpc "github.com/unistack-org/micro-codec-protorpc"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
-	cjson "github.com/unistack-org/micro/v3/codec/json"
-	cjsonrpc "github.com/unistack-org/micro/v3/codec/jsonrpc"
-	cproto "github.com/unistack-org/micro/v3/codec/proto"
-	cprotorpc "github.com/unistack-org/micro/v3/codec/protorpc"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/registry"
 )

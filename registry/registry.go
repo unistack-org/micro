@@ -30,11 +30,11 @@ type Registry interface {
 	Options() Options
 	Connect(context.Context) error
 	Disconnect(context.Context) error
-	Register(*Service, ...RegisterOption) error
-	Deregister(*Service, ...DeregisterOption) error
-	GetService(string, ...GetOption) ([]*Service, error)
-	ListServices(...ListOption) ([]*Service, error)
-	Watch(...WatchOption) (Watcher, error)
+	Register(context.Context, *Service, ...RegisterOption) error
+	Deregister(context.Context, *Service, ...DeregisterOption) error
+	GetService(context.Context, string, ...GetOption) ([]*Service, error)
+	ListServices(context.Context, ...ListOption) ([]*Service, error)
+	Watch(context.Context, ...WatchOption) (Watcher, error)
 	String() string
 }
 

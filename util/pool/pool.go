@@ -2,6 +2,7 @@
 package pool
 
 import (
+	"context"
 	"time"
 
 	"github.com/unistack-org/micro/v3/network/transport"
@@ -12,7 +13,7 @@ type Pool interface {
 	// Close the pool
 	Close() error
 	// Get a connection
-	Get(addr string, opts ...transport.DialOption) (Conn, error)
+	Get(ctx context.Context, addr string, opts ...transport.DialOption) (Conn, error)
 	// Release the connection
 	Release(c Conn, status error) error
 }
