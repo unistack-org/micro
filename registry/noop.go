@@ -5,55 +5,64 @@ import (
 	"fmt"
 )
 
-type NoopRegistry struct {
+type noopRegistry struct {
 	opts Options
 }
 
-func (n *NoopRegistry) Init(opts ...Option) error {
+// Init initialize registry
+func (n *noopRegistry) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
 	return nil
 }
 
-func (n *NoopRegistry) Options() Options {
+// Options returns options struct
+func (n *noopRegistry) Options() Options {
 	return n.opts
 }
 
-func (n *NoopRegistry) Connect(ctx context.Context) error {
+// Connect opens connection to registry
+func (n *noopRegistry) Connect(ctx context.Context) error {
 	return nil
 }
 
-func (n *NoopRegistry) Disconnect(ctx context.Context) error {
+// Disconnect close connection to registry
+func (n *noopRegistry) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (n *NoopRegistry) Register(*Service, ...RegisterOption) error {
+// Register registers service
+func (n *noopRegistry) Register(*Service, ...RegisterOption) error {
 	return nil
 }
 
-func (n *NoopRegistry) Deregister(*Service, ...DeregisterOption) error {
+// Deregister deregisters service
+func (n *noopRegistry) Deregister(*Service, ...DeregisterOption) error {
 	return nil
 }
 
-func (n *NoopRegistry) GetService(string, ...GetOption) ([]*Service, error) {
+// GetService returns servive info
+func (n *noopRegistry) GetService(string, ...GetOption) ([]*Service, error) {
 	return []*Service{}, nil
 }
 
-func (n *NoopRegistry) ListServices(...ListOption) ([]*Service, error) {
+// ListServices listing services
+func (n *noopRegistry) ListServices(...ListOption) ([]*Service, error) {
 	return []*Service{}, nil
 }
 
-func (n *NoopRegistry) Watch(...WatchOption) (Watcher, error) {
+// Watch is used to watch for service changes
+func (n *noopRegistry) Watch(...WatchOption) (Watcher, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (n *NoopRegistry) String() string {
+// String returns registry string representation
+func (n *noopRegistry) String() string {
 	return "noop"
 }
 
 // NewRegistry returns a new noop registry
 func NewRegistry(opts ...Option) Registry {
-	options := NewOptions(opts...)
-	return &NoopRegistry{opts: options}
+	return &noopRegistry{opts: NewOptions(opts...)}
 }

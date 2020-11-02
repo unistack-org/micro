@@ -93,7 +93,7 @@ func NewTransport(opts ...transport.Option) transport.Transport {
 	return t
 }
 
-// WithTransport sets the internal tunnel
+// WithTunnel sets the internal tunnel
 func WithTunnel(t tunnel.Tunnel) transport.Option {
 	return func(o *transport.Options) {
 		if o.Context == nil {

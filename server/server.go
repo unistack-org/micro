@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	DefaultServer Server = &NoopServer{opts: NewOptions()}
+	DefaultServer Server = NewServer()
 )
 
 // Server is a simple micro server abstraction

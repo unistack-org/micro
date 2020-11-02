@@ -49,6 +49,7 @@ type Options struct {
 	Context context.Context
 }
 
+// NewOptions returns new Options filled with defaults and overrided by provided opts
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Context:   context.Background(),
@@ -73,6 +74,7 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+// Option func
 type Option func(*Options)
 
 // Broker to be used for service

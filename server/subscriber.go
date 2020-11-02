@@ -59,6 +59,7 @@ func isExportedOrBuiltinType(t reflect.Type) bool {
 	return isExported(t.Name()) || t.PkgPath() == ""
 }
 
+// ValidateSubscriber func
 func ValidateSubscriber(sub Subscriber) error {
 	typ := reflect.TypeOf(sub.Subscriber())
 	var argType reflect.Type
@@ -184,7 +185,7 @@ func newSubscriber(topic string, sub interface{}, opts ...SubscriberOption) Subs
 	}
 }
 
-func (n *NoopServer) createSubHandler(sb *subscriber, opts Options) broker.Handler {
+func (n *noopServer) createSubHandler(sb *subscriber, opts Options) broker.Handler {
 	return func(p broker.Event) (err error) {
 		defer func() {
 			if r := recover(); r != nil {

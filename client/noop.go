@@ -11,7 +11,7 @@ import (
 	"github.com/unistack-org/micro/v3/metadata"
 )
 
-type NoopClient struct {
+type noopClient struct {
 	opts Options
 }
 
@@ -29,6 +29,11 @@ type noopRequest struct {
 	body        interface{}
 	codec       codec.Writer
 	stream      bool
+}
+
+// NewClient returns new noop client
+func NewClient(opts ...Option) Client {
+	return &noopClient{opts: NewOptions(opts...)}
 }
 
 func (n *noopRequest) Service() string {
@@ -118,48 +123,40 @@ func (n *noopMessage) ContentType() string {
 	return n.opts.ContentType
 }
 
-func (n *NoopClient) Init(opts ...Option) error {
+func (n *noopClient) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
 	return nil
 }
 
-func (n *NoopClient) Options() Options {
+func (n *noopClient) Options() Options {
 	return n.opts
 }
 
-func (n *NoopClient) String() string {
+func (n *noopClient) String() string {
 	return "noop"
 }
 
-func (n *NoopClient) Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error {
+func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error {
 	return nil
 }
 
-func (n *NoopClient) NewRequest(service, endpoint string, req interface{}, opts ...RequestOption) Request {
+func (n *noopClient) NewRequest(service, endpoint string, req interface{}, opts ...RequestOption) Request {
 	return &noopRequest{}
 }
 
-func (n *NoopClient) NewMessage(topic string, msg interface{}, opts ...MessageOption) Message {
-	options := MessageOptions{}
-	for _, o := range opts {
-		o(&options)
-	}
-
+func (n *noopClient) NewMessage(topic string, msg interface{}, opts ...MessageOption) Message {
+	options := NewMessageOptions(opts...)
 	return &noopMessage{topic: topic, payload: msg, opts: options}
 }
 
-func (n *NoopClient) Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error) {
+func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error) {
 	return &noopStream{}, nil
 }
 
-func (n *NoopClient) Publish(ctx context.Context, p Message, opts ...PublishOption) error {
+func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOption) error {
 	var body []byte
-
-	if err := n.opts.Broker.Connect(ctx); err != nil {
-		return errors.InternalServerError("go.micro.client", err.Error())
-	}
 
 	options := NewPublishOptions(opts...)
 
@@ -207,12 +204,4 @@ func (n *NoopClient) Publish(ctx context.Context, p Message, opts ...PublishOpti
 	}, broker.PublishContext(options.Context))
 
 	return nil
-}
-
-func newClient(opts ...Option) Client {
-	options := NewOptions()
-	for _, o := range opts {
-		o(&options)
-	}
-	return &NoopClient{opts: options}
 }

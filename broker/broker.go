@@ -4,7 +4,7 @@ package broker
 import "context"
 
 var (
-	DefaultBroker Broker = &NoopBroker{opts: NewOptions()}
+	DefaultBroker Broker = NewBroker()
 )
 
 // Broker is an interface used for asynchronous messaging.

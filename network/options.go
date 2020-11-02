@@ -8,6 +8,7 @@ import (
 	"github.com/unistack-org/micro/v3/router"
 )
 
+// Option func
 type Option func(*Options)
 
 // Options configure network

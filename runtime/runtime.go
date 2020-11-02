@@ -7,6 +7,7 @@ import (
 )
 
 var (
+	// ErrAlreadyExists error
 	ErrAlreadyExists = errors.New("already exists")
 )
 

@@ -85,7 +85,7 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
-// Server name
+// Name sets the server name option
 func Name(n string) Option {
 	return func(o *Options) {
 		o.Name = n
@@ -99,7 +99,7 @@ func Namespace(n string) Option {
 	}
 }
 
-// Logger
+// Logger sets the logger option
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
@@ -127,7 +127,7 @@ func Address(a string) Option {
 	}
 }
 
-// The address to advertise for discovery - host:port
+// Advertise the address to advertise for discovery - host:port
 func Advertise(a string) Option {
 	return func(o *Options) {
 		o.Advertise = a
@@ -199,14 +199,14 @@ func RegisterCheck(fn func(context.Context) error) Option {
 	}
 }
 
-// Register the service with a TTL
+// RegisterTTL registers service with a TTL
 func RegisterTTL(t time.Duration) Option {
 	return func(o *Options) {
 		o.RegisterTTL = t
 	}
 }
 
-// Register the service with at interval
+// RegisterInterval registers service with at interval
 func RegisterInterval(t time.Duration) Option {
 	return func(o *Options) {
 		o.RegisterInterval = t
@@ -250,28 +250,31 @@ func Wait(wg *sync.WaitGroup) Option {
 	}
 }
 
-// Adds a handler Wrapper to a list of options passed into the server
+// WrapHandler adds a handler Wrapper to a list of options passed into the server
 func WrapHandler(w HandlerWrapper) Option {
 	return func(o *Options) {
 		o.HdlrWrappers = append(o.HdlrWrappers, w)
 	}
 }
 
-// Adds a subscriber Wrapper to a list of options passed into the server
+// WrapSubscriber adds a subscriber Wrapper to a list of options passed into the server
 func WrapSubscriber(w SubscriberWrapper) Option {
 	return func(o *Options) {
 		o.SubWrappers = append(o.SubWrappers, w)
 	}
 }
 
+// HandlerOption func
 type HandlerOption func(*HandlerOptions)
 
+// HandlerOptions struct
 type HandlerOptions struct {
 	Internal bool
 	Metadata map[string]map[string]string
 	Context  context.Context
 }
 
+// NewHandlerOptions creates new HandlerOptions
 func NewHandlerOptions(opts ...HandlerOption) HandlerOptions {
 	options := HandlerOptions{
 		Context: context.Background(),
@@ -284,8 +287,10 @@ func NewHandlerOptions(opts ...HandlerOption) HandlerOptions {
 	return options
 }
 
+// SubscriberOption func
 type SubscriberOption func(*SubscriberOptions)
 
+// SubscriberOptions struct
 type SubscriberOptions struct {
 	// AutoAck defaults to true. When a handler returns
 	// with a nil error the message is acked.
@@ -295,6 +300,7 @@ type SubscriberOptions struct {
 	Context  context.Context
 }
 
+// NewSubscriberOptions create new SubscriberOptions
 func NewSubscriberOptions(opts ...SubscriberOption) SubscriberOptions {
 	options := SubscriberOptions{
 		AutoAck: true,
@@ -316,7 +322,7 @@ func EndpointMetadata(name string, md map[string]string) HandlerOption {
 	}
 }
 
-// Internal Handler options specifies that a handler is not advertised
+// InternalHandler options specifies that a handler is not advertised
 // to the discovery system. In the future this may also limit request
 // to the internal network or authorised user.
 func InternalHandler(b bool) HandlerOption {
@@ -325,7 +331,7 @@ func InternalHandler(b bool) HandlerOption {
 	}
 }
 
-// Internal Subscriber options specifies that a subscriber is not advertised
+// InternalSubscriber options specifies that a subscriber is not advertised
 // to the discovery system.
 func InternalSubscriber(b bool) SubscriberOption {
 	return func(o *SubscriberOptions) {
@@ -341,7 +347,7 @@ func DisableAutoAck() SubscriberOption {
 	}
 }
 
-// Shared queue name distributed messages across subscribers
+// SubscriberQueue sets the shared queue name distributed messages across subscribers
 func SubscriberQueue(n string) SubscriberOption {
 	return func(o *SubscriberOptions) {
 		o.Queue = n

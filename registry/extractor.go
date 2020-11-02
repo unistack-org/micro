@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// Extract *Value from reflect.Type
 func ExtractValue(v reflect.Type, d int) *Value {
 	if d == 3 {
 		return nil
@@ -59,6 +60,7 @@ func ExtractValue(v reflect.Type, d int) *Value {
 	return arg
 }
 
+// ExtractEndpoint extract *Endpoint from reflect.Method
 func ExtractEndpoint(method reflect.Method) *Endpoint {
 	if method.PkgPath != "" {
 		return nil
@@ -104,6 +106,7 @@ func ExtractEndpoint(method reflect.Method) *Endpoint {
 	return ep
 }
 
+// ExtractSubValue exctact *Value from reflect.Type
 func ExtractSubValue(typ reflect.Type) *Value {
 	var reqType reflect.Type
 	switch typ.NumIn() {

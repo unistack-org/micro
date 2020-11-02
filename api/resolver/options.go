@@ -4,11 +4,13 @@ import (
 	"github.com/unistack-org/micro/v3/registry"
 )
 
+// Options struct
 type Options struct {
 	Handler       string
 	ServicePrefix string
 }
 
+// Option func
 type Option func(o *Options)
 
 // WithHandler sets the handler being used
@@ -27,7 +29,7 @@ func WithServicePrefix(p string) Option {
 
 // NewOptions returns new initialised options
 func NewOptions(opts ...Option) Options {
-	var options Options
+	options := Options{}
 	for _, o := range opts {
 		o(&options)
 	}
@@ -51,12 +53,9 @@ func Domain(n string) ResolveOption {
 
 // NewResolveOptions returns new initialised resolve options
 func NewResolveOptions(opts ...ResolveOption) ResolveOptions {
-	var options ResolveOptions
+	options := ResolveOptions{Domain: registry.DefaultDomain}
 	for _, o := range opts {
 		o(&options)
-	}
-	if len(options.Domain) == 0 {
-		options.Domain = registry.DefaultDomain
 	}
 
 	return options
