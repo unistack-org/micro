@@ -18,7 +18,7 @@ func (r *apiRouter) String() string {
 	return "api"
 }
 
-// Router is a hack for API routing
+// New router is a hack for API routing
 func New(srvs []*registry.Service) router.Router {
 	var routes []router.Route
 

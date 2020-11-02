@@ -7,7 +7,7 @@ import "time"
 type Tags map[string]string
 
 var (
-	Defaultreporter Reporter
+	DefaultReporter Reporter
 )
 
 // Reporter is an interface for collecting and instrumenting metrics

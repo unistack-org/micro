@@ -1,8 +1,8 @@
-// Package log provides a log interface
+// Package logger provides a log interface
 package logger
 
 var (
-	// Default logger
+	// DefaultLogger variable
 	DefaultLogger Logger = NewHelper(NewLogger())
 )
 
@@ -24,22 +24,27 @@ type Logger interface {
 	String() string
 }
 
+// Init initialize logger
 func Init(opts ...Option) error {
 	return DefaultLogger.Init(opts...)
 }
 
+// Fields create logger with specific fields
 func Fields(fields map[string]interface{}) Logger {
 	return DefaultLogger.Fields(fields)
 }
 
+// Log writes log with specific level
 func Log(level Level, v ...interface{}) {
 	DefaultLogger.Log(level, v...)
 }
 
+// Logf writes formatted log with specific level
 func Logf(level Level, format string, v ...interface{}) {
 	DefaultLogger.Logf(level, format, v...)
 }
 
+// String return logger name
 func String() string {
 	return DefaultLogger.String()
 }

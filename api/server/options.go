@@ -8,8 +8,10 @@ import (
 	"github.com/unistack-org/micro/v3/api/server/acme"
 )
 
+// Option func
 type Option func(o *Options)
 
+// Options for api server
 type Options struct {
 	EnableACME   bool
 	EnableCORS   bool

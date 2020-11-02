@@ -15,6 +15,7 @@ import (
 	"github.com/unistack-org/micro/v3/tracer"
 )
 
+// Options server struct
 type Options struct {
 	Codecs       map[string]codec.NewCodec
 	Broker       broker.Broker
@@ -56,6 +57,7 @@ type Options struct {
 	Context context.Context
 }
 
+// NewOptions returns new options struct with default or passed values
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Auth:             auth.DefaultAuth,
@@ -104,7 +106,7 @@ func Logger(l logger.Logger) Option {
 	}
 }
 
-// Unique server id
+// Id unique server id
 func Id(id string) Option {
 	return func(o *Options) {
 		o.Id = id
