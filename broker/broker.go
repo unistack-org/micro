@@ -32,9 +32,8 @@ type Event interface {
 
 // Message is used to transfer data
 type Message struct {
-	Header map[string]string
-	Body   []byte
-	Error  error
+	Header map[string]string // contains message metadata
+	Body   []byte            // contains message body
 }
 
 // Subscriber is a convenience return type for the Subscribe method
