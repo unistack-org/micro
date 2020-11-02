@@ -2,6 +2,7 @@
 package tunnel
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -55,15 +56,15 @@ type Tunnel interface {
 	// Address returns the address the tunnel is listening on
 	Address() string
 	// Connect connects the tunnel
-	Connect() error
+	Connect(ctx context.Context) error
 	// Close closes the tunnel
-	Close() error
+	Close(ctx context.Context) error
 	// Links returns all the links the tunnel is connected to
 	Links() []Link
 	// Dial allows a client to connect to a channel
-	Dial(channel string, opts ...DialOption) (Session, error)
+	Dial(ctx context.Context, channel string, opts ...DialOption) (Session, error)
 	// Listen allows to accept connections on a channel
-	Listen(channel string, opts ...ListenOption) (Listener, error)
+	Listen(ctx context.Context, channel string, opts ...ListenOption) (Listener, error)
 	// String returns the name of the tunnel implementation
 	String() string
 }

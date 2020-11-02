@@ -1,5 +1,10 @@
 package tracer
 
+var (
+	// DefaultSize of the buffer
+	DefaultSize = 64
+)
+
 // Options struct
 type Options struct {
 	// Size is the size of ring buffer
@@ -9,6 +14,7 @@ type Options struct {
 // Option func
 type Option func(o *Options)
 
+// ReadOptions struct
 type ReadOptions struct {
 	// Trace id
 	Trace string
@@ -24,14 +30,13 @@ func ReadTrace(t string) ReadOption {
 	}
 }
 
-const (
-	// DefaultSize of the buffer
-	DefaultSize = 64
-)
-
-// DefaultOptions returns default options
-func DefaultOptions() Options {
-	return Options{
+// NewOptions returns default options
+func NewOptions(opts ...Option) Options {
+	options := Options{
 		Size: DefaultSize,
 	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
 }

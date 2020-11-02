@@ -1,4 +1,4 @@
-// Package trace provides an interface for distributed tracing
+// Package tracer provides an interface for distributed tracing
 package tracer
 
 import (
@@ -7,6 +7,7 @@ import (
 )
 
 var (
+	// DefaultTracer is the global default tracer
 	DefaultTracer Tracer = NewTracer()
 )
 

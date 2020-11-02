@@ -2,6 +2,7 @@
 package events
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"time"
@@ -16,14 +17,14 @@ var (
 
 // Stream of events
 type Stream interface {
-	Publish(topic string, msg interface{}, opts ...PublishOption) error
-	Subscribe(topic string, opts ...SubscribeOption) (<-chan Event, error)
+	Publish(ctx context.Context, topic string, msg interface{}, opts ...PublishOption) error
+	Subscribe(ctx context.Context, topic string, opts ...SubscribeOption) (<-chan Event, error)
 }
 
 // Store of events
 type Store interface {
-	Read(opts ...ReadOption) ([]*Event, error)
-	Write(event *Event, opts ...WriteOption) error
+	Read(ctx context.Context, opts ...ReadOption) ([]*Event, error)
+	Write(ctx context.Context, event *Event, opts ...WriteOption) error
 }
 
 // Event is the object returned by the broker when you subscribe to a topic

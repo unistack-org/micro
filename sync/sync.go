@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	// ErrLockTimeout error
 	ErrLockTimeout = errors.New("lock timeout")
 )
 

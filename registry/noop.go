@@ -33,27 +33,27 @@ func (n *noopRegistry) Disconnect(ctx context.Context) error {
 }
 
 // Register registers service
-func (n *noopRegistry) Register(*Service, ...RegisterOption) error {
+func (n *noopRegistry) Register(ctx context.Context, svc *Service, opts ...RegisterOption) error {
 	return nil
 }
 
 // Deregister deregisters service
-func (n *noopRegistry) Deregister(*Service, ...DeregisterOption) error {
+func (n *noopRegistry) Deregister(ctx context.Context, svc *Service, opts ...DeregisterOption) error {
 	return nil
 }
 
 // GetService returns servive info
-func (n *noopRegistry) GetService(string, ...GetOption) ([]*Service, error) {
+func (n *noopRegistry) GetService(ctx context.Context, name string, opts ...GetOption) ([]*Service, error) {
 	return []*Service{}, nil
 }
 
 // ListServices listing services
-func (n *noopRegistry) ListServices(...ListOption) ([]*Service, error) {
+func (n *noopRegistry) ListServices(ctx context.Context, opts ...ListOption) ([]*Service, error) {
 	return []*Service{}, nil
 }
 
 // Watch is used to watch for service changes
-func (n *noopRegistry) Watch(...WatchOption) (Watcher, error) {
+func (n *noopRegistry) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 

@@ -177,7 +177,7 @@ func (r *staticRouter) Endpoint(req *http.Request) (*api.Service, error) {
 	}
 
 	epf := strings.Split(ep.apiep.Name, ".")
-	services, err := r.opts.Registry.GetService(epf[0])
+	services, err := r.opts.Registry.GetService(r.opts.Context, epf[0])
 	if err != nil {
 		return nil, err
 	}

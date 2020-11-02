@@ -2,6 +2,7 @@
 package transport
 
 import (
+	"context"
 	"time"
 )
 
@@ -16,8 +17,8 @@ var (
 type Transport interface {
 	Init(...Option) error
 	Options() Options
-	Dial(addr string, opts ...DialOption) (Client, error)
-	Listen(addr string, opts ...ListenOption) (Listener, error)
+	Dial(ctx context.Context, addr string, opts ...DialOption) (Client, error)
+	Listen(ctx context.Context, addr string, opts ...ListenOption) (Listener, error)
 	String() string
 }
 

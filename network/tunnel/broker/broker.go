@@ -50,17 +50,17 @@ func (t *tunBroker) Address() string {
 }
 
 func (t *tunBroker) Connect(ctx context.Context) error {
-	return t.tunnel.Connect()
+	return t.tunnel.Connect(ctx)
 }
 
 func (t *tunBroker) Disconnect(ctx context.Context) error {
-	return t.tunnel.Close()
+	return t.tunnel.Close(ctx)
 }
 
 func (t *tunBroker) Publish(ctx context.Context, topic string, m *broker.Message, opts ...broker.PublishOption) error {
 	// TODO: this is probably inefficient, we might want to just maintain an open connection
 	// it may be easier to add broadcast to the tunnel
-	c, err := t.tunnel.Dial(topic, tunnel.DialMode(tunnel.Multicast))
+	c, err := t.tunnel.Dial(ctx, topic, tunnel.DialMode(tunnel.Multicast))
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (t *tunBroker) Publish(ctx context.Context, topic string, m *broker.Message
 }
 
 func (t *tunBroker) Subscribe(ctx context.Context, topic string, h broker.Handler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
-	l, err := t.tunnel.Listen(topic, tunnel.ListenMode(tunnel.Multicast))
+	l, err := t.tunnel.Listen(ctx, topic, tunnel.ListenMode(tunnel.Multicast))
 	if err != nil {
 		return nil, err
 	}
