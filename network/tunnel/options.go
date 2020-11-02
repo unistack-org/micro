@@ -15,6 +15,7 @@ var (
 	DefaultToken = "go.micro.tunnel"
 )
 
+// Option func
 type Option func(*Options)
 
 // Options provides network configuration options
@@ -33,8 +34,10 @@ type Options struct {
 	Logger logger.Logger
 }
 
+// DialOption func
 type DialOption func(*DialOptions)
 
+// DialOptions provides dial options
 type DialOptions struct {
 	// Link specifies the link to use
 	Link string
@@ -46,8 +49,10 @@ type DialOptions struct {
 	Timeout time.Duration
 }
 
+// ListenOption func
 type ListenOption func(*ListenOptions)
 
+// ListenOptions provides listen options
 type ListenOptions struct {
 	// specify mode of the session
 	Mode Mode
@@ -55,7 +60,7 @@ type ListenOptions struct {
 	Timeout time.Duration
 }
 
-// The tunnel id
+// Id sets the tunnel id
 func Id(id string) Option {
 	return func(o *Options) {
 		o.Id = id
@@ -69,7 +74,7 @@ func Logger(l logger.Logger) Option {
 	}
 }
 
-// The tunnel address
+// Address sets the tunnel address
 func Address(a string) Option {
 	return func(o *Options) {
 		o.Address = a
@@ -97,23 +102,21 @@ func Transport(t transport.Transport) Option {
 	}
 }
 
-// Listen options
+// ListenMode option
 func ListenMode(m Mode) ListenOption {
 	return func(o *ListenOptions) {
 		o.Mode = m
 	}
 }
 
-// Timeout for reads and writes on the listener session
+// ListenTimeout for reads and writes on the listener session
 func ListenTimeout(t time.Duration) ListenOption {
 	return func(o *ListenOptions) {
 		o.Timeout = t
 	}
 }
 
-// Dial options
-
-// Dial multicast sets the multicast option to send only to those mapped
+// DialMode multicast sets the multicast option to send only to those mapped
 func DialMode(m Mode) DialOption {
 	return func(o *DialOptions) {
 		o.Mode = m
@@ -144,10 +147,14 @@ func DialWait(b bool) DialOption {
 }
 
 // DefaultOptions returns router default options
-func DefaultOptions() Options {
-	return Options{
+func NewOptions(opts ...Option) Options {
+	options := Options{
 		Id:      uuid.New().String(),
 		Address: DefaultAddress,
 		Token:   DefaultToken,
 	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
 }

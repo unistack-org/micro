@@ -9,10 +9,12 @@ import (
 	"github.com/unistack-org/micro/v3/api/resolver"
 )
 
+// Resolver struct
 type Resolver struct {
 	opts resolver.Options
 }
 
+// Resolve func to resolve enndpoint
 func (r *Resolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*resolver.Endpoint, error) {
 	// parse options
 	options := resolver.NewResolveOptions(opts...)
@@ -39,6 +41,7 @@ func (r *Resolver) String() string {
 	return "grpc"
 }
 
+// NewResolver is used to create new Resolver
 func NewResolver(opts ...resolver.Option) resolver.Resolver {
 	return &Resolver{opts: resolver.NewOptions(opts...)}
 }

@@ -52,6 +52,7 @@ var (
 	}
 )
 
+// NewRegistryService returns *registry.Service from Server
 func NewRegistryService(s Server) (*registry.Service, error) {
 	opts := s.Options()
 

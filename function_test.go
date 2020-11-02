@@ -8,14 +8,13 @@ import (
 	"testing"
 
 	rmemory "github.com/unistack-org/micro-registry-memory"
-	"github.com/unistack-org/micro/v3/util/test"
 )
 
 func TestFunction(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	r := rmemory.NewRegistry(rmemory.Services(test.Data))
+	r := rmemory.NewRegistry()
 
 	// create service
 	fn := NewFunction(

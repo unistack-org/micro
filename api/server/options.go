@@ -23,6 +23,7 @@ type Options struct {
 	Wrappers     []Wrapper
 }
 
+// NewOptions returns new Options
 func NewOptions(opts ...Option) Options {
 	options := Options{}
 	for _, o := range opts {

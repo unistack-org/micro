@@ -10,14 +10,16 @@ import (
 
 var (
 	// ErrNotFound is returned when a key doesn't exist
-	ErrNotFound        = errors.New("not found")
-	DefaultStore Store = &NoopStore{opts: NewOptions()}
+	ErrNotFound = errors.New("not found")
+	// DefaultStore is the global default store
+	DefaultStore Store = NewStore()
 )
 
 // Store is a data storage interface
 type Store interface {
 	// Init initialises the store. It must perform any required setup on the backing storage implementation and check that it is ready for use, returning any errors.
 	Init(opts ...Option) error
+	// Connect is used when store needs to be connected
 	Connect(ctx context.Context) error
 	// Options allows you to view the current options.
 	Options() Options

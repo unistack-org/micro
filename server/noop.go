@@ -32,7 +32,7 @@ const (
 	defaultContentType = "application/json"
 )
 
-type NoopServer struct {
+type noopServer struct {
 	h           Handler
 	opts        Options
 	rsvc        *registry.Service
@@ -45,7 +45,12 @@ type NoopServer struct {
 	sync.RWMutex
 }
 
-func (n *NoopServer) newCodec(contentType string) (codec.NewCodec, error) {
+// NewServer returns new noop server
+func NewServer(opts ...Option) Server {
+	return &noopServer{opts: NewOptions(opts...)}
+}
+
+func (n *noopServer) newCodec(contentType string) (codec.NewCodec, error) {
 	if cf, ok := n.opts.Codecs[contentType]; ok {
 		return cf, nil
 	}
@@ -55,12 +60,12 @@ func (n *NoopServer) newCodec(contentType string) (codec.NewCodec, error) {
 	return nil, fmt.Errorf("Unsupported Content-Type: %s", contentType)
 }
 
-func (n *NoopServer) Handle(handler Handler) error {
+func (n *noopServer) Handle(handler Handler) error {
 	n.h = handler
 	return nil
 }
 
-func (n *NoopServer) Subscribe(sb Subscriber) error {
+func (n *noopServer) Subscribe(sb Subscriber) error {
 	sub, ok := sb.(*subscriber)
 	if !ok {
 		return fmt.Errorf("invalid subscriber: expected *subscriber")
@@ -84,15 +89,15 @@ func (n *NoopServer) Subscribe(sb Subscriber) error {
 	return nil
 }
 
-func (n *NoopServer) NewHandler(h interface{}, opts ...HandlerOption) Handler {
+func (n *noopServer) NewHandler(h interface{}, opts ...HandlerOption) Handler {
 	return newRpcHandler(h, opts...)
 }
 
-func (n *NoopServer) NewSubscriber(topic string, sb interface{}, opts ...SubscriberOption) Subscriber {
+func (n *noopServer) NewSubscriber(topic string, sb interface{}, opts ...SubscriberOption) Subscriber {
 	return newSubscriber(topic, sb, opts...)
 }
 
-func (n *NoopServer) Init(opts ...Option) error {
+func (n *noopServer) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
@@ -110,15 +115,15 @@ func (n *NoopServer) Init(opts ...Option) error {
 	return nil
 }
 
-func (n *NoopServer) Options() Options {
+func (n *noopServer) Options() Options {
 	return n.opts
 }
 
-func (n *NoopServer) String() string {
+func (n *noopServer) String() string {
 	return "noop"
 }
 
-func (n *NoopServer) Register() error {
+func (n *noopServer) Register() error {
 	n.RLock()
 	rsvc := n.rsvc
 	config := n.opts
@@ -233,7 +238,7 @@ func (n *NoopServer) Register() error {
 	return nil
 }
 
-func (n *NoopServer) Deregister() error {
+func (n *noopServer) Deregister() error {
 	var err error
 
 	n.RLock()
@@ -293,7 +298,7 @@ func (n *NoopServer) Deregister() error {
 	return nil
 }
 
-func (n *NoopServer) Start() error {
+func (n *noopServer) Start() error {
 	n.RLock()
 	if n.started {
 		n.RUnlock()
@@ -433,7 +438,7 @@ func (n *NoopServer) Start() error {
 	return nil
 }
 
-func (n *NoopServer) Stop() error {
+func (n *noopServer) Stop() error {
 	n.RLock()
 	if !n.started {
 		n.RUnlock()

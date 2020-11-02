@@ -9,6 +9,7 @@ import (
 	"github.com/unistack-org/micro/v3/registry"
 )
 
+// Options struct
 type Options struct {
 	Addrs  []string
 	Secure bool
@@ -27,6 +28,7 @@ type Options struct {
 	Context context.Context
 }
 
+// NewOptions create new Options
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Registry: registry.DefaultRegistry,
@@ -39,30 +41,34 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+// Context sets the context option
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
 		o.Context = ctx
 	}
 }
 
+// PublishOptions struct
 type PublishOptions struct {
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
 }
 
+// NewPublishOptions creates PublishOptions struct
 func NewPublishOptions(opts ...PublishOption) PublishOptions {
-	opt := PublishOptions{
+	options := PublishOptions{
 		Context: context.Background(),
 	}
 
 	for _, o := range opts {
-		o(&opt)
+		o(&options)
 	}
 
-	return opt
+	return options
 }
 
+// SubscribeOptions struct
 type SubscribeOptions struct {
 	// AutoAck ack messages if handler returns nil err
 	AutoAck bool
@@ -80,30 +86,34 @@ type SubscribeOptions struct {
 	Context context.Context
 }
 
+// Option func
 type Option func(*Options)
 
+// PublishOption func
 type PublishOption func(*PublishOptions)
 
-// PublishContext set context
+// PublishContext sets the context
 func PublishContext(ctx context.Context) PublishOption {
 	return func(o *PublishOptions) {
 		o.Context = ctx
 	}
 }
 
+// SubscribeOption func
 type SubscribeOption func(*SubscribeOptions)
 
+// NewSubscribeOptions creates new SubscribeOptions
 func NewSubscribeOptions(opts ...SubscribeOption) SubscribeOptions {
-	opt := SubscribeOptions{
+	options := SubscribeOptions{
 		AutoAck: true,
 		Context: context.Background(),
 	}
 
 	for _, o := range opts {
-		o(&opt)
+		o(&options)
 	}
 
-	return opt
+	return options
 }
 
 // Addrs sets the host addresses to be used by the broker
@@ -121,6 +131,7 @@ func Codec(c codec.Marshaler) Option {
 	}
 }
 
+// DisableAutoAck disables auto ack
 func DisableAutoAck() SubscribeOption {
 	return func(o *SubscribeOptions) {
 		o.AutoAck = false
@@ -151,6 +162,7 @@ func SubscribeErrorHandler(h Handler) SubscribeOption {
 	}
 }
 
+// Queue sets the subscribers sueue
 func Queue(name string) SubscribeOption {
 	return func(o *SubscribeOptions) {
 		o.Group = name
@@ -164,6 +176,7 @@ func SubscribeGroup(name string) SubscribeOption {
 	}
 }
 
+// Registry sets registry option
 func Registry(r registry.Registry) Option {
 	return func(o *Options) {
 		o.Registry = r

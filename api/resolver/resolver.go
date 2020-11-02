@@ -7,7 +7,9 @@ import (
 )
 
 var (
-	ErrNotFound    = errors.New("not found")
+	// ErrNotFound returned when endpoint is not found
+	ErrNotFound = errors.New("not found")
+	// ErrInvalidPath returned on invalid path
 	ErrInvalidPath = errors.New("invalid path")
 )
 
@@ -19,7 +21,7 @@ type Resolver interface {
 
 // Endpoint is the endpoint for a http request
 type Endpoint struct {
-	// e.g greeter
+	// Endpoint name e.g greeter
 	Name string
 	// HTTP Host e.g example.com
 	Host string

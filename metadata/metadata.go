@@ -14,9 +14,11 @@ type metadataKey struct{}
 type Metadata map[string]string
 
 var (
+	// DefaultMetadataSize used when need to init new Metadata
 	DefaultMetadataSize = 6
 )
 
+// Get returns value from metadata by key
 func (md Metadata) Get(key string) (string, bool) {
 	// fast path
 	val, ok := md[key]
@@ -27,10 +29,12 @@ func (md Metadata) Get(key string) (string, bool) {
 	return val, ok
 }
 
+// Set is used to store value in metadata
 func (md Metadata) Set(key, val string) {
 	md[textproto.CanonicalMIMEHeaderKey(key)] = val
 }
 
+// Del is used to remove value from metadata
 func (md Metadata) Del(key string) {
 	// fast path
 	if _, ok := md[key]; ok {

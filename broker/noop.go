@@ -2,7 +2,7 @@ package broker
 
 import "context"
 
-type NoopBroker struct {
+type noopBroker struct {
 	opts Options
 }
 
@@ -11,7 +11,13 @@ type noopSubscriber struct {
 	opts  SubscribeOptions
 }
 
-func (n *NoopBroker) Init(opts ...Option) error {
+// NewBroker returns new noop broker
+func NewBroker(opts ...Option) Broker {
+	return &noopBroker{opts: NewOptions(opts...)}
+}
+
+// Init initialize broker
+func (n *noopBroker) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
@@ -19,48 +25,53 @@ func (n *NoopBroker) Init(opts ...Option) error {
 	return nil
 }
 
-func (n *NoopBroker) Options() Options {
+// Options returns broker Options
+func (n *noopBroker) Options() Options {
 	return n.opts
 }
 
-func (n *NoopBroker) Address() string {
+// Address returns broker address
+func (n *noopBroker) Address() string {
 	return ""
 }
 
-func (n *NoopBroker) Connect(ctx context.Context) error {
+// Connect connects to broker
+func (n *noopBroker) Connect(ctx context.Context) error {
 	return nil
 }
 
-func (n *NoopBroker) Disconnect(ctx context.Context) error {
+// Disconnect disconnects from broker
+func (n *noopBroker) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (n *NoopBroker) Publish(ctx context.Context, topic string, m *Message, opts ...PublishOption) error {
+// Publish publishes message to broker
+func (n *noopBroker) Publish(ctx context.Context, topic string, m *Message, opts ...PublishOption) error {
 	return nil
 }
 
-func (n *NoopBroker) Subscribe(ctx context.Context, topic string, h Handler, opts ...SubscribeOption) (Subscriber, error) {
-	options := NewSubscribeOptions()
-
-	for _, o := range opts {
-		o(&options)
-	}
-
+// Subscribe subscribes to broker topic
+func (n *noopBroker) Subscribe(ctx context.Context, topic string, h Handler, opts ...SubscribeOption) (Subscriber, error) {
+	options := NewSubscribeOptions(opts...)
 	return &noopSubscriber{topic: topic, opts: options}, nil
 }
 
-func (n *NoopBroker) String() string {
+// String return broker string representation
+func (n *noopBroker) String() string {
 	return "noop"
 }
 
+// Options returns subscriber options
 func (n *noopSubscriber) Options() SubscribeOptions {
 	return n.opts
 }
 
+// TOpic returns subscriber topic
 func (n *noopSubscriber) Topic() string {
 	return n.topic
 }
 
+// Unsubscribe unsbscribes from broker topic
 func (n *noopSubscriber) Unsubscribe(ctx context.Context) error {
 	return nil
 }

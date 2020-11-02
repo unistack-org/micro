@@ -1,10 +1,12 @@
 package tracer
 
+// Options struct
 type Options struct {
 	// Size is the size of ring buffer
 	Size int
 }
 
+// Option func
 type Option func(o *Options)
 
 type ReadOptions struct {
@@ -12,9 +14,10 @@ type ReadOptions struct {
 	Trace string
 }
 
+// ReadOption func
 type ReadOption func(o *ReadOptions)
 
-// Read the given trace
+// ReadTracer read the given trace
 func ReadTrace(t string) ReadOption {
 	return func(o *ReadOptions) {
 		o.Trace = t

@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	// DefaultRouter is the global default router
 	DefaultRouter Router
 	// DefaultNetwork is default micro network
 	DefaultNetwork = "micro"

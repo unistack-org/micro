@@ -14,6 +14,7 @@ const (
 )
 
 var (
+	// DefaultRegistry is the global default registry
 	DefaultRegistry Registry = NewRegistry()
 	// ErrNotFound returned when GetService is called and no services found
 	ErrNotFound = errors.New("service not found")

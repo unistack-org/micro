@@ -1,31 +1,35 @@
 package transport
 
-type NoopTransport struct {
+type noopTransport struct {
 	opts Options
 }
 
-func (t *NoopTransport) Init(opts ...Option) error {
+func NewTransport(opts ...Option) Transport {
+	return &noopTransport{opts: NewOptions(opts...)}
+}
+
+func (t *noopTransport) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&t.opts)
 	}
 	return nil
 }
 
-func (t *NoopTransport) Options() Options {
+func (t *noopTransport) Options() Options {
 	return t.opts
 }
 
-func (t *NoopTransport) Dial(addr string, opts ...DialOption) (Client, error) {
+func (t *noopTransport) Dial(addr string, opts ...DialOption) (Client, error) {
 	options := NewDialOptions(opts...)
 	return &noopClient{opts: options}, nil
 }
 
-func (t *NoopTransport) Listen(addr string, opts ...ListenOption) (Listener, error) {
+func (t *noopTransport) Listen(addr string, opts ...ListenOption) (Listener, error) {
 	options := NewListenOptions(opts...)
 	return &noopListener{opts: options}, nil
 }
 
-func (t *NoopTransport) String() string {
+func (t *noopTransport) String() string {
 	return "noop"
 }
 
