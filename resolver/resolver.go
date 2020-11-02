@@ -9,7 +9,7 @@ type Resolver interface {
 	Resolve(name string) ([]*Record, error)
 }
 
-// A resolved record
+// Record that resolved
 type Record struct {
 	Address  string `json:"address"`
 	Priority int64  `json:"priority"`

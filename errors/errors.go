@@ -23,6 +23,7 @@ var (
 	ErrGatewayTimeout      = &Error{Code: 504}
 )
 
+// Error tpye
 type Error struct {
 	Id     string
 	Code   int32

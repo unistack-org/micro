@@ -71,10 +71,8 @@ type Event interface {
 	Publish(ctx context.Context, msg interface{}, opts ...client.PublishOption) error
 }
 
-// Type alias to satisfy the deprecation
-type Publisher = Event
-
 var (
+	// HeaderPrefix for all headers passed
 	HeaderPrefix = "Micro-"
 )
 
@@ -102,11 +100,6 @@ func NewFunction(opts ...Option) Function {
 // NewEvent creates a new event publisher
 func NewEvent(topic string, c client.Client) Event {
 	return &event{c, topic}
-}
-
-// Deprecated: NewPublisher returns a new Publisher
-func NewPublisher(topic string, c client.Client) Event {
-	return NewEvent(topic, c)
 }
 
 // RegisterHandler is syntactic sugar for registering a handler

@@ -3,9 +3,9 @@ package network
 import (
 	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/network/tunnel"
 	"github.com/unistack-org/micro/v3/proxy"
 	"github.com/unistack-org/micro/v3/router"
-	"github.com/unistack-org/micro/v3/network/tunnel"
 )
 
 type Option func(*Options)
