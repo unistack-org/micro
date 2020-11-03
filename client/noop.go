@@ -162,7 +162,7 @@ func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOpti
 
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
-		md = make(map[string]string)
+		md = metadata.New(0)
 	}
 	md["Content-Type"] = p.ContentType()
 	md["Micro-Topic"] = p.Topic()

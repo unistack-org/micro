@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"io"
+	"os"
 )
 
 type Option func(*Options)
@@ -21,7 +22,13 @@ type Options struct {
 }
 
 func NewOptions(opts ...Option) Options {
-	options := Options{}
+	options := Options{
+		Level:           InfoLevel,
+		Fields:          make(map[string]interface{}),
+		Out:             os.Stderr,
+		CallerSkipCount: 2,
+		Context:         context.Background(),
+	}
 	for _, o := range opts {
 		o(&options)
 	}

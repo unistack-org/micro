@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 // Extract *Value from reflect.Type
@@ -94,7 +96,7 @@ func ExtractEndpoint(method reflect.Method) *Endpoint {
 		Name:     method.Name,
 		Request:  request,
 		Response: response,
-		Metadata: make(map[string]string),
+		Metadata: metadata.New(0),
 	}
 
 	if stream {

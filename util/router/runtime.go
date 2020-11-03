@@ -63,7 +63,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 
 	if version != 1 {
 		if logger.V(logger.DebugLevel) {
-			logger.Debugf("unsupported version: %d", version)
+			logger.Debug("unsupported version: %d", version)
 		}
 		return Pattern{}, ErrInvalidPattern
 	}
@@ -71,7 +71,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 	l := len(ops)
 	if l%2 != 0 {
 		if logger.V(logger.DebugLevel) {
-			logger.Debugf("odd number of ops codes: %d", l)
+			logger.Debug("odd number of ops codes: %d", l)
 		}
 		return Pattern{}, ErrInvalidPattern
 	}
@@ -105,7 +105,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 		case OpLitPush:
 			if op.operand < 0 || len(pool) <= op.operand {
 				if logger.V(logger.TraceLevel) {
-					logger.Tracef("negative literal index: %d", op.operand)
+					logger.Trace("negative literal index: %d", op.operand)
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
@@ -116,7 +116,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 		case OpConcatN:
 			if op.operand <= 0 {
 				if logger.V(logger.TraceLevel) {
-					logger.Tracef("negative concat size: %d", op.operand)
+					logger.Trace("negative concat size: %d", op.operand)
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
@@ -131,7 +131,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 		case OpCapture:
 			if op.operand < 0 || len(pool) <= op.operand {
 				if logger.V(logger.TraceLevel) {
-					logger.Tracef("variable name index out of bound: %d", op.operand)
+					logger.Trace("variable name index out of bound: %d", op.operand)
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
@@ -147,7 +147,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 			}
 		default:
 			if logger.V(logger.DebugLevel) {
-				logger.Tracef("invalid opcode: %d", op.code)
+				logger.Trace("invalid opcode: %d", op.code)
 			}
 			return Pattern{}, ErrInvalidPattern
 		}
@@ -172,7 +172,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 func MustPattern(p Pattern, err error) Pattern {
 	if err != nil {
 		if logger.V(logger.FatalLevel) {
-			logger.Fatalf("Pattern initialization failed: %v", err)
+			logger.Fatal("Pattern initialization failed: %v", err)
 		}
 	}
 	return p
@@ -235,7 +235,7 @@ func (p Pattern) Match(components []string, verb string) (map[string]string, err
 	if pos < l {
 		return nil, ErrNotMatch
 	}
-	bindings := make(map[string]string)
+	bindings := make(map[string]string, len(captured))
 	for i, val := range captured {
 		bindings[p.vars[i]] = val
 	}

@@ -228,7 +228,7 @@ func (c *client) Watch(r *Resource, opts ...WatchOption) (Watcher, error) {
 // NewService returns default micro kubernetes service definition
 func NewService(name, version, typ, namespace string) *Service {
 	if logger.V(logger.TraceLevel) {
-		logger.Tracef("kubernetes default service: name: %s, version: %s", name, version)
+		logger.Trace("kubernetes default service: name: %s, version: %s", name, version)
 	}
 
 	Labels := map[string]string{
@@ -271,7 +271,7 @@ func NewService(name, version, typ, namespace string) *Service {
 // NewService returns default micro kubernetes deployment definition
 func NewDeployment(name, version, typ, namespace string) *Deployment {
 	if logger.V(logger.TraceLevel) {
-		logger.Tracef("kubernetes default deployment: name: %s, version: %s", name, version)
+		logger.Trace("kubernetes default deployment: name: %s, version: %s", name, version)
 	}
 
 	Labels := map[string]string{
@@ -363,21 +363,21 @@ func NewClusterClient() *client {
 
 	s, err := os.Stat(serviceAccountPath)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(err.Error())
 	}
 	if s == nil || !s.IsDir() {
-		logger.Fatal(errors.New("service account not found"))
+		logger.Fatal("service account not found")
 	}
 
 	token, err := ioutil.ReadFile(path.Join(serviceAccountPath, "token"))
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(err.Error())
 	}
 	t := string(token)
 
 	crt, err := CertPoolFromFile(path.Join(serviceAccountPath, "ca.crt"))
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(err.Error())
 	}
 
 	c := &http.Client{

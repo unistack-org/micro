@@ -1,16 +1,13 @@
 package logger
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"runtime"
-	"sort"
 	"strings"
 	"sync"
 	"time"
-
-	dlog "github.com/unistack-org/micro/v3/debug/log"
 )
 
 func init() {
@@ -19,31 +16,33 @@ func init() {
 		lvl = InfoLevel
 	}
 
-	DefaultLogger = NewHelper(NewLogger(WithLevel(lvl)))
+	DefaultLogger = NewLogger(WithLevel(lvl))
 }
 
 type defaultLogger struct {
 	sync.RWMutex
 	opts Options
+	enc  *json.Encoder
 }
 
 // Init(opts...) should only overwrite provided options
 func (l *defaultLogger) Init(opts ...Option) error {
+	l.Lock()
+	defer l.Unlock()
+
 	for _, o := range opts {
 		o(&l.opts)
 	}
+	l.enc = json.NewEncoder(l.opts.Out)
 	return nil
 }
 
 func (l *defaultLogger) String() string {
-	return "default"
+	return "micro"
 }
 
 func (l *defaultLogger) V(level Level) bool {
-	if l.opts.Level.Enabled(level) {
-		return true
-	}
-	return false
+	return l.opts.Level.Enabled(level)
 }
 
 func (l *defaultLogger) Fields(fields map[string]interface{}) Logger {
@@ -85,45 +84,32 @@ func logCallerfilePath(loggingFilePath string) string {
 	return loggingFilePath[idx+1:]
 }
 
-func (l *defaultLogger) Log(level Level, v ...interface{}) {
-	if !l.V(level) {
-		return
-	}
-
-	l.RLock()
-	fields := copyFields(l.opts.Fields)
-	l.RUnlock()
-
-	fields["level"] = level.String()
-
-	if _, file, line, ok := runtime.Caller(l.opts.CallerSkipCount); ok {
-		fields["file"] = fmt.Sprintf("%s:%d", logCallerfilePath(file), line)
-	}
-
-	rec := dlog.Record{
-		Timestamp: time.Now(),
-		Message:   fmt.Sprint(v...),
-		Metadata:  make(map[string]string, len(fields)),
-	}
-
-	keys := make([]string, 0, len(fields))
-	for k, v := range fields {
-		keys = append(keys, k)
-		rec.Metadata[k] = fmt.Sprintf("%v", v)
-	}
-
-	sort.Strings(keys)
-	metadata := ""
-
-	for _, k := range keys {
-		metadata += fmt.Sprintf(" %s=%v", k, fields[k])
-	}
-
-	t := rec.Timestamp.Format("2006-01-02 15:04:05")
-	fmt.Printf("%s %s %v\n", t, metadata, rec.Message)
+func (l *defaultLogger) Info(msg string, args ...interface{}) {
+	l.log(InfoLevel, msg, args...)
 }
 
-func (l *defaultLogger) Logf(level Level, format string, v ...interface{}) {
+func (l *defaultLogger) Error(msg string, args ...interface{}) {
+	l.log(ErrorLevel, msg, args...)
+}
+
+func (l *defaultLogger) Debug(msg string, args ...interface{}) {
+	l.log(DebugLevel, msg, args...)
+}
+
+func (l *defaultLogger) Warn(msg string, args ...interface{}) {
+	l.log(WarnLevel, msg, args...)
+}
+
+func (l *defaultLogger) Trace(msg string, args ...interface{}) {
+	l.log(TraceLevel, msg, args...)
+}
+
+func (l *defaultLogger) Fatal(msg string, args ...interface{}) {
+	l.log(FatalLevel, msg, args...)
+	os.Exit(1)
+}
+
+func (l *defaultLogger) log(level Level, msg string, args ...interface{}) {
 	if !l.V(level) {
 		return
 	}
@@ -135,30 +121,20 @@ func (l *defaultLogger) Logf(level Level, format string, v ...interface{}) {
 	fields["level"] = level.String()
 
 	if _, file, line, ok := runtime.Caller(l.opts.CallerSkipCount); ok {
-		fields["file"] = fmt.Sprintf("%s:%d", logCallerfilePath(file), line)
+		fields["caller"] = fmt.Sprintf("%s:%d", logCallerfilePath(file), line)
 	}
 
-	rec := dlog.Record{
-		Timestamp: time.Now(),
-		Message:   fmt.Sprintf(format, v...),
-		Metadata:  make(map[string]string, len(fields)),
+	fields["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
+	if len(msg) > 0 {
+		if len(args) > 0 {
+			fields["msg"] = fmt.Sprintf(msg, args...)
+		} else {
+			fields["msg"] = msg
+		}
 	}
-
-	keys := make([]string, 0, len(fields))
-	for k, v := range fields {
-		keys = append(keys, k)
-		rec.Metadata[k] = fmt.Sprintf("%v", v)
-	}
-
-	sort.Strings(keys)
-	metadata := ""
-
-	for _, k := range keys {
-		metadata += fmt.Sprintf(" %s=%v", k, fields[k])
-	}
-
-	t := rec.Timestamp.Format("2006-01-02 15:04:05")
-	fmt.Printf("%s %s %v\n", t, metadata, rec.Message)
+	l.RLock()
+	_ = l.enc.Encode(fields)
+	l.RUnlock()
 }
 
 func (l *defaultLogger) Options() Options {
@@ -172,19 +148,7 @@ func (l *defaultLogger) Options() Options {
 
 // NewLogger builds a new logger based on options
 func NewLogger(opts ...Option) Logger {
-	// Default options
-	options := Options{
-		Level:           InfoLevel,
-		Fields:          make(map[string]interface{}),
-		Out:             os.Stderr,
-		CallerSkipCount: 2,
-		Context:         context.Background(),
-	}
-
-	l := &defaultLogger{opts: options}
-	if err := l.Init(opts...); err != nil {
-		l.Log(FatalLevel, err)
-	}
-
+	l := &defaultLogger{opts: NewOptions(opts...)}
+	l.enc = json.NewEncoder(l.opts.Out)
 	return l
 }

@@ -113,11 +113,11 @@ func (t *tunSubscriber) run() {
 		m := new(transport.Message)
 		if err := c.Recv(m); err != nil {
 			if logger.V(logger.ErrorLevel) {
-				logger.Error(err)
+				logger.Error(err.Error())
 			}
 			if err = c.Close(); err != nil {
 				if logger.V(logger.ErrorLevel) {
-					logger.Error(err)
+					logger.Error(err.Error())
 				}
 			}
 			continue

@@ -17,6 +17,7 @@ import (
 type service struct {
 	opts Options
 
+	sync.RWMutex
 	once sync.Once
 }
 
@@ -128,8 +129,13 @@ func (s *service) String() string {
 
 func (s *service) Start() error {
 	var err error
-	if logger.V(logger.InfoLevel) {
-		logger.Infof("Starting [service] %s", s.Name())
+
+	s.RLock()
+	config := s.opts
+	s.RUnlock()
+
+	if config.Logger.V(logger.InfoLevel) {
+		config.Logger.Info("Starting [service] %s", s.Name())
 	}
 
 	for _, fn := range s.opts.BeforeStart {
@@ -174,8 +180,12 @@ func (s *service) Start() error {
 }
 
 func (s *service) Stop() error {
-	if logger.V(logger.InfoLevel) {
-		logger.Infof("Stoppping [service] %s", s.Name())
+	s.RLock()
+	config := s.opts
+	s.RUnlock()
+
+	if config.Logger.V(logger.InfoLevel) {
+		config.Logger.Info("Stoppping [service] %s", s.Name())
 	}
 
 	var err error

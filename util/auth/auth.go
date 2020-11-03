@@ -26,7 +26,7 @@ func Verify(a auth.Auth) error {
 			return err
 		}
 		if logger.V(logger.DebugLevel) {
-			logger.Debugf("Auth [%v] Generated an auth account", a.String())
+			logger.Debug("Auth [%v] Generated an auth account: %s", a.String())
 		}
 
 		accID = acc.ID
@@ -68,7 +68,7 @@ func Verify(a auth.Auth) error {
 			)
 			if err != nil {
 				if logger.V(logger.WarnLevel) {
-					logger.Warnf("[Auth] Error refreshing token: %v", err)
+					logger.Warn("[Auth] Error refreshing token: %v", err)
 				}
 				continue
 			}
