@@ -15,7 +15,7 @@ type httpServer struct {
 	mux  *http.ServeMux
 	opts server.Options
 
-	mtx     sync.RWMutex
+	sync.RWMutex
 	address string
 	exit    chan chan error
 }
@@ -30,8 +30,8 @@ func NewServer(address string, opts ...server.Option) server.Server {
 }
 
 func (s *httpServer) Address() string {
-	s.mtx.RLock()
-	defer s.mtx.RUnlock()
+	s.RLock()
+	defer s.RUnlock()
 	return s.address
 }
 
@@ -57,6 +57,9 @@ func (s *httpServer) Start() error {
 	var l net.Listener
 	var err error
 
+	s.RLock()
+	config := s.opts
+	s.RUnlock()
 	if s.opts.EnableACME && s.opts.ACMEProvider != nil {
 		// should we check the address to make sure its using :443?
 		l, err = s.opts.ACMEProvider.Listen(s.opts.ACMEHosts...)
@@ -70,19 +73,19 @@ func (s *httpServer) Start() error {
 		return err
 	}
 
-	if logger.V(logger.InfoLevel) {
-		logger.Infof("HTTP API Listening on %s", l.Addr().String())
+	if config.Logger.V(logger.InfoLevel) {
+		config.Logger.Info("HTTP API Listening on %s", l.Addr().String())
 	}
 
-	s.mtx.Lock()
+	s.Lock()
 	s.address = l.Addr().String()
-	s.mtx.Unlock()
+	s.Unlock()
 
 	go func() {
 		if err := http.Serve(l, s.mux); err != nil {
 			// temporary fix
-			if logger.V(logger.ErrorLevel) {
-				logger.Errorf("serve err: %v", err)
+			if config.Logger.V(logger.ErrorLevel) {
+				config.Logger.Error("serve err: %v", err)
 			}
 			s.Stop()
 		}

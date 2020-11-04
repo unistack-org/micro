@@ -187,8 +187,8 @@ func (n *noopServer) Register() error {
 	n.RUnlock()
 
 	if !registered {
-		if logger.V(logger.InfoLevel) {
-			logger.Infof("Registry [%s] Registering node: %s", config.Registry.String(), service.Nodes[0].Id)
+		if config.Logger.V(logger.InfoLevel) {
+			config.Logger.Info("Registry [%s] Registering node: %s", config.Registry.String(), service.Nodes[0].Id)
 		}
 	}
 
@@ -220,8 +220,8 @@ func (n *noopServer) Register() error {
 
 		opts = append(opts, broker.SubscribeContext(cx), broker.SubscribeAutoAck(sb.Options().AutoAck))
 
-		if logger.V(logger.InfoLevel) {
-			logger.Infof("Subscribing to topic: %s", sb.Topic())
+		if config.Logger.V(logger.InfoLevel) {
+			config.Logger.Info("Subscribing to topic: %s", sb.Topic())
 		}
 		sub, err := config.Broker.Subscribe(cx, sb.Topic(), handler, opts...)
 		if err != nil {
@@ -250,8 +250,8 @@ func (n *noopServer) Deregister() error {
 		return err
 	}
 
-	if logger.V(logger.InfoLevel) {
-		logger.Infof("Deregistering node: %s", service.Nodes[0].Id)
+	if config.Logger.V(logger.InfoLevel) {
+		config.Logger.Info("deregistering node: %s", service.Nodes[0].Id)
 	}
 
 	if err := DefaultDeregisterFunc(service, config); err != nil {
@@ -280,12 +280,12 @@ func (n *noopServer) Deregister() error {
 			wg.Add(1)
 			go func(s broker.Subscriber) {
 				defer wg.Done()
-				if logger.V(logger.InfoLevel) {
-					logger.Infof("Unsubscribing from topic: %s", s.Topic())
+				if config.Logger.V(logger.InfoLevel) {
+					config.Logger.Info("unsubscribing from topic: %s", s.Topic())
 				}
 				if err := s.Unsubscribe(cx); err != nil {
-					if logger.V(logger.ErrorLevel) {
-						logger.Errorf("Unsubscribing from topic: %s err: %v", s.Topic(), err)
+					if config.Logger.V(logger.ErrorLevel) {
+						config.Logger.Error("unsubscribing from topic: %s err: %v", s.Topic(), err)
 					}
 				}
 			}(sub)
@@ -307,8 +307,8 @@ func (n *noopServer) Start() error {
 	config := n.Options()
 	n.RUnlock()
 
-	if logger.V(logger.InfoLevel) {
-		logger.Infof("Server [noop] Listening on %s", config.Address)
+	if config.Logger.V(logger.InfoLevel) {
+		config.Logger.Info("Server [noop] Listening on %s", config.Address)
 	}
 	n.Lock()
 	if len(config.Advertise) == 0 {
@@ -320,27 +320,27 @@ func (n *noopServer) Start() error {
 	if len(n.subscribers) > 0 {
 		// connect to the broker
 		if err := config.Broker.Connect(config.Context); err != nil {
-			if logger.V(logger.ErrorLevel) {
-				logger.Errorf("Broker [%s] connect error: %v", config.Broker.String(), err)
+			if config.Logger.V(logger.ErrorLevel) {
+				config.Logger.Error("Broker [%s] connect error: %v", config.Broker.String(), err)
 			}
 			return err
 		}
 
-		if logger.V(logger.InfoLevel) {
-			logger.Infof("Broker [%s] Connected to %s", config.Broker.String(), config.Broker.Address())
+		if config.Logger.V(logger.InfoLevel) {
+			config.Logger.Info("Broker [%s] Connected to %s", config.Broker.String(), config.Broker.Address())
 		}
 	}
 
 	// use RegisterCheck func before register
 	if err := config.RegisterCheck(config.Context); err != nil {
-		if logger.V(logger.ErrorLevel) {
-			logger.Errorf("Server %s-%s register check error: %s", config.Name, config.Id, err)
+		if config.Logger.V(logger.ErrorLevel) {
+			config.Logger.Error("Server %s-%s register check error: %s", config.Name, config.Id, err)
 		}
 	} else {
 		// announce self to the world
 		if err := n.Register(); err != nil {
-			if logger.V(logger.ErrorLevel) {
-				logger.Errorf("Server register error: %v", err)
+			if config.Logger.V(logger.ErrorLevel) {
+				config.Logger.Error("Server register error: %v", err)
 			}
 		}
 	}
@@ -367,24 +367,24 @@ func (n *noopServer) Start() error {
 				n.RUnlock()
 				rerr := config.RegisterCheck(config.Context)
 				if rerr != nil && registered {
-					if logger.V(logger.ErrorLevel) {
-						logger.Errorf("Server %s-%s register check error: %s, deregister it", config.Name, config.Id, rerr)
+					if config.Logger.V(logger.ErrorLevel) {
+						config.Logger.Error("Server %s-%s register check error: %s, deregister it", config.Name, config.Id, rerr)
 					}
 					// deregister self in case of error
 					if err := n.Deregister(); err != nil {
-						if logger.V(logger.ErrorLevel) {
-							logger.Errorf("Server %s-%s deregister error: %s", config.Name, config.Id, err)
+						if config.Logger.V(logger.ErrorLevel) {
+							config.Logger.Error("Server %s-%s deregister error: %s", config.Name, config.Id, err)
 						}
 					}
 				} else if rerr != nil && !registered {
-					if logger.V(logger.ErrorLevel) {
-						logger.Errorf("Server %s-%s register check error: %s", config.Name, config.Id, rerr)
+					if config.Logger.V(logger.ErrorLevel) {
+						config.Logger.Error("Server %s-%s register check error: %s", config.Name, config.Id, rerr)
 					}
 					continue
 				}
 				if err := n.Register(); err != nil {
-					if logger.V(logger.ErrorLevel) {
-						logger.Errorf("Server %s-%s register error: %s", config.Name, config.Id, err)
+					if config.Logger.V(logger.ErrorLevel) {
+						config.Logger.Error("Server %s-%s register error: %s", config.Name, config.Id, err)
 					}
 				}
 			// wait for exit
@@ -395,8 +395,8 @@ func (n *noopServer) Start() error {
 
 		// deregister self
 		if err := n.Deregister(); err != nil {
-			if logger.V(logger.ErrorLevel) {
-				logger.Error("Server deregister error: ", err)
+			if config.Logger.V(logger.ErrorLevel) {
+				config.Logger.Error("Server deregister error: ", err)
 			}
 		}
 
@@ -419,13 +419,13 @@ func (n *noopServer) Start() error {
 		// close transport
 		ch <- nil
 
-		if logger.V(logger.InfoLevel) {
-			logger.Infof("Broker [%s] Disconnected from %s", config.Broker.String(), config.Broker.Address())
+		if config.Logger.V(logger.InfoLevel) {
+			config.Logger.Info("Broker [%s] Disconnected from %s", config.Broker.String(), config.Broker.Address())
 		}
 		// disconnect broker
 		if err := config.Broker.Disconnect(config.Context); err != nil {
-			if logger.V(logger.ErrorLevel) {
-				logger.Errorf("Broker [%s] disconnect error: %v", config.Broker.String(), err)
+			if config.Logger.V(logger.ErrorLevel) {
+				config.Logger.Error("Broker [%s] disconnect error: %v", config.Broker.String(), err)
 			}
 		}
 	}()

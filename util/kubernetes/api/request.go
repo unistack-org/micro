@@ -219,7 +219,7 @@ func (r *Request) Do() *Response {
 		}
 	}
 
-	logger.Debugf("[Kubernetes] %v %v", req.Method, req.URL.String())
+	logger.Debug("[Kubernetes] %v %v", req.Method, req.URL.String())
 	res, err := r.client.Do(req)
 	if err != nil {
 		return &Response{

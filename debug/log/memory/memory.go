@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/unistack-org/micro/v3/debug/log"
+	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/util/ring"
 )
 
@@ -94,7 +95,7 @@ func (l *memoryLog) Stream() (log.Stream, error) {
 			records <- log.Record{
 				Timestamp: entry.Timestamp,
 				Message:   entry.Value,
-				Metadata:  make(map[string]string),
+				Metadata:  metadata.New(0),
 			}
 		}
 		// now stream continuously
@@ -102,7 +103,7 @@ func (l *memoryLog) Stream() (log.Stream, error) {
 			records <- log.Record{
 				Timestamp: entry.Timestamp,
 				Message:   entry.Value,
-				Metadata:  make(map[string]string),
+				Metadata:  metadata.New(0),
 			}
 		}
 	}()

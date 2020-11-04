@@ -316,6 +316,6 @@ func TestParseSegmentsWithErrors(t *testing.T) {
 			t.Errorf("parser{%q}.segments() succeeded; want InvalidTemplateError; accepted %#v", spec.tokens, segs)
 			continue
 		}
-		logger.Info(err)
+		logger.Info(err.Error())
 	}
 }

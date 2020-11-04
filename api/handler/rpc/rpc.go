@@ -224,7 +224,7 @@ func requestPayload(r *http.Request) ([]byte, error) {
 	case strings.Contains(ct, "application/json-rpc"):
 		msg := codec.Message{
 			Type:   codec.Request,
-			Header: make(map[string]string),
+			Header: metadata.New(0),
 		}
 		c := jsonrpc.NewCodec(&buffer{r.Body})
 		if err = c.ReadHeader(&msg, codec.Request); err != nil {
@@ -238,7 +238,7 @@ func requestPayload(r *http.Request) ([]byte, error) {
 	case strings.Contains(ct, "application/proto-rpc"), strings.Contains(ct, "application/octet-stream"):
 		msg := codec.Message{
 			Type:   codec.Request,
-			Header: make(map[string]string),
+			Header: metadata.New(0),
 		}
 		c := protorpc.NewCodec(&buffer{r.Body})
 		if err = c.ReadHeader(&msg, codec.Request); err != nil {
@@ -253,7 +253,7 @@ func requestPayload(r *http.Request) ([]byte, error) {
 		r.ParseForm()
 
 		// generate a new set of values from the form
-		vals := make(map[string]string)
+		vals := make(map[string]string, len(r.Form))
 		for k, v := range r.Form {
 			vals[k] = strings.Join(v, ",")
 		}
@@ -268,7 +268,7 @@ func requestPayload(r *http.Request) ([]byte, error) {
 	// dont user metadata.FromContext as it mangles names
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
-		md = make(map[string]string)
+		md = metadata.New(0)
 	}
 
 	// allocate maximum
@@ -445,7 +445,7 @@ func writeError(w http.ResponseWriter, r *http.Request, err error) {
 	_, werr := w.Write([]byte(ce.Error()))
 	if werr != nil {
 		if logger.V(logger.ErrorLevel) {
-			logger.Error(werr)
+			logger.Error(werr.Error())
 		}
 	}
 }
@@ -471,7 +471,7 @@ func writeResponse(w http.ResponseWriter, r *http.Request, rsp []byte) {
 	_, err := w.Write(rsp)
 	if err != nil {
 		if logger.V(logger.ErrorLevel) {
-			logger.Error(err)
+			logger.Error(err.Error())
 		}
 	}
 

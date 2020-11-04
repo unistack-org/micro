@@ -3,7 +3,7 @@ package logger
 
 var (
 	// DefaultLogger variable
-	DefaultLogger Logger = NewHelper(NewLogger())
+	DefaultLogger Logger = NewLogger()
 )
 
 // Logger is a generic logging interface
@@ -16,12 +16,48 @@ type Logger interface {
 	Options() Options
 	// Fields set fields to always be logged
 	Fields(fields map[string]interface{}) Logger
-	// Log writes a log entry
-	Log(level Level, v ...interface{})
-	// Logf writes a formatted log entry
-	Logf(level Level, format string, v ...interface{})
+	// Info level message
+	Info(msg string, args ...interface{})
+	// Trace level message
+	Trace(msg string, args ...interface{})
+	// Debug level message
+	Debug(msg string, args ...interface{})
+	// Warn level message
+	Warn(msg string, args ...interface{})
+	// Error level message
+	Error(msg string, args ...interface{})
+	// Fatal level message
+	Fatal(msg string, args ...interface{})
 	// String returns the name of logger
 	String() string
+}
+
+func Info(msg string, args ...interface{}) {
+	DefaultLogger.Info(msg, args...)
+}
+
+func Error(msg string, args ...interface{}) {
+	DefaultLogger.Error(msg, args...)
+}
+
+func Debug(msg string, args ...interface{}) {
+	DefaultLogger.Debug(msg, args...)
+}
+
+func Warn(msg string, args ...interface{}) {
+	DefaultLogger.Warn(msg, args...)
+}
+
+func Trace(msg string, args ...interface{}) {
+	DefaultLogger.Trace(msg, args...)
+}
+
+func Fatal(msg string, args ...interface{}) {
+	DefaultLogger.Fatal(msg, args...)
+}
+
+func V(level Level) bool {
+	return DefaultLogger.V(level)
 }
 
 // Init initialize logger
@@ -32,19 +68,4 @@ func Init(opts ...Option) error {
 // Fields create logger with specific fields
 func Fields(fields map[string]interface{}) Logger {
 	return DefaultLogger.Fields(fields)
-}
-
-// Log writes log with specific level
-func Log(level Level, v ...interface{}) {
-	DefaultLogger.Log(level, v...)
-}
-
-// Logf writes formatted log with specific level
-func Logf(level Level, format string, v ...interface{}) {
-	DefaultLogger.Logf(level, format, v...)
-}
-
-// String return logger name
-func String() string {
-	return DefaultLogger.String()
 }

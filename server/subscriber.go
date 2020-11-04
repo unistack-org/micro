@@ -189,9 +189,12 @@ func (n *noopServer) createSubHandler(sb *subscriber, opts Options) broker.Handl
 	return func(p broker.Event) (err error) {
 		defer func() {
 			if r := recover(); r != nil {
-				if logger.V(logger.ErrorLevel) {
-					logger.Error("panic recovered: ", r)
-					logger.Error(string(debug.Stack()))
+				n.RLock()
+				config := n.opts
+				n.RUnlock()
+				if config.Logger.V(logger.ErrorLevel) {
+					config.Logger.Error("panic recovered: ", r)
+					config.Logger.Error(string(debug.Stack()))
 				}
 				err = errors.InternalServerError(n.opts.Name+".subscriber", "panic recovered: %v", r)
 			}

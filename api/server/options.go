@@ -6,6 +6,7 @@ import (
 
 	"github.com/unistack-org/micro/v3/api/resolver"
 	"github.com/unistack-org/micro/v3/api/server/acme"
+	"github.com/unistack-org/micro/v3/logger"
 )
 
 // Option func
@@ -21,11 +22,14 @@ type Options struct {
 	TLSConfig    *tls.Config
 	Resolver     resolver.Resolver
 	Wrappers     []Wrapper
+	Logger       logger.Logger
 }
 
 // NewOptions returns new Options
 func NewOptions(opts ...Option) Options {
-	options := Options{}
+	options := Options{
+		Logger: logger.DefaultLogger,
+	}
 	for _, o := range opts {
 		o(&options)
 	}
@@ -79,5 +83,11 @@ func TLSConfig(t *tls.Config) Option {
 func Resolver(r resolver.Resolver) Option {
 	return func(o *Options) {
 		o.Resolver = r
+	}
+}
+
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
 	}
 }
