@@ -202,6 +202,4 @@ func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOpti
 		Header: md,
 		Body:   body,
 	}, broker.PublishContext(options.Context))
-
-	return nil
 }
