@@ -144,4 +144,5 @@ var (
 	DefaultRegisterCheck    = func(context.Context) error { return nil }
 	DefaultRegisterInterval = time.Second * 30
 	DefaultRegisterTTL      = time.Second * 90
+	DefaultNamespace        = "micro"
 )

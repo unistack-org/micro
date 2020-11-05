@@ -71,11 +71,12 @@ func NewOptions(opts ...Option) Options {
 		Tracer:           tracer.DefaultTracer,
 		Broker:           broker.DefaultBroker,
 		Registry:         registry.DefaultRegistry,
+		Transport:        transport.DefaultTransport,
 		Address:          DefaultAddress,
 		Name:             DefaultName,
 		Version:          DefaultVersion,
 		Id:               DefaultId,
-		Transport:        transport.DefaultTransport,
+		Namespace:        DefaultNamespace,
 	}
 
 	for _, o := range opts {
