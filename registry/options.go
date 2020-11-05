@@ -41,6 +41,17 @@ type RegisterOptions struct {
 	Attempts int
 }
 
+func NewRegisterOptions(opts ...RegisterOption) RegisterOptions {
+	options := RegisterOptions{
+		Domain:  DefaultDomain,
+		Context: context.Background(),
+	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 type WatchOptions struct {
 	// Specify a service to watch
 	// If blank, the watch is for all services
@@ -52,6 +63,17 @@ type WatchOptions struct {
 	Domain string
 }
 
+func NewWatchOptions(opts ...WatchOption) WatchOptions {
+	options := WatchOptions{
+		Domain:  DefaultDomain,
+		Context: context.Background(),
+	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 type DeregisterOptions struct {
 	Context context.Context
 	// Domain the service was registered in
@@ -60,16 +82,49 @@ type DeregisterOptions struct {
 	Attempts int
 }
 
+func NewDeregisterOptions(opts ...DeregisterOption) DeregisterOptions {
+	options := DeregisterOptions{
+		Domain:  DefaultDomain,
+		Context: context.Background(),
+	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 type GetOptions struct {
 	Context context.Context
 	// Domain to scope the request to
 	Domain string
 }
 
+func NewGetOptions(opts ...GetOption) GetOptions {
+	options := GetOptions{
+		Domain:  DefaultDomain,
+		Context: context.Background(),
+	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 type ListOptions struct {
 	Context context.Context
 	// Domain to scope the request to
 	Domain string
+}
+
+func NewListOptions(opts ...ListOption) ListOptions {
+	options := ListOptions{
+		Domain:  DefaultDomain,
+		Context: context.Background(),
+	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
 }
 
 // Addrs is the registry addresses to use
