@@ -73,13 +73,6 @@ func Table(t string) Option {
 	}
 }
 
-// WithContext sets the stores context, for any extra configuration
-func WithContext(c context.Context) Option {
-	return func(o *Options) {
-		o.Context = c
-	}
-}
-
 // ReadOptions configures an individual Read operation
 type ReadOptions struct {
 	Database, Table string

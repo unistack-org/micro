@@ -17,7 +17,7 @@ var (
 
 // Store is a data storage interface
 type Store interface {
-	// Init initialises the store. It must perform any required setup on the backing storage implementation and check that it is ready for use, returning any errors.
+	// Init initialises the store
 	Init(opts ...Option) error
 	// Connect is used when store needs to be connected
 	Connect(ctx context.Context) error
