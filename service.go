@@ -5,11 +5,14 @@ import (
 	rtime "runtime"
 	"sync"
 
+	"github.com/unistack-org/micro/v3/auth"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/client"
+	"github.com/unistack-org/micro/v3/config"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/network/transport"
 	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/router"
 	"github.com/unistack-org/micro/v3/server"
 	"github.com/unistack-org/micro/v3/store"
 )
@@ -121,6 +124,34 @@ func (s *service) Client() client.Client {
 
 func (s *service) Server() server.Server {
 	return s.opts.Server
+}
+
+func (s *service) Store() store.Store {
+	return s.opts.Store
+}
+
+func (s *service) Registry() registry.Registry {
+	return s.opts.Registry
+}
+
+func (s *service) Logger() logger.Logger {
+	return s.opts.Logger
+}
+
+func (s *service) Transport() transport.Transport {
+	return s.opts.Transport
+}
+
+func (s *service) Config() config.Config {
+	return s.opts.Config
+}
+
+func (s *service) Auth() auth.Auth {
+	return s.opts.Auth
+}
+
+func (s *service) Router() router.Router {
+	return s.opts.Router
 }
 
 func (s *service) String() string {
