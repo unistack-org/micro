@@ -64,6 +64,7 @@ type DialOptions struct {
 // NewDialOptions returns new DialOptions
 func NewDialOptions(opts ...DialOption) DialOptions {
 	options := DialOptions{
+		Timeout: DefaultDialTimeout,
 		Context: context.Background(),
 	}
 

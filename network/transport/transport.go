@@ -9,6 +9,8 @@ import (
 var (
 	// DefaultTransport is the global default transport
 	DefaultTransport Transport = NewTransport()
+	// Default dial timeout
+	DefaultDialTimeout = time.Second * 5
 )
 
 // Transport is an interface which is used for communication between
@@ -57,8 +59,3 @@ type DialOption func(*DialOptions)
 
 // ListenOption is the option signature
 type ListenOption func(*ListenOptions)
-
-var (
-	// Default dial timeout
-	DefaultDialTimeout = time.Second * 5
-)
