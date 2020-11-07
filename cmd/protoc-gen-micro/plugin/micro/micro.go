@@ -378,6 +378,11 @@ func (g *micro) generateClientMethod(reqServ, servName, serviceDescVar string, m
 	g.P("Context() context.Context")
 	g.P("SendMsg(interface{}) error")
 	g.P("RecvMsg(interface{}) error")
+
+	if genSend && !genRecv {
+		// client streaming, the server will send a response upon close
+		g.P("CloseAndRecv() (*", outType, ", error)")
+	}
 	g.P("Close() error")
 
 	if genSend {
@@ -394,6 +399,18 @@ func (g *micro) generateClientMethod(reqServ, servName, serviceDescVar string, m
 	g.P("}")
 	g.P()
 
+	if genSend && !genRecv {
+		// client streaming, the server will send a response upon close
+		g.P("func (x *", streamType, ") CloseAndRecv() (*", outType, ", error) {")
+		g.P("if err := x.stream.Close(); err != nil {")
+		g.P("return nil, err")
+		g.P("}")
+		g.P("r := new(", outType, ")")
+		g.P("err := x.RecvMsg(r)")
+		g.P("return r, err")
+		g.P("}")
+		g.P()
+	}
 	g.P("func (x *", streamType, ") Close() error {")
 	g.P("return x.stream.Close()")
 	g.P("}")
@@ -493,6 +510,10 @@ func (g *micro) generateServerMethod(servName string, method *pb.MethodDescripto
 	g.P("Context() context.Context")
 	g.P("SendMsg(interface{}) error")
 	g.P("RecvMsg(interface{}) error")
+	if !genSend {
+		// client streaming, the server will send a response upon close
+		g.P("SendAndClose(*", outType, ")  error")
+	}
 	g.P("Close() error")
 
 	if genSend {
@@ -511,6 +532,17 @@ func (g *micro) generateServerMethod(servName string, method *pb.MethodDescripto
 	g.P("}")
 	g.P()
 
+	if !genSend {
+		// client streaming, the server will send a response upon close
+		g.P("func (x *", streamType, ") SendAndClose(in *", outType, ") error {")
+		g.P("if err := x.SendMsg(in); err != nil {")
+		g.P("return err")
+		g.P("}")
+		g.P("return x.stream.Close()")
+		g.P("}")
+		g.P()
+	}
+	// other types of rpc don't send a response when the stream closes
 	g.P("func (x *", streamType, ") Close() error {")
 	g.P("return x.stream.Close()")
 	g.P("}")
