@@ -2,12 +2,12 @@ package rpc
 
 import (
 	"bytes"
-	"encoding/json"
 	"net/http"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	go_api "github.com/unistack-org/micro/v3/api/proto"
+	jsonpb "google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestRequestPayloadFromRequest(t *testing.T) {
@@ -22,7 +22,7 @@ func TestRequestPayloadFromRequest(t *testing.T) {
 		t.Fatal("Failed to marshal proto", err)
 	}
 
-	jsonBytes, err := json.Marshal(protoEvent)
+	jsonBytes, err := jsonpb.Marshal(&protoEvent)
 	if err != nil {
 		t.Fatal("Failed to marshal proto to JSON ", err)
 	}

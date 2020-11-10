@@ -44,6 +44,8 @@ func serveWebsocket(ctx context.Context, w http.ResponseWriter, r *http.Request,
 			case "binary":
 				hdr["Sec-WebSocket-Protocol"] = []string{"binary"}
 				op = ws.OpBinary
+			default:
+				op = ws.OpBinary
 			}
 		}
 	}
