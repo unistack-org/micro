@@ -12,4 +12,5 @@ func TestLogger(t *testing.T) {
 	l.Trace("trace_msg1")
 	l.Warn("warn_msg1")
 	l.Fields(map[string]interface{}{"error": "test"}).Info("error message")
+	l.Warn("first", " ", "second")
 }

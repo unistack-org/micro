@@ -17,43 +17,79 @@ type Logger interface {
 	// Fields set fields to always be logged
 	Fields(fields map[string]interface{}) Logger
 	// Info level message
-	Info(msg string, args ...interface{})
+	Info(args ...interface{})
 	// Trace level message
-	Trace(msg string, args ...interface{})
+	Trace(args ...interface{})
 	// Debug level message
-	Debug(msg string, args ...interface{})
+	Debug(args ...interface{})
 	// Warn level message
-	Warn(msg string, args ...interface{})
+	Warn(args ...interface{})
 	// Error level message
-	Error(msg string, args ...interface{})
+	Error(args ...interface{})
 	// Fatal level message
-	Fatal(msg string, args ...interface{})
+	Fatal(args ...interface{})
+	// Infof level message
+	Infof(msg string, args ...interface{})
+	// Tracef level message
+	Tracef(msg string, args ...interface{})
+	// Debug level message
+	Debugf(msg string, args ...interface{})
+	// Warn level message
+	Warnf(msg string, args ...interface{})
+	// Error level message
+	Errorf(msg string, args ...interface{})
+	// Fatal level message
+	Fatalf(msg string, args ...interface{})
 	// String returns the name of logger
 	String() string
 }
 
-func Info(msg string, args ...interface{}) {
-	DefaultLogger.Info(msg, args...)
+func Info(args ...interface{}) {
+	DefaultLogger.Info(args...)
 }
 
-func Error(msg string, args ...interface{}) {
-	DefaultLogger.Error(msg, args...)
+func Error(args ...interface{}) {
+	DefaultLogger.Error(args...)
 }
 
-func Debug(msg string, args ...interface{}) {
-	DefaultLogger.Debug(msg, args...)
+func Debug(args ...interface{}) {
+	DefaultLogger.Debug(args...)
 }
 
-func Warn(msg string, args ...interface{}) {
-	DefaultLogger.Warn(msg, args...)
+func Warn(args ...interface{}) {
+	DefaultLogger.Warn(args...)
 }
 
-func Trace(msg string, args ...interface{}) {
-	DefaultLogger.Trace(msg, args...)
+func Trace(args ...interface{}) {
+	DefaultLogger.Trace(args...)
 }
 
-func Fatal(msg string, args ...interface{}) {
-	DefaultLogger.Fatal(msg, args...)
+func Fatal(args ...interface{}) {
+	DefaultLogger.Fatal(args...)
+}
+
+func Infof(msg string, args ...interface{}) {
+	DefaultLogger.Infof(msg, args...)
+}
+
+func Errorf(msg string, args ...interface{}) {
+	DefaultLogger.Errorf(msg, args...)
+}
+
+func Debugf(msg string, args ...interface{}) {
+	DefaultLogger.Debugf(msg, args...)
+}
+
+func Warnf(msg string, args ...interface{}) {
+	DefaultLogger.Warnf(msg, args...)
+}
+
+func Tracef(msg string, args ...interface{}) {
+	DefaultLogger.Tracef(msg, args...)
+}
+
+func Fatalf(msg string, args ...interface{}) {
+	DefaultLogger.Fatalf(msg, args...)
 }
 
 func V(level Level) bool {

@@ -84,32 +84,57 @@ func logCallerfilePath(loggingFilePath string) string {
 	return loggingFilePath[idx+1:]
 }
 
-func (l *defaultLogger) Info(msg string, args ...interface{}) {
-	l.log(InfoLevel, msg, args...)
+func (l *defaultLogger) Info(args ...interface{}) {
+	l.log(InfoLevel, args...)
 }
 
-func (l *defaultLogger) Error(msg string, args ...interface{}) {
-	l.log(ErrorLevel, msg, args...)
+func (l *defaultLogger) Error(args ...interface{}) {
+	l.log(ErrorLevel, args...)
 }
 
-func (l *defaultLogger) Debug(msg string, args ...interface{}) {
-	l.log(DebugLevel, msg, args...)
+func (l *defaultLogger) Debug(args ...interface{}) {
+	l.log(DebugLevel, args...)
 }
 
-func (l *defaultLogger) Warn(msg string, args ...interface{}) {
-	l.log(WarnLevel, msg, args...)
+func (l *defaultLogger) Warn(args ...interface{}) {
+	l.log(WarnLevel, args...)
 }
 
-func (l *defaultLogger) Trace(msg string, args ...interface{}) {
-	l.log(TraceLevel, msg, args...)
+func (l *defaultLogger) Trace(args ...interface{}) {
+	l.log(TraceLevel, args...)
 }
 
-func (l *defaultLogger) Fatal(msg string, args ...interface{}) {
-	l.log(FatalLevel, msg, args...)
+func (l *defaultLogger) Fatal(args ...interface{}) {
+	l.log(FatalLevel, args...)
 	os.Exit(1)
 }
 
-func (l *defaultLogger) log(level Level, msg string, args ...interface{}) {
+func (l *defaultLogger) Infof(msg string, args ...interface{}) {
+	l.logf(InfoLevel, msg, args...)
+}
+
+func (l *defaultLogger) Errorf(msg string, args ...interface{}) {
+	l.logf(ErrorLevel, msg, args...)
+}
+
+func (l *defaultLogger) Debugf(msg string, args ...interface{}) {
+	l.logf(DebugLevel, msg, args...)
+}
+
+func (l *defaultLogger) Warnf(msg string, args ...interface{}) {
+	l.logf(WarnLevel, msg, args...)
+}
+
+func (l *defaultLogger) Tracef(msg string, args ...interface{}) {
+	l.logf(TraceLevel, msg, args...)
+}
+
+func (l *defaultLogger) Fatalf(msg string, args ...interface{}) {
+	l.logf(FatalLevel, msg, args...)
+	os.Exit(1)
+}
+
+func (l *defaultLogger) log(level Level, args ...interface{}) {
 	if !l.V(level) {
 		return
 	}
@@ -125,12 +150,33 @@ func (l *defaultLogger) log(level Level, msg string, args ...interface{}) {
 	}
 
 	fields["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
-	if len(msg) > 0 {
-		if len(args) > 0 {
-			fields["msg"] = fmt.Sprintf(msg, args...)
-		} else {
-			fields["msg"] = msg
-		}
+	fields["msg"] = fmt.Sprint(args...)
+
+	l.RLock()
+	_ = l.enc.Encode(fields)
+	l.RUnlock()
+}
+
+func (l *defaultLogger) logf(level Level, msg string, args ...interface{}) {
+	if !l.V(level) {
+		return
+	}
+
+	l.RLock()
+	fields := copyFields(l.opts.Fields)
+	l.RUnlock()
+
+	fields["level"] = level.String()
+
+	if _, file, line, ok := runtime.Caller(l.opts.CallerSkipCount); ok {
+		fields["caller"] = fmt.Sprintf("%s:%d", logCallerfilePath(file), line)
+	}
+
+	fields["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
+	if len(args) > 0 {
+		fields["msg"] = fmt.Sprintf(msg, args...)
+	} else {
+		fields["msg"] = msg
 	}
 	l.RLock()
 	_ = l.enc.Encode(fields)
