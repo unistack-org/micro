@@ -19,9 +19,8 @@ import (
 
 type service struct {
 	opts Options
-
 	sync.RWMutex
-	once sync.Once
+	//	once sync.Once
 }
 
 func newService(opts ...Option) Service {
@@ -281,10 +280,8 @@ func (s *service) Run() error {
 		return err
 	}
 
-	select {
 	// wait on context cancel
-	case <-s.opts.Context.Done():
-	}
+	<-s.opts.Context.Done()
 
 	return s.Stop()
 }
