@@ -84,6 +84,9 @@ func Get(ctx context.Context, key string) (string, bool) {
 
 // FromContext returns metadata from the given context
 func FromContext(ctx context.Context) (Metadata, bool) {
+	if ctx == nil {
+		return nil, false
+	}
 	md, ok := ctx.Value(metadataKey{}).(Metadata)
 	if !ok {
 		return nil, ok
@@ -102,6 +105,9 @@ func New(size int) Metadata {
 
 // NewContext creates a new context with the given metadata
 func NewContext(ctx context.Context, md Metadata) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	return context.WithValue(ctx, metadataKey{}, Copy(md))
 }
 

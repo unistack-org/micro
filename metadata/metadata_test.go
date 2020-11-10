@@ -63,6 +63,15 @@ func TestMetadataDelete(t *testing.T) {
 
 }
 
+func TestNilContext(t *testing.T) {
+	var ctx context.Context
+
+	_, ok := FromContext(ctx)
+	if ok {
+		t.Fatal("nil context")
+	}
+}
+
 func TestMetadataCopy(t *testing.T) {
 	md := Metadata{
 		"Foo": "bar",
