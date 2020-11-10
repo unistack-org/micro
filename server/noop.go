@@ -405,17 +405,6 @@ func (n *noopServer) Start() error {
 			n.wg.Wait()
 		}
 
-		// stop the grpc server
-		exit := make(chan bool)
-
-		go func() {
-			close(exit)
-		}()
-
-		select {
-		case <-exit:
-		}
-
 		// close transport
 		ch <- nil
 
