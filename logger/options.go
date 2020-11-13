@@ -63,6 +63,13 @@ func WithCallerSkipCount(c int) Option {
 	}
 }
 
+// WithContext set context
+func WithContext(ctx context.Context) Option {
+	return func(args *Options) {
+		args.Context = ctx
+	}
+}
+
 func SetOption(k, v interface{}) Option {
 	return func(o *Options) {
 		if o.Context == nil {
