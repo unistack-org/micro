@@ -18,7 +18,6 @@ require (
 	github.com/micro/cli/v2 v2.1.2
 	github.com/miekg/dns v1.1.31
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c
-	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.5.1
 	github.com/unistack-org/micro-codec-bytes v0.0.0-20200828083432-4e49e953d844
 	github.com/unistack-org/micro-codec-json v0.0.0-20201102222734-a29c895ec05c
@@ -28,6 +27,5 @@ require (
 	github.com/unistack-org/micro-config-cmd v0.0.0-20201028144621-5a55f1aad70a
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73
-	google.golang.org/genproto v0.0.0-20200904004341-0bd0a958aa1d
 	google.golang.org/protobuf v1.25.0
 )
