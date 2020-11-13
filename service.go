@@ -36,8 +36,6 @@ func (s *service) Name() string {
 // which parses command line flags. cmd.Init is only called
 // on first Init.
 func (s *service) Init(opts ...Option) error {
-	//var once sync.Once
-
 	// process options
 	for _, o := range opts {
 		o(&s.opts)
@@ -49,13 +47,18 @@ func (s *service) Init(opts ...Option) error {
 			s.opts.Cmd.App().Name = s.Server().Options().Name
 		}
 
-		//once.Do(func() {
 		// Initialise the command options
-		//	if err := s.opts.Cmd.Init(); err != nil {
-		//		logger.Fatal(err)
-		//return err
-		//	}
-		//})
+		if err := s.opts.Cmd.Init(); err != nil {
+			return err
+		}
+	}
+
+	if s.opts.Logger != nil {
+		if err := s.opts.Logger.Init(
+			logger.WithContext(s.opts.Context),
+		); err != nil {
+			return err
+		}
 	}
 
 	if s.opts.Registry != nil {
