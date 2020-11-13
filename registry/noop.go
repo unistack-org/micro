@@ -2,7 +2,6 @@ package registry
 
 import (
 	"context"
-	"fmt"
 )
 
 type noopRegistry struct {
@@ -54,12 +53,26 @@ func (n *noopRegistry) ListServices(ctx context.Context, opts ...ListOption) ([]
 
 // Watch is used to watch for service changes
 func (n *noopRegistry) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
-	return nil, fmt.Errorf("not implemented")
+	return &noopWatcher{done: make(chan struct{}), opts: NewWatchOptions(opts...)}, nil
 }
 
 // String returns registry string representation
 func (n *noopRegistry) String() string {
 	return "noop"
+}
+
+type noopWatcher struct {
+	opts WatchOptions
+	done chan struct{}
+}
+
+func (n *noopWatcher) Next() (*Result, error) {
+	<-n.done
+	return nil, ErrWatcherStopped
+}
+
+func (n *noopWatcher) Stop() {
+	close(n.done)
 }
 
 // NewRegistry returns a new noop registry
