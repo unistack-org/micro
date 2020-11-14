@@ -12,6 +12,7 @@ var (
 
 // Reporter is an interface for collecting and instrumenting metrics
 type Reporter interface {
+	Init(...Option) error
 	Count(id string, value int64, tags Tags) error
 	Gauge(id string, value float64, tags Tags) error
 	Timing(id string, value time.Duration, tags Tags) error

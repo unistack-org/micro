@@ -16,6 +16,14 @@ func NewReporter(opts ...Option) Reporter {
 	}
 }
 
+// Init initialize options
+func (r *noopReporter) Init(opts ...Option) error {
+	for _, o := range opts {
+		o(&r.opts)
+	}
+	return nil
+}
+
 // Count implements the Reporter interface Count method:
 func (r *noopReporter) Count(metricName string, value int64, tags Tags) error {
 	return nil
