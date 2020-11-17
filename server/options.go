@@ -10,6 +10,7 @@ import (
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/network/transport"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/tracer"
@@ -24,7 +25,7 @@ type Options struct {
 	Auth         auth.Auth
 	Logger       logger.Logger
 	Transport    transport.Transport
-	Metadata     map[string]string
+	Metadata     metadata.Metadata
 	Name         string
 	Address      string
 	Advertise    string
@@ -63,7 +64,7 @@ func NewOptions(opts ...Option) Options {
 		Auth:             auth.DefaultAuth,
 		Codecs:           make(map[string]codec.NewCodec),
 		Context:          context.Background(),
-		Metadata:         map[string]string{},
+		Metadata:         metadata.New(0),
 		RegisterInterval: DefaultRegisterInterval,
 		RegisterTTL:      DefaultRegisterTTL,
 		RegisterCheck:    DefaultRegisterCheck,
@@ -187,9 +188,9 @@ func Transport(t transport.Transport) Option {
 }
 
 // Metadata associated with the server
-func Metadata(md map[string]string) Option {
+func Metadata(md metadata.Metadata) Option {
 	return func(o *Options) {
-		o.Metadata = md
+		o.Metadata = metadata.Copy(md)
 	}
 }
 
@@ -271,7 +272,7 @@ type HandlerOption func(*HandlerOptions)
 // HandlerOptions struct
 type HandlerOptions struct {
 	Internal bool
-	Metadata map[string]map[string]string
+	Metadata map[string]metadata.Metadata
 	Context  context.Context
 }
 
@@ -317,9 +318,9 @@ func NewSubscriberOptions(opts ...SubscriberOption) SubscriberOptions {
 
 // EndpointMetadata is a Handler option that allows metadata to be added to
 // individual endpoints.
-func EndpointMetadata(name string, md map[string]string) HandlerOption {
+func EndpointMetadata(name string, md metadata.Metadata) HandlerOption {
 	return func(o *HandlerOptions) {
-		o.Metadata[name] = md
+		o.Metadata[name] = metadata.Copy(md)
 	}
 }
 

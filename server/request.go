@@ -2,13 +2,14 @@ package server
 
 import (
 	"github.com/unistack-org/micro/v3/codec"
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 type rpcMessage struct {
 	topic       string
 	contentType string
 	payload     interface{}
-	header      map[string]string
+	header      metadata.Metadata
 	body        []byte
 	codec       codec.Codec
 }
@@ -25,7 +26,7 @@ func (r *rpcMessage) Payload() interface{} {
 	return r.payload
 }
 
-func (r *rpcMessage) Header() map[string]string {
+func (r *rpcMessage) Header() metadata.Metadata {
 	return r.header
 }
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/codec"
+	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/registry"
 )
 
@@ -53,7 +54,7 @@ type Message interface {
 	// The content type of the payload
 	ContentType() string
 	// The raw headers of the message
-	Header() map[string]string
+	Header() metadata.Metadata
 	// The raw body of the message
 	Body() []byte
 	// Codec used to decode the message
@@ -71,7 +72,7 @@ type Request interface {
 	// Content type provided
 	ContentType() string
 	// Header of the request
-	Header() map[string]string
+	Header() metadata.Metadata
 	// Body is the initial decoded value
 	Body() interface{}
 	// Read the undecoded request body
@@ -87,7 +88,7 @@ type Response interface {
 	// Encoded writer
 	Codec() codec.Writer
 	// Write the header
-	WriteHeader(map[string]string)
+	WriteHeader(metadata.Metadata)
 	// write a response directly to the client
 	Write([]byte) error
 }

@@ -1,7 +1,11 @@
 // Package broker is an interface used for asynchronous messaging
 package broker
 
-import "context"
+import (
+	"context"
+
+	"github.com/unistack-org/micro/v3/metadata"
+)
 
 var (
 	DefaultBroker Broker = NewBroker()
@@ -32,7 +36,7 @@ type Event interface {
 
 // Message is used to transfer data
 type Message struct {
-	Header map[string]string // contains message metadata
+	Header metadata.Metadata // contains message metadata
 	Body   []byte            // contains message body
 }
 

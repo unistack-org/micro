@@ -6,6 +6,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/unistack-org/micro/v3/auth"
+	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/util/token"
 )
 
@@ -13,7 +14,7 @@ import (
 type authClaims struct {
 	Type     string            `json:"type"`
 	Scopes   []string          `json:"scopes"`
-	Metadata map[string]string `json:"metadata"`
+	Metadata metadata.Metadata `json:"metadata"`
 
 	jwt.StandardClaims
 }

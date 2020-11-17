@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/unistack-org/micro/v3/codec"
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 var (
@@ -57,7 +58,7 @@ type Response interface {
 	// Read the response
 	Codec() codec.Reader
 	// read the header
-	Header() map[string]string
+	Header() metadata.Metadata
 	// Read the undecoded response
 	Read() ([]byte, error)
 }

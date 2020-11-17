@@ -100,9 +100,7 @@ func ExtractEndpoint(method reflect.Method) *Endpoint {
 	}
 
 	if stream {
-		ep.Metadata = map[string]string{
-			"stream": fmt.Sprintf("%v", stream),
-		}
+		ep.Metadata.Set("stream", fmt.Sprintf("%v", stream))
 	}
 
 	return ep

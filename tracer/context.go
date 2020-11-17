@@ -29,8 +29,8 @@ func FromContext(ctx context.Context) (traceID string, parentSpanID string, isFo
 
 // NewContext saves the trace and span ids in the context
 func NewContext(ctx context.Context, traceID, parentSpanID string) context.Context {
-	return metadata.MergeContext(ctx, map[string]string{
-		traceIDKey: traceID,
-		spanIDKey:  parentSpanID,
-	}, true)
+	md := metadata.New(2)
+	md.Set(traceIDKey, traceID)
+	md.Set(spanIDKey, parentSpanID)
+	return metadata.MergeContext(ctx, md, true)
 }

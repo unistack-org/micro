@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/unistack-org/micro/v3/debug/log"
+	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/util/kubernetes/client"
 )
 
@@ -89,7 +90,7 @@ func (k *klog) parse(line string) log.Record {
 	if err := json.Unmarshal([]byte(line), &record); err != nil {
 		record.Timestamp = time.Now().UTC()
 		record.Message = line
-		record.Metadata = make(map[string]string)
+		record.Metadata = metadata.New(1)
 	}
 
 	record.Metadata["service"] = k.Options.Name

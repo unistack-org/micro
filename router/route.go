@@ -2,6 +2,8 @@ package router
 
 import (
 	"hash/fnv"
+
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 var (
@@ -28,7 +30,7 @@ type Route struct {
 	// Metric is the route cost metric
 	Metric int64
 	// Metadata for the route
-	Metadata map[string]string
+	Metadata metadata.Metadata
 }
 
 // Hash returns route hash sum.
