@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/store"
 )
 
@@ -102,7 +103,7 @@ func LoginURL(url string) Option {
 
 type GenerateOptions struct {
 	// Metadata associated with the account
-	Metadata map[string]string
+	Metadata metadata.Metadata
 	// Scopes the account has access too
 	Scopes []string
 	// Provider of the account, e.g. oauth
@@ -132,9 +133,9 @@ func WithType(t string) GenerateOption {
 }
 
 // WithMetadata for the generated account
-func WithMetadata(md map[string]string) GenerateOption {
+func WithMetadata(md metadata.Metadata) GenerateOption {
 	return func(o *GenerateOptions) {
-		o.Metadata = md
+		o.Metadata = metadata.Copy(md)
 	}
 }
 

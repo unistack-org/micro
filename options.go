@@ -12,6 +12,7 @@ import (
 	"github.com/unistack-org/micro/v3/config"
 	"github.com/unistack-org/micro/v3/debug/profile"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/network/transport"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/router"
@@ -260,7 +261,7 @@ func Version(v string) Option {
 }
 
 // Metadata associated with the service
-func Metadata(md map[string]string) Option {
+func Metadata(md metadata.Metadata) Option {
 	return func(o *Options) {
 		if o.Server != nil {
 			o.Server.Init(server.Metadata(md))

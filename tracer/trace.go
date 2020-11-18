@@ -4,6 +4,8 @@ package tracer
 import (
 	"context"
 	"time"
+
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 var (
@@ -46,7 +48,7 @@ type Span struct {
 	// Duration in nano seconds
 	Duration time.Duration
 	// associated data
-	Metadata map[string]string
+	Metadata metadata.Metadata
 	// Type
 	Type SpanType
 }

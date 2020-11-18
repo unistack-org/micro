@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"time"
+
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 var (
@@ -36,7 +38,7 @@ type Event struct {
 	// Timestamp of the event
 	Timestamp time.Time
 	// Metadata contains the encoded event was indexed by
-	Metadata map[string]string
+	Metadata metadata.Metadata
 	// Payload contains the encoded message
 	Payload []byte
 }

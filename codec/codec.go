@@ -4,6 +4,8 @@ package codec
 import (
 	"errors"
 	"io"
+
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 const (
@@ -67,6 +69,6 @@ type Message struct {
 	Error    string
 
 	// The values read from the socket
-	Header map[string]string
+	Header metadata.Metadata
 	Body   []byte
 }

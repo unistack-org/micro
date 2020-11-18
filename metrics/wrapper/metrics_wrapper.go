@@ -1,10 +1,10 @@
 package wrapper
 
 import (
+	"context"
 	"time"
 
-	"context"
-
+	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/metrics"
 	"github.com/unistack-org/micro/v3/server"
 )
@@ -26,9 +26,8 @@ func (w *Wrapper) HandlerFunc(handlerFunction server.HandlerFunc) server.Handler
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
 
 		// Build some tags to describe the call:
-		tags := metrics.Tags{
-			"method": req.Method(),
-		}
+		tags := metadata.New(2)
+		tags.Set("method", req.Method())
 
 		// Start the clock:
 		callTime := time.Now()

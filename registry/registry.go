@@ -4,6 +4,8 @@ package registry
 import (
 	"context"
 	"errors"
+
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 const (
@@ -42,7 +44,7 @@ type Registry interface {
 type Service struct {
 	Name      string            `json:"name"`
 	Version   string            `json:"version"`
-	Metadata  map[string]string `json:"metadata"`
+	Metadata  metadata.Metadata `json:"metadata"`
 	Endpoints []*Endpoint       `json:"endpoints"`
 	Nodes     []*Node           `json:"nodes"`
 }
@@ -51,7 +53,7 @@ type Service struct {
 type Node struct {
 	Id       string            `json:"id"`
 	Address  string            `json:"address"`
-	Metadata map[string]string `json:"metadata"`
+	Metadata metadata.Metadata `json:"metadata"`
 }
 
 // Endpoint holds endpoint registry info
@@ -59,7 +61,7 @@ type Endpoint struct {
 	Name     string            `json:"name"`
 	Request  *Value            `json:"request"`
 	Response *Value            `json:"response"`
-	Metadata map[string]string `json:"metadata"`
+	Metadata metadata.Metadata `json:"metadata"`
 }
 
 // Valud holds additional kv stuff

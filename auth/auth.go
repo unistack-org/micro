@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"time"
+
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 const (
@@ -57,7 +59,7 @@ type Account struct {
 	// Issuer of the account
 	Issuer string `json:"issuer"`
 	// Any other associated metadata
-	Metadata map[string]string `json:"metadata"`
+	Metadata metadata.Metadata `json:"metadata"`
 	// Scopes the account has access to
 	Scopes []string `json:"scopes"`
 	// Secret for the account, e.g. the password

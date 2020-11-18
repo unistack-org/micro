@@ -35,7 +35,7 @@ func (r *request) Codec() codec.Reader {
 	return r.Request.Codec().(codec.Reader)
 }
 
-func (r *request) Header() map[string]string {
+func (r *request) Header() metadata.Metadata {
 	md, _ := metadata.FromContext(r.context)
 	return md
 }

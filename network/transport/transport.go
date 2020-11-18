@@ -4,6 +4,8 @@ package transport
 import (
 	"context"
 	"time"
+
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 var (
@@ -26,7 +28,7 @@ type Transport interface {
 
 // Message is used to transfer data
 type Message struct {
-	Header map[string]string
+	Header metadata.Metadata
 	Body   []byte
 }
 

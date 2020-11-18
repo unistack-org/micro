@@ -4,6 +4,8 @@ package runtime
 import (
 	"errors"
 	"time"
+
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 var (
@@ -43,7 +45,7 @@ type Logs interface {
 // Log is a log message
 type Log struct {
 	Message  string
-	Metadata map[string]string
+	Metadata metadata.Metadata
 }
 
 // Scheduler is a runtime service scheduler
@@ -103,7 +105,7 @@ type Service struct {
 	// url location of source
 	Source string
 	// Metadata stores metadata
-	Metadata map[string]string
+	Metadata metadata.Metadata
 }
 
 // Resources which are allocated to a serivce

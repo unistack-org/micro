@@ -66,14 +66,14 @@ func (n *noopRequest) Stream() bool {
 
 type noopResponse struct {
 	codec  codec.Reader
-	header map[string]string
+	header metadata.Metadata
 }
 
 func (n *noopResponse) Codec() codec.Reader {
 	return n.codec
 }
 
-func (n *noopResponse) Header() map[string]string {
+func (n *noopResponse) Header() metadata.Metadata {
 	return n.header
 }
 

@@ -1,11 +1,15 @@
 package events
 
-import "time"
+import (
+	"time"
+
+	"github.com/unistack-org/micro/v3/metadata"
+)
 
 // PublishOptions contains all the options which can be provided when publishing an event
 type PublishOptions struct {
 	// Metadata contains any keys which can be used to query the data, for example a customer id
-	Metadata map[string]string
+	Metadata metadata.Metadata
 	// Timestamp to set for the event, if the timestamp is a zero value, the current time will be used
 	Timestamp time.Time
 }
@@ -14,9 +18,9 @@ type PublishOptions struct {
 type PublishOption func(o *PublishOptions)
 
 // WithMetadata sets the Metadata field on PublishOptions
-func WithMetadata(md map[string]string) PublishOption {
+func WithMetadata(md metadata.Metadata) PublishOption {
 	return func(o *PublishOptions) {
-		o.Metadata = md
+		o.Metadata = metadata.Copy(md)
 	}
 }
 

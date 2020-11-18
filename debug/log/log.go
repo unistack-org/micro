@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 var (
@@ -29,7 +31,7 @@ type Record struct {
 	// Timestamp of logged event
 	Timestamp time.Time `json:"timestamp"`
 	// Metadata to enrich log record
-	Metadata map[string]string `json:"metadata"`
+	Metadata metadata.Metadata `json:"metadata"`
 	// Value contains log entry
 	Message interface{} `json:"message"`
 }
