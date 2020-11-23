@@ -13,7 +13,7 @@ import (
 type Options struct {
 	Addrs  []string
 	Secure bool
-	Codec  codec.Marshaler
+	Codec  codec.Codec
 
 	// Logger
 	Logger logger.Logger
@@ -125,7 +125,7 @@ func Addrs(addrs ...string) Option {
 
 // Codec sets the codec used for encoding/decoding used where
 // a broker does not support headers
-func Codec(c codec.Marshaler) Option {
+func Codec(c codec.Codec) Option {
 	return func(o *Options) {
 		o.Codec = c
 	}

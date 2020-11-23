@@ -1,4 +1,4 @@
-// Package registry resolves names using the go-micro registry
+// Package registry resolves names using the micro registry
 package registry
 
 import (

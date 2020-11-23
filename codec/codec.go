@@ -18,40 +18,22 @@ const (
 var (
 	// ErrInvalidMessage returned when invalid messge passed to codec
 	ErrInvalidMessage = errors.New("invalid message")
+	// ErrUnknownContentType returned when content-type is unknown
+	ErrUnknownContentType = errors.New("unknown content-type")
 )
 
 // MessageType
 type MessageType int
 
-// NewCodec takes in a connection/buffer and returns a new Codec
-type NewCodec func(io.ReadWriteCloser) Codec
-
-// Codec encodes/decodes various types of messages used within go-micro.
+// Codec encodes/decodes various types of messages used within micro.
 // ReadHeader and ReadBody are called in pairs to read requests/responses
 // from the connection. Close is called when finished with the
 // connection. ReadBody may be called with a nil argument to force the
 // body to be read and discarded.
 type Codec interface {
-	Reader
-	Writer
-	Close() error
-	String() string
-}
-
-// Reader interface
-type Reader interface {
-	ReadHeader(*Message, MessageType) error
-	ReadBody(interface{}) error
-}
-
-// Writer interface
-type Writer interface {
-	Write(*Message, interface{}) error
-}
-
-// Marshaler is a simple encoding interface used for the broker/transport
-// where headers are not supported by the underlying implementation.
-type Marshaler interface {
+	ReadHeader(io.ReadWriter, *Message, MessageType) error
+	ReadBody(io.ReadWriter, interface{}) error
+	Write(io.ReadWriter, *Message, interface{}) error
 	Marshal(interface{}) ([]byte, error)
 	Unmarshal([]byte, interface{}) error
 	String() string

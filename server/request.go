@@ -34,6 +34,6 @@ func (r *rpcMessage) Body() []byte {
 	return r.body
 }
 
-func (r *rpcMessage) Codec() codec.Reader {
+func (r *rpcMessage) Codec() codec.Codec {
 	return r.codec
 }

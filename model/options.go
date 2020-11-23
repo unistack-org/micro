@@ -12,7 +12,7 @@ type Options struct {
 	// Database to write to
 	Database string
 	// for serialising
-	Codec codec.Marshaler
+	Codec codec.Codec
 	// for locking
 	Sync sync.Sync
 	// for storage

@@ -48,7 +48,7 @@ type Request interface {
 	// The unencoded request body
 	Body() interface{}
 	// Write to the encoded request writer. This is nil before a call is made
-	Codec() codec.Writer
+	Codec() codec.Codec
 	// indicates whether the request will be a streaming one rather than unary
 	Stream() bool
 }
@@ -56,7 +56,7 @@ type Request interface {
 // Response is the response received from a service
 type Response interface {
 	// Read the response
-	Codec() codec.Reader
+	Codec() codec.Codec
 	// read the header
 	Header() metadata.Metadata
 	// Read the undecoded response

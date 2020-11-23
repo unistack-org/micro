@@ -22,7 +22,7 @@ type Options struct {
 
 	// Plugged interfaces
 	Broker    broker.Broker
-	Codecs    map[string]codec.NewCodec
+	Codecs    map[string]codec.Codec
 	Router    router.Router
 	Selector  selector.Selector
 	Transport transport.Transport
@@ -141,8 +141,8 @@ type RequestOptions struct {
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Context:     context.Background(),
-		ContentType: "application/protobuf",
-		Codecs:      make(map[string]codec.NewCodec),
+		ContentType: "application/json",
+		Codecs:      make(map[string]codec.Codec),
 		CallOptions: CallOptions{
 			Backoff:        DefaultBackoff,
 			Retry:          DefaultRetry,
@@ -179,7 +179,7 @@ func Logger(l logger.Logger) Option {
 }
 
 // Codec to be used to encode/decode requests for a given content type
-func Codec(contentType string, c codec.NewCodec) Option {
+func Codec(contentType string, c codec.Codec) Option {
 	return func(o *Options) {
 		o.Codecs[contentType] = c
 	}

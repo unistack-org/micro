@@ -3,12 +3,24 @@ package client
 import (
 	"context"
 
-	raw "github.com/unistack-org/micro-codec-bytes"
-	json "github.com/unistack-org/micro-codec-json"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/errors"
 	"github.com/unistack-org/micro/v3/metadata"
+)
+
+var (
+	DefaultCodecs = map[string]codec.Codec{
+		//"application/json":         cjson.NewCodec,
+		//"application/json-rpc":     cjsonrpc.NewCodec,
+		//"application/protobuf":     cproto.NewCodec,
+		//"application/proto-rpc":    cprotorpc.NewCodec,
+		"application/octet-stream": codec.NewCodec(),
+	}
+)
+
+const (
+	defaultContentType = "application/json"
 )
 
 type noopClient struct {
@@ -27,7 +39,7 @@ type noopRequest struct {
 	endpoint    string
 	contentType string
 	body        interface{}
-	codec       codec.Writer
+	codec       codec.Codec
 	stream      bool
 }
 
@@ -56,7 +68,7 @@ func (n *noopRequest) Body() interface{} {
 	return n.body
 }
 
-func (n *noopRequest) Codec() codec.Writer {
+func (n *noopRequest) Codec() codec.Codec {
 	return n.codec
 }
 
@@ -65,11 +77,11 @@ func (n *noopRequest) Stream() bool {
 }
 
 type noopResponse struct {
-	codec  codec.Reader
+	codec  codec.Codec
 	header metadata.Metadata
 }
 
-func (n *noopResponse) Codec() codec.Reader {
+func (n *noopResponse) Codec() codec.Codec {
 	return n.codec
 }
 
@@ -123,6 +135,16 @@ func (n *noopMessage) ContentType() string {
 	return n.opts.ContentType
 }
 
+func (n *noopClient) newCodec(contentType string) (codec.Codec, error) {
+	if cf, ok := n.opts.Codecs[contentType]; ok {
+		return cf, nil
+	}
+	if cf, ok := DefaultCodecs[contentType]; ok {
+		return cf, nil
+	}
+	return nil, codec.ErrUnknownContentType
+}
+
 func (n *noopClient) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
@@ -168,21 +190,15 @@ func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOpti
 	md["Micro-Topic"] = p.Topic()
 
 	// passed in raw data
-	if d, ok := p.Payload().(*raw.Frame); ok {
+	if d, ok := p.Payload().(*codec.Frame); ok {
 		body = d.Data
 	} else {
-		cf := n.opts.Broker.Options().Codec
-		if cf == nil {
-			cf = json.Marshaler{}
+		// use codec for payload
+		cf, err := n.newCodec(p.ContentType())
+		if err != nil {
+			return errors.InternalServerError("go.micro.client", err.Error())
 		}
 
-		/*
-			// use codec for payload
-			cf, err := n.opts.Codecs[p.ContentType()]
-			if err != nil {
-				return errors.InternalServerError("go.micro.client", err.Error())
-			}
-		*/
 		// set the body
 		b, err := cf.Marshal(p.Payload())
 		if err != nil {

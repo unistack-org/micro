@@ -168,7 +168,7 @@ func (s *service) Start() error {
 	s.RUnlock()
 
 	if config.Logger.V(logger.InfoLevel) {
-		config.Logger.Info("Starting [service] %s", s.Name())
+		config.Logger.Infof("starting [service] %s", s.Name())
 	}
 
 	for _, fn := range s.opts.BeforeStart {
@@ -218,7 +218,7 @@ func (s *service) Stop() error {
 	s.RUnlock()
 
 	if config.Logger.V(logger.InfoLevel) {
-		config.Logger.Info("Stoppping [service] %s", s.Name())
+		config.Logger.Infof("stoppping [service] %s", s.Name())
 	}
 
 	var err error

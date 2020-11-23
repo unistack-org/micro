@@ -34,7 +34,7 @@ func (r *testRequest) Body() interface{} {
 	return r.body
 }
 
-func (r *testRequest) Codec() codec.Writer {
+func (r *testRequest) Codec() codec.Codec {
 	return r.codec
 }
 

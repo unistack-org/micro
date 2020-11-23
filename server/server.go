@@ -58,7 +58,7 @@ type Message interface {
 	// The raw body of the message
 	Body() []byte
 	// Codec used to decode the message
-	Codec() codec.Reader
+	Codec() codec.Codec
 }
 
 // Request is a synchronous request interface
@@ -78,7 +78,7 @@ type Request interface {
 	// Read the undecoded request body
 	Read() ([]byte, error)
 	// The encoded message stream
-	Codec() codec.Reader
+	Codec() codec.Codec
 	// Indicates whether its a stream
 	Stream() bool
 }
@@ -86,7 +86,7 @@ type Request interface {
 // Response is the response writer for unencoded messages
 type Response interface {
 	// Encoded writer
-	Codec() codec.Writer
+	Codec() codec.Codec
 	// Write the header
 	WriteHeader(metadata.Metadata)
 	// write a response directly to the client

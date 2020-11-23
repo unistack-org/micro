@@ -31,8 +31,8 @@ type request struct {
 	context context.Context
 }
 
-func (r *request) Codec() codec.Reader {
-	return r.Request.Codec().(codec.Reader)
+func (r *request) Codec() codec.Codec {
+	return r.Request.Codec()
 }
 
 func (r *request) Header() metadata.Metadata {

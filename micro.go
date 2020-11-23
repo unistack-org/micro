@@ -12,7 +12,7 @@ import (
 type serviceKey struct{}
 
 // Service is an interface that wraps the lower level libraries
-// within go-micro. Its a convenience method for building
+// within micro. Its a convenience method for building
 // and initialising services.
 type Service interface {
 	// The service name

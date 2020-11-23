@@ -138,7 +138,7 @@ func (s *storage) Stat(key string) (certmagic.KeyInfo, error) {
 	}, nil
 }
 
-// NewStorage returns a certmagic.Storage backed by a go-micro/lock and go-micro/store
+// NewStorage returns a certmagic.Storage backed by a micro/lock and micro/store
 func NewStorage(lock sync.Sync, store store.Store) certmagic.Storage {
 	return &storage{
 		lock:  lock,

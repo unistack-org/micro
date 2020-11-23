@@ -239,7 +239,7 @@ func (n *noopServer) createSubHandler(sb *subscriber, opts Options) broker.Handl
 				req = req.Elem()
 			}
 
-			if err = cf(noopcodec{bytes.NewBuffer(msg.Body)}).ReadBody(req.Interface()); err != nil {
+			if err = cf.ReadBody(bytes.NewBuffer(msg.Body), req.Interface()); err != nil {
 				return err
 			}
 

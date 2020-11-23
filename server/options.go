@@ -18,7 +18,7 @@ import (
 
 // Options server struct
 type Options struct {
-	Codecs       map[string]codec.NewCodec
+	Codecs       map[string]codec.Codec
 	Broker       broker.Broker
 	Registry     registry.Registry
 	Tracer       tracer.Tracer
@@ -62,7 +62,7 @@ type Options struct {
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Auth:             auth.DefaultAuth,
-		Codecs:           make(map[string]codec.NewCodec),
+		Codecs:           make(map[string]codec.Codec),
 		Context:          context.Background(),
 		Metadata:         metadata.New(0),
 		RegisterInterval: DefaultRegisterInterval,
@@ -144,7 +144,7 @@ func Broker(b broker.Broker) Option {
 }
 
 // Codec to use to encode/decode requests for a given content type
-func Codec(contentType string, c codec.NewCodec) Option {
+func Codec(contentType string, c codec.Codec) Option {
 	return func(o *Options) {
 		o.Codecs[contentType] = c
 	}

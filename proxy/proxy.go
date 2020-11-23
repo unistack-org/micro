@@ -1,4 +1,4 @@
-// Package proxy is a transparent proxy built on the go-micro/server
+// Package proxy is a transparent proxy built on the micro/server
 package proxy
 
 import (
@@ -7,7 +7,7 @@ import (
 	"github.com/unistack-org/micro/v3/server"
 )
 
-// Proxy can be used as a proxy server for go-micro services
+// Proxy can be used as a proxy server for micro services
 type Proxy interface {
 	// ProcessMessage handles inbound messages
 	ProcessMessage(context.Context, server.Message) error

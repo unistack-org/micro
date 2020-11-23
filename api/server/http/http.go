@@ -74,7 +74,7 @@ func (s *httpServer) Start() error {
 	}
 
 	if config.Logger.V(logger.InfoLevel) {
-		config.Logger.Info("HTTP API Listening on %s", l.Addr().String())
+		config.Logger.Infof("HTTP API Listening on %s", l.Addr().String())
 	}
 
 	s.Lock()
@@ -85,7 +85,7 @@ func (s *httpServer) Start() error {
 		if err := http.Serve(l, s.mux); err != nil {
 			// temporary fix
 			if config.Logger.V(logger.ErrorLevel) {
-				config.Logger.Error("serve err: %v", err)
+				config.Logger.Errorf("serve err: %v", err)
 			}
 			s.Stop()
 		}
