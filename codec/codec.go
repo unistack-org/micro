@@ -54,3 +54,7 @@ type Message struct {
 	Header metadata.Metadata
 	Body   []byte
 }
+
+func NewMessage(t MessageType) *Message {
+	return &Message{Type: t, Header: metadata.New(0)}
+}
