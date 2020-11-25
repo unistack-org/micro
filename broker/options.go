@@ -50,6 +50,8 @@ func Context(ctx context.Context) Option {
 
 // PublishOptions struct
 type PublishOptions struct {
+	// BodyOnly says that only body of the message must be published
+	BodyOnly bool
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
@@ -81,6 +83,9 @@ type SubscribeOptions struct {
 	// receives a subset of messages.
 	Group string
 
+	// BodyOnly says that consumed only body of the message
+	BodyOnly bool
+
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
@@ -91,6 +96,13 @@ type Option func(*Options)
 
 // PublishOption func
 type PublishOption func(*PublishOptions)
+
+// PublishBodyOnly publish only body of the message
+func PublishBodyOnly(b bool) PublishOption {
+	return func(o *PublishOptions) {
+		o.BodyOnly = b
+	}
+}
 
 // PublishContext sets the context
 func PublishContext(ctx context.Context) PublishOption {
@@ -146,6 +158,13 @@ func SubscribeAutoAck(b bool) SubscribeOption {
 	}
 }
 
+// SubscribeBodyOnly consumes only body of the message
+func SubscribeBodyOnly(b bool) SubscribeOption {
+	return func(o *SubscribeOptions) {
+		o.BodyOnly = b
+	}
+}
+
 // ErrorHandler will catch all broker errors that cant be handled
 // in normal way, for example Codec errors
 func ErrorHandler(h Handler) Option {
@@ -162,7 +181,7 @@ func SubscribeErrorHandler(h Handler) SubscribeOption {
 	}
 }
 
-// Queue sets the subscribers sueue
+// Deprecated: Queue sets the subscribers sueue
 func Queue(name string) SubscribeOption {
 	return func(o *SubscribeOptions) {
 		o.Group = name
