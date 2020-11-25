@@ -29,6 +29,10 @@ func (c *noopCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
 	}
 
 	switch v := b.(type) {
+	case string:
+		v = string(buf)
+	case *string:
+		*v = string(buf)
 	case []byte:
 		v = buf
 	case *[]byte:
@@ -43,12 +47,18 @@ func (c *noopCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
 }
 
 func (c *noopCodec) Write(conn io.ReadWriter, m *Message, b interface{}) error {
+	if b == nil {
+		return nil
+	}
+
 	var v []byte
 	switch vb := b.(type) {
-	case nil:
-		return nil
 	case *Frame:
 		v = vb.Data
+	case string:
+		v = []byte(vb)
+	case *string:
+		v = []byte(*vb)
 	case *[]byte:
 		v = *vb
 	case []byte:
@@ -69,7 +79,15 @@ func NewCodec() Codec {
 }
 
 func (n *noopCodec) Marshal(v interface{}) ([]byte, error) {
+	if v == nil {
+		return nil, nil
+	}
+
 	switch ve := v.(type) {
+	case string:
+		return []byte(ve), nil
+	case *string:
+		return []byte(*ve), nil
 	case *[]byte:
 		return *ve, nil
 	case []byte:
@@ -83,7 +101,15 @@ func (n *noopCodec) Marshal(v interface{}) ([]byte, error) {
 }
 
 func (n *noopCodec) Unmarshal(d []byte, v interface{}) error {
+	if v == nil {
+		return nil
+	}
+
 	switch ve := v.(type) {
+	case string:
+		ve = string(d)
+	case *string:
+		*ve = string(d)
 	case []byte:
 		ve = d
 	case *[]byte:
