@@ -22,6 +22,10 @@ var (
 	ErrUnknownContentType = errors.New("unknown content-type")
 )
 
+var (
+	DefaultMaxMessageSize = 1024 * 1024 * 4 // 4Mb
+)
+
 // MessageType
 type MessageType int
 
@@ -53,6 +57,18 @@ type Message struct {
 	// The values read from the socket
 	Header metadata.Metadata
 	Body   []byte
+}
+
+type Option func(*Options)
+
+type Options struct {
+	MaxMessageSize int64
+}
+
+func MaxMessageSize(n int64) Option {
+	return func(o *Options) {
+		o.MaxMessageSize = n
+	}
 }
 
 func NewMessage(t MessageType) *Message {
