@@ -23,7 +23,7 @@ var (
 )
 
 var (
-	DefaultMaxMessageSize = 1024 * 1024 * 4 // 4Mb
+	DefaultMaxMsgSize = 1024 * 1024 * 4 // 4Mb
 )
 
 // MessageType
@@ -62,12 +62,12 @@ type Message struct {
 type Option func(*Options)
 
 type Options struct {
-	MaxMessageSize int64
+	MaxMsgSize int64
 }
 
-func MaxMessageSize(n int64) Option {
+func MaxMsgSize(n int64) Option {
 	return func(o *Options) {
-		o.MaxMessageSize = n
+		o.MaxMsgSize = n
 	}
 }
 

@@ -16,6 +16,8 @@ import (
 	"github.com/unistack-org/micro/v3/tracer"
 )
 
+type Option func(*Options)
+
 // Options server struct
 type Options struct {
 	Codecs       map[string]codec.Codec

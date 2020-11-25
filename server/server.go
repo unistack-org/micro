@@ -15,6 +15,20 @@ var (
 	DefaultServer Server = NewServer()
 )
 
+var (
+	DefaultAddress          = ":0"
+	DefaultName             = "server"
+	DefaultVersion          = "latest"
+	DefaultId               = uuid.New().String()
+	DefaultRegisterCheck    = func(context.Context) error { return nil }
+	DefaultRegisterInterval = time.Second * 30
+	DefaultRegisterTTL      = time.Second * 90
+	DefaultNamespace        = "micro"
+	DefaultMaxMsgSize       = 1024 * 1024 * 4 // 4Mb
+	DefaultMaxMsgRecvSize   = 1024 * 1024 * 4 // 4Mb
+	DefaultMaxMsgSendSize   = 1024 * 1024 * 4 // 4Mb
+)
+
 // Server is a simple micro server abstraction
 type Server interface {
 	// Initialise options
@@ -134,16 +148,3 @@ type Subscriber interface {
 	Endpoints() []*registry.Endpoint
 	Options() SubscriberOptions
 }
-
-type Option func(*Options)
-
-var (
-	DefaultAddress          = ":0"
-	DefaultName             = "server"
-	DefaultVersion          = "latest"
-	DefaultId               = uuid.New().String()
-	DefaultRegisterCheck    = func(context.Context) error { return nil }
-	DefaultRegisterInterval = time.Second * 30
-	DefaultRegisterTTL      = time.Second * 90
-	DefaultNamespace        = "micro"
-)
