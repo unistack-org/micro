@@ -74,6 +74,8 @@ func (n *noopCodec) Marshal(v interface{}) ([]byte, error) {
 		return *ve, nil
 	case []byte:
 		return ve, nil
+	case *Frame:
+		return ve.Data, nil
 	case *Message:
 		return ve.Body, nil
 	}
@@ -86,6 +88,8 @@ func (n *noopCodec) Unmarshal(d []byte, v interface{}) error {
 		ve = d
 	case *[]byte:
 		*ve = d
+	case *Frame:
+		ve.Data = d
 	case *Message:
 		ve.Body = d
 	}
