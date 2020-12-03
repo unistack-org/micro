@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"sort"
 
 	"github.com/unistack-org/micro/v3/errors"
