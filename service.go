@@ -10,7 +10,6 @@ import (
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/config"
 	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/network/transport"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/router"
 	"github.com/unistack-org/micro/v3/server"
@@ -41,23 +40,19 @@ func (s *service) Init(opts ...Option) error {
 		o(&s.opts)
 	}
 
-	if s.opts.Cmd != nil {
-		// set cmd name
-		if len(s.opts.Cmd.App().Name) == 0 {
-			s.opts.Cmd.App().Name = s.Server().Options().Name
-		}
-
-		// Initialise the command options
-		if err := s.opts.Cmd.Init(); err != nil {
-			return err
-		}
-	}
-
 	if s.opts.Logger != nil {
 		if err := s.opts.Logger.Init(
 			logger.WithContext(s.opts.Context),
 		); err != nil {
 			return err
+		}
+	}
+
+	if s.opts.Configs != nil {
+		for _, c := range s.opts.Configs {
+			if err := c.Init(config.Context(s.opts.Context)	); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -72,14 +67,6 @@ func (s *service) Init(opts ...Option) error {
 	if s.opts.Broker != nil {
 		if err := s.opts.Broker.Init(
 			broker.Context(s.opts.Context),
-		); err != nil {
-			return err
-		}
-	}
-
-	if s.opts.Transport != nil {
-		if err := s.opts.Transport.Init(
-			transport.Context(s.opts.Context),
 		); err != nil {
 			return err
 		}
@@ -140,14 +127,6 @@ func (s *service) Logger() logger.Logger {
 	return s.opts.Logger
 }
 
-func (s *service) Transport() transport.Transport {
-	return s.opts.Transport
-}
-
-func (s *service) Config() config.Config {
-	return s.opts.Config
-}
-
 func (s *service) Auth() auth.Auth {
 	return s.opts.Auth
 }
@@ -172,8 +151,24 @@ func (s *service) Start() error {
 	}
 
 	for _, fn := range s.opts.BeforeStart {
-		if err = fn(); err != nil {
+		if err = fn(s.opts.Context); err != nil {
 			return err
+		}
+	}
+
+	for _, cfg := range s.opts.Configs {
+		for _, fn := range cfg.Options().BeforeLoad {
+			if err := fn(s.opts.Context, cfg); err != nil {
+				return err
+			}
+		}
+		if err := cfg.Load(s.opts.Context); err != nil {
+			return err
+		}
+		for _, fn := range cfg.Options().AfterLoad {
+			if err := fn(s.opts.Context, cfg); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -204,7 +199,7 @@ func (s *service) Start() error {
 	}
 
 	for _, fn := range s.opts.AfterStart {
-		if err = fn(); err != nil {
+		if err = fn(s.opts.Context); err != nil {
 			return err
 		}
 	}
@@ -223,7 +218,7 @@ func (s *service) Stop() error {
 
 	var err error
 	for _, fn := range s.opts.BeforeStop {
-		if err = fn(); err != nil {
+		if err = fn(s.opts.Context); err != nil {
 			return err
 		}
 	}
@@ -233,7 +228,7 @@ func (s *service) Stop() error {
 	}
 
 	for _, fn := range s.opts.AfterStop {
-		if err = fn(); err != nil {
+		if err = fn(s.opts.Context); err != nil {
 			return err
 		}
 	}
@@ -271,12 +266,6 @@ func (s *service) Run() error {
 			return err
 		}
 		defer s.opts.Profile.Stop()
-	}
-
-	if s.opts.Cmd != nil {
-		if err := s.opts.Cmd.Run(); err != nil {
-			return err
-		}
 	}
 
 	if err := s.Start(); err != nil {

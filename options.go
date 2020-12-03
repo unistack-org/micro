@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/micro/cli/v2"
-	cmd "github.com/unistack-org/micro-config-cmd"
 	"github.com/unistack-org/micro/v3/auth"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/client"
@@ -13,7 +11,6 @@ import (
 	"github.com/unistack-org/micro/v3/debug/profile"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/metadata"
-	"github.com/unistack-org/micro/v3/network/transport"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/router"
 	"github.com/unistack-org/micro/v3/runtime"
@@ -25,25 +22,23 @@ import (
 
 // Options for micro service
 type Options struct {
-	Auth      auth.Auth
-	Broker    broker.Broker
-	Logger    logger.Logger
-	Cmd       cmd.Cmd
-	Config    config.Config
-	Client    client.Client
-	Server    server.Server
-	Store     store.Store
-	Registry  registry.Registry
-	Router    router.Router
-	Runtime   runtime.Runtime
-	Transport transport.Transport
-	Profile   profile.Profile
+	Auth     auth.Auth
+	Broker   broker.Broker
+	Logger   logger.Logger
+	Configs  []config.Config
+	Client   client.Client
+	Server   server.Server
+	Store    store.Store
+	Registry registry.Registry
+	Router   router.Router
+	Runtime  runtime.Runtime
+	Profile  profile.Profile
 
 	// Before and After funcs
-	BeforeStart []func() error
-	BeforeStop  []func() error
-	AfterStart  []func() error
-	AfterStop   []func() error
+	BeforeStart []func(context.Context) error
+	BeforeStop  []func(context.Context) error
+	AfterStart  []func(context.Context) error
+	AfterStop   []func(context.Context) error
 
 	// Other options for implementations of the interface
 	// can be stored in a context
@@ -53,17 +48,16 @@ type Options struct {
 // NewOptions returns new Options filled with defaults and overrided by provided opts
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Context:   context.Background(),
-		Server:    server.DefaultServer,
-		Client:    client.DefaultClient,
-		Broker:    broker.DefaultBroker,
-		Registry:  registry.DefaultRegistry,
-		Router:    router.DefaultRouter,
-		Auth:      auth.DefaultAuth,
-		Logger:    logger.DefaultLogger,
-		Config:    config.DefaultConfig,
-		Store:     store.DefaultStore,
-		Transport: transport.DefaultTransport,
+		Context:  context.Background(),
+		Server:   server.DefaultServer,
+		Client:   client.DefaultClient,
+		Broker:   broker.DefaultBroker,
+		Registry: registry.DefaultRegistry,
+		Router:   router.DefaultRouter,
+		Auth:     auth.DefaultAuth,
+		Logger:   logger.DefaultLogger,
+		Configs:  []config.Config{config.DefaultConfig},
+		Store:    store.DefaultStore,
 		//Runtime   runtime.Runtime
 		//Profile   profile.Profile
 	}
@@ -89,13 +83,6 @@ func Broker(b broker.Broker) Option {
 		if o.Server != nil {
 			o.Server.Init(server.Broker(b))
 		}
-	}
-}
-
-// Cmd to be used for service
-func Cmd(c cmd.Cmd) Option {
-	return func(o *Options) {
-		o.Cmd = c
 	}
 }
 
@@ -182,10 +169,10 @@ func Auth(a auth.Auth) Option {
 	}
 }
 
-// Config sets the config for the service
-func Config(c config.Config) Option {
+// Configs sets the configs for the service
+func Configs(c []config.Config) Option {
 	return func(o *Options) {
-		o.Config = c
+		o.Configs = c
 	}
 }
 
@@ -194,21 +181,6 @@ func Selector(s selector.Selector) Option {
 	return func(o *Options) {
 		if o.Client != nil {
 			o.Client.Init(client.Selector(s))
-		}
-	}
-}
-
-// Transport sets the transport for the service
-// and the underlying components
-func Transport(t transport.Transport) Option {
-	return func(o *Options) {
-		o.Transport = t
-		// Update Client and Server
-		if o.Client != nil {
-			o.Client.Init(client.Transport(t))
-		}
-		if o.Server != nil {
-			o.Server.Init(server.Transport(t))
 		}
 	}
 }
@@ -230,8 +202,6 @@ func Router(r router.Router) Option {
 		}
 	}
 }
-
-// Convenience options
 
 // Address sets the address of the server
 func Address(addr string) Option {
@@ -265,24 +235,6 @@ func Metadata(md metadata.Metadata) Option {
 	return func(o *Options) {
 		if o.Server != nil {
 			o.Server.Init(server.Metadata(md))
-		}
-	}
-}
-
-// Flags that can be passed to service
-func Flags(flags ...cli.Flag) Option {
-	return func(o *Options) {
-		if o.Cmd != nil {
-			o.Cmd.App().Flags = append(o.Cmd.App().Flags, flags...)
-		}
-	}
-}
-
-// Action can be used to parse user provided cli options
-func Action(a func(*cli.Context) error) Option {
-	return func(o *Options) {
-		if o.Cmd != nil {
-			o.Cmd.App().Action = a
 		}
 	}
 }
@@ -352,31 +304,29 @@ func WrapSubscriber(w ...server.SubscriberWrapper) Option {
 	}
 }
 
-// Before and Afters
-
 // BeforeStart run funcs before service starts
-func BeforeStart(fn func() error) Option {
+func BeforeStart(fn func(context.Context) error) Option {
 	return func(o *Options) {
 		o.BeforeStart = append(o.BeforeStart, fn)
 	}
 }
 
 // BeforeStop run funcs before service stops
-func BeforeStop(fn func() error) Option {
+func BeforeStop(fn func(context.Context) error) Option {
 	return func(o *Options) {
 		o.BeforeStop = append(o.BeforeStop, fn)
 	}
 }
 
 // AfterStart run funcs after service starts
-func AfterStart(fn func() error) Option {
+func AfterStart(fn func(context.Context) error) Option {
 	return func(o *Options) {
 		o.AfterStart = append(o.AfterStart, fn)
 	}
 }
 
 // AfterStop run funcs after service stops
-func AfterStop(fn func() error) Option {
+func AfterStop(fn func(context.Context) error) Option {
 	return func(o *Options) {
 		o.AfterStop = append(o.AfterStop, fn)
 	}
