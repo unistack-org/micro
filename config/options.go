@@ -1,28 +1,58 @@
 package config
 
 import (
-	"github.com/unistack-org/micro/v3/config/loader"
-	"github.com/unistack-org/micro/v3/config/reader"
-	"github.com/unistack-org/micro/v3/config/source"
+	"context"
+
+	"github.com/unistack-org/micro/v3/codec"
 )
 
-// WithLoader sets the loader for manager config
-func WithLoader(l loader.Loader) Option {
+type Options struct {
+	// Struct that holds config data
+	Struct interface{}
+	// struct tag name
+	StructTag string
+	// codec that used for load/save
+	Codec codec.Codec
+	// for alternative data
+	Context context.Context
+}
+
+type Option func(o *Options)
+
+func NewOptions(opts ...Option) Options {
+	options := Options{
+		Context: context.Background(),
+	}
+	for _, o := range opts {
+		o(&options)
+	}
+
+	return options
+}
+
+func Context(ctx context.Context) Option {
 	return func(o *Options) {
-		o.Loader = l
+		o.Context = ctx
 	}
 }
 
-// WithSource appends a source to list of sources
-func WithSource(s source.Source) Option {
+// Codec sets the source codec
+func Codec(c codec.Codec) Option {
 	return func(o *Options) {
-		o.Source = append(o.Source, s)
+		o.Codec = c
 	}
 }
 
-// WithReader sets the config reader
-func WithReader(r reader.Reader) Option {
+// Struct
+func Struct(v interface{}) Option {
 	return func(o *Options) {
-		o.Reader = r
+		o.Struct = v
+	}
+}
+
+// StructTag
+func StructTag(name string) Option {
+	return func(o *Options) {
+		o.StructTag = name
 	}
 }

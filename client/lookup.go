@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"sort"
 
 	"github.com/unistack-org/micro/v3/errors"
@@ -16,6 +17,11 @@ func LookupRoute(ctx context.Context, req Request, opts CallOptions) ([]string, 
 	// check to see if an address was provided as a call option
 	if len(opts.Address) > 0 {
 		return opts.Address, nil
+	}
+
+	if opts.Router == nil {
+		fmt.Printf("%#+v\n", opts)
+		return nil, router.ErrRouteNotFound
 	}
 
 	// construct the router query

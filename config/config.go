@@ -3,52 +3,35 @@ package config
 
 import (
 	"context"
-
-	"github.com/unistack-org/micro/v3/config/loader"
-	"github.com/unistack-org/micro/v3/config/reader"
-	"github.com/unistack-org/micro/v3/config/source"
+	"errors"
 )
 
 var (
-	DefaultConfig Config
+	DefaultConfig Config = NewConfig()
+)
+
+var (
+	// ErrWatcherStopped is returned when source watcher has been stopped
+	ErrWatcherStopped = errors.New("watcher stopped")
 )
 
 // Config is an interface abstraction for dynamic configuration
 type Config interface {
-	// provide the reader.Values interface
-	reader.Values
 	// Init the config
 	Init(opts ...Option) error
 	// Options in the config
 	Options() Options
-	// Stop the config loader/watcher
-	Close() error
-	// Load config sources
-	Load(source ...source.Source) error
-	// Force a source changeset sync
-	Sync() error
+	// Load config from sources
+	Load(context.Context) error
+	// Save config to sources
+	Save(context.Context) error
 	// Watch a value for changes
-	Watch(path ...string) (Watcher, error)
+	//	Watch(interface{}) (Watcher, error)
+	String() string
 }
 
 // Watcher is the config watcher
-type Watcher interface {
-	Next() (reader.Value, error)
-	Stop() error
-}
-
-type Options struct {
-	Loader loader.Loader
-	Reader reader.Reader
-	Source []source.Source
-
-	// for alternative data
-	Context context.Context
-}
-
-type Option func(o *Options)
-
-// NewConfig returns new config
-func NewConfig(opts ...Option) (Config, error) {
-	return newConfig(opts...)
-}
+//type Watcher interface {
+//	Next() (, error)
+//	Stop() error
+//}
