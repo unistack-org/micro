@@ -20,7 +20,6 @@ func LookupRoute(ctx context.Context, req Request, opts CallOptions) ([]string, 
 	}
 
 	if opts.Router == nil {
-		fmt.Printf("%#+v\n", opts)
 		return nil, router.ErrRouteNotFound
 	}
 
