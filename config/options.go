@@ -7,6 +7,10 @@ import (
 )
 
 type Options struct {
+	BeforeLoad []func(context.Context, Config) error
+	AfterLoad []func(context.Context, Config) error
+	BeforeSave []func(context.Context, Config) error
+	AfterSave []func(context.Context, Config) error
 	// Struct that holds config data
 	Struct interface{}
 	// struct tag name
@@ -29,6 +33,32 @@ func NewOptions(opts ...Option) Options {
 
 	return options
 }
+
+func BeforeLoad(fn ...func(context.Context, Config) error) Option {
+	return func(o *Options) {
+		o.BeforeLoad = fn
+	}
+}
+
+func AfterLoad(fn ...func(context.Context, Config) error) Option {
+	return func(o *Options) {
+		o.AfterLoad = fn
+	}
+}
+
+func BeforeSave(fn ...func(context.Context, Config) error) Option {
+	return func(o *Options) {
+		o.BeforeSave = fn
+	}
+}
+
+func AfterSave(fn ...func(context.Context, Config) error) Option {
+	return func(o *Options) {
+		o.AfterSave= fn
+	}
+}
+
+
 
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
