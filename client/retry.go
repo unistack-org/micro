@@ -14,22 +14,23 @@ func RetryAlways(ctx context.Context, req Request, retryCount int, err error) (b
 	return true, nil
 }
 
+// RetryNever never retry on error
+func RetryNever(ctx context.Context, req Request, retryCount int, err error) (bool, error) {
+	return false, nil
+}
+
 // RetryOnError retries a request on a 500 or timeout error
 func RetryOnError(ctx context.Context, req Request, retryCount int, err error) (bool, error) {
 	if err == nil {
 		return false, nil
 	}
 
-	e := errors.Parse(err.Error())
-	if e == nil {
-		return false, nil
-	}
-
-	switch e.Code {
+	me := errors.FromError(err)
+	switch me.Code {
 	// retry on timeout or internal server error
 	case 408, 500:
 		return true, nil
-	default:
-		return false, nil
 	}
+
+	return false, nil
 }
