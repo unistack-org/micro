@@ -29,8 +29,7 @@ func TestNoop(t *testing.T) {
 		return nil
 	}
 
-
-	cfg := config.NewConfig(config.Struct(conf),config.BeforeLoad(blfn),config.AfterLoad(alfn))
+	cfg := config.NewConfig(config.Struct(conf), config.BeforeLoad(blfn), config.AfterLoad(alfn))
 	if err := cfg.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +54,5 @@ func TestNoop(t *testing.T) {
 	if conf.Value != "after_load" {
 		t.Fatal("AfterLoad option not working")
 	}
-
-
 
 }

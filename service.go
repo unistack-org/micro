@@ -50,7 +50,7 @@ func (s *service) Init(opts ...Option) error {
 
 	if s.opts.Configs != nil {
 		for _, c := range s.opts.Configs {
-			if err := c.Init(config.Context(s.opts.Context)	); err != nil {
+			if err := c.Init(config.Context(s.opts.Context)); err != nil {
 				return err
 			}
 		}
