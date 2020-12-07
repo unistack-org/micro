@@ -1,2 +1,0 @@
-client/grpc/* micro-client-grpc
-#server/grpc/* micro-server-grpc

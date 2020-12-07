@@ -17,7 +17,7 @@ func NewContext(ctx context.Context, s Server) context.Context {
 	return context.WithValue(ctx, serverKey{}, s)
 }
 
-// Setoption returns a function to setup a context with given value
+// SetOption returns a function to setup a context with given value
 func SetOption(k, v interface{}) Option {
 	return func(o *Options) {
 		if o.Context == nil {
