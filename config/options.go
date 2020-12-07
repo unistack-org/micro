@@ -4,17 +4,20 @@ import (
 	"context"
 
 	"github.com/unistack-org/micro/v3/codec"
+	"github.com/unistack-org/micro/v3/logger"
 )
 
 type Options struct {
 	BeforeLoad []func(context.Context, Config) error
-	AfterLoad []func(context.Context, Config) error
+	AfterLoad  []func(context.Context, Config) error
 	BeforeSave []func(context.Context, Config) error
-	AfterSave []func(context.Context, Config) error
+	AfterSave  []func(context.Context, Config) error
 	// Struct that holds config data
 	Struct interface{}
 	// struct tag name
 	StructTag string
+	// logger that will be used
+	Logger logger.Logger
 	// codec that used for load/save
 	Codec codec.Codec
 	// for alternative data
@@ -54,11 +57,9 @@ func BeforeSave(fn ...func(context.Context, Config) error) Option {
 
 func AfterSave(fn ...func(context.Context, Config) error) Option {
 	return func(o *Options) {
-		o.AfterSave= fn
+		o.AfterSave = fn
 	}
 }
-
-
 
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
@@ -73,7 +74,13 @@ func Codec(c codec.Codec) Option {
 	}
 }
 
-// Struct
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
+	}
+}
+
+// Struct used as config
 func Struct(v interface{}) Option {
 	return func(o *Options) {
 		o.Struct = v
