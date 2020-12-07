@@ -7,6 +7,7 @@ import (
 )
 
 var (
+	// DefaultConfig default config
 	DefaultConfig Config = NewConfig()
 )
 

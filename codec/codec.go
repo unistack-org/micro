@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	// Message types
 	Error MessageType = iota
 	Request
 	Response
@@ -23,6 +24,7 @@ var (
 )
 
 var (
+	// DefaultMaxMsgSize specifies how much data codec can handle
 	DefaultMaxMsgSize = 1024 * 1024 * 4 // 4Mb
 )
 
@@ -59,18 +61,22 @@ type Message struct {
 	Body   []byte
 }
 
+// Option func
 type Option func(*Options)
 
+// Options contains codec options
 type Options struct {
 	MaxMsgSize int64
 }
 
+// MaxMsgSize sets the max message size
 func MaxMsgSize(n int64) Option {
 	return func(o *Options) {
 		o.MaxMsgSize = n
 	}
 }
 
+// NewMessage creates new codec message
 func NewMessage(t MessageType) *Message {
 	return &Message{Type: t, Header: metadata.New(0)}
 }

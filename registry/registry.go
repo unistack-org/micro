@@ -24,7 +24,7 @@ var (
 	ErrWatcherStopped = errors.New("watcher stopped")
 )
 
-// The registry provides an interface for service discovery
+// Registry provides an interface for service discovery
 // and an abstraction over varying implementations
 // {consul, etcd, zookeeper, ...}
 type Registry interface {
@@ -64,7 +64,7 @@ type Endpoint struct {
 	Metadata metadata.Metadata `json:"metadata"`
 }
 
-// Valud holds additional kv stuff
+// Value holds additional kv stuff
 type Value struct {
 	Name   string   `json:"name"`
 	Type   string   `json:"type"`

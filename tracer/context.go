@@ -1,4 +1,4 @@
-// Package trace provides an interface for distributed tracing
+// Package tracer provides an interface for distributed tracing
 package tracer
 
 import (

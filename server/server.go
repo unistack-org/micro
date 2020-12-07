@@ -12,21 +12,33 @@ import (
 )
 
 var (
+	// DefaultServer default server
 	DefaultServer Server = NewServer()
 )
 
 var (
-	DefaultAddress          = ":0"
-	DefaultName             = "server"
-	DefaultVersion          = "latest"
-	DefaultId               = uuid.New().String()
-	DefaultRegisterCheck    = func(context.Context) error { return nil }
+	// DefaultAddress will be used if no address passed
+	DefaultAddress = ":0"
+	// DefaultName will be used if no name passed
+	DefaultName = "server"
+	// DefaultVersion will be used if no version passed
+	DefaultVersion = "latest"
+	// DefaultId will be used if no id passed
+	DefaultId = uuid.New().String()
+	// DefaultRegisterCheck holds func that run before register server
+	DefaultRegisterCheck = func(context.Context) error { return nil }
+	// DefaultRegisterInterval holds interval for register
 	DefaultRegisterInterval = time.Second * 30
-	DefaultRegisterTTL      = time.Second * 90
-	DefaultNamespace        = "micro"
-	DefaultMaxMsgSize       = 1024 * 1024 * 4 // 4Mb
-	DefaultMaxMsgRecvSize   = 1024 * 1024 * 4 // 4Mb
-	DefaultMaxMsgSendSize   = 1024 * 1024 * 4 // 4Mb
+	// DefaultRegisterTTL holds registry record ttl, must be multiple of DefaultRegisterInterval
+	DefaultRegisterTTL = time.Second * 90
+	// DefaultNamespace will be used if no namespace passed
+	DefaultNamespace = "micro"
+	// DefaultMaxMsgSize holds default max msg ssize
+	DefaultMaxMsgSize = 1024 * 1024 * 4 // 4Mb
+	// DefaultMaxMsgRecvSize holds default max recv size
+	DefaultMaxMsgRecvSize = 1024 * 1024 * 4 // 4Mb
+	// DefaultMaxMsgSendSize holds default max send size
+	DefaultMaxMsgSendSize = 1024 * 1024 * 4 // 4Mb
 )
 
 // Server is a simple micro server abstraction

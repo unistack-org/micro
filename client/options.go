@@ -14,6 +14,7 @@ import (
 	"github.com/unistack-org/micro/v3/selector/random"
 )
 
+// Options holds client options
 type Options struct {
 	// Used to select codec
 	ContentType string
@@ -45,6 +46,7 @@ type Options struct {
 	Context context.Context
 }
 
+// NewCallOptions creates new call options struct
 func NewCallOptions(opts ...CallOption) CallOptions {
 	options := CallOptions{}
 	for _, o := range opts {
@@ -53,6 +55,7 @@ func NewCallOptions(opts ...CallOption) CallOptions {
 	return options
 }
 
+// CallOptions holds client call options
 type CallOptions struct {
 	// Address of remote hosts
 	Address []string
@@ -87,12 +90,14 @@ type CallOptions struct {
 	Context context.Context
 }
 
+// Context pass context to client
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
 		o.Context = ctx
 	}
 }
 
+// NewPublishOptions create new PublishOptions struct from option
 func NewPublishOptions(opts ...PublishOption) PublishOptions {
 	options := PublishOptions{}
 	for _, o := range opts {
@@ -101,6 +106,7 @@ func NewPublishOptions(opts ...PublishOption) PublishOptions {
 	return options
 }
 
+// PublishOptions holds publish options
 type PublishOptions struct {
 	// Exchange is the routing exchange for the message
 	Exchange string
@@ -109,6 +115,7 @@ type PublishOptions struct {
 	Context context.Context
 }
 
+// NewMessageOptions creates message options struct
 func NewMessageOptions(opts ...MessageOption) MessageOptions {
 	options := MessageOptions{}
 	for _, o := range opts {
@@ -117,10 +124,12 @@ func NewMessageOptions(opts ...MessageOption) MessageOptions {
 	return options
 }
 
+// MessageOptions holds client message options
 type MessageOptions struct {
 	ContentType string
 }
 
+// NewRequestOptions creates new RequestOptions struct
 func NewRequestOptions(opts ...RequestOption) RequestOptions {
 	options := RequestOptions{}
 	for _, o := range opts {
@@ -129,6 +138,7 @@ func NewRequestOptions(opts ...RequestOption) RequestOptions {
 	return options
 }
 
+// RequestOptions holds client request options
 type RequestOptions struct {
 	ContentType string
 	Stream      bool
@@ -138,6 +148,7 @@ type RequestOptions struct {
 	Context context.Context
 }
 
+// NewOptions creates new options struct
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Context:     context.Background(),
@@ -172,6 +183,7 @@ func Broker(b broker.Broker) Option {
 	}
 }
 
+// Logger to be used for log mesages
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
@@ -272,7 +284,7 @@ func Lookup(l LookupFunc) Option {
 	}
 }
 
-// Number of retries when making the request.
+// Retries sets the retry count when making the request.
 // Should this be a Call Option?
 func Retries(i int) Option {
 	return func(o *Options) {
@@ -287,7 +299,7 @@ func Retry(fn RetryFunc) Option {
 	}
 }
 
-// The request timeout.
+// RequestTimeout is the request timeout.
 // Should this be a Call Option?
 func RequestTimeout(d time.Duration) Option {
 	return func(o *Options) {
@@ -422,6 +434,7 @@ func WithSelectOptions(sops ...selector.SelectOption) CallOption {
 	}
 }
 
+// WithMessageContentType sets the message content type
 func WithMessageContentType(ct string) MessageOption {
 	return func(o *MessageOptions) {
 		o.ContentType = ct
@@ -430,12 +443,14 @@ func WithMessageContentType(ct string) MessageOption {
 
 // Request Options
 
+// WithContentType specifies request content type
 func WithContentType(ct string) RequestOption {
 	return func(o *RequestOptions) {
 		o.ContentType = ct
 	}
 }
 
+// StreamingRequest specifies that request is streaming
 func StreamingRequest() RequestOption {
 	return func(o *RequestOptions) {
 		o.Stream = true

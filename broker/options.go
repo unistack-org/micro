@@ -181,7 +181,8 @@ func SubscribeErrorHandler(h Handler) SubscribeOption {
 	}
 }
 
-// Deprecated: Queue sets the subscribers sueue
+// Queue sets the subscribers queue
+// Deprecated
 func Queue(name string) SubscribeOption {
 	return func(o *SubscribeOptions) {
 		o.Group = name

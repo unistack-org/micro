@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	// DefaultBroker default broker
 	DefaultBroker Broker = NewBroker()
 )
 

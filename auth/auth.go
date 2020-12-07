@@ -19,7 +19,7 @@ const (
 )
 
 var (
-	DefaultAuth Auth = &NoopAuth{opts: NewOptions()}
+	DefaultAuth Auth = NewAuth()
 	// ErrInvalidToken is when the token provided is not valid
 	ErrInvalidToken = errors.New("invalid token provided")
 	// ErrForbidden is when a user does not have the necessary scope to access a resource

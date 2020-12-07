@@ -9,18 +9,30 @@ import (
 )
 
 var (
-	ErrBadRequest          = &Error{Code: 400}
-	ErrUnauthorized        = &Error{Code: 401}
-	ErrForbidden           = &Error{Code: 403}
-	ErrNotFound            = &Error{Code: 404}
-	ErrMethodNotAllowed    = &Error{Code: 405}
-	ErrTimeout             = &Error{Code: 408}
-	ErrConflict            = &Error{Code: 409}
+	// ErrBadRequest
+	ErrBadRequest = &Error{Code: 400}
+	// ErrUnauthorized
+	ErrUnauthorized = &Error{Code: 401}
+	// ErrForbidden
+	ErrForbidden = &Error{Code: 403}
+	// ErrNotFound
+	ErrNotFound = &Error{Code: 404}
+	// ErrMethodNotAllowed
+	ErrMethodNotAllowed = &Error{Code: 405}
+	// ErrTimeout
+	ErrTimeout = &Error{Code: 408}
+	// ErrConflict
+	ErrConflict = &Error{Code: 409}
+	// ErrInternalServerError
 	ErrInternalServerError = &Error{Code: 500}
-	ErNotImplemented       = &Error{Code: 501}
-	ErrBadGateway          = &Error{Code: 502}
-	ErrServiceUnavailable  = &Error{Code: 503}
-	ErrGatewayTimeout      = &Error{Code: 504}
+	// ErNotImplemented
+	ErNotImplemented = &Error{Code: 501}
+	// ErrBadGateway
+	ErrBadGateway = &Error{Code: 502}
+	// ErrServiceUnavailable
+	ErrServiceUnavailable = &Error{Code: 503}
+	// ErrGatewayTimeout
+	ErrGatewayTimeout = &Error{Code: 504}
 )
 
 // Error tpye

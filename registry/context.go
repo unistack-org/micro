@@ -6,11 +6,13 @@ import (
 
 type registryKey struct{}
 
+// FromContext get registry from context
 func FromContext(ctx context.Context) (Registry, bool) {
 	c, ok := ctx.Value(registryKey{}).(Registry)
 	return c, ok
 }
 
+// NewContext put registry in context
 func NewContext(ctx context.Context, c Registry) context.Context {
 	return context.WithValue(ctx, registryKey{}, c)
 }

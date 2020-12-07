@@ -74,11 +74,12 @@ func (c *noopCodec) String() string {
 	return "noop"
 }
 
+// NewCodec returns new noop codec
 func NewCodec() Codec {
 	return &noopCodec{}
 }
 
-func (n *noopCodec) Marshal(v interface{}) ([]byte, error) {
+func (c *noopCodec) Marshal(v interface{}) ([]byte, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -100,7 +101,7 @@ func (n *noopCodec) Marshal(v interface{}) ([]byte, error) {
 	return nil, ErrInvalidMessage
 }
 
-func (n *noopCodec) Unmarshal(d []byte, v interface{}) error {
+func (c *noopCodec) Unmarshal(d []byte, v interface{}) error {
 	if v == nil {
 		return nil
 	}

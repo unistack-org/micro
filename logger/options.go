@@ -6,8 +6,10 @@ import (
 	"os"
 )
 
+// Option func
 type Option func(*Options)
 
+// Options holds logger options
 type Options struct {
 	// The logging level the logger should log at. default is `InfoLevel`
 	Level Level
@@ -21,6 +23,7 @@ type Options struct {
 	Context context.Context
 }
 
+// NewOptions creates new options struct
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Level:           InfoLevel,

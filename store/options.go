@@ -23,6 +23,7 @@ type Options struct {
 	Context context.Context
 }
 
+// NewOptions creates options struct
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Logger:  logger.DefaultLogger,
@@ -37,6 +38,7 @@ func NewOptions(opts ...Option) Options {
 // Option sets values in Options
 type Option func(o *Options)
 
+// Context pass context to store
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
 		o.Context = ctx

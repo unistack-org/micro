@@ -54,6 +54,7 @@ func Copy(md Metadata) Metadata {
 	return nmd
 }
 
+// Del deletes key from metadata
 func Del(ctx context.Context, key string) context.Context {
 	md, ok := FromContext(ctx)
 	if !ok {

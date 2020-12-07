@@ -6,6 +6,7 @@ type noopTransport struct {
 	opts Options
 }
 
+// NewTransport creates new noop transport
 func NewTransport(opts ...Option) Transport {
 	return &noopTransport{opts: NewOptions(opts...)}
 }

@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	// DefaultCodecs will be used to encode/decode data
 	DefaultCodecs = map[string]codec.Codec{
 		//"application/json":         cjson.NewCodec,
 		//"application/json-rpc":     cjsonrpc.NewCodec,

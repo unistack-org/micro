@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+// Level means logger level
 type Level int8
 
 const (
@@ -22,6 +23,7 @@ const (
 	FatalLevel
 )
 
+// String returns logger level string representation
 func (l Level) String() string {
 	switch l {
 	case TraceLevel:

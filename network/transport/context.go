@@ -6,11 +6,13 @@ import (
 
 type transportKey struct{}
 
+// FromContext get transport from context
 func FromContext(ctx context.Context) (Transport, bool) {
 	c, ok := ctx.Value(transportKey{}).(Transport)
 	return c, ok
 }
 
+// NewContext put transport in context
 func NewContext(ctx context.Context, c Transport) context.Context {
 	return context.WithValue(ctx, transportKey{}, c)
 }

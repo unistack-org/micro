@@ -6,11 +6,13 @@ import (
 
 type storeKey struct{}
 
-func storeContext(ctx context.Context) (Store, bool) {
+// FromContext get store from context
+func FromContext(ctx context.Context) (Store, bool) {
 	c, ok := ctx.Value(storeKey{}).(Store)
 	return c, ok
 }
 
+// NewContext put store in context
 func NewContext(ctx context.Context, c Store) context.Context {
 	return context.WithValue(ctx, storeKey{}, c)
 }

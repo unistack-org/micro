@@ -23,7 +23,7 @@ type ReadOptions struct {
 // ReadOption func
 type ReadOption func(o *ReadOptions)
 
-// ReadTracer read the given trace
+// ReadTrace read the given trace
 func ReadTrace(t string) ReadOption {
 	return func(o *ReadOptions) {
 		o.Trace = t

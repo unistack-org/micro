@@ -16,6 +16,7 @@ import (
 	"github.com/unistack-org/micro/v3/tracer"
 )
 
+// Option func
 type Option func(*Options)
 
 // Options server struct
