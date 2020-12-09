@@ -24,7 +24,7 @@ type Options struct {
 	TLSConfig *tls.Config
 	// Timeout sets the timeout for Send/Recv
 	Timeout time.Duration
-	// Logger
+	// Logger sets the logger
 	Logger logger.Logger
 	// Other options for implementations of the interface
 	// can be stored in a context

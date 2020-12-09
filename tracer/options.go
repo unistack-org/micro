@@ -1,5 +1,7 @@
 package tracer
 
+import "github.com/unistack-org/micro/v3/logger"
+
 var (
 	// DefaultSize of the buffer
 	DefaultSize = 64
@@ -7,6 +9,8 @@ var (
 
 // Options struct
 type Options struct {
+	// Logger is the logger for messages
+	Logger logger.Logger
 	// Size is the size of ring buffer
 	Size int
 }
@@ -30,10 +34,18 @@ func ReadTrace(t string) ReadOption {
 	}
 }
 
+// Logger sets the logger
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
+	}
+}
+
 // NewOptions returns default options
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Size: DefaultSize,
+		Logger: logger.DefaultLogger,
+		Size:   DefaultSize,
 	}
 	for _, o := range opts {
 		o(&options)

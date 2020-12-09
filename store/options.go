@@ -17,7 +17,7 @@ type Options struct {
 	Database string
 	// Table is analag for a table in database backends or a key prefix in KV backends
 	Table string
-	// Logger
+	// Logger the logger
 	Logger logger.Logger
 	// Context should contain all implementation specific options, using context.WithValue.
 	Context context.Context

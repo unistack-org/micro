@@ -9,8 +9,11 @@ import (
 	"github.com/unistack-org/micro/v3/store"
 )
 
+// NewOptions creates Options struct from slice of options
 func NewOptions(opts ...Option) Options {
-	var options Options
+	options := Options{
+		Logger: logger.DefaultLogger,
+	}
 	for _, o := range opts {
 		o(&options)
 	}
@@ -42,6 +45,7 @@ type Options struct {
 	Context context.Context
 }
 
+// Option func
 type Option func(o *Options)
 
 // Addrs is the auth addresses to use
@@ -101,6 +105,7 @@ func LoginURL(url string) Option {
 	}
 }
 
+// GenerateOptions struct
 type GenerateOptions struct {
 	// Metadata associated with the account
 	Metadata metadata.Metadata
@@ -116,6 +121,7 @@ type GenerateOptions struct {
 	Issuer string
 }
 
+// GenerateOption func
 type GenerateOption func(o *GenerateOptions)
 
 // WithSecret for the generated account
@@ -169,6 +175,7 @@ func NewGenerateOptions(opts ...GenerateOption) GenerateOptions {
 	return options
 }
 
+// TokenOptions struct
 type TokenOptions struct {
 	// ID for the account
 	ID string
@@ -182,6 +189,7 @@ type TokenOptions struct {
 	Issuer string
 }
 
+// TokenOption func
 type TokenOption func(o *TokenOptions)
 
 // WithExpiry for the token
@@ -191,6 +199,7 @@ func WithExpiry(ex time.Duration) TokenOption {
 	}
 }
 
+// WithCredentials sets tye id and secret
 func WithCredentials(id, secret string) TokenOption {
 	return func(o *TokenOptions) {
 		o.ID = id
@@ -198,12 +207,14 @@ func WithCredentials(id, secret string) TokenOption {
 	}
 }
 
+// WithToken sets the refresh token
 func WithToken(rt string) TokenOption {
 	return func(o *TokenOptions) {
 		o.RefreshToken = rt
 	}
 }
 
+// WithTokenIssuer sets the token issuer option
 func WithTokenIssuer(iss string) TokenOption {
 	return func(o *TokenOptions) {
 		o.Issuer = iss
@@ -225,39 +236,55 @@ func NewTokenOptions(opts ...TokenOption) TokenOptions {
 	return options
 }
 
+// VerifyOptions struct
 type VerifyOptions struct {
 	Context   context.Context
 	Namespace string
 }
 
+// VerifyOption func
 type VerifyOption func(o *VerifyOptions)
 
+// VerifyContext pass context to verify
 func VerifyContext(ctx context.Context) VerifyOption {
 	return func(o *VerifyOptions) {
 		o.Context = ctx
 	}
 }
+
+// VerifyNamespace sets thhe namespace for verify
 func VerifyNamespace(ns string) VerifyOption {
 	return func(o *VerifyOptions) {
 		o.Namespace = ns
 	}
 }
 
+// RulesOptions struct
 type RulesOptions struct {
 	Context   context.Context
 	Namespace string
 }
 
+// RulesOption func
 type RulesOption func(o *RulesOptions)
 
+// RulesContext pass rules context
 func RulesContext(ctx context.Context) RulesOption {
 	return func(o *RulesOptions) {
 		o.Context = ctx
 	}
 }
 
+// RulesNamespace sets the rule namespace
 func RulesNamespace(ns string) RulesOption {
 	return func(o *RulesOptions) {
 		o.Namespace = ns
+	}
+}
+
+// Logger sets the logger
+func Logger(l logger.Logger) Option {
+	return func(o *Options) {
+		o.Logger = l
 	}
 }

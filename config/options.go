@@ -28,6 +28,7 @@ type Option func(o *Options)
 
 func NewOptions(opts ...Option) Options {
 	options := Options{
+		Logger:  logger.DefaultLogger,
 		Context: context.Background(),
 	}
 	for _, o := range opts {

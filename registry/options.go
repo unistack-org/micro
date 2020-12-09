@@ -13,7 +13,9 @@ type Options struct {
 	Timeout   time.Duration
 	Secure    bool
 	TLSConfig *tls.Config
-	Logger    logger.Logger
+
+	// Logger imp
+	Logger logger.Logger
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context

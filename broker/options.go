@@ -13,9 +13,11 @@ import (
 type Options struct {
 	Addrs  []string
 	Secure bool
-	Codec  codec.Codec
 
-	// Logger
+	// Codec
+	Codec codec.Codec
+
+	// Logger the logger
 	Logger logger.Logger
 	// Handler executed when errors occur processing messages
 	ErrorHandler Handler
