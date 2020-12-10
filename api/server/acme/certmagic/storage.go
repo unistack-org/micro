@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
-	"fmt"
 	"path"
 	"strings"
 	"time"
@@ -48,25 +47,19 @@ func (s *storage) Store(key string, value []byte) error {
 	if err := e.Encode(f); err != nil {
 		return err
 	}
-	r := &store.Record{
-		Key:   key,
-		Value: buf.Bytes(),
-	}
-	return s.store.Write(s.store.Options().Context, r)
+	return s.store.Write(s.store.Options().Context, key, buf.Bytes())
 }
 
 func (s *storage) Load(key string) ([]byte, error) {
 	if !s.Exists(key) {
 		return nil, certmagic.ErrNotExist(errors.New(key + " doesn't exist"))
 	}
-	records, err := s.store.Read(s.store.Options().Context, key)
+	var val []byte
+	err := s.store.Read(s.store.Options().Context, key, val)
 	if err != nil {
 		return nil, err
 	}
-	if len(records) != 1 {
-		return nil, fmt.Errorf("ACME Storage: multiple records matched key %s", key)
-	}
-	b := bytes.NewBuffer(records[0].Value)
+	b := bytes.NewBuffer(val)
 	d := gob.NewDecoder(b)
 	var f File
 	err = d.Decode(&f)
@@ -81,7 +74,7 @@ func (s *storage) Delete(key string) error {
 }
 
 func (s *storage) Exists(key string) bool {
-	if _, err := s.store.Read(s.store.Options().Context, key); err != nil {
+	if err := s.store.Read(s.store.Options().Context, key, nil); err != nil {
 		return false
 	}
 	return true
@@ -116,14 +109,12 @@ func (s *storage) List(prefix string, recursive bool) ([]string, error) {
 }
 
 func (s *storage) Stat(key string) (certmagic.KeyInfo, error) {
-	records, err := s.store.Read(s.store.Options().Context, key)
+	var val []byte
+	err := s.store.Read(s.store.Options().Context, key, val)
 	if err != nil {
 		return certmagic.KeyInfo{}, err
 	}
-	if len(records) != 1 {
-		return certmagic.KeyInfo{}, fmt.Errorf("ACME Storage: multiple records matched key %s", key)
-	}
-	b := bytes.NewBuffer(records[0].Value)
+	b := bytes.NewBuffer(val)
 	d := gob.NewDecoder(b)
 	var f File
 	err = d.Decode(&f)

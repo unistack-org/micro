@@ -29,12 +29,17 @@ func (n *noopStore) String() string {
 }
 
 // Read reads store value by key
-func (n *noopStore) Read(ctx context.Context, key string, opts ...ReadOption) ([]*Record, error) {
-	return []*Record{}, nil
+func (n *noopStore) Exists(ctx context.Context, key string) error {
+	return ErrNotFound
+}
+
+// Read reads store value by key
+func (n *noopStore) Read(ctx context.Context, key string, val interface{}, opts ...ReadOption) error {
+	return ErrNotFound
 }
 
 // Write writes store record
-func (n *noopStore) Write(ctx context.Context, r *Record, opts ...WriteOption) error {
+func (n *noopStore) Write(ctx context.Context, key string, val interface{}, opts ...WriteOption) error {
 	return nil
 }
 

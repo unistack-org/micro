@@ -24,14 +24,14 @@ func (s *Scope) Options() store.Options {
 	return o
 }
 
-func (s *Scope) Read(ctx context.Context, key string, opts ...store.ReadOption) ([]*store.Record, error) {
+func (s *Scope) Read(ctx context.Context, key string, val interface{}, opts ...store.ReadOption) error {
 	key = fmt.Sprintf("%v/%v", s.prefix, key)
-	return s.Store.Read(ctx, key, opts...)
+	return s.Store.Read(ctx, key, val, opts...)
 }
 
-func (s *Scope) Write(ctx context.Context, r *store.Record, opts ...store.WriteOption) error {
-	r.Key = fmt.Sprintf("%v/%v", s.prefix, r.Key)
-	return s.Store.Write(ctx, r, opts...)
+func (s *Scope) Write(ctx context.Context, key string, val interface{}, opts ...store.WriteOption) error {
+	key = fmt.Sprintf("%v/%v", s.prefix, key)
+	return s.Store.Write(ctx, key, val, opts...)
 }
 
 func (s *Scope) Delete(ctx context.Context, key string, opts ...store.DeleteOption) error {

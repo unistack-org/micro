@@ -96,12 +96,16 @@ func (c *syncStore) List(ctx context.Context, opts ...store.ListOption) ([]strin
 	return c.syncOpts.Stores[0].List(ctx, opts...)
 }
 
-func (c *syncStore) Read(ctx context.Context, key string, opts ...store.ReadOption) ([]*store.Record, error) {
-	return c.syncOpts.Stores[0].Read(ctx, key, opts...)
+func (c *syncStore) Exists(ctx context.Context, key string) error {
+	return c.syncOpts.Stores[0].Exists(ctx, key)
 }
 
-func (c *syncStore) Write(ctx context.Context, r *store.Record, opts ...store.WriteOption) error {
-	return c.syncOpts.Stores[0].Write(ctx, r, opts...)
+func (c *syncStore) Read(ctx context.Context, key string, val interface{}, opts ...store.ReadOption) error {
+	return c.syncOpts.Stores[0].Read(ctx, key, val, opts...)
+}
+
+func (c *syncStore) Write(ctx context.Context, key string, val interface{}, opts ...store.WriteOption) error {
+	return c.syncOpts.Stores[0].Write(ctx, key, val, opts...)
 }
 
 // Delete removes a key from the sync

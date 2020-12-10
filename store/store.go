@@ -5,7 +5,8 @@ package store
 import (
 	"context"
 	"errors"
-	"time"
+
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 var (
@@ -23,10 +24,12 @@ type Store interface {
 	Connect(ctx context.Context) error
 	// Options allows you to view the current options.
 	Options() Options
-	// Read takes a single key name and optional ReadOptions. It returns matching []*Record or an error.
-	Read(ctx context.Context, key string, opts ...ReadOption) ([]*Record, error)
-	// Write() writes a record to the store, and returns an error if the record was not written.
-	Write(ctx context.Context, r *Record, opts ...WriteOption) error
+	// Exists check that key exists in store
+	Exists(ctx context.Context, key string) error
+	// Read reads a single key name to provided value with optional ReadOptions
+	Read(ctx context.Context, key string, val interface{}, opts ...ReadOption) error
+	// Write writes a value to key name to the store with optional WriteOption
+	Write(ctx context.Context, key string, val interface{}, opts ...WriteOption) error
 	// Delete removes the record with the corresponding key from the store.
 	Delete(ctx context.Context, key string, opts ...DeleteOption) error
 	// List returns any keys that match, or an empty list with no error if none matched.
@@ -37,14 +40,11 @@ type Store interface {
 	String() string
 }
 
-// Record is an item stored or retrieved from a Store
-type Record struct {
-	// The key to store the record
-	Key string `json:"key"`
-	// The value within the record
-	Value []byte `json:"value"`
-	// Any associated metadata for indexing
-	Metadata map[string]interface{} `json:"metadata"`
-	// Time to expire a record: TODO: change to timestamp
-	Expiry time.Duration `json:"expiry,omitempty"`
+// Value is an item stored or retrieved from a Store
+// may be used in store implementations to provide metadata
+type Value struct {
+	// Data holds underline struct
+	Data interface{} `json:"data"`
+	// Metadata associated with data for indexing
+	Metadata metadata.Metadata `json:"metadata"`
 }
