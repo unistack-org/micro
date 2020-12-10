@@ -102,10 +102,10 @@ func (c *noopCodec) Marshal(v interface{}) ([]byte, error) {
 }
 
 func (c *noopCodec) Unmarshal(d []byte, v interface{}) error {
+	var err error
 	if v == nil {
 		return nil
 	}
-
 	switch ve := v.(type) {
 	case string:
 		ve = string(d)
@@ -119,6 +119,9 @@ func (c *noopCodec) Unmarshal(d []byte, v interface{}) error {
 		ve.Data = d
 	case *Message:
 		ve.Body = d
+	default:
+		err = ErrInvalidMessage
 	}
-	return ErrInvalidMessage
+
+	return err
 }
