@@ -86,6 +86,15 @@ func Table(t string) Option {
 	}
 }
 
+// NewReadOptions fills ReadOptions struct with opts slice
+func NewReadOptions(opts ...ReadOption) ReadOptions {
+	options := ReadOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 // ReadOptions configures an individual Read operation
 type ReadOptions struct {
 	Database string
@@ -103,14 +112,19 @@ func ReadFrom(database, table string) ReadOption {
 	}
 }
 
+// NewWriteOptions fills WriteOptions struct with opts slice
+func NewWriteOptions(opts ...WriteOption) WriteOptions {
+	options := WriteOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 // WriteOptions configures an individual Write operation
-// If Expiry and TTL are set TTL takes precedence
 type WriteOptions struct {
 	Database string
 	Table    string
-	// Expiry is the time the record expires
-	Expiry time.Time
-	// TTL is the time until the record expires
 	TTL      time.Duration
 	Metadata metadata.Metadata
 }
@@ -123,13 +137,6 @@ func WriteTo(database, table string) WriteOption {
 	return func(w *WriteOptions) {
 		w.Database = database
 		w.Table = table
-	}
-}
-
-// WriteExpiry is the time the record expires
-func WriteExpiry(t time.Time) WriteOption {
-	return func(w *WriteOptions) {
-		w.Expiry = t
 	}
 }
 
@@ -147,6 +154,15 @@ func WriteMetadata(md metadata.Metadata) WriteOption {
 	}
 }
 
+// NewDeleteOptions fills DeleteOptions struct with opts slice
+func NewDeleteOptions(opts ...DeleteOption) DeleteOptions {
+	options := DeleteOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 // DeleteOptions configures an individual Delete operation
 type DeleteOptions struct {
 	Database, Table string
@@ -161,6 +177,15 @@ func DeleteFrom(database, table string) DeleteOption {
 		d.Database = database
 		d.Table = table
 	}
+}
+
+// NewListOptions fills ListOptions struct with opts slice
+func NewListOptions(opts ...ListOption) ListOptions {
+	options := ListOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
 }
 
 // ListOptions configures an individual List operation
