@@ -4,7 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 // Options contains configuration for the Store
@@ -17,6 +19,8 @@ type Options struct {
 	Database string
 	// Table is analag for a table in database backends or a key prefix in KV backends
 	Table string
+	// Codec that used for marshal/unmarshal value
+	Codec codec.Codec
 	// Logger the logger
 	Logger logger.Logger
 	// Context should contain all implementation specific options, using context.WithValue.
@@ -42,6 +46,13 @@ type Option func(o *Options)
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
 		o.Context = ctx
+	}
+}
+
+// Codec sets the codec
+func Codec(c codec.Codec) Option {
+	return func(o *Options) {
+		o.Codec = c
 	}
 }
 
@@ -130,11 +141,13 @@ func ReadOffset(o uint) ReadOption {
 // WriteOptions configures an individual Write operation
 // If Expiry and TTL are set TTL takes precedence
 type WriteOptions struct {
-	Database, Table string
+	Database string
+	Table    string
 	// Expiry is the time the record expires
 	Expiry time.Time
 	// TTL is the time until the record expires
-	TTL time.Duration
+	TTL      time.Duration
+	Metadata metadata.Metadata
 }
 
 // WriteOption sets values in WriteOptions
@@ -159,6 +172,13 @@ func WriteExpiry(t time.Time) WriteOption {
 func WriteTTL(d time.Duration) WriteOption {
 	return func(w *WriteOptions) {
 		w.TTL = d
+	}
+}
+
+// WriteMetadata add metadata.Metadata
+func WriteMetadata(md metadata.Metadata) WriteOption {
+	return func(w *WriteOptions) {
+		w.Metadata = metadata.Copy(md)
 	}
 }
 

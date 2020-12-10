@@ -41,16 +41,12 @@ func (c *syncStore) processQueue(index int) {
 		if !ir.expiresAt.IsZero() && time.Now().After(ir.expiresAt) {
 			continue
 		}
-		nr := &store.Record{
-			Key: ir.key,
-		}
-		nr.Value = make([]byte, len(ir.value))
-		copy(nr.Value, ir.value)
+		var opts []store.WriteOption
 		if !ir.expiresAt.IsZero() {
-			nr.Expiry = time.Until(ir.expiresAt)
+			opts = append(opts, store.WriteTTL(ir.expiresAt.Sub(time.Now())))
 		}
 		// Todo = internal queue also has to hold the corresponding store.WriteOptions
-		if err := c.syncOpts.Stores[index+1].Write(c.storeOpts.Context, nr); err != nil {
+		if err := c.syncOpts.Stores[index+1].Write(c.storeOpts.Context, ir.key, ir.value, opts...); err != nil {
 			// some error, so queue for retry and bail
 			q.PushBack(ir)
 			return

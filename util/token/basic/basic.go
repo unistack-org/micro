@@ -47,11 +47,7 @@ func (b *Basic) Generate(acc *auth.Account, opts ...token.GenerateOption) (*toke
 
 	// write to the store
 	key := uuid.New().String()
-	err = b.store.Write(context.Background(), &store.Record{
-		Key:    fmt.Sprintf("%v%v", StorePrefix, key),
-		Value:  bytes,
-		Expiry: options.Expiry,
-	})
+	err = b.store.Write(context.Background(), fmt.Sprintf("%v%v", StorePrefix, key), bytes, store.WriteTTL(options.Expiry))
 	if err != nil {
 		return nil, err
 	}
@@ -67,17 +63,16 @@ func (b *Basic) Generate(acc *auth.Account, opts ...token.GenerateOption) (*toke
 // Inspect a token
 func (b *Basic) Inspect(t string) (*auth.Account, error) {
 	// lookup the token in the store
-	recs, err := b.store.Read(context.Background(), StorePrefix+t)
+	var val []byte
+	err := b.store.Read(context.Background(), StorePrefix+t, val)
 	if err == store.ErrNotFound {
 		return nil, token.ErrInvalidToken
 	} else if err != nil {
 		return nil, err
 	}
-	bytes := recs[0].Value
-
 	// unmarshal the bytes
 	var acc *auth.Account
-	if err := json.Unmarshal(bytes, &acc); err != nil {
+	if err := json.Unmarshal(val, &acc); err != nil {
 		return nil, err
 	}
 
