@@ -25,7 +25,8 @@ var (
 
 var (
 	// DefaultMaxMsgSize specifies how much data codec can handle
-	DefaultMaxMsgSize = 1024 * 1024 * 4 // 4Mb
+	DefaultMaxMsgSize       = 1024 * 1024 * 4 // 4Mb
+	DefaultCodec      Codec = NewCodec()
 )
 
 // MessageType

@@ -32,6 +32,7 @@ func NewOptions(opts ...Option) Options {
 	options := Options{
 		Logger:  logger.DefaultLogger,
 		Context: context.Background(),
+		Codec:   codec.DefaultCodec,
 	}
 	for _, o := range opts {
 		o(&options)
