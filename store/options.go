@@ -88,15 +88,8 @@ func Table(t string) Option {
 
 // ReadOptions configures an individual Read operation
 type ReadOptions struct {
-	Database, Table string
-	// Prefix returns all records that are prefixed with key
-	Prefix bool
-	// Suffix returns all records that have the suffix key
-	Suffix bool
-	// Limit limits the number of returned records
-	Limit uint
-	// Offset when combined with Limit supports pagination
-	Offset uint
+	Database string
+	Table    string
 }
 
 // ReadOption sets values in ReadOptions
@@ -107,34 +100,6 @@ func ReadFrom(database, table string) ReadOption {
 	return func(r *ReadOptions) {
 		r.Database = database
 		r.Table = table
-	}
-}
-
-// ReadPrefix returns all records that are prefixed with key
-func ReadPrefix() ReadOption {
-	return func(r *ReadOptions) {
-		r.Prefix = true
-	}
-}
-
-// ReadSuffix returns all records that have the suffix key
-func ReadSuffix() ReadOption {
-	return func(r *ReadOptions) {
-		r.Suffix = true
-	}
-}
-
-// ReadLimit limits the number of responses to l
-func ReadLimit(l uint) ReadOption {
-	return func(r *ReadOptions) {
-		r.Limit = l
-	}
-}
-
-// ReadOffset starts returning responses from o. Use in conjunction with Limit for pagination
-func ReadOffset(o uint) ReadOption {
-	return func(r *ReadOptions) {
-		r.Offset = o
 	}
 }
 
