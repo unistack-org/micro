@@ -170,7 +170,7 @@ func Auth(a auth.Auth) Option {
 }
 
 // Configs sets the configs for the service
-func Configs(c []config.Config) Option {
+func Configs(c ...config.Config) Option {
 	return func(o *Options) {
 		o.Configs = c
 	}
