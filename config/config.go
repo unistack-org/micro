@@ -12,6 +12,8 @@ var (
 )
 
 var (
+	// ErrCodecMissing is returned when codec needed and not specified
+	ErrCodecMissing = errors.New("codec missing")
 	// ErrInvalidStruct is returned when the target struct is invalid
 	ErrInvalidStruct = errors.New("invalid struct specified")
 	// ErrWatcherStopped is returned when source watcher has been stopped
