@@ -40,19 +40,35 @@ func (s *service) Init(opts ...Option) error {
 		o(&s.opts)
 	}
 
+	for _, cfg := range s.opts.Configs {
+
+		if err := cfg.Init(config.Context(s.opts.Context)); err != nil {
+			return err
+		}
+
+		for _, fn := range cfg.Options().BeforeLoad {
+			if err := fn(s.opts.Context, cfg); err != nil {
+				return err
+			}
+		}
+
+		if err := cfg.Load(s.opts.Context); err != nil {
+			return err
+		}
+
+		for _, fn := range cfg.Options().AfterLoad {
+			if err := fn(s.opts.Context, cfg); err != nil {
+				return err
+			}
+		}
+
+	}
+
 	if s.opts.Logger != nil {
 		if err := s.opts.Logger.Init(
 			logger.WithContext(s.opts.Context),
 		); err != nil {
 			return err
-		}
-	}
-
-	if s.opts.Configs != nil {
-		for _, c := range s.opts.Configs {
-			if err := c.Init(config.Context(s.opts.Context)); err != nil {
-				return err
-			}
 		}
 	}
 
