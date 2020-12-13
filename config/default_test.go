@@ -11,6 +11,9 @@ import (
 type Cfg struct {
 	StringValue string `default:"string_value"`
 	IntValue    int    `default:"99"`
+	StructValue struct {
+		StringValue string `default:"string_value"`
+	}
 }
 
 func TestDefault(t *testing.T) {
@@ -50,7 +53,7 @@ func TestDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if conf.StringValue != "string_value" || conf.IntValue != 99 {
+	if conf.StringValue != "string_value" || conf.IntValue != 99 || conf.StructValue.StringValue != "string_value" {
 		t.Fatalf("load failed: %#+v", conf)
 	}
 
@@ -63,4 +66,5 @@ func TestDefault(t *testing.T) {
 		t.Fatal("AfterLoad option not working")
 	}
 
+	t.Logf("%#+v\n", conf)
 }

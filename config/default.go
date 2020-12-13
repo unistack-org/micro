@@ -173,6 +173,12 @@ func (c *defaultConfig) fillValues(ctx context.Context, valueOf reflect.Value) e
 			continue
 		}
 		switch value.Kind() {
+		case reflect.Struct:
+			value.Set(reflect.Indirect(reflect.New(value.Type())))
+			if err := c.fillValues(ctx, value); err != nil {
+				return err
+			}
+			continue
 		case reflect.Ptr:
 			if value.IsNil() {
 				if value.Type().Elem().Kind() != reflect.Struct {
