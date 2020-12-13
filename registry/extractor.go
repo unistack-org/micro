@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/unistack-org/micro/v3/metadata"
 )
@@ -19,6 +21,18 @@ func ExtractValue(v reflect.Type, d int) *Value {
 
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
+	}
+
+	if len(v.Name()) == 0 {
+		return nil
+	}
+
+	// get the rune character
+	a, _ := utf8.DecodeRuneInString(string(v.Name()[0]))
+
+	// crude check for is unexported field
+	if unicode.IsLower(a) {
+		return nil
 	}
 
 	arg := &Value{
@@ -91,6 +105,9 @@ func ExtractEndpoint(method reflect.Method) *Endpoint {
 
 	request := ExtractValue(reqType, 0)
 	response := ExtractValue(rspType, 0)
+	if request == nil || response == nil {
+		return nil
+	}
 
 	ep := &Endpoint{
 		Name:     method.Name,

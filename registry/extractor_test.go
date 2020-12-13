@@ -6,18 +6,18 @@ import (
 	"testing"
 )
 
-type testHandler struct{}
+type TestHandler struct{}
 
-type testRequest struct{}
+type TestRequest struct{}
 
-type testResponse struct{}
+type TestResponse struct{}
 
-func (t *testHandler) Test(ctx context.Context, req *testRequest, rsp *testResponse) error {
+func (t *TestHandler) Test(ctx context.Context, req *TestRequest, rsp *TestResponse) error {
 	return nil
 }
 
 func TestExtractEndpoint(t *testing.T) {
-	handler := &testHandler{}
+	handler := &TestHandler{}
 	typ := reflect.TypeOf(handler)
 
 	var endpoints []*Endpoint
@@ -29,35 +29,35 @@ func TestExtractEndpoint(t *testing.T) {
 	}
 
 	if i := len(endpoints); i != 1 {
-		t.Errorf("Expected 1 endpoint, have %d", i)
+		t.Fatalf("Expected 1 endpoint, have %d", i)
 	}
 
 	if endpoints[0].Name != "Test" {
-		t.Errorf("Expected handler Test, got %s", endpoints[0].Name)
+		t.Fatalf("Expected handler Test, got %s", endpoints[0].Name)
 	}
 
 	if endpoints[0].Request == nil {
-		t.Error("Expected non nil request")
+		t.Fatal("Expected non nil Request")
 	}
 
 	if endpoints[0].Response == nil {
-		t.Error("Expected non nil request")
+		t.Fatal("Expected non nil Request")
 	}
 
-	if endpoints[0].Request.Name != "testRequest" {
-		t.Errorf("Expected testRequest got %s", endpoints[0].Request.Name)
+	if endpoints[0].Request.Name != "TestRequest" {
+		t.Fatalf("Expected TestRequest got %s", endpoints[0].Request.Name)
 	}
 
-	if endpoints[0].Response.Name != "testResponse" {
-		t.Errorf("Expected testResponse got %s", endpoints[0].Response.Name)
+	if endpoints[0].Response.Name != "TestResponse" {
+		t.Fatalf("Expected TestResponse got %s", endpoints[0].Response.Name)
 	}
 
-	if endpoints[0].Request.Type != "testRequest" {
-		t.Errorf("Expected testRequest type got %s", endpoints[0].Request.Type)
+	if endpoints[0].Request.Type != "TestRequest" {
+		t.Fatalf("Expected TestRequest type got %s", endpoints[0].Request.Type)
 	}
 
-	if endpoints[0].Response.Type != "testResponse" {
-		t.Errorf("Expected testResponse type got %s", endpoints[0].Response.Type)
+	if endpoints[0].Response.Type != "TestResponse" {
+		t.Fatalf("Expected TestResponse type got %s", endpoints[0].Response.Type)
 	}
 
 }
