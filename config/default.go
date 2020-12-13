@@ -196,7 +196,7 @@ func (c *defaultConfig) fillValues(ctx context.Context, valueOf reflect.Value) e
 		}
 		tag, ok := field.Tag.Lookup(c.opts.StructTag)
 		if !ok {
-			return nil
+			continue
 		}
 
 		if err := c.fillValue(ctx, value, tag); err != nil {

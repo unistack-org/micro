@@ -11,6 +11,7 @@ import (
 type Cfg struct {
 	StringValue string `default:"string_value"`
 	IntValue    int    `default:"99"`
+	IgnoreValue string `json:"-"`
 	StructValue struct {
 		StringValue string `default:"string_value"`
 	}
