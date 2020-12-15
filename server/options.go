@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"net"
 	"sync"
 	"time"
 
@@ -57,6 +58,8 @@ type Options struct {
 
 	Wait *sync.WaitGroup
 
+	// Listener may be passed if already created
+	Listener net.Listener
 	// MaxConn limit connections to server
 	MaxConn int
 	// Other options for implementations of the interface
@@ -269,6 +272,20 @@ func WrapHandler(w HandlerWrapper) Option {
 func WrapSubscriber(w SubscriberWrapper) Option {
 	return func(o *Options) {
 		o.SubWrappers = append(o.SubWrappers, w)
+	}
+}
+
+// MaxConn specifies maximum number of max simultaneous connections to server
+func MaxConn(n int) Option {
+	return func(o *Options) {
+		o.MaxConn = n
+	}
+}
+
+// Listener specifies the net.Listener to use instead of the default
+func Listener(l net.Listener) Option {
+	return func(o *Options) {
+		o.Listener = l
 	}
 }
 
