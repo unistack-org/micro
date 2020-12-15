@@ -56,6 +56,9 @@ type Options struct {
 	TLSConfig *tls.Config
 
 	Wait *sync.WaitGroup
+
+	// MaxConn limit connections to server
+	MaxConn int
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
