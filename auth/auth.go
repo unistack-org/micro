@@ -126,11 +126,17 @@ type accountKey struct{}
 // is not set, a nil account will be returned. The error is only returned
 // when there was a problem retrieving an account
 func AccountFromContext(ctx context.Context) (*Account, bool) {
+	if ctx == nil {
+		return nil, false
+	}
 	acc, ok := ctx.Value(accountKey{}).(*Account)
 	return acc, ok
 }
 
 // ContextWithAccount sets the account in the context
 func ContextWithAccount(ctx context.Context, account *Account) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	return context.WithValue(ctx, accountKey{}, account)
 }
