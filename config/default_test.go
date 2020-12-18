@@ -41,27 +41,8 @@ func TestDefault(t *testing.T) {
 	if err := cfg.Init(); err != nil {
 		t.Fatal(err)
 	}
-	for _, fn := range cfg.Options().BeforeLoad {
-		if err := fn(ctx, cfg); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if conf.StringValue != "before_load" {
-		t.Fatal("BeforeLoad option not working")
-	}
-
 	if err := cfg.Load(ctx); err != nil {
 		t.Fatal(err)
-	}
-
-	if conf.StringValue != "string_value" || conf.IntValue != 99 || conf.StructValue.StringValue != "string_value" {
-		t.Fatalf("load failed: %#+v", conf)
-	}
-
-	for _, fn := range cfg.Options().AfterLoad {
-		if err := fn(ctx, cfg); err != nil {
-			t.Fatal(err)
-		}
 	}
 	if conf.StringValue != "after_load" {
 		t.Fatal("AfterLoad option not working")
