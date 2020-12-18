@@ -46,20 +46,8 @@ func (s *service) Init(opts ...Option) error {
 			return err
 		}
 
-		for _, fn := range cfg.Options().BeforeLoad {
-			if err := fn(s.opts.Context, cfg); err != nil {
-				return err
-			}
-		}
-
 		if err := cfg.Load(s.opts.Context); err != nil {
 			return err
-		}
-
-		for _, fn := range cfg.Options().AfterLoad {
-			if err := fn(s.opts.Context, cfg); err != nil {
-				return err
-			}
 		}
 
 	}
@@ -173,18 +161,8 @@ func (s *service) Start() error {
 	}
 
 	for _, cfg := range s.opts.Configs {
-		for _, fn := range cfg.Options().BeforeLoad {
-			if err := fn(s.opts.Context, cfg); err != nil {
-				return err
-			}
-		}
 		if err := cfg.Load(s.opts.Context); err != nil {
 			return err
-		}
-		for _, fn := range cfg.Options().AfterLoad {
-			if err := fn(s.opts.Context, cfg); err != nil {
-				return err
-			}
 		}
 	}
 
