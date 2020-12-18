@@ -40,3 +40,14 @@ type Config interface {
 //	Next() (, error)
 //	Stop() error
 //}
+
+// Load loads config from config sources
+func Load(ctx context.Context, cs ...Config) error {
+	var err error
+	for _, c := range cs {
+		if err = c.Load(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}

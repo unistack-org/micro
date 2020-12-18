@@ -23,10 +23,22 @@ func (c *defaultConfig) Init(opts ...Option) error {
 }
 
 func (c *defaultConfig) Load(ctx context.Context) error {
+	for _, fn := range c.opts.BeforeLoad {
+		if err := fn(ctx, c); err != nil {
+			return err
+		}
+	}
+
 	valueOf := reflect.ValueOf(c.opts.Struct)
 
 	if err := c.fillValues(ctx, valueOf); err != nil {
 		return err
+	}
+
+	for _, fn := range c.opts.AfterLoad {
+		if err := fn(ctx, c); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -208,6 +220,18 @@ func (c *defaultConfig) fillValues(ctx context.Context, valueOf reflect.Value) e
 }
 
 func (c *defaultConfig) Save(ctx context.Context) error {
+	for _, fn := range c.opts.BeforeSave {
+		if err := fn(ctx, c); err != nil {
+			return err
+		}
+	}
+
+	for _, fn := range c.opts.AfterSave {
+		if err := fn(ctx, c); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
