@@ -1,6 +1,8 @@
 package config
 
-import "reflect"
+import (
+	"reflect"
+)
 
 func IsEmpty(v reflect.Value) bool {
 	switch v.Kind() {
@@ -25,4 +27,20 @@ func IsEmpty(v reflect.Value) bool {
 		return true
 	}
 	return false
+}
+
+func Zero(src interface{}) (interface{}, error) {
+	sv := reflect.ValueOf(src)
+
+	if sv.Kind() == reflect.Ptr {
+		sv = sv.Elem()
+	}
+
+	if sv.Kind() == reflect.Invalid {
+		return nil, ErrInvalidStruct
+	}
+
+	dst := reflect.New(sv.Type())
+
+	return dst.Interface(), nil
 }
