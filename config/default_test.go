@@ -19,7 +19,7 @@ type Cfg struct {
 
 func TestDefault(t *testing.T) {
 	ctx := context.Background()
-	conf := &Cfg{}
+	conf := &Cfg{IntValue: 10}
 	blfn := func(ctx context.Context, cfg config.Config) error {
 		conf, ok := cfg.Options().Struct.(*Cfg)
 		if !ok {

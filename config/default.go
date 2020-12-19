@@ -24,19 +24,19 @@ func (c *defaultConfig) Init(opts ...Option) error {
 
 func (c *defaultConfig) Load(ctx context.Context) error {
 	for _, fn := range c.opts.BeforeLoad {
-		if err := fn(ctx, c); err != nil {
+		if err := fn(ctx, c); err != nil && !c.opts.AllowFail {
 			return err
 		}
 	}
 
 	valueOf := reflect.ValueOf(c.opts.Struct)
 
-	if err := c.fillValues(ctx, valueOf); err != nil {
+	if err := c.fillValues(ctx, valueOf); err != nil && !c.opts.AllowFail {
 		return err
 	}
 
 	for _, fn := range c.opts.AfterLoad {
-		if err := fn(ctx, c); err != nil {
+		if err := fn(ctx, c); err != nil && !c.opts.AllowFail {
 			return err
 		}
 	}
@@ -45,6 +45,9 @@ func (c *defaultConfig) Load(ctx context.Context) error {
 }
 
 func (c *defaultConfig) fillValue(ctx context.Context, value reflect.Value, val string) error {
+	if !IsEmpty(value) {
+		return nil
+	}
 	switch value.Kind() {
 	case reflect.Map:
 		t := value.Type()
@@ -221,13 +224,13 @@ func (c *defaultConfig) fillValues(ctx context.Context, valueOf reflect.Value) e
 
 func (c *defaultConfig) Save(ctx context.Context) error {
 	for _, fn := range c.opts.BeforeSave {
-		if err := fn(ctx, c); err != nil {
+		if err := fn(ctx, c); err != nil && !c.opts.AllowFail {
 			return err
 		}
 	}
 
 	for _, fn := range c.opts.AfterSave {
-		if err := fn(ctx, c); err != nil {
+		if err := fn(ctx, c); err != nil && !c.opts.AllowFail {
 			return err
 		}
 	}

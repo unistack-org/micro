@@ -8,6 +8,7 @@ import (
 )
 
 type Options struct {
+	AllowFail  bool
 	BeforeLoad []func(context.Context, Config) error
 	AfterLoad  []func(context.Context, Config) error
 	BeforeSave []func(context.Context, Config) error
@@ -36,6 +37,12 @@ func NewOptions(opts ...Option) Options {
 	}
 
 	return options
+}
+
+func AllowFail(b bool) Option {
+	return func(o *Options) {
+		o.AllowFail = b
+	}
 }
 
 func BeforeLoad(fn ...func(context.Context, Config) error) Option {
