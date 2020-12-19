@@ -41,7 +41,10 @@ func (s *service) Init(opts ...Option) error {
 	}
 
 	for _, cfg := range s.opts.Configs {
-
+		if cfg.Options().Struct == nil {
+			// skip config as the struct not passed
+			continue
+		}
 		if err := cfg.Init(config.Context(s.opts.Context)); err != nil {
 			return err
 		}
@@ -161,6 +164,11 @@ func (s *service) Start() error {
 	}
 
 	for _, cfg := range s.opts.Configs {
+		if cfg.Options().Struct == nil {
+			// skip config as the struct not passed
+			continue
+		}
+
 		if err := cfg.Load(s.opts.Context); err != nil {
 			return err
 		}
