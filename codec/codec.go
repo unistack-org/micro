@@ -38,9 +38,9 @@ type MessageType int
 // connection. ReadBody may be called with a nil argument to force the
 // body to be read and discarded.
 type Codec interface {
-	ReadHeader(io.ReadWriter, *Message, MessageType) error
-	ReadBody(io.ReadWriter, interface{}) error
-	Write(io.ReadWriter, *Message, interface{}) error
+	ReadHeader(io.Reader, *Message, MessageType) error
+	ReadBody(io.Reader, interface{}) error
+	Write(io.Writer, *Message, interface{}) error
 	Marshal(interface{}) ([]byte, error)
 	Unmarshal([]byte, interface{}) error
 	String() string

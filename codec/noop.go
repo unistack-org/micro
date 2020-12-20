@@ -13,11 +13,11 @@ type Frame struct {
 	Data []byte
 }
 
-func (c *noopCodec) ReadHeader(conn io.ReadWriter, m *Message, t MessageType) error {
+func (c *noopCodec) ReadHeader(conn io.Reader, m *Message, t MessageType) error {
 	return nil
 }
 
-func (c *noopCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
+func (c *noopCodec) ReadBody(conn io.Reader, b interface{}) error {
 	// read bytes
 	buf, err := ioutil.ReadAll(conn)
 	if err != nil {
@@ -46,7 +46,7 @@ func (c *noopCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
 	return nil
 }
 
-func (c *noopCodec) Write(conn io.ReadWriter, m *Message, b interface{}) error {
+func (c *noopCodec) Write(conn io.Writer, m *Message, b interface{}) error {
 	if b == nil {
 		return nil
 	}
