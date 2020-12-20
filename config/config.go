@@ -45,6 +45,9 @@ type Config interface {
 func Load(ctx context.Context, cs ...Config) error {
 	var err error
 	for _, c := range cs {
+		if err = c.Init(); err != nil {
+			return err
+		}
 		if err = c.Load(ctx); err != nil {
 			return err
 		}
