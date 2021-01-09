@@ -11,6 +11,8 @@ import (
 type Router interface {
 	// Returns options
 	Options() Options
+	// Init initialize router
+	Init(...Option) error
 	// Stop the router
 	Close() error
 	// Endpoint returns an api.Service endpoint or an error if it does not exist
@@ -21,4 +23,6 @@ type Router interface {
 	Deregister(ep *api.Endpoint) error
 	// Route returns an api.Service route
 	Route(r *http.Request) (*api.Service, error)
+	// String represenation of router
+	String() string
 }
