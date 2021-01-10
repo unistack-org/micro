@@ -1,9 +1,13 @@
 // Package logger provides a log interface
 package logger
 
+import "context"
+
 var (
 	// DefaultLogger variable
 	DefaultLogger Logger = NewLogger()
+	// DefaultLogger level
+	DefaultLevel Level = InfoLevel
 )
 
 // Logger is a generic logging interface
@@ -14,94 +18,100 @@ type Logger interface {
 	V(level Level) bool
 	// The Logger options
 	Options() Options
+	// SetLevel modify current log level
+	SetLevel(level Level)
 	// Fields set fields to always be logged
 	Fields(fields map[string]interface{}) Logger
 	// Info level message
-	Info(args ...interface{})
+	Info(ctx context.Context, args ...interface{})
 	// Trace level message
-	Trace(args ...interface{})
+	Trace(ctx context.Context, args ...interface{})
 	// Debug level message
-	Debug(args ...interface{})
+	Debug(ctx context.Context, args ...interface{})
 	// Warn level message
-	Warn(args ...interface{})
+	Warn(ctx context.Context, args ...interface{})
 	// Error level message
-	Error(args ...interface{})
+	Error(ctx context.Context, args ...interface{})
 	// Fatal level message
-	Fatal(args ...interface{})
+	Fatal(ctx context.Context, args ...interface{})
 	// Infof level message
-	Infof(msg string, args ...interface{})
+	Infof(ctx context.Context, msg string, args ...interface{})
 	// Tracef level message
-	Tracef(msg string, args ...interface{})
+	Tracef(ctx context.Context, msg string, args ...interface{})
 	// Debug level message
-	Debugf(msg string, args ...interface{})
+	Debugf(ctx context.Context, msg string, args ...interface{})
 	// Warn level message
-	Warnf(msg string, args ...interface{})
+	Warnf(ctx context.Context, msg string, args ...interface{})
 	// Error level message
-	Errorf(msg string, args ...interface{})
+	Errorf(ctx context.Context, msg string, args ...interface{})
 	// Fatal level message
-	Fatalf(msg string, args ...interface{})
+	Fatalf(ctx context.Context, msg string, args ...interface{})
+	// Log logs message with needed level
+	Log(ctx context.Context, level Level, args ...interface{})
+	// Logf logs message with needed level
+	Logf(ctx context.Context, level Level, msg string, args ...interface{})
 	// String returns the name of logger
 	String() string
 }
 
 // Info writes msg to default logger on info level
-func Info(args ...interface{}) {
-	DefaultLogger.Info(args...)
+func Info(ctx context.Context, args ...interface{}) {
+	DefaultLogger.Info(ctx, args...)
 }
 
 // Error writes msg to default logger on error level
-func Error(args ...interface{}) {
-	DefaultLogger.Error(args...)
+func Error(ctx context.Context, args ...interface{}) {
+	DefaultLogger.Error(ctx, args...)
 }
 
 // Debug writes msg to default logger on debug level
-func Debug(args ...interface{}) {
-	DefaultLogger.Debug(args...)
+func Debug(ctx context.Context, args ...interface{}) {
+	DefaultLogger.Debug(ctx, args...)
 }
 
 // Warn writes msg to default logger on warn level
-func Warn(args ...interface{}) {
-	DefaultLogger.Warn(args...)
+func Warn(ctx context.Context, args ...interface{}) {
+	DefaultLogger.Warn(ctx, args...)
 }
 
 // Trace writes msg to default logger on trace level
-func Trace(args ...interface{}) {
-	DefaultLogger.Trace(args...)
+func Trace(ctx context.Context, args ...interface{}) {
+	DefaultLogger.Trace(ctx, args...)
 }
 
 // Fatal writes msg to default logger on fatal level
-func Fatal(args ...interface{}) {
-	DefaultLogger.Fatal(args...)
+func Fatal(ctx context.Context, args ...interface{}) {
+	DefaultLogger.Fatal(ctx, args...)
 }
 
 // Infof writes formatted msg to default logger on info level
-func Infof(msg string, args ...interface{}) {
-	DefaultLogger.Infof(msg, args...)
+func Infof(ctx context.Context, msg string, args ...interface{}) {
+	DefaultLogger.Infof(ctx, msg, args...)
 }
 
 // Errorf writes formatted msg to default logger on error level
-func Errorf(msg string, args ...interface{}) {
-	DefaultLogger.Errorf(msg, args...)
+func Errorf(ctx context.Context, msg string, args ...interface{}) {
+	DefaultLogger.Errorf(ctx, msg, args...)
 }
 
 // Debugf writes formatted msg to default logger on debug level
-func Debugf(msg string, args ...interface{}) {
-	DefaultLogger.Debugf(msg, args...)
+func Debugf(ctx context.Context, msg string, args ...interface{}) {
+	DefaultLogger.Debugf(ctx, msg, args...)
 }
 
 // Warnf writes formatted msg to default logger on warn level
-func Warnf(msg string, args ...interface{}) {
-	DefaultLogger.Warnf(msg, args...)
+func Warnf(ctx context.Context, msg string, args ...interface{}) {
+	DefaultLogger.Warnf(ctx, msg, args...)
 }
 
 // Tracef writes formatted msg to default logger on trace level
-func Tracef(msg string, args ...interface{}) {
-	DefaultLogger.Tracef(msg, args...)
+func Tracef(ctx context.Context, msg string, args ...interface{}) {
+	DefaultLogger.Tracef(ctx, msg, args...)
 }
 
 // Fatalf writes formatted msg to default logger on fatal level
-func Fatalf(msg string, args ...interface{}) {
-	DefaultLogger.Fatalf(msg, args...)
+func Fatalf(ctx context.Context, msg string, args ...interface{}) {
+	DefaultLogger.Fatalf(ctx, msg, args...)
 }
 
 // V returns true if passed level enabled in default logger

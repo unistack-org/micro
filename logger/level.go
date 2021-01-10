@@ -12,12 +12,11 @@ const (
 	TraceLevel Level = iota - 2
 	// DebugLevel level. Usually only enabled when debugging. Very verbose logging.
 	DebugLevel
-	// InfoLevel is the default logging priority.
-	// General operational entries about what's going on inside the application.
+	// InfoLevel level. General operational entries about what's going on inside the application.
 	InfoLevel
 	// WarnLevel level. Non-critical entries that deserve eyes.
 	WarnLevel
-	// ErrorLevel level. Logs. Used for errors that should definitely be noted.
+	// ErrorLevel level. Used for errors that should definitely be noted.
 	ErrorLevel
 	// FatalLevel level. Logs and then calls `os.Exit(1)`. highest level of severity.
 	FatalLevel

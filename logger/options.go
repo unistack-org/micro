@@ -26,10 +26,10 @@ type Options struct {
 // NewOptions creates new options struct
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Level:           InfoLevel,
+		Level:           DefaultLevel,
 		Fields:          make(map[string]interface{}),
 		Out:             os.Stderr,
-		CallerSkipCount: 2,
+		CallerSkipCount: 0,
 		Context:         context.Background(),
 	}
 	for _, o := range opts {
@@ -40,35 +40,35 @@ func NewOptions(opts ...Option) Options {
 
 // WithFields set default fields for the logger
 func WithFields(fields map[string]interface{}) Option {
-	return func(args *Options) {
-		args.Fields = fields
+	return func(o *Options) {
+		o.Fields = fields
 	}
 }
 
 // WithLevel set default level for the logger
 func WithLevel(level Level) Option {
-	return func(args *Options) {
-		args.Level = level
+	return func(o *Options) {
+		o.Level = level
 	}
 }
 
 // WithOutput set default output writer for the logger
 func WithOutput(out io.Writer) Option {
-	return func(args *Options) {
-		args.Out = out
+	return func(o *Options) {
+		o.Out = out
 	}
 }
 
 // WithCallerSkipCount set frame count to skip
 func WithCallerSkipCount(c int) Option {
-	return func(args *Options) {
-		args.CallerSkipCount = c
+	return func(o *Options) {
+		o.CallerSkipCount = c
 	}
 }
 
 // WithContext set context
 func WithContext(ctx context.Context) Option {
-	return func(args *Options) {
-		args.Context = ctx
+	return func(o *Options) {
+		o.Context = ctx
 	}
 }

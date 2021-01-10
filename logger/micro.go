@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -28,12 +29,11 @@ type defaultLogger struct {
 // Init(opts...) should only overwrite provided options
 func (l *defaultLogger) Init(opts ...Option) error {
 	l.Lock()
-	defer l.Unlock()
-
 	for _, o := range opts {
 		o(&l.opts)
 	}
 	l.enc = json.NewEncoder(l.opts.Out)
+	l.Unlock()
 	return nil
 }
 
@@ -41,8 +41,24 @@ func (l *defaultLogger) String() string {
 	return "micro"
 }
 
+func (l *defaultLogger) SetLevel(level Level) {
+	l.Lock()
+	l.opts.Level = level
+	l.Unlock()
+}
+
+func (l *defaultLogger) GetLevel() Level {
+	l.RLock()
+	lvl := l.opts.Level
+	l.RUnlock()
+	return lvl
+}
+
 func (l *defaultLogger) V(level Level) bool {
-	return l.opts.Level.Enabled(level)
+	l.RLock()
+	ok := l.opts.Level.Enabled(level)
+	l.RUnlock()
+	return ok
 }
 
 func (l *defaultLogger) Fields(fields map[string]interface{}) Logger {
@@ -84,57 +100,57 @@ func logCallerfilePath(loggingFilePath string) string {
 	return loggingFilePath[idx+1:]
 }
 
-func (l *defaultLogger) Info(args ...interface{}) {
-	l.log(InfoLevel, args...)
+func (l *defaultLogger) Info(ctx context.Context, args ...interface{}) {
+	l.Log(ctx, InfoLevel, args...)
 }
 
-func (l *defaultLogger) Error(args ...interface{}) {
-	l.log(ErrorLevel, args...)
+func (l *defaultLogger) Error(ctx context.Context, args ...interface{}) {
+	l.Log(ctx, ErrorLevel, args...)
 }
 
-func (l *defaultLogger) Debug(args ...interface{}) {
-	l.log(DebugLevel, args...)
+func (l *defaultLogger) Debug(ctx context.Context, args ...interface{}) {
+	l.Log(ctx, DebugLevel, args...)
 }
 
-func (l *defaultLogger) Warn(args ...interface{}) {
-	l.log(WarnLevel, args...)
+func (l *defaultLogger) Warn(ctx context.Context, args ...interface{}) {
+	l.Log(ctx, WarnLevel, args...)
 }
 
-func (l *defaultLogger) Trace(args ...interface{}) {
-	l.log(TraceLevel, args...)
+func (l *defaultLogger) Trace(ctx context.Context, args ...interface{}) {
+	l.Log(ctx, TraceLevel, args...)
 }
 
-func (l *defaultLogger) Fatal(args ...interface{}) {
-	l.log(FatalLevel, args...)
+func (l *defaultLogger) Fatal(ctx context.Context, args ...interface{}) {
+	l.Log(ctx, FatalLevel, args...)
 	os.Exit(1)
 }
 
-func (l *defaultLogger) Infof(msg string, args ...interface{}) {
-	l.logf(InfoLevel, msg, args...)
+func (l *defaultLogger) Infof(ctx context.Context, msg string, args ...interface{}) {
+	l.Logf(ctx, InfoLevel, msg, args...)
 }
 
-func (l *defaultLogger) Errorf(msg string, args ...interface{}) {
-	l.logf(ErrorLevel, msg, args...)
+func (l *defaultLogger) Errorf(ctx context.Context, msg string, args ...interface{}) {
+	l.Logf(ctx, ErrorLevel, msg, args...)
 }
 
-func (l *defaultLogger) Debugf(msg string, args ...interface{}) {
-	l.logf(DebugLevel, msg, args...)
+func (l *defaultLogger) Debugf(ctx context.Context, msg string, args ...interface{}) {
+	l.Logf(ctx, DebugLevel, msg, args...)
 }
 
-func (l *defaultLogger) Warnf(msg string, args ...interface{}) {
-	l.logf(WarnLevel, msg, args...)
+func (l *defaultLogger) Warnf(ctx context.Context, msg string, args ...interface{}) {
+	l.Logf(ctx, WarnLevel, msg, args...)
 }
 
-func (l *defaultLogger) Tracef(msg string, args ...interface{}) {
-	l.logf(TraceLevel, msg, args...)
+func (l *defaultLogger) Tracef(ctx context.Context, msg string, args ...interface{}) {
+	l.Logf(ctx, TraceLevel, msg, args...)
 }
 
-func (l *defaultLogger) Fatalf(msg string, args ...interface{}) {
-	l.logf(FatalLevel, msg, args...)
+func (l *defaultLogger) Fatalf(ctx context.Context, msg string, args ...interface{}) {
+	l.Logf(ctx, FatalLevel, msg, args...)
 	os.Exit(1)
 }
 
-func (l *defaultLogger) log(level Level, args ...interface{}) {
+func (l *defaultLogger) Log(ctx context.Context, level Level, args ...interface{}) {
 	if !l.V(level) {
 		return
 	}
@@ -157,7 +173,7 @@ func (l *defaultLogger) log(level Level, args ...interface{}) {
 	l.RUnlock()
 }
 
-func (l *defaultLogger) logf(level Level, msg string, args ...interface{}) {
+func (l *defaultLogger) Logf(ctx context.Context, level Level, msg string, args ...interface{}) {
 	if !l.V(level) {
 		return
 	}
