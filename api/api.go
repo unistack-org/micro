@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/server"
 )
@@ -102,19 +103,23 @@ func Encode(e *Endpoint) map[string]string {
 }
 
 // Decode decodes endpoint metadata into an endpoint
-func Decode(e map[string]string) *Endpoint {
+func Decode(e metadata.Metadata) *Endpoint {
 	if e == nil {
 		return nil
 	}
 
-	return &Endpoint{
-		Name:        e["endpoint"],
-		Description: e["description"],
-		Method:      slice(e["method"]),
-		Path:        slice(e["path"]),
-		Host:        slice(e["host"]),
-		Handler:     e["handler"],
-	}
+	ep := &Endpoint{}
+	ep.Name, _ = e.Get("endpoint")
+	ep.Description, _ = e.Get("description")
+	epmethod, _ := e.Get("method")
+	ep.Method = []string{epmethod}
+	eppath, _ := e.Get("path")
+	ep.Path = []string{eppath}
+	ephost, _ := e.Get("host")
+	ep.Host = []string{ephost}
+	ep.Handler, _ = e.Get("handler")
+
+	return ep
 }
 
 // Validate validates an endpoint to guarantee it won't blow up when being served
