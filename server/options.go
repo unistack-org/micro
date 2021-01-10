@@ -302,7 +302,8 @@ type HandlerOptions struct {
 // NewHandlerOptions creates new HandlerOptions
 func NewHandlerOptions(opts ...HandlerOption) HandlerOptions {
 	options := HandlerOptions{
-		Context: context.Background(),
+		Context:  context.Background(),
+		Metadata: make(map[string]metadata.Metadata),
 	}
 
 	for _, o := range opts {
