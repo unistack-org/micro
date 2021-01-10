@@ -3,6 +3,7 @@ package router
 // download from https://raw.githubusercontent.com/grpc-ecosystem/grpc-gateway/master/protoc-gen-grpc-gateway/httprule/parse.go
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -103,20 +104,20 @@ type parser struct {
 // topLevelSegments is the target of this parser.
 func (p *parser) topLevelSegments() ([]segment, error) {
 	if logger.V(logger.TraceLevel) {
-		logger.Debug("Parsing %q", p.tokens)
+		logger.Debug(context.TODO(), "Parsing %q", p.tokens)
 	}
 	segs, err := p.segments()
 	if err != nil {
 		return nil, err
 	}
 	if logger.V(logger.TraceLevel) {
-		logger.Trace("accept segments: %q; %q", p.accepted, p.tokens)
+		logger.Trace(context.TODO(), "accept segments: %q; %q", p.accepted, p.tokens)
 	}
 	if _, err := p.accept(typeEOF); err != nil {
 		return nil, fmt.Errorf("unexpected token %q after segments %q", p.tokens[0], strings.Join(p.accepted, ""))
 	}
 	if logger.V(logger.TraceLevel) {
-		logger.Trace("accept eof: %q; %q", p.accepted, p.tokens)
+		logger.Trace(context.TODO(), "accept eof: %q; %q", p.accepted, p.tokens)
 	}
 	return segs, nil
 }
@@ -128,7 +129,7 @@ func (p *parser) segments() ([]segment, error) {
 	}
 
 	if logger.V(logger.TraceLevel) {
-		logger.Trace("accept segment: %q; %q", p.accepted, p.tokens)
+		logger.Trace(context.TODO(), "accept segment: %q; %q", p.accepted, p.tokens)
 	}
 	segs := []segment{s}
 	for {
@@ -141,7 +142,7 @@ func (p *parser) segments() ([]segment, error) {
 		}
 		segs = append(segs, s)
 		if logger.V(logger.TraceLevel) {
-			logger.Trace("accept segment: %q; %q", p.accepted, p.tokens)
+			logger.Trace(context.TODO(), "accept segment: %q; %q", p.accepted, p.tokens)
 		}
 	}
 }

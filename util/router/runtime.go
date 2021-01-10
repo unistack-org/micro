@@ -3,6 +3,7 @@ package router
 // download from https://raw.githubusercontent.com/grpc-ecosystem/grpc-gateway/master/runtime/pattern.go
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -63,7 +64,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 
 	if version != 1 {
 		if logger.V(logger.DebugLevel) {
-			logger.Debug("unsupported version: %d", version)
+			logger.Debug(context.TODO(), "unsupported version: %d", version)
 		}
 		return Pattern{}, ErrInvalidPattern
 	}
@@ -71,7 +72,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 	l := len(ops)
 	if l%2 != 0 {
 		if logger.V(logger.DebugLevel) {
-			logger.Debug("odd number of ops codes: %d", l)
+			logger.Debug(context.TODO(), "odd number of ops codes: %d", l)
 		}
 		return Pattern{}, ErrInvalidPattern
 	}
@@ -96,7 +97,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 		case OpPushM:
 			if pushMSeen {
 				if logger.V(logger.TraceLevel) {
-					logger.Trace("pushM appears twice")
+					logger.Trace(context.TODO(), "pushM appears twice")
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
@@ -105,7 +106,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 		case OpLitPush:
 			if op.operand < 0 || len(pool) <= op.operand {
 				if logger.V(logger.TraceLevel) {
-					logger.Trace("negative literal index: %d", op.operand)
+					logger.Trace(context.TODO(), "negative literal index: %d", op.operand)
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
@@ -116,14 +117,14 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 		case OpConcatN:
 			if op.operand <= 0 {
 				if logger.V(logger.TraceLevel) {
-					logger.Trace("negative concat size: %d", op.operand)
+					logger.Trace(context.TODO(), "negative concat size: %d", op.operand)
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
 			stack -= op.operand
 			if stack < 0 {
 				if logger.V(logger.TraceLevel) {
-					logger.Trace("stack underflow")
+					logger.Trace(context.TODO(), "stack underflow")
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
@@ -131,7 +132,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 		case OpCapture:
 			if op.operand < 0 || len(pool) <= op.operand {
 				if logger.V(logger.TraceLevel) {
-					logger.Trace("variable name index out of bound: %d", op.operand)
+					logger.Trace(context.TODO(), "variable name index out of bound: %d", op.operand)
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
@@ -141,13 +142,13 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 			stack--
 			if stack < 0 {
 				if logger.V(logger.DebugLevel) {
-					logger.Trace("stack underflow")
+					logger.Trace(context.TODO(), "stack underflow")
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
 		default:
 			if logger.V(logger.DebugLevel) {
-				logger.Trace("invalid opcode: %d", op.code)
+				logger.Trace(context.TODO(), "invalid opcode: %d", op.code)
 			}
 			return Pattern{}, ErrInvalidPattern
 		}
@@ -172,7 +173,7 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 func MustPattern(p Pattern, err error) Pattern {
 	if err != nil {
 		if logger.V(logger.FatalLevel) {
-			logger.Fatal("Pattern initialization failed: %v", err)
+			logger.Fatal(context.TODO(), "Pattern initialization failed: %v", err)
 		}
 	}
 	return p

@@ -7,13 +7,16 @@ import (
 	"net"
 	"os"
 
+	"github.com/unistack-org/micro/v3/api/server"
 	"github.com/unistack-org/micro/v3/api/server/acme"
 	"github.com/unistack-org/micro/v3/logger"
 	"golang.org/x/crypto/acme/autocert"
 )
 
 // autoCertACME is the ACME provider from golang.org/x/crypto/acme/autocert
-type autocertProvider struct{}
+type autocertProvider struct {
+	opts server.Options
+}
 
 func (a *autocertProvider) Init(opts ...acme.Option) error {
 	return nil
@@ -36,7 +39,7 @@ func (a *autocertProvider) TLSConfig(hosts ...string) (*tls.Config, error) {
 	dir := cacheDir()
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		if logger.V(logger.InfoLevel) {
-			logger.Info("warning: autocert not using a cache: %v", err)
+			logger.Info(a.opts.Context, "warning: autocert not using a cache: %v", err)
 		}
 	} else {
 		m.Cache = autocert.DirCache(dir)

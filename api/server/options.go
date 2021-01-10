@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"crypto/tls"
 	"net/http"
 
@@ -23,12 +24,14 @@ type Options struct {
 	Resolver     resolver.Resolver
 	Wrappers     []Wrapper
 	Logger       logger.Logger
+	Context      context.Context
 }
 
 // NewOptions returns new Options
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Logger: logger.DefaultLogger,
+		Logger:  logger.DefaultLogger,
+		Context: context.Background(),
 	}
 	for _, o := range opts {
 		o(&options)

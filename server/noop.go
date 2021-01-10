@@ -187,7 +187,7 @@ func (n *noopServer) Register() error {
 
 	if !registered {
 		if config.Logger.V(logger.InfoLevel) {
-			config.Logger.Infof("registry [%s] Registering node: %s", config.Registry.String(), service.Nodes[0].Id)
+			config.Logger.Infof(n.opts.Context, "registry [%s] Registering node: %s", config.Registry.String(), service.Nodes[0].Id)
 		}
 	}
 
@@ -220,7 +220,7 @@ func (n *noopServer) Register() error {
 		opts = append(opts, broker.SubscribeContext(cx), broker.SubscribeAutoAck(sb.Options().AutoAck))
 
 		if config.Logger.V(logger.InfoLevel) {
-			config.Logger.Infof("subscribing to topic: %s", sb.Topic())
+			config.Logger.Infof(n.opts.Context, "subscribing to topic: %s", sb.Topic())
 		}
 		sub, err := config.Broker.Subscribe(cx, sb.Topic(), handler, opts...)
 		if err != nil {
@@ -250,7 +250,7 @@ func (n *noopServer) Deregister() error {
 	}
 
 	if config.Logger.V(logger.InfoLevel) {
-		config.Logger.Infof("deregistering node: %s", service.Nodes[0].Id)
+		config.Logger.Infof(n.opts.Context, "deregistering node: %s", service.Nodes[0].Id)
 	}
 
 	if err := DefaultDeregisterFunc(service, config); err != nil {
@@ -280,11 +280,11 @@ func (n *noopServer) Deregister() error {
 			go func(s broker.Subscriber) {
 				defer wg.Done()
 				if config.Logger.V(logger.InfoLevel) {
-					config.Logger.Infof("unsubscribing from topic: %s", s.Topic())
+					config.Logger.Infof(n.opts.Context, "unsubscribing from topic: %s", s.Topic())
 				}
 				if err := s.Unsubscribe(cx); err != nil {
 					if config.Logger.V(logger.ErrorLevel) {
-						config.Logger.Errorf("unsubscribing from topic: %s err: %v", s.Topic(), err)
+						config.Logger.Errorf(n.opts.Context, "unsubscribing from topic: %s err: %v", s.Topic(), err)
 					}
 				}
 			}(sub)
@@ -307,7 +307,7 @@ func (n *noopServer) Start() error {
 	n.RUnlock()
 
 	if config.Logger.V(logger.InfoLevel) {
-		config.Logger.Infof("server [noop] Listening on %s", config.Address)
+		config.Logger.Infof(n.opts.Context, "server [noop] Listening on %s", config.Address)
 	}
 	n.Lock()
 	if len(config.Advertise) == 0 {
@@ -320,26 +320,26 @@ func (n *noopServer) Start() error {
 		// connect to the broker
 		if err := config.Broker.Connect(config.Context); err != nil {
 			if config.Logger.V(logger.ErrorLevel) {
-				config.Logger.Errorf("broker [%s] connect error: %v", config.Broker.String(), err)
+				config.Logger.Errorf(n.opts.Context, "broker [%s] connect error: %v", config.Broker.String(), err)
 			}
 			return err
 		}
 
 		if config.Logger.V(logger.InfoLevel) {
-			config.Logger.Infof("broker [%s] Connected to %s", config.Broker.String(), config.Broker.Address())
+			config.Logger.Infof(n.opts.Context, "broker [%s] Connected to %s", config.Broker.String(), config.Broker.Address())
 		}
 	}
 
 	// use RegisterCheck func before register
 	if err := config.RegisterCheck(config.Context); err != nil {
 		if config.Logger.V(logger.ErrorLevel) {
-			config.Logger.Errorf("server %s-%s register check error: %s", config.Name, config.Id, err)
+			config.Logger.Errorf(n.opts.Context, "server %s-%s register check error: %s", config.Name, config.Id, err)
 		}
 	} else {
 		// announce self to the world
 		if err := n.Register(); err != nil {
 			if config.Logger.V(logger.ErrorLevel) {
-				config.Logger.Errorf("server register error: %v", err)
+				config.Logger.Errorf(n.opts.Context, "server register error: %v", err)
 			}
 		}
 	}
@@ -367,23 +367,23 @@ func (n *noopServer) Start() error {
 				rerr := config.RegisterCheck(config.Context)
 				if rerr != nil && registered {
 					if config.Logger.V(logger.ErrorLevel) {
-						config.Logger.Errorf("server %s-%s register check error: %s, deregister it", config.Name, config.Id, rerr)
+						config.Logger.Errorf(n.opts.Context, "server %s-%s register check error: %s, deregister it", config.Name, config.Id, rerr)
 					}
 					// deregister self in case of error
 					if err := n.Deregister(); err != nil {
 						if config.Logger.V(logger.ErrorLevel) {
-							config.Logger.Errorf("server %s-%s deregister error: %s", config.Name, config.Id, err)
+							config.Logger.Errorf(n.opts.Context, "server %s-%s deregister error: %s", config.Name, config.Id, err)
 						}
 					}
 				} else if rerr != nil && !registered {
 					if config.Logger.V(logger.ErrorLevel) {
-						config.Logger.Errorf("server %s-%s register check error: %s", config.Name, config.Id, rerr)
+						config.Logger.Errorf(n.opts.Context, "server %s-%s register check error: %s", config.Name, config.Id, rerr)
 					}
 					continue
 				}
 				if err := n.Register(); err != nil {
 					if config.Logger.V(logger.ErrorLevel) {
-						config.Logger.Errorf("server %s-%s register error: %s", config.Name, config.Id, err)
+						config.Logger.Errorf(n.opts.Context, "server %s-%s register error: %s", config.Name, config.Id, err)
 					}
 				}
 			// wait for exit
@@ -395,7 +395,7 @@ func (n *noopServer) Start() error {
 		// deregister self
 		if err := n.Deregister(); err != nil {
 			if config.Logger.V(logger.ErrorLevel) {
-				config.Logger.Errorf("server deregister error: ", err)
+				config.Logger.Errorf(n.opts.Context, "server deregister error: ", err)
 			}
 		}
 
@@ -408,12 +408,12 @@ func (n *noopServer) Start() error {
 		ch <- nil
 
 		if config.Logger.V(logger.InfoLevel) {
-			config.Logger.Infof("broker [%s] Disconnected from %s", config.Broker.String(), config.Broker.Address())
+			config.Logger.Infof(n.opts.Context, "broker [%s] Disconnected from %s", config.Broker.String(), config.Broker.Address())
 		}
 		// disconnect broker
 		if err := config.Broker.Disconnect(config.Context); err != nil {
 			if config.Logger.V(logger.ErrorLevel) {
-				config.Logger.Errorf("broker [%s] disconnect error: %v", config.Broker.String(), err)
+				config.Logger.Errorf(n.opts.Context, "broker [%s] disconnect error: %v", config.Broker.String(), err)
 			}
 		}
 	}()

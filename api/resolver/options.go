@@ -1,6 +1,8 @@
 package resolver
 
 import (
+	"context"
+
 	"github.com/unistack-org/micro/v3/registry"
 )
 
@@ -8,6 +10,7 @@ import (
 type Options struct {
 	Handler       string
 	ServicePrefix string
+	Context       context.Context
 }
 
 // Option func
@@ -29,7 +32,9 @@ func WithServicePrefix(p string) Option {
 
 // NewOptions returns new initialised options
 func NewOptions(opts ...Option) Options {
-	options := Options{}
+	options := Options{
+		Context: context.Background(),
+	}
 	for _, o := range opts {
 		o(&options)
 	}

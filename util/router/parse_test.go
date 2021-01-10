@@ -3,6 +3,7 @@ package router
 // download from https://raw.githubusercontent.com/grpc-ecosystem/grpc-gateway/master/protoc-gen-grpc-gateway/httprule/parse_test.go
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"reflect"
@@ -316,6 +317,6 @@ func TestParseSegmentsWithErrors(t *testing.T) {
 			t.Errorf("parser{%q}.segments() succeeded; want InvalidTemplateError; accepted %#v", spec.tokens, segs)
 			continue
 		}
-		logger.Info(err.Error())
+		logger.Info(context.TODO(), err.Error())
 	}
 }

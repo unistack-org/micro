@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,7 +27,7 @@ func Verify(a auth.Auth) error {
 			return err
 		}
 		if logger.V(logger.DebugLevel) {
-			logger.Debug("Auth [%v] Generated an auth account: %s", a.String())
+			logger.Debug(context.TODO(), "Auth [%v] Generated an auth account: %s", a.String())
 		}
 
 		accID = acc.ID
@@ -68,7 +69,7 @@ func Verify(a auth.Auth) error {
 			)
 			if err != nil {
 				if logger.V(logger.WarnLevel) {
-					logger.Warn("[Auth] Error refreshing token: %v", err)
+					logger.Warn(context.TODO(), "[Auth] Error refreshing token: %v", err)
 				}
 				continue
 			}

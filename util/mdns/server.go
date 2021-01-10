@@ -1,6 +1,7 @@
 package mdns
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"net"
@@ -61,6 +62,8 @@ type Config struct {
 	// LocalhostChecking if enabled asks the server to also send responses to 0.0.0.0 if the target IP
 	// is this host (as defined by GetMachineIP). Useful in case machine is on a VPN which blocks comms on non standard ports
 	LocalhostChecking bool
+
+	Context context.Context
 }
 
 // Server is an mDNS server used to listen for mDNS queries and respond if we
@@ -143,6 +146,10 @@ func NewServer(config *Config) (*Server, error) {
 		outboundIP: ipFunc(),
 	}
 
+	if s.config.Context == nil {
+		s.config.Context = context.Background()
+	}
+
 	go s.recv(s.ipv4List)
 	go s.recv(s.ipv6List)
 
@@ -196,7 +203,7 @@ func (s *Server) recv(c *net.UDPConn) {
 			continue
 		}
 		if err := s.parsePacket(buf[:n], from); err != nil {
-			logger.Error("[ERR] mdns: Failed to handle query: %v", err)
+			logger.Errorf(s.config.Context, "[ERR] mdns: Failed to handle query: %v", err)
 		}
 	}
 }
@@ -205,7 +212,7 @@ func (s *Server) recv(c *net.UDPConn) {
 func (s *Server) parsePacket(packet []byte, from net.Addr) error {
 	var msg dns.Msg
 	if err := msg.Unpack(packet); err != nil {
-		logger.Error("[ERR] mdns: Failed to unpack packet: %v", err)
+		logger.Errorf(s.config.Context, "[ERR] mdns: Failed to unpack packet: %v", err)
 		return err
 	}
 	// TODO: This is a bit of a hack
@@ -384,7 +391,7 @@ func (s *Server) probe() {
 
 	for i := 0; i < 3; i++ {
 		if err := s.SendMulticast(q); err != nil {
-			logger.Error("[ERR] mdns: failed to send probe: %v", err)
+			logger.Errorf(s.config.Context, "[ERR] mdns: failed to send probe: %v", err)
 		}
 		time.Sleep(time.Duration(randomizer.Intn(250)) * time.Millisecond)
 	}
@@ -410,7 +417,7 @@ func (s *Server) probe() {
 	timer := time.NewTimer(timeout)
 	for i := 0; i < 3; i++ {
 		if err := s.SendMulticast(resp); err != nil {
-			logger.Error("[ERR] mdns: failed to send announcement:", err.Error())
+			logger.Errorf(s.config.Context, "[ERR] mdns: failed to send announcement: %v", err)
 		}
 		select {
 		case <-timer.C:
