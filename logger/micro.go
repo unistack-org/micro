@@ -41,19 +41,6 @@ func (l *defaultLogger) String() string {
 	return "micro"
 }
 
-func (l *defaultLogger) SetLevel(level Level) {
-	l.Lock()
-	l.opts.Level = level
-	l.Unlock()
-}
-
-func (l *defaultLogger) GetLevel() Level {
-	l.RLock()
-	lvl := l.opts.Level
-	l.RUnlock()
-	return lvl
-}
-
 func (l *defaultLogger) V(level Level) bool {
 	l.RLock()
 	ok := l.opts.Level.Enabled(level)

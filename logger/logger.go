@@ -18,8 +18,6 @@ type Logger interface {
 	V(level Level) bool
 	// The Logger options
 	Options() Options
-	// SetLevel modify current log level
-	SetLevel(level Level)
 	// Fields set fields to always be logged
 	Fields(fields map[string]interface{}) Logger
 	// Info level message
