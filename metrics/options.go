@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"context"
+
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/metadata"
 )
@@ -24,6 +26,7 @@ type Options struct {
 	DefaultTags      metadata.Metadata
 	TimingObjectives map[float64]float64
 	Logger           logger.Logger
+	Context          context.Context
 }
 
 // NewOptions prepares a set of options:
@@ -33,6 +36,7 @@ func NewOptions(opt ...Option) Options {
 		DefaultTags:      metadata.New(2),
 		Path:             defaultPath,
 		TimingObjectives: defaultTimingObjectives,
+		Context:          context.Background(),
 	}
 
 	for _, o := range opt {
@@ -40,6 +44,13 @@ func NewOptions(opt ...Option) Options {
 	}
 
 	return opts
+}
+
+// Cntext sets the metrics context
+func Context(ctx context.Context) Option {
+	return func(o *Options) {
+		o.Context = ctx
+	}
 }
 
 // Path used to serve metrics over HTTP:
