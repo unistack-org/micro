@@ -42,3 +42,13 @@ func SetCallOption(k, v interface{}) CallOption {
 		o.Context = context.WithValue(o.Context, k, v)
 	}
 }
+
+// SetOption returns a function to setup a context with given value
+func SetOption(k, v interface{}) Option {
+	return func(o *Options) {
+		if o.Context == nil {
+			o.Context = context.Background()
+		}
+		o.Context = context.WithValue(o.Context, k, v)
+	}
+}
