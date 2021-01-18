@@ -5,6 +5,7 @@ import (
 
 	"github.com/unistack-org/micro/v3/api/resolver"
 	"github.com/unistack-org/micro/v3/api/resolver/vpath"
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/registry"
 )
 
@@ -12,6 +13,7 @@ type Options struct {
 	Handler  string
 	Registry registry.Registry
 	Resolver resolver.Resolver
+	Logger   logger.Logger
 	Context  context.Context
 }
 
