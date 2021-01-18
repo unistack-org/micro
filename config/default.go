@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	rutil "github.com/unistack-org/micro/v3/util/reflect"
 )
 
 type defaultConfig struct {
@@ -45,7 +47,7 @@ func (c *defaultConfig) Load(ctx context.Context) error {
 }
 
 func (c *defaultConfig) fillValue(ctx context.Context, value reflect.Value, val string) error {
-	if !IsEmpty(value) {
+	if !rutil.IsEmpty(value) {
 		return nil
 	}
 	switch value.Kind() {

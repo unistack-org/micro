@@ -3,7 +3,7 @@ package config_test
 import (
 	"testing"
 
-	"github.com/unistack-org/micro/v3/config"
+	rutil "github.com/unistack-org/micro/v3/util/reflect"
 )
 
 type Config struct {
@@ -18,7 +18,7 @@ type SubConfig struct {
 
 func TestReflect(t *testing.T) {
 	cfg1 := &Config{Value: "cfg1", Config: &Config{Value: "cfg1_1"}, SubConfig: &SubConfig{Value: "cfg1"}}
-	cfg2, err := config.Zero(cfg1)
+	cfg2, err := rutil.Zero(cfg1)
 	if err != nil {
 		t.Fatal(err)
 	}

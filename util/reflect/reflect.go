@@ -1,7 +1,12 @@
-package config
+package reflect
 
 import (
+	"errors"
 	"reflect"
+)
+
+var (
+	ErrInvalidStruct = errors.New("invalid struct specified")
 )
 
 func IsEmpty(v reflect.Value) bool {
