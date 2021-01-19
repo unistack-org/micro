@@ -49,3 +49,35 @@ func Zero(src interface{}) (interface{}, error) {
 
 	return dst.Interface(), nil
 }
+
+func StructFields(src interface{}) ([]reflect.StructField, error) {
+	var fields []reflect.StructField
+
+	sv := reflect.ValueOf(src)
+	if sv.Kind() == reflect.Ptr {
+		sv = sv.Elem()
+	}
+	if sv.Kind() != reflect.Struct {
+		return nil, ErrInvalidStruct
+	}
+
+	typ := sv.Type()
+	for idx := 0; idx < typ.NumField(); idx++ {
+		fld := typ.Field(idx)
+		val := sv.Field(idx)
+		if !val.CanSet() || len(fld.PkgPath) != 0 {
+			continue
+		}
+		if val.Kind() == reflect.Struct {
+			infields, err := StructFields(val.Interface())
+			if err != nil {
+				return nil, err
+			}
+			fields = append(fields, infields...)
+		} else {
+			fields = append(fields, fld)
+		}
+	}
+
+	return fields, nil
+}
