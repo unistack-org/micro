@@ -5,17 +5,17 @@ import (
 	"time"
 
 	"github.com/unistack-org/micro/v3/metadata"
-	"github.com/unistack-org/micro/v3/metrics"
+	"github.com/unistack-org/micro/v3/meter"
 	"github.com/unistack-org/micro/v3/server"
 )
 
-// Wrapper provides a HandlerFunc for metrics.Reporter implementations:
+// Wrapper provides a HandlerFunc for meter.Reporter implementations:
 type Wrapper struct {
-	reporter metrics.Reporter
+	reporter meter.Reporter
 }
 
-// New returns a *Wrapper configured with the given metrics.Reporter:
-func New(reporter metrics.Reporter) *Wrapper {
+// New returns a *Wrapper configured with the given meter.Reporter:
+func New(reporter meter.Reporter) *Wrapper {
 	return &Wrapper{
 		reporter: reporter,
 	}
