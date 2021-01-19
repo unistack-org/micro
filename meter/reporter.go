@@ -1,5 +1,5 @@
-// Package metrics is for instrumentation and debugging
-package metrics
+// Package meter is for instrumentation
+package meter
 
 import (
 	"time"
