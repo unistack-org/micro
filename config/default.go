@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/imdario/mergo"
 	rutil "github.com/unistack-org/micro/v3/util/reflect"
 )
 
@@ -31,9 +32,15 @@ func (c *defaultConfig) Load(ctx context.Context) error {
 		}
 	}
 
-	valueOf := reflect.ValueOf(c.opts.Struct)
+	src, err := rutil.Zero(c.opts.Struct)
+	if err == nil {
+		valueOf := reflect.ValueOf(src)
+		if err = c.fillValues(ctx, valueOf); err == nil {
+			err = mergo.Merge(c.opts.Struct, src, mergo.WithOverride, mergo.WithTypeCheck, mergo.WithAppendSlice)
+		}
+	}
 
-	if err := c.fillValues(ctx, valueOf); err != nil && !c.opts.AllowFail {
+	if err != nil && !c.opts.AllowFail {
 		return err
 	}
 
