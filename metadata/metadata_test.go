@@ -2,9 +2,25 @@ package metadata
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 )
+
+func TestIterator(t *testing.T) {
+	md := Metadata{
+		"1Last":   "last",
+		"2First":  "first",
+		"3Second": "second",
+	}
+
+	iter := md.Iterator()
+	var k, v string
+
+	for iter.Next(&k, &v) {
+		fmt.Printf("k: %s, v: %s\n", k, v)
+	}
+}
 
 func TestMedataCanonicalKey(t *testing.T) {
 	ctx := Set(context.TODO(), "x-request-id", "12345")

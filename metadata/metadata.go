@@ -4,6 +4,7 @@ package metadata
 import (
 	"context"
 	"net/textproto"
+	"sort"
 )
 
 type metadataKey struct{}
@@ -17,6 +18,35 @@ var (
 	// DefaultMetadataSize used when need to init new Metadata
 	DefaultMetadataSize = 6
 )
+
+type Iterator struct {
+	cur  int
+	cnt  int
+	keys []string
+	md   Metadata
+}
+
+func (iter *Iterator) Next(k, v *string) bool {
+	if iter.cur+1 > iter.cnt {
+		return false
+	}
+
+	*k = iter.keys[iter.cur]
+	*v = iter.md[*k]
+	iter.cur++
+	return true
+}
+
+// Iterate returns run user func with map key, val sorted by key
+func (md Metadata) Iterator() *Iterator {
+	iter := &Iterator{md: md, cnt: len(md)}
+	iter.keys = make([]string, 0, iter.cnt)
+	for k := range md {
+		iter.keys = append(iter.keys, k)
+	}
+	sort.Strings(iter.keys)
+	return iter
+}
 
 // Get returns value from metadata by key
 func (md Metadata) Get(key string) (string, bool) {
@@ -83,53 +113,10 @@ func Get(ctx context.Context, key string) (string, bool) {
 	return md.Get(key)
 }
 
-// FromContext returns metadata from the given context
-func FromContext(ctx context.Context) (Metadata, bool) {
-	if ctx == nil {
-		return nil, false
-	}
-	md, ok := ctx.Value(metadataKey{}).(Metadata)
-	if !ok {
-		return nil, ok
-	}
-	nmd := Copy(md)
-	return nmd, ok
-}
-
 // New return new sized metadata
 func New(size int) Metadata {
 	if size == 0 {
 		size = DefaultMetadataSize
 	}
 	return make(Metadata, size)
-}
-
-// NewContext creates a new context with the given metadata
-func NewContext(ctx context.Context, md Metadata) context.Context {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	return context.WithValue(ctx, metadataKey{}, Copy(md))
-}
-
-// MergeContext merges metadata to existing metadata, overwriting if specified
-func MergeContext(ctx context.Context, pmd Metadata, overwrite bool) context.Context {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	md, ok := FromContext(ctx)
-	if !ok {
-		return context.WithValue(ctx, metadataKey{}, Copy(pmd))
-	}
-	nmd := Copy(md)
-	for key, val := range pmd {
-		if _, ok := nmd[key]; ok && !overwrite {
-			// skip
-		} else if val != "" {
-			nmd.Set(key, val)
-		} else {
-			nmd.Del(key)
-		}
-	}
-	return context.WithValue(ctx, metadataKey{}, nmd)
 }
