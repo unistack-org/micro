@@ -5,7 +5,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/meter"
 	"github.com/unistack-org/micro/v3/network/transport"
+	"github.com/unistack-org/micro/v3/tracer"
 )
 
 var (
@@ -32,6 +34,10 @@ type Options struct {
 	Transport transport.Transport
 	// Logger
 	Logger logger.Logger
+	// Meter
+	Meter meter.Meter
+	// Tracer
+	Tracer tracer.Tracer
 }
 
 // DialOption func
@@ -71,6 +77,13 @@ func Id(id string) Option {
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
+	}
+}
+
+// Meter sets the meter
+func Meter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
 	}
 }
 
@@ -152,9 +165,19 @@ func NewOptions(opts ...Option) Options {
 		Id:      uuid.New().String(),
 		Address: DefaultAddress,
 		Token:   DefaultToken,
+		Logger:  logger.DefaultLogger,
+		Meter:   meter.DefaultMeter,
+		Tracer:  tracer.DefaultTracer,
 	}
 	for _, o := range opts {
 		o(&options)
 	}
 	return options
+}
+
+// Tracer to be used for tracing
+func Tracer(t tracer.Tracer) Option {
+	return func(o *Options) {
+		o.Tracer = t
+	}
 }

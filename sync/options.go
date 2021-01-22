@@ -4,15 +4,33 @@ import (
 	"time"
 
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/meter"
+	"github.com/unistack-org/micro/v3/tracer"
 )
 
 type Options struct {
 	Nodes  []string
 	Prefix string
 	Logger logger.Logger
+	Tracer tracer.Tracer
+	Meter  meter.Meter
 }
 
 type Option func(o *Options)
+
+func NewOptions(opts ...Option) Options {
+	options := Options{
+		Logger: logger.DefaultLogger,
+		Meter:  meter.DefaultMeter,
+		Tracer: tracer.DefaultTracer,
+	}
+
+	for _, o := range opts {
+		o(&options)
+	}
+
+	return options
+}
 
 type LeaderOptions struct{}
 
@@ -29,6 +47,20 @@ type LockOption func(o *LockOptions)
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
+	}
+}
+
+// Meter sets the logger
+func Meter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
+	}
+}
+
+// Tracer sets the tracer
+func Tracer(t tracer.Tracer) Option {
+	return func(o *Options) {
+		o.Tracer = t
 	}
 }
 

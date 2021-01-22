@@ -6,13 +6,17 @@ import (
 
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/metadata"
+	"github.com/unistack-org/micro/v3/meter"
 	"github.com/unistack-org/micro/v3/store"
+	"github.com/unistack-org/micro/v3/tracer"
 )
 
 // NewOptions creates Options struct from slice of options
 func NewOptions(opts ...Option) Options {
 	options := Options{
+		Tracer: tracer.DefaultTracer,
 		Logger: logger.DefaultLogger,
+		Meter:  meter.DefaultMeter,
 	}
 	for _, o := range opts {
 		o(&options)
@@ -41,6 +45,10 @@ type Options struct {
 	Addrs []string
 	// Logger sets the logger
 	Logger logger.Logger
+	// Meter sets tht meter
+	Meter meter.Meter
+	// Tracer
+	Tracer tracer.Tracer
 	// Context to store other options
 	Context context.Context
 }
@@ -286,5 +294,19 @@ func RulesNamespace(ns string) RulesOption {
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
+	}
+}
+
+// Meter sets the meter
+func Meter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
+	}
+}
+
+// Tracer sets the meter
+func Tracer(t tracer.Tracer) Option {
+	return func(o *Options) {
+		o.Tracer = t
 	}
 }

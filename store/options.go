@@ -7,6 +7,8 @@ import (
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/metadata"
+	"github.com/unistack-org/micro/v3/meter"
+	"github.com/unistack-org/micro/v3/tracer"
 )
 
 // Options contains configuration for the Store
@@ -23,6 +25,10 @@ type Options struct {
 	Codec codec.Codec
 	// Logger the logger
 	Logger logger.Logger
+	// Meter the meter
+	Meter meter.Meter
+	// Tracer the tacer
+	Tracer tracer.Tracer
 	// Context should contain all implementation specific options, using context.WithValue.
 	Context context.Context
 }
@@ -33,6 +39,8 @@ func NewOptions(opts ...Option) Options {
 		Logger:  logger.DefaultLogger,
 		Context: context.Background(),
 		Codec:   codec.DefaultCodec,
+		Tracer:  tracer.DefaultTracer,
+		Meter:   meter.DefaultMeter,
 	}
 	for _, o := range opts {
 		o(&options)
@@ -61,6 +69,20 @@ func Codec(c codec.Codec) Option {
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
+	}
+}
+
+// Meter sets the meter
+func Meter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
+	}
+}
+
+// Tracer sets the tracer
+func Tracer(t tracer.Tracer) Option {
+	return func(o *Options) {
+		o.Tracer = t
 	}
 }
 

@@ -6,16 +6,21 @@ import (
 	"time"
 
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/meter"
+	"github.com/unistack-org/micro/v3/tracer"
 )
 
 type Options struct {
 	Addrs     []string
 	Timeout   time.Duration
-	Secure    bool
 	TLSConfig *tls.Config
 
-	// Logger imp
+	// Logger that will be used
 	Logger logger.Logger
+	// Meter that will be used
+	Meter meter.Meter
+	// Tracer
+	Tracer tracer.Tracer
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
@@ -24,6 +29,8 @@ type Options struct {
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Logger:  logger.DefaultLogger,
+		Meter:   meter.DefaultMeter,
+		Tracer:  tracer.DefaultTracer,
 		Context: context.Background(),
 	}
 	for _, o := range opts {
@@ -142,17 +149,24 @@ func Timeout(t time.Duration) Option {
 	}
 }
 
-// Secure communication with the registry
-func Secure(b bool) Option {
-	return func(o *Options) {
-		o.Secure = b
-	}
-}
-
 // Logger sets the logger
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
+	}
+}
+
+// Meter sets the meter
+func Meter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
+	}
+}
+
+// Tracer sets the tracer
+func Tracer(t tracer.Tracer) Option {
+	return func(o *Options) {
+		o.Tracer = t
 	}
 }
 

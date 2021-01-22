@@ -7,6 +7,8 @@ import (
 
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/meter"
+	"github.com/unistack-org/micro/v3/tracer"
 )
 
 type Options struct {
@@ -26,6 +28,10 @@ type Options struct {
 	Timeout time.Duration
 	// Logger sets the logger
 	Logger logger.Logger
+	// Meter sets the meter
+	Meter meter.Meter
+	// Tracer
+	Tracer tracer.Tracer
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
@@ -35,6 +41,8 @@ type Options struct {
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Logger:  logger.DefaultLogger,
+		Meter:   meter.DefaultMeter,
+		Tracer:  tracer.DefaultTracer,
 		Context: context.Background(),
 	}
 
@@ -112,6 +120,13 @@ func Logger(l logger.Logger) Option {
 	}
 }
 
+// Meter sets the meter
+func Meter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
+	}
+}
+
 // Context sets the context
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
@@ -134,14 +149,6 @@ func Timeout(t time.Duration) Option {
 	}
 }
 
-// Use secure communication. If TLSConfig is not specified we
-// use InsecureSkipVerify and generate a self signed cert
-func Secure(b bool) Option {
-	return func(o *Options) {
-		o.Secure = b
-	}
-}
-
 // TLSConfig to be used for the transport.
 func TLSConfig(t *tls.Config) Option {
 	return func(o *Options) {
@@ -160,5 +167,12 @@ func WithStream() DialOption {
 func WithTimeout(d time.Duration) DialOption {
 	return func(o *DialOptions) {
 		o.Timeout = d
+	}
+}
+
+// Tracer to be used for tracing
+func Tracer(t tracer.Tracer) Option {
+	return func(o *Options) {
+		o.Tracer = t
 	}
 }

@@ -5,6 +5,8 @@ import (
 
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/meter"
+	"github.com/unistack-org/micro/v3/tracer"
 )
 
 type Options struct {
@@ -15,13 +17,17 @@ type Options struct {
 	AfterSave  []func(context.Context, Config) error
 	// Struct that holds config data
 	Struct interface{}
-	// struct tag name
+	// StructTag name
 	StructTag string
-	// logger that will be used
+	// Logger that will be used
 	Logger logger.Logger
-	// codec that used for load/save
+	// Meter that will be used
+	Meter meter.Meter
+	// Tracer used for trace
+	Tracer tracer.Tracer
+	// Codec that used for load/save
 	Codec codec.Codec
-	// for alternative data
+	// Context for alternative data
 	Context context.Context
 }
 
@@ -30,6 +36,8 @@ type Option func(o *Options)
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Logger:  logger.DefaultLogger,
+		Meter:   meter.DefaultMeter,
+		Tracer:  tracer.DefaultTracer,
 		Context: context.Background(),
 	}
 	for _, o := range opts {
@@ -85,6 +93,13 @@ func Codec(c codec.Codec) Option {
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
+	}
+}
+
+// Tracer to be used for tracing
+func Tracer(t tracer.Tracer) Option {
+	return func(o *Options) {
+		o.Tracer = t
 	}
 }
 

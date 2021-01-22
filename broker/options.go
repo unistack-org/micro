@@ -6,27 +6,30 @@ import (
 
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/meter"
 	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/tracer"
 )
 
 // Options struct
 type Options struct {
-	Addrs  []string
-	Secure bool
-
-	// Codec
-	Codec codec.Codec
-
-	// Logger the logger
-	Logger logger.Logger
-	// Handler executed when errors occur processing messages
+	// Addrs useed by broker
+	Addrs []string
+	// ErrorHandler executed when errors occur processing messages
 	ErrorHandler Handler
-
+	// Codec used to marshal/unmarshal messages
+	Codec codec.Codec
+	// Logger the used logger
+	Logger logger.Logger
+	// Meter the used for metrics
+	Meter meter.Meter
+	// Tracer used for trace
+	Tracer tracer.Tracer
+	// TLSConfig for secure communication
 	TLSConfig *tls.Config
 	// Registry used for clustering
 	Registry registry.Registry
-	// Other options for implementations of the interface
-	// can be stored in a context
+	// Context is used for non default options
 	Context context.Context
 }
 
@@ -36,6 +39,9 @@ func NewOptions(opts ...Option) Options {
 		Registry: registry.DefaultRegistry,
 		Logger:   logger.DefaultLogger,
 		Context:  context.Background(),
+		Meter:    meter.DefaultMeter,
+		Codec:    codec.DefaultCodec,
+		Tracer:   tracer.DefaultTracer,
 	}
 	for _, o := range opts {
 		o(&options)
@@ -54,8 +60,7 @@ func Context(ctx context.Context) Option {
 type PublishOptions struct {
 	// BodyOnly says that only body of the message must be published
 	BodyOnly bool
-	// Other options for implementations of the interface
-	// can be stored in a context
+	// Context for non default options
 	Context context.Context
 }
 
@@ -77,10 +82,10 @@ type SubscribeOptions struct {
 	// AutoAck ack messages if handler returns nil err
 	AutoAck bool
 
-	// Handler executed when errors occur processing messages
+	// ErrorHandler executed when errors occur processing messages
 	ErrorHandler Handler
 
-	// Subscribers with the same group name
+	// Group for subscriber, Subscribers with the same group name
 	// will create a shared subscription where each
 	// receives a subset of messages.
 	Group string
@@ -88,8 +93,7 @@ type SubscribeOptions struct {
 	// BodyOnly says that consumed only body of the message
 	BodyOnly bool
 
-	// Other options for implementations of the interface
-	// can be stored in a context
+	// Context is used for non default options
 	Context context.Context
 }
 
@@ -205,13 +209,6 @@ func Registry(r registry.Registry) Option {
 	}
 }
 
-// Secure communication with the broker
-func Secure(b bool) Option {
-	return func(o *Options) {
-		o.Secure = b
-	}
-}
-
 // TLSConfig sets the TLS Config
 func TLSConfig(t *tls.Config) Option {
 	return func(o *Options) {
@@ -223,6 +220,20 @@ func TLSConfig(t *tls.Config) Option {
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
+	}
+}
+
+// Tracer to be used for tracing
+func Tracer(t tracer.Tracer) Option {
+	return func(o *Options) {
+		o.Tracer = t
+	}
+}
+
+// Meter sets the meter
+func Meter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
 	}
 }
 

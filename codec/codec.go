@@ -25,7 +25,7 @@ var (
 
 var (
 	// DefaultMaxMsgSize specifies how much data codec can handle
-	DefaultMaxMsgSize       = 1024 * 1024 * 4 // 4Mb
+	DefaultMaxMsgSize int   = 1024 * 1024 * 4 // 4Mb
 	DefaultCodec      Codec = NewCodec()
 )
 
@@ -60,21 +60,6 @@ type Message struct {
 	// The values read from the socket
 	Header metadata.Metadata
 	Body   []byte
-}
-
-// Option func
-type Option func(*Options)
-
-// Options contains codec options
-type Options struct {
-	MaxMsgSize int64
-}
-
-// MaxMsgSize sets the max message size
-func MaxMsgSize(n int64) Option {
-	return func(o *Options) {
-		o.MaxMsgSize = n
-	}
 }
 
 // NewMessage creates new codec message

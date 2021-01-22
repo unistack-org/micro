@@ -7,11 +7,13 @@ import (
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/meter"
 	"github.com/unistack-org/micro/v3/network/transport"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/router"
 	"github.com/unistack-org/micro/v3/selector"
 	"github.com/unistack-org/micro/v3/selector/random"
+	"github.com/unistack-org/micro/v3/tracer"
 )
 
 // Options holds client options
@@ -28,21 +30,21 @@ type Options struct {
 	Selector  selector.Selector
 	Transport transport.Transport
 	Logger    logger.Logger
+	Meter     meter.Meter
 	// Lookup used for looking up routes
 	Lookup LookupFunc
 
 	// Connection Pool
 	PoolSize int
 	PoolTTL  time.Duration
-
-	// Middleware for client
+	Tracer   tracer.Tracer
+	// Wrapper that used client
 	Wrappers []Wrapper
 
-	// Default Call Options
+	// CallOptions that used by default
 	CallOptions CallOptions
 
-	// Other options for implementations of the interface
-	// can be stored in a context
+	// Context is used for non default options
 	Context context.Context
 }
 
@@ -81,12 +83,9 @@ type CallOptions struct {
 	AuthToken bool
 	// Network to lookup the route within
 	Network string
-
 	// Middleware for low level call func
 	CallWrappers []CallWrapper
-
-	// Other options for implementations of the interface
-	// can be stored in a context
+	// Context is uded for non default options
 	Context context.Context
 }
 
@@ -142,7 +141,6 @@ func NewRequestOptions(opts ...RequestOption) RequestOptions {
 type RequestOptions struct {
 	ContentType string
 	Stream      bool
-
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
@@ -167,6 +165,8 @@ func NewOptions(opts ...Option) Options {
 		Selector: random.NewSelector(),
 		Logger:   logger.DefaultLogger,
 		Broker:   broker.DefaultBroker,
+		Meter:    meter.DefaultMeter,
+		Tracer:   tracer.DefaultTracer,
 	}
 
 	for _, o := range opts {
@@ -183,10 +183,24 @@ func Broker(b broker.Broker) Option {
 	}
 }
 
+// Tracer to be used for tracing
+func Tracer(t tracer.Tracer) Option {
+	return func(o *Options) {
+		o.Tracer = t
+	}
+}
+
 // Logger to be used for log mesages
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
+	}
+}
+
+// Meter to be used for metrics
+func Meter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
 	}
 }
 

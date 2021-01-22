@@ -12,6 +12,7 @@ import (
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/metadata"
+	"github.com/unistack-org/micro/v3/meter"
 	"github.com/unistack-org/micro/v3/network/transport"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/tracer"
@@ -28,6 +29,7 @@ type Options struct {
 	Tracer       tracer.Tracer
 	Auth         auth.Auth
 	Logger       logger.Logger
+	Meter        meter.Meter
 	Transport    transport.Transport
 	Metadata     metadata.Metadata
 	Name         string
@@ -78,6 +80,7 @@ func NewOptions(opts ...Option) Options {
 		RegisterTTL:      DefaultRegisterTTL,
 		RegisterCheck:    DefaultRegisterCheck,
 		Logger:           logger.DefaultLogger,
+		Meter:            meter.DefaultMeter,
 		Tracer:           tracer.DefaultTracer,
 		Broker:           broker.DefaultBroker,
 		Registry:         registry.DefaultRegistry,
@@ -114,6 +117,13 @@ func Namespace(n string) Option {
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
+	}
+}
+
+// Meter sets the meter option
+func Meter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
 	}
 }
 
@@ -235,7 +245,6 @@ func TLSConfig(t *tls.Config) Option {
 
 		// set the transport tls
 		o.Transport.Init(
-			transport.Secure(true),
 			transport.TLSConfig(t),
 		)
 	}

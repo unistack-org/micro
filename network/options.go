@@ -3,9 +3,11 @@ package network
 import (
 	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/meter"
 	"github.com/unistack-org/micro/v3/network/tunnel"
 	"github.com/unistack-org/micro/v3/proxy"
 	"github.com/unistack-org/micro/v3/router"
+	"github.com/unistack-org/micro/v3/tracer"
 )
 
 // Option func
@@ -31,6 +33,10 @@ type Options struct {
 	Proxy proxy.Proxy
 	// Logger
 	Logger logger.Logger
+	// Meter
+	Meter meter.Meter
+	// Tracer
+	Tracer tracer.Tracer
 }
 
 // Id sets the id of the network node
@@ -96,11 +102,34 @@ func Logger(l logger.Logger) Option {
 	}
 }
 
-// DefaultOptions returns network default options
-func DefaultOptions() Options {
-	return Options{
+// Meter sets the meter
+func Meter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
+	}
+}
+
+// Tracer to be used for tracing
+func Tracer(t tracer.Tracer) Option {
+	return func(o *Options) {
+		o.Tracer = t
+	}
+}
+
+// NewOptions returns network default options
+func NewOptions(opts ...Option) Options {
+	options := Options{
 		Id:      uuid.New().String(),
 		Name:    "go.micro",
 		Address: ":0",
+		Logger:  logger.DefaultLogger,
+		Meter:   meter.DefaultMeter,
+		Tracer:  tracer.DefaultTracer,
 	}
+
+	for _, o := range opts {
+		o(&options)
+	}
+
+	return options
 }

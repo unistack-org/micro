@@ -11,6 +11,7 @@ import (
 	"github.com/unistack-org/micro/v3/debug/profile"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/metadata"
+	"github.com/unistack-org/micro/v3/meter"
 	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/router"
 	"github.com/unistack-org/micro/v3/runtime"
@@ -25,11 +26,13 @@ type Options struct {
 	Auth     auth.Auth
 	Broker   broker.Broker
 	Logger   logger.Logger
+	Meter    meter.Meter
 	Configs  []config.Config
 	Client   client.Client
 	Server   server.Server
 	Store    store.Store
 	Registry registry.Registry
+	Tracer   tracer.Tracer
 	Router   router.Router
 	Runtime  runtime.Runtime
 	Profile  profile.Profile
@@ -56,6 +59,8 @@ func NewOptions(opts ...Option) Options {
 		Router:   router.DefaultRouter,
 		Auth:     auth.DefaultAuth,
 		Logger:   logger.DefaultLogger,
+		Tracer:   tracer.DefaultTracer,
+		Meter:    meter.DefaultMeter,
 		Configs:  []config.Config{config.DefaultConfig},
 		Store:    store.DefaultStore,
 		//Runtime   runtime.Runtime
@@ -129,6 +134,13 @@ func Logger(l logger.Logger) Option {
 	}
 }
 
+// Meter set the meter to use
+func Meter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
+	}
+}
+
 // Registry sets the registry for the service
 // and the underlying components
 func Registry(r registry.Registry) Option {
@@ -152,9 +164,12 @@ func Registry(r registry.Registry) Option {
 // Tracer sets the tracer for the service
 func Tracer(t tracer.Tracer) Option {
 	return func(o *Options) {
+		o.Tracer = t
 		if o.Server != nil {
-			//todo client trace
 			o.Server.Init(server.Tracer(t))
+		}
+		if o.Client != nil {
+			o.Client.Init(client.Tracer(t))
 		}
 	}
 }
