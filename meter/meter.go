@@ -8,7 +8,18 @@ import (
 )
 
 var (
-	DefaultReporter Meter = NewMeter()
+	// DefaultMeter is the default meter
+	DefaultMeter Meter = NewMeter()
+	// DefaultAddress data will be made available on this host:port
+	DefaultAddress = ":9090"
+	// DefaultPath the meter endpoint where the Meter data will be made available
+	DefaultPath = "/metrics"
+	// timingObjectives is the default spread of stats we maintain for timings / histograms:
+	//defaultTimingObjectives = map[float64]float64{0.0: 0, 0.5: 0.05, 0.75: 0.04, 0.90: 0.03, 0.95: 0.02, 0.98: 0.001, 1: 0}
+	// default metric prefix
+	DefaultMetricPrefix = "micro_"
+	// default label prefix
+	DefaultLabelPrefix = "micro_"
 )
 
 // Meter is an interface for collecting and instrumenting metrics

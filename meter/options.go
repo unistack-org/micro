@@ -7,15 +7,6 @@ import (
 	"github.com/unistack-org/micro/v3/metadata"
 )
 
-var (
-	// The Meter data will be made available on this port
-	DefaultAddress = ":9090"
-	// This is the endpoint where the Meter data will be made available ("/metrics" is the default)
-	DefaultPath = "/metrics"
-	// timingObjectives is the default spread of stats we maintain for timings / histograms:
-	//defaultTimingObjectives = map[float64]float64{0.0: 0, 0.5: 0.05, 0.75: 0.04, 0.90: 0.03, 0.95: 0.02, 0.98: 0.001, 1: 0}
-)
-
 // Option powers the configuration for metrics implementations:
 type Option func(*Options)
 
@@ -25,19 +16,22 @@ type Options struct {
 	Path     string
 	Metadata metadata.Metadata
 	//TimingObjectives map[float64]float64
-	Logger  logger.Logger
-	Context context.Context
+	Logger       logger.Logger
+	Context      context.Context
+	MetricPrefix string
+	LabelPrefix  string
 }
 
 // NewOptions prepares a set of options:
 func NewOptions(opt ...Option) Options {
 	opts := Options{
-		Address:  DefaultAddress,
-		Metadata: metadata.New(3), // 3 elements contains service name, version and id
-		Path:     DefaultPath,
-		//	TimingObjectives: defaultTimingObjectives,
-		Context: context.Background(),
-		Logger:  logger.DefaultLogger,
+		Address:      DefaultAddress,
+		Metadata:     metadata.New(3), // 3 elements contains service name, version and id
+		Path:         DefaultPath,
+		Context:      context.Background(),
+		Logger:       logger.DefaultLogger,
+		MetricPrefix: DefaultMetricPrefix,
+		LabelPrefix:  DefaultLabelPrefix,
 	}
 
 	for _, o := range opt {
@@ -47,7 +41,7 @@ func NewOptions(opt ...Option) Options {
 	return opts
 }
 
-// Cntext sets the metrics context
+// Context sets the metrics context
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
 		o.Context = ctx
