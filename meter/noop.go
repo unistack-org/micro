@@ -9,7 +9,7 @@ import (
 // NoopMeter is an noop implementation of Meter
 type noopMeter struct {
 	opts Options
-	md   metadata.Metadata
+	md   map[string]string
 }
 
 // NewMeter returns a configured noop reporter:
@@ -28,37 +28,37 @@ func (r *noopMeter) Init(opts ...Option) error {
 }
 
 // Counter implements the Meter interface
-func (r *noopMeter) Counter(name string, md metadata.Metadata) Counter {
+func (r *noopMeter) Counter(name string, md map[string]string) Counter {
 	return &noopCounter{}
 }
 
 // FloatCounter implements the Meter interface
-func (r *noopMeter) FloatCounter(name string, md metadata.Metadata) FloatCounter {
+func (r *noopMeter) FloatCounter(name string, md map[string]string) FloatCounter {
 	return &noopFloatCounter{}
 }
 
 // Gauge implements the Meter interface
-func (r *noopMeter) Gauge(name string, f func() float64, md metadata.Metadata) Gauge {
+func (r *noopMeter) Gauge(name string, f func() float64, md map[string]string) Gauge {
 	return &noopGauge{}
 }
 
 // Summary implements the Meter interface
-func (r *noopMeter) Summary(name string, md metadata.Metadata) Summary {
+func (r *noopMeter) Summary(name string, md map[string]string) Summary {
 	return &noopSummary{}
 }
 
 // SummaryExt implements the Meter interface
-func (r *noopMeter) SummaryExt(name string, window time.Duration, quantiles []float64, md metadata.Metadata) Summary {
+func (r *noopMeter) SummaryExt(name string, window time.Duration, quantiles []float64, md map[string]string) Summary {
 	return &noopSummary{}
 }
 
 // Histogram implements the Meter interface
-func (r *noopMeter) Histogram(name string, md metadata.Metadata) Histogram {
+func (r *noopMeter) Histogram(name string, md map[string]string) Histogram {
 	return &noopHistogram{}
 }
 
 // Set implements the Meter interface
-func (r *noopMeter) Set(md metadata.Metadata) Meter {
+func (r *noopMeter) Set(md map[string]string) Meter {
 	return &noopMeter{opts: r.opts, md: metadata.Copy(md)}
 }
 

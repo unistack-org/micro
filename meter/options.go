@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/metadata"
 )
 
 // Option powers the configuration for metrics implementations:
@@ -14,7 +13,7 @@ type Option func(*Options)
 type Options struct {
 	Address  string
 	Path     string
-	Metadata metadata.Metadata
+	Metadata map[string]string
 	//TimingObjectives map[float64]float64
 	Logger       logger.Logger
 	Context      context.Context
@@ -26,7 +25,7 @@ type Options struct {
 func NewOptions(opt ...Option) Options {
 	opts := Options{
 		Address:      DefaultAddress,
-		Metadata:     metadata.New(3), // 3 elements contains service name, version and id
+		Metadata:     make(map[string]string, 3), // 3 elements contains service name, version and id
 		Path:         DefaultPath,
 		Context:      context.Background(),
 		Logger:       logger.DefaultLogger,
@@ -63,9 +62,11 @@ func Address(value string) Option {
 }
 
 // Metadata will be added to every metric
-func Metadata(md metadata.Metadata) Option {
+func Metadata(md map[string]string) Option {
 	return func(o *Options) {
-		o.Metadata = metadata.Copy(md)
+		for k, v := range md {
+			o.Metadata[k] = v
+		}
 	}
 }
 

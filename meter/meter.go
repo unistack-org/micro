@@ -3,8 +3,6 @@ package meter
 
 import (
 	"time"
-
-	"github.com/unistack-org/micro/v3/metadata"
 )
 
 var (
@@ -25,13 +23,13 @@ var (
 // Meter is an interface for collecting and instrumenting metrics
 type Meter interface {
 	Init(...Option) error
-	Counter(string, metadata.Metadata) Counter
-	FloatCounter(string, metadata.Metadata) FloatCounter
-	Gauge(string, func() float64, metadata.Metadata) Gauge
-	Set(metadata.Metadata) Meter
-	Histogram(string, metadata.Metadata) Histogram
-	Summary(string, metadata.Metadata) Summary
-	SummaryExt(string, time.Duration, []float64, metadata.Metadata) Summary
+	Counter(string, map[string]string) Counter
+	FloatCounter(string, map[string]string) FloatCounter
+	Gauge(string, func() float64, map[string]string) Gauge
+	Set(map[string]string) Meter
+	Histogram(string, map[string]string) Histogram
+	Summary(string, map[string]string) Summary
+	SummaryExt(string, time.Duration, []float64, map[string]string) Summary
 	Options() Options
 	String() string
 }
