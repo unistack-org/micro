@@ -35,15 +35,5 @@ func MergeContext(ctx context.Context, pmd Metadata, overwrite bool) context.Con
 	if !ok {
 		return context.WithValue(ctx, metadataKey{}, Copy(pmd))
 	}
-	nmd := Copy(md)
-	for key, val := range pmd {
-		if _, ok := nmd[key]; ok && !overwrite {
-			// skip
-		} else if val != "" {
-			nmd.Set(key, val)
-		} else {
-			nmd.Del(key)
-		}
-	}
-	return context.WithValue(ctx, metadataKey{}, nmd)
+	return context.WithValue(ctx, metadataKey{}, Merge(md, pmd, overwrite))
 }

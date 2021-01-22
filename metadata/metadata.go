@@ -120,3 +120,18 @@ func New(size int) Metadata {
 	}
 	return make(Metadata, size)
 }
+
+// Merge merges metadata to existing metadata, overwriting if specified
+func Merge(omd Metadata, mmd Metadata, overwrite bool) Metadata {
+	nmd := Copy(omd)
+	for key, val := range mmd {
+		if _, ok := nmd[key]; ok && !overwrite {
+			// skip
+		} else if val != "" {
+			nmd.Set(key, val)
+		} else {
+			nmd.Del(key)
+		}
+	}
+	return nmd
+}

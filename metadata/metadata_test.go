@@ -7,6 +7,20 @@ import (
 	"testing"
 )
 
+func TestMerge(t *testing.T) {
+	omd := Metadata{
+		"key1": "val1",
+	}
+	mmd := Metadata{
+		"key2": "val2",
+	}
+
+	nmd := Merge(omd, mmd, true)
+	if len(nmd) != 2 {
+		t.Fatalf("merge failed: %v", nmd)
+	}
+}
+
 func TestIterator(t *testing.T) {
 	md := Metadata{
 		"1Last":   "last",
