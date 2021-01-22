@@ -9,15 +9,15 @@ import (
 	"github.com/unistack-org/micro/v3/server"
 )
 
-// Wrapper provides a HandlerFunc for meter.Reporter implementations:
+// Wrapper provides a HandlerFunc for meter.Meter implementations
 type Wrapper struct {
-	reporter meter.Reporter
+	meter meter.Meter
 }
 
-// New returns a *Wrapper configured with the given meter.Reporter:
-func New(reporter meter.Reporter) *Wrapper {
+// New returns a *Wrapper configured with the given meter.Meter
+func New(meter meter.Meter) *Wrapper {
 	return &Wrapper{
-		reporter: reporter,
+		meter: meter,
 	}
 }
 
@@ -43,7 +43,7 @@ func (w *Wrapper) HandlerFunc(handlerFunction server.HandlerFunc) server.Handler
 		}
 
 		// Instrument the result (if the DefaultClient has been configured):
-		w.reporter.Timing("service.handler", time.Since(callTime), tags)
+		w.meter.Summary("service.handler", tags).Update(float64(time.Since(callTime).Seconds()))
 
 		return err
 	}
