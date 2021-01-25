@@ -96,7 +96,7 @@ func (c *syncStore) List(ctx context.Context, opts ...store.ListOption) ([]strin
 	return c.syncOpts.Stores[0].List(ctx, opts...)
 }
 
-func (c *syncStore) Exists(ctx context.Context, key string) error {
+func (c *syncStore) Exists(ctx context.Context, key string, opts ...store.ExistsOption) error {
 	return c.syncOpts.Stores[0].Exists(ctx, key)
 }
 

@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"crypto/tls"
 	"time"
 
 	"github.com/unistack-org/micro/v3/codec"
@@ -29,6 +30,9 @@ type Options struct {
 	Meter meter.Meter
 	// Tracer the tacer
 	Tracer tracer.Tracer
+	// TLSConfig specifies tls.Config for secure
+	TLSConfig *tls.Config
+
 	// Context should contain all implementation specific options, using context.WithValue.
 	Context context.Context
 }
@@ -50,6 +54,13 @@ func NewOptions(opts ...Option) Options {
 
 // Option sets values in Options
 type Option func(o *Options)
+
+// TLSConfig specifies a *tls.Config
+func TLSConfig(t *tls.Config) Option {
+	return func(o *Options) {
+		o.TLSConfig = t
+	}
+}
 
 // Context pass context to store
 func Context(ctx context.Context) Option {
@@ -120,8 +131,10 @@ func NewReadOptions(opts ...ReadOption) ReadOptions {
 
 // ReadOptions configures an individual Read operation
 type ReadOptions struct {
-	Database string
-	Table    string
+	Database  string
+	Table     string
+	Namespace string
+	Context   context.Context
 }
 
 // ReadOption sets values in ReadOptions
@@ -146,10 +159,12 @@ func NewWriteOptions(opts ...WriteOption) WriteOptions {
 
 // WriteOptions configures an individual Write operation
 type WriteOptions struct {
-	Database string
-	Table    string
-	TTL      time.Duration
-	Metadata metadata.Metadata
+	Database  string
+	Table     string
+	TTL       time.Duration
+	Metadata  metadata.Metadata
+	Namespace string
+	Context   context.Context
 }
 
 // WriteOption sets values in WriteOptions
@@ -188,7 +203,10 @@ func NewDeleteOptions(opts ...DeleteOption) DeleteOptions {
 
 // DeleteOptions configures an individual Delete operation
 type DeleteOptions struct {
-	Database, Table string
+	Database  string
+	Table     string
+	Namespace string
+	Context   context.Context
 }
 
 // DeleteOption sets values in DeleteOptions
@@ -222,7 +240,9 @@ type ListOptions struct {
 	// Limit limits the number of returned keys
 	Limit uint
 	// Offset when combined with Limit supports pagination
-	Offset uint
+	Offset    uint
+	Namespace string
+	Context   context.Context
 }
 
 // ListOption sets values in ListOptions
@@ -262,4 +282,21 @@ func ListOffset(o uint) ListOption {
 	return func(l *ListOptions) {
 		l.Offset = o
 	}
+}
+
+type ExistsOption func(*ExistsOptions)
+
+type ExistsOptions struct {
+	Namespace string
+	Context   context.Context
+}
+
+func NewExistsOptions(opts ...ExistsOption) ExistsOptions {
+	options := ExistsOptions{
+		Context: context.Background(),
+	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
 }

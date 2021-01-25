@@ -12,6 +12,8 @@ import (
 var (
 	// ErrNotFound is returned when a key doesn't exist
 	ErrNotFound = errors.New("not found")
+	// ErrInvalidKey is returned when a key has empty or have invalid format
+	ErrInvalidKey = errors.New("invalid key")
 	// DefaultStore is the global default store
 	DefaultStore Store = NewStore()
 )
@@ -25,7 +27,7 @@ type Store interface {
 	// Options allows you to view the current options.
 	Options() Options
 	// Exists check that key exists in store
-	Exists(ctx context.Context, key string) error
+	Exists(ctx context.Context, key string, opts ...ExistsOption) error
 	// Read reads a single key name to provided value with optional ReadOptions
 	Read(ctx context.Context, key string, val interface{}, opts ...ReadOption) error
 	// Write writes a value to key name to the store with optional WriteOption

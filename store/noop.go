@@ -29,7 +29,7 @@ func (n *noopStore) String() string {
 }
 
 // Read reads store value by key
-func (n *noopStore) Exists(ctx context.Context, key string) error {
+func (n *noopStore) Exists(ctx context.Context, key string, opts ...ExistsOption) error {
 	return ErrNotFound
 }
 
