@@ -2,6 +2,8 @@
 package meter
 
 import (
+	"io"
+	"sort"
 	"time"
 )
 
@@ -23,13 +25,14 @@ var (
 // Meter is an interface for collecting and instrumenting metrics
 type Meter interface {
 	Init(...Option) error
-	Counter(string, map[string]string) Counter
-	FloatCounter(string, map[string]string) FloatCounter
-	Gauge(string, func() float64, map[string]string) Gauge
-	Set(map[string]string) Meter
-	Histogram(string, map[string]string) Histogram
-	Summary(string, map[string]string) Summary
-	SummaryExt(string, time.Duration, []float64, map[string]string) Summary
+	Counter(string, ...Option) Counter
+	FloatCounter(string, ...Option) FloatCounter
+	Gauge(string, func() float64, ...Option) Gauge
+	Set(...Option) Meter
+	Histogram(string, ...Option) Histogram
+	Summary(string, ...Option) Summary
+	SummaryExt(string, time.Duration, []float64, ...Option) Summary
+	Write(io.Writer, bool) error
 	Options() Options
 	String() string
 }
@@ -68,4 +71,56 @@ type Histogram interface {
 type Summary interface {
 	Update(float64)
 	UpdateDuration(time.Time)
+}
+
+type Labels struct {
+	keys []string
+	vals []string
+}
+
+func (ls Labels) Len() int {
+	return len(ls.keys)
+}
+
+func (ls Labels) Swap(i, j int) {
+	ls.keys[i], ls.keys[j] = ls.keys[j], ls.keys[i]
+	ls.vals[i], ls.vals[j] = ls.vals[j], ls.vals[i]
+}
+
+func (ls Labels) Less(i, j int) bool {
+	return ls.vals[i] < ls.vals[j]
+}
+
+func (ls Labels) Sort() {
+	sort.Sort(ls)
+}
+
+func (ls Labels) Append(nls Labels) Labels {
+	for n := range nls.keys {
+		ls.keys = append(ls.keys, nls.keys[n])
+		ls.vals = append(ls.vals, nls.vals[n])
+	}
+	return ls
+}
+
+type LabelIter struct {
+	labels Labels
+	cnt    int
+	cur    int
+}
+
+func (ls Labels) Iter() *LabelIter {
+	ls.Sort()
+	return &LabelIter{labels: ls, cnt: len(ls.keys)}
+}
+
+func (iter *LabelIter) Next(k, v *string) bool {
+	if iter.cur+1 > iter.cnt {
+		return false
+	}
+
+	*k = iter.labels.keys[iter.cur]
+	*v = iter.labels.vals[iter.cur]
+	iter.cur++
+	return true
 }

@@ -11,9 +11,9 @@ type Option func(*Options)
 
 // Options for metrics implementations:
 type Options struct {
-	Address  string
-	Path     string
-	Metadata map[string]string
+	Address string
+	Path    string
+	Labels  Labels
 	//TimingObjectives map[float64]float64
 	Logger       logger.Logger
 	Context      context.Context
@@ -25,7 +25,6 @@ type Options struct {
 func NewOptions(opt ...Option) Options {
 	opts := Options{
 		Address:      DefaultAddress,
-		Metadata:     make(map[string]string, 3), // 3 elements contains service name, version and id
 		Path:         DefaultPath,
 		Context:      context.Background(),
 		Logger:       logger.DefaultLogger,
@@ -61,14 +60,14 @@ func Address(value string) Option {
 	}
 }
 
-// Metadata will be added to every metric
-func Metadata(md map[string]string) Option {
+/*
+// Labels be added to every metric
+func Labels(labels []string) Option {
 	return func(o *Options) {
-		for k, v := range md {
-			o.Metadata[k] = v
-		}
+		o.Labels = labels
 	}
 }
+*/
 
 /*
 // TimingObjectives defines the desired spread of statistics for histogram / timing metrics:
@@ -83,5 +82,13 @@ func TimingObjectives(value map[float64]float64) Option {
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
+	}
+}
+
+// Label sets the label
+func Label(key, val string) Option {
+	return func(o *Options) {
+		o.Labels.keys = append(o.Labels.keys, key)
+		o.Labels.vals = append(o.Labels.vals, val)
 	}
 }

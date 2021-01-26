@@ -1,22 +1,19 @@
 package meter
 
 import (
+	"io"
 	"time"
-
-	"github.com/unistack-org/micro/v3/metadata"
 )
 
 // NoopMeter is an noop implementation of Meter
 type noopMeter struct {
-	opts Options
-	md   map[string]string
+	opts   Options
+	labels Labels
 }
 
 // NewMeter returns a configured noop reporter:
 func NewMeter(opts ...Option) Meter {
-	return &noopMeter{
-		opts: NewOptions(opts...),
-	}
+	return &noopMeter{opts: NewOptions(opts...)}
 }
 
 // Init initialize options
@@ -28,38 +25,52 @@ func (r *noopMeter) Init(opts ...Option) error {
 }
 
 // Counter implements the Meter interface
-func (r *noopMeter) Counter(name string, md map[string]string) Counter {
-	return &noopCounter{}
+func (r *noopMeter) Counter(name string, opts ...Option) Counter {
+	options := Options{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return &noopCounter{labels: options.Labels}
 }
 
 // FloatCounter implements the Meter interface
-func (r *noopMeter) FloatCounter(name string, md map[string]string) FloatCounter {
+func (r *noopMeter) FloatCounter(name string, opts ...Option) FloatCounter {
 	return &noopFloatCounter{}
 }
 
 // Gauge implements the Meter interface
-func (r *noopMeter) Gauge(name string, f func() float64, md map[string]string) Gauge {
+func (r *noopMeter) Gauge(name string, f func() float64, opts ...Option) Gauge {
 	return &noopGauge{}
 }
 
 // Summary implements the Meter interface
-func (r *noopMeter) Summary(name string, md map[string]string) Summary {
+func (r *noopMeter) Summary(name string, opts ...Option) Summary {
 	return &noopSummary{}
 }
 
 // SummaryExt implements the Meter interface
-func (r *noopMeter) SummaryExt(name string, window time.Duration, quantiles []float64, md map[string]string) Summary {
+func (r *noopMeter) SummaryExt(name string, window time.Duration, quantiles []float64, opts ...Option) Summary {
 	return &noopSummary{}
 }
 
 // Histogram implements the Meter interface
-func (r *noopMeter) Histogram(name string, md map[string]string) Histogram {
+func (r *noopMeter) Histogram(name string, opts ...Option) Histogram {
 	return &noopHistogram{}
 }
 
 // Set implements the Meter interface
-func (r *noopMeter) Set(md map[string]string) Meter {
-	return &noopMeter{opts: r.opts, md: metadata.Copy(md)}
+func (r *noopMeter) Set(opts ...Option) Meter {
+	m := &noopMeter{opts: r.opts}
+
+	for _, o := range opts {
+		o(&m.opts)
+	}
+
+	return m
+}
+
+func (r *noopMeter) Write(w io.Writer, withProcessMetrics bool) error {
+	return nil
 }
 
 // Options implements the Meter interface
@@ -72,7 +83,9 @@ func (r *noopMeter) String() string {
 	return "noop"
 }
 
-type noopCounter struct{}
+type noopCounter struct {
+	labels Labels
+}
 
 func (r *noopCounter) Add(int) {
 
