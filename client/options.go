@@ -9,7 +9,7 @@ import (
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/meter"
 	"github.com/unistack-org/micro/v3/network/transport"
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 	"github.com/unistack-org/micro/v3/router"
 	"github.com/unistack-org/micro/v3/selector"
 	"github.com/unistack-org/micro/v3/selector/random"
@@ -18,6 +18,7 @@ import (
 
 // Options holds client options
 type Options struct {
+	Name string
 	// Used to select codec
 	ContentType string
 	// Proxy address to send requests via
@@ -246,11 +247,11 @@ func Transport(t transport.Transport) Option {
 	}
 }
 
-// Registry sets the routers registry
-func Registry(r registry.Registry) Option {
+// Register sets the routers register
+func Register(r register.Register) Option {
 	return func(o *Options) {
 		if o.Router != nil {
-			o.Router.Init(router.Registry(r))
+			o.Router.Init(router.Register(r))
 		}
 	}
 }
@@ -288,6 +289,13 @@ func WrapCall(cw ...CallWrapper) Option {
 func Backoff(fn BackoffFunc) Option {
 	return func(o *Options) {
 		o.CallOptions.Backoff = fn
+	}
+}
+
+// Name sets the client name
+func Name(n string) Option {
+	return func(o *Options) {
+		o.Name = n
 	}
 }
 

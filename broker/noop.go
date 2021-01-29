@@ -16,6 +16,10 @@ func NewBroker(opts ...Option) Broker {
 	return &noopBroker{opts: NewOptions(opts...)}
 }
 
+func (n *noopBroker) Name() string {
+	return n.opts.Name
+}
+
 // Init initialize broker
 func (n *noopBroker) Init(opts ...Option) error {
 	for _, o := range opts {

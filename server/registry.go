@@ -5,23 +5,23 @@ import (
 	"time"
 
 	"github.com/unistack-org/micro/v3/metadata"
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 	"github.com/unistack-org/micro/v3/util/addr"
 	"github.com/unistack-org/micro/v3/util/backoff"
 )
 
 var (
 	// DefaultRegisterFunc uses backoff to register service
-	DefaultRegisterFunc = func(svc *registry.Service, config Options) error {
+	DefaultRegisterFunc = func(svc *register.Service, config Options) error {
 		var err error
 
-		opts := []registry.RegisterOption{
-			registry.RegisterTTL(config.RegisterTTL),
-			registry.RegisterDomain(config.Namespace),
+		opts := []register.RegisterOption{
+			register.RegisterTTL(config.RegisterTTL),
+			register.RegisterDomain(config.Namespace),
 		}
 
 		for i := 0; i <= config.RegisterAttempts; i++ {
-			err = config.Registry.Register(config.Context, svc, opts...)
+			err = config.Register.Register(config.Context, svc, opts...)
 			if err == nil {
 				break
 			}
@@ -32,15 +32,15 @@ var (
 		return err
 	}
 	// DefaultDeregisterFunc uses backoff to deregister service
-	DefaultDeregisterFunc = func(svc *registry.Service, config Options) error {
+	DefaultDeregisterFunc = func(svc *register.Service, config Options) error {
 		var err error
 
-		opts := []registry.DeregisterOption{
-			registry.DeregisterDomain(config.Namespace),
+		opts := []register.DeregisterOption{
+			register.DeregisterDomain(config.Namespace),
 		}
 
 		for i := 0; i <= config.DeregisterAttempts; i++ {
-			err = config.Registry.Deregister(config.Context, svc, opts...)
+			err = config.Register.Deregister(config.Context, svc, opts...)
 			if err == nil {
 				break
 			}
@@ -52,8 +52,8 @@ var (
 	}
 )
 
-// NewRegistryService returns *registry.Service from Server
-func NewRegistryService(s Server) (*registry.Service, error) {
+// NewRegisterService returns *register.Service from Server
+func NewRegisterService(s Server) (*register.Service, error) {
 	opts := s.Options()
 
 	advt := opts.Address
@@ -71,7 +71,7 @@ func NewRegistryService(s Server) (*registry.Service, error) {
 		addr = host
 	}
 
-	node := &registry.Node{
+	node := &register.Node{
 		Id:      opts.Name + "-" + opts.Id,
 		Address: net.JoinHostPort(addr, port),
 	}
@@ -79,12 +79,12 @@ func NewRegistryService(s Server) (*registry.Service, error) {
 
 	node.Metadata["server"] = s.String()
 	node.Metadata["broker"] = opts.Broker.String()
-	node.Metadata["registry"] = opts.Registry.String()
+	node.Metadata["register"] = opts.Register.String()
 
-	return &registry.Service{
+	return &register.Service{
 		Name:     opts.Name,
 		Version:  opts.Version,
-		Nodes:    []*registry.Node{node},
+		Nodes:    []*register.Node{node},
 		Metadata: metadata.New(0),
 	}, nil
 }

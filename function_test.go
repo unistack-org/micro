@@ -7,18 +7,18 @@ import (
 	"sync"
 	"testing"
 
-	rmemory "github.com/unistack-org/micro-registry-memory"
+	rmemory "github.com/unistack-org/micro-register-memory"
 )
 
 func TestFunction(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	r := rmemory.NewRegistry()
+	r := rmemory.NewRegister()
 
 	// create service
 	fn := NewFunction(
-		Registry(r),
+		Register(r),
 		Name("test.function"),
 		AfterStart(func() error {
 			wg.Done()

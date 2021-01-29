@@ -18,6 +18,7 @@ var (
 
 // Router is an interface for a routing control plane
 type Router interface {
+	Name() string
 	// Init initializes the router with options
 	Init(...Option) error
 	// Options returns the router options

@@ -16,6 +16,10 @@ func NewMeter(opts ...Option) Meter {
 	return &noopMeter{opts: NewOptions(opts...)}
 }
 
+func (r *noopMeter) Name() string {
+	return r.opts.Name
+}
+
 // Init initialize options
 func (r *noopMeter) Init(opts ...Option) error {
 	for _, o := range opts {

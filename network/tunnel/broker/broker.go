@@ -41,6 +41,10 @@ func (t *tunBroker) Init(opts ...broker.Option) error {
 	return nil
 }
 
+func (t *tunBroker) Name() string {
+	return t.opts.Name
+}
+
 func (t *tunBroker) Options() broker.Options {
 	return t.opts
 }

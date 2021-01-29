@@ -24,6 +24,7 @@ var (
 
 // Meter is an interface for collecting and instrumenting metrics
 type Meter interface {
+	Name() string
 	Init(...Option) error
 	Counter(string, ...Option) Counter
 	FloatCounter(string, ...Option) FloatCounter

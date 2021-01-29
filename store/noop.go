@@ -23,6 +23,11 @@ func (n *noopStore) Options() Options {
 	return n.opts
 }
 
+// Name
+func (n *noopStore) Name() string {
+	return n.opts.Name
+}
+
 // String returns string representation
 func (n *noopStore) String() string {
 	return "noop"

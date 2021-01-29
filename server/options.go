@@ -14,7 +14,7 @@ import (
 	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/meter"
 	"github.com/unistack-org/micro/v3/network/transport"
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 	"github.com/unistack-org/micro/v3/tracer"
 )
 
@@ -25,7 +25,7 @@ type Option func(*Options)
 type Options struct {
 	Codecs       map[string]codec.Codec
 	Broker       broker.Broker
-	Registry     registry.Registry
+	Register     register.Register
 	Tracer       tracer.Tracer
 	Auth         auth.Auth
 	Logger       logger.Logger
@@ -83,7 +83,7 @@ func NewOptions(opts ...Option) Options {
 		Meter:            meter.DefaultMeter,
 		Tracer:           tracer.DefaultTracer,
 		Broker:           broker.DefaultBroker,
-		Registry:         registry.DefaultRegistry,
+		Register:         register.DefaultRegister,
 		Transport:        transport.DefaultTransport,
 		Address:          DefaultAddress,
 		Name:             DefaultName,
@@ -178,10 +178,10 @@ func Context(ctx context.Context) Option {
 	}
 }
 
-// Registry used for discovery
-func Registry(r registry.Registry) Option {
+// Register used for discovery
+func Register(r register.Register) Option {
 	return func(o *Options) {
-		o.Registry = r
+		o.Register = r
 	}
 }
 
@@ -213,7 +213,7 @@ func Metadata(md metadata.Metadata) Option {
 	}
 }
 
-// RegisterCheck run func before registry service
+// RegisterCheck run func before register service
 func RegisterCheck(fn func(context.Context) error) Option {
 	return func(o *Options) {
 		o.RegisterCheck = fn

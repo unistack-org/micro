@@ -33,7 +33,7 @@ type Store interface {
 type Event struct {
 	// ID to uniquely identify the event
 	ID string
-	// Topic of event, e.g. "registry.service.created"
+	// Topic of event, e.g. "register.service.created"
 	Topic string
 	// Timestamp of the event
 	Timestamp time.Time

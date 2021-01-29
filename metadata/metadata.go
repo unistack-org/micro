@@ -7,6 +7,11 @@ import (
 	"sort"
 )
 
+var (
+	// HeaderPrefix for all headers passed
+	HeaderPrefix = "Micro-"
+)
+
 type metadataKey struct{}
 
 // Metadata is our way of representing request headers internally.

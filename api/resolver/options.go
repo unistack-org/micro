@@ -3,7 +3,7 @@ package resolver
 import (
 	"context"
 
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 )
 
 // Options struct
@@ -58,7 +58,7 @@ func Domain(n string) ResolveOption {
 
 // NewResolveOptions returns new initialised resolve options
 func NewResolveOptions(opts ...ResolveOption) ResolveOptions {
-	options := ResolveOptions{Domain: registry.DefaultDomain}
+	options := ResolveOptions{Domain: register.DefaultDomain}
 	for _, o := range opts {
 		o(&options)
 	}

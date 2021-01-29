@@ -18,6 +18,7 @@ var (
 // It supports Request/Response via Transport and Publishing via the Broker.
 // It also supports bidirectional streaming of requests.
 type Client interface {
+	Name() string
 	Init(...Option) error
 	Options() Options
 	NewMessage(topic string, msg interface{}, opts ...MessageOption) Message

@@ -6,6 +6,10 @@ type noopTracer struct {
 	opts Options
 }
 
+func (n *noopTracer) Name() string {
+	return n.opts.Name
+}
+
 // Init initilize tracer
 func (n *noopTracer) Init(opts ...Option) error {
 	for _, o := range opts {
@@ -16,6 +20,11 @@ func (n *noopTracer) Init(opts ...Option) error {
 
 // Start starts new span
 func (n *noopTracer) Start(ctx context.Context, name string) (context.Context, *Span) {
+	return nil, nil
+}
+
+// Lookup get span from context
+func (n *noopTracer) Lookup(ctx context.Context) (*Span, error) {
 	return nil, nil
 }
 

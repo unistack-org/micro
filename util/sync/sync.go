@@ -78,6 +78,11 @@ func (c *syncStore) Init(opts ...store.Option) error {
 	return nil
 }
 
+// Name returns the store name
+func (c *syncStore) Name() string {
+	return c.storeOpts.Name
+}
+
 // Options returns the sync's store options
 func (c *syncStore) Options() store.Options {
 	return c.storeOpts

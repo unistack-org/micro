@@ -20,6 +20,7 @@ var (
 
 // Store is a data storage interface
 type Store interface {
+	Name() string
 	// Init initialises the store
 	Init(opts ...Option) error
 	// Connect is used when store needs to be connected

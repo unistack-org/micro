@@ -35,20 +35,20 @@ func TestLabelsAppend(t *testing.T) {
 	ls.vals = []string{"noop", "http"}
 
 	var nls Labels
-	nls.keys = []string{"registry"}
+	nls.keys = []string{"register"}
 	nls.vals = []string{"gossip"}
 	ls = ls.Append(nls)
 
 	ls.Sort()
 
-	if ls.keys[0] != "registry" || ls.vals[0] != "gossip" {
+	if ls.keys[0] != "register" || ls.vals[0] != "gossip" {
 		t.Fatalf("append error: %v", ls)
 	}
 }
 
 func TestIterator(t *testing.T) {
 	var ls Labels
-	ls.keys = []string{"type", "server", "registry"}
+	ls.keys = []string{"type", "server", "register"}
 	ls.vals = []string{"noop", "http", "gossip"}
 
 	iter := ls.Iter()

@@ -1,18 +1,18 @@
-package registry
+package register
 
 import (
 	"os"
 	"testing"
 
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 )
 
 func TestRemove(t *testing.T) {
-	services := []*registry.Service{
+	services := []*register.Service{
 		{
 			Name:    "foo",
 			Version: "1.0.0",
-			Nodes: []*registry.Node{
+			Nodes: []*register.Node{
 				{
 					Id:      "foo-123",
 					Address: "localhost:9999",
@@ -22,7 +22,7 @@ func TestRemove(t *testing.T) {
 		{
 			Name:    "foo",
 			Version: "1.0.0",
-			Nodes: []*registry.Node{
+			Nodes: []*register.Node{
 				{
 					Id:      "foo-123",
 					Address: "localhost:6666",
@@ -31,7 +31,7 @@ func TestRemove(t *testing.T) {
 		},
 	}
 
-	servs := Remove([]*registry.Service{services[0]}, []*registry.Service{services[1]})
+	servs := Remove([]*register.Service{services[0]}, []*register.Service{services[1]})
 	if i := len(servs); i > 0 {
 		t.Errorf("Expected 0 nodes, got %d: %+v", i, servs)
 	}
@@ -41,11 +41,11 @@ func TestRemove(t *testing.T) {
 }
 
 func TestRemoveNodes(t *testing.T) {
-	services := []*registry.Service{
+	services := []*register.Service{
 		{
 			Name:    "foo",
 			Version: "1.0.0",
-			Nodes: []*registry.Node{
+			Nodes: []*register.Node{
 				{
 					Id:      "foo-123",
 					Address: "localhost:9999",
@@ -59,7 +59,7 @@ func TestRemoveNodes(t *testing.T) {
 		{
 			Name:    "foo",
 			Version: "1.0.0",
-			Nodes: []*registry.Node{
+			Nodes: []*register.Node{
 				{
 					Id:      "foo-123",
 					Address: "localhost:6666",

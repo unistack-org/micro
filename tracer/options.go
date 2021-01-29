@@ -9,6 +9,7 @@ var (
 
 // Options struct
 type Options struct {
+	Name string
 	// Logger is the logger for messages
 	Logger logger.Logger
 	// Size is the size of ring buffer

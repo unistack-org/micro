@@ -1,26 +1,26 @@
-package registry
+package register
 
 import (
 	"context"
 )
 
-type registryKey struct{}
+type registerKey struct{}
 
-// FromContext get registry from context
-func FromContext(ctx context.Context) (Registry, bool) {
+// FromContext get register from context
+func FromContext(ctx context.Context) (Register, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	c, ok := ctx.Value(registryKey{}).(Registry)
+	c, ok := ctx.Value(registerKey{}).(Register)
 	return c, ok
 }
 
-// NewContext put registry in context
-func NewContext(ctx context.Context, c Registry) context.Context {
+// NewContext put register in context
+func NewContext(ctx context.Context, c Register) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, registryKey{}, c)
+	return context.WithValue(ctx, registerKey{}, c)
 }
 
 // SetOption returns a function to setup a context with given value

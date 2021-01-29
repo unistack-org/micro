@@ -3,13 +3,13 @@ package server
 import (
 	"reflect"
 
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 )
 
 type rpcHandler struct {
 	name      string
 	handler   interface{}
-	endpoints []*registry.Endpoint
+	endpoints []*register.Endpoint
 	opts      HandlerOptions
 }
 
@@ -20,10 +20,10 @@ func newRpcHandler(handler interface{}, opts ...HandlerOption) Handler {
 	hdlr := reflect.ValueOf(handler)
 	name := reflect.Indirect(hdlr).Type().Name()
 
-	var endpoints []*registry.Endpoint
+	var endpoints []*register.Endpoint
 
 	for m := 0; m < typ.NumMethod(); m++ {
-		if e := registry.ExtractEndpoint(typ.Method(m)); e != nil {
+		if e := register.ExtractEndpoint(typ.Method(m)); e != nil {
 			e.Name = name + "." + e.Name
 
 			for k, v := range options.Metadata[e.Name] {
@@ -50,7 +50,7 @@ func (r *rpcHandler) Handler() interface{} {
 	return r.handler
 }
 
-func (r *rpcHandler) Endpoints() []*registry.Endpoint {
+func (r *rpcHandler) Endpoints() []*register.Endpoint {
 	return r.endpoints
 }
 

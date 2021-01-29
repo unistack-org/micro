@@ -14,6 +14,7 @@ import (
 
 // Options contains configuration for the Store
 type Options struct {
+	Name string
 	// Nodes contains the addresses or other connection information of the backing storage.
 	// For example, an etcd implementation would contain the nodes of the cluster.
 	// A SQL implementation could contain one or more connection strings.

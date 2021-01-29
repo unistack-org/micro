@@ -14,6 +14,7 @@ var (
 
 // Broker is an interface used for asynchronous messaging.
 type Broker interface {
+	Name() string
 	Init(...Option) error
 	Options() Options
 	Address() string

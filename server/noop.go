@@ -13,7 +13,7 @@ import (
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 )
 
 var (
@@ -34,7 +34,7 @@ const (
 type noopServer struct {
 	h           Handler
 	opts        Options
-	rsvc        *registry.Service
+	rsvc        *register.Service
 	handlers    map[string]Handler
 	subscribers map[*subscriber][]broker.Subscriber
 	registered  bool
@@ -62,6 +62,10 @@ func (n *noopServer) newCodec(contentType string) (codec.Codec, error) {
 func (n *noopServer) Handle(handler Handler) error {
 	n.h = handler
 	return nil
+}
+
+func (n *noopServer) Name() string {
+	return n.opts.Name
 }
 
 func (n *noopServer) Subscribe(sb Subscriber) error {
@@ -137,10 +141,10 @@ func (n *noopServer) Register() error {
 	}
 
 	var err error
-	var service *registry.Service
+	var service *register.Service
 	var cacheService bool
 
-	service, err = NewRegistryService(n)
+	service, err = NewRegisterService(n)
 	if err != nil {
 		return err
 	}
@@ -168,7 +172,7 @@ func (n *noopServer) Register() error {
 		return subscriberList[i].topic > subscriberList[j].topic
 	})
 
-	endpoints := make([]*registry.Endpoint, 0, len(handlerList)+len(subscriberList))
+	endpoints := make([]*register.Endpoint, 0, len(handlerList)+len(subscriberList))
 	for _, h := range handlerList {
 		endpoints = append(endpoints, n.handlers[h].Endpoints()...)
 	}
@@ -187,7 +191,7 @@ func (n *noopServer) Register() error {
 
 	if !registered {
 		if config.Logger.V(logger.InfoLevel) {
-			config.Logger.Infof(n.opts.Context, "registry [%s] Registering node: %s", config.Registry.String(), service.Nodes[0].Id)
+			config.Logger.Infof(n.opts.Context, "register [%s] Registering node: %s", config.Register.String(), service.Nodes[0].Id)
 		}
 	}
 
@@ -244,7 +248,7 @@ func (n *noopServer) Deregister() error {
 	config := n.opts
 	n.RUnlock()
 
-	service, err := NewRegistryService(n)
+	service, err := NewRegisterService(n)
 	if err != nil {
 		return err
 	}

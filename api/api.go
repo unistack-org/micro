@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/unistack-org/micro/v3/metadata"
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 	"github.com/unistack-org/micro/v3/server"
 )
 
@@ -56,7 +56,7 @@ type Service struct {
 	// The endpoint for this service
 	Endpoint *Endpoint
 	// Versions of this service
-	Services []*registry.Service
+	Services []*register.Service
 }
 
 func strip(s string) string {

@@ -12,13 +12,13 @@ import (
 	"github.com/unistack-org/micro/v3/api/resolver"
 	"github.com/unistack-org/micro/v3/api/resolver/vpath"
 	"github.com/unistack-org/micro/v3/api/router"
-	regRouter "github.com/unistack-org/micro/v3/api/router/registry"
-	"github.com/unistack-org/micro/v3/registry"
-	"github.com/unistack-org/micro/v3/registry/memory"
+	regRouter "github.com/unistack-org/micro/v3/api/router/register"
+	"github.com/unistack-org/micro/v3/register"
+	"github.com/unistack-org/micro/v3/register/memory"
 )
 
 func testHttp(t *testing.T, path, service, ns string) {
-	r := memory.NewRegistry()
+	r := memory.NewRegister()
 
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -26,9 +26,9 @@ func testHttp(t *testing.T, path, service, ns string) {
 	}
 	defer l.Close()
 
-	s := &registry.Service{
+	s := &register.Service{
 		Name: service,
-		Nodes: []*registry.Node{
+		Nodes: []*register.Node{
 			{
 				Id:      service + "-1",
 				Address: l.Addr().String(),
@@ -58,7 +58,7 @@ func testHttp(t *testing.T, path, service, ns string) {
 	// initialise the handler
 	rt := regRouter.NewRouter(
 		router.WithHandler("http"),
-		router.WithRegistry(r),
+		router.WithRegister(r),
 		router.WithResolver(vpath.NewResolver(
 			resolver.WithServicePrefix(ns),
 		)),

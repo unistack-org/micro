@@ -1,5 +1,5 @@
-// Package registry is an interface for service discovery
-package registry
+// Package register is an interface for service discovery
+package register
 
 import (
 	"context"
@@ -16,31 +16,32 @@ const (
 )
 
 var (
-	// DefaultRegistry is the global default registry
-	DefaultRegistry Registry = NewRegistry()
-	// ErrNotFound returned when GetService is called and no services found
+	// DefaultRegister is the global default register
+	DefaultRegister Register = NewRegister()
+	// ErrNotFound returned when LookupService is called and no services found
 	ErrNotFound = errors.New("service not found")
 	// ErrWatcherStopped returned when when watcher is stopped
 	ErrWatcherStopped = errors.New("watcher stopped")
 )
 
-// Registry provides an interface for service discovery
+// Register provides an interface for service discovery
 // and an abstraction over varying implementations
 // {consul, etcd, zookeeper, ...}
-type Registry interface {
+type Register interface {
+	Name() string
 	Init(...Option) error
 	Options() Options
 	Connect(context.Context) error
 	Disconnect(context.Context) error
 	Register(context.Context, *Service, ...RegisterOption) error
 	Deregister(context.Context, *Service, ...DeregisterOption) error
-	GetService(context.Context, string, ...GetOption) ([]*Service, error)
+	LookupService(context.Context, string, ...LookupOption) ([]*Service, error)
 	ListServices(context.Context, ...ListOption) ([]*Service, error)
 	Watch(context.Context, ...WatchOption) (Watcher, error)
 	String() string
 }
 
-// Service holds service registry info
+// Service holds service register info
 type Service struct {
 	Name      string            `json:"name"`
 	Version   string            `json:"version"`
@@ -49,14 +50,14 @@ type Service struct {
 	Nodes     []*Node           `json:"nodes"`
 }
 
-// Node holds node registry info
+// Node holds node register info
 type Node struct {
 	Id       string            `json:"id"`
 	Address  string            `json:"address"`
 	Metadata metadata.Metadata `json:"metadata"`
 }
 
-// Endpoint holds endpoint registry info
+// Endpoint holds endpoint register info
 type Endpoint struct {
 	Name     string            `json:"name"`
 	Request  *Value            `json:"request"`
@@ -83,8 +84,8 @@ type WatchOption func(*WatchOptions)
 // DeregisterOption option is used to deregister service
 type DeregisterOption func(*DeregisterOptions)
 
-// GetOption option is used to get service
-type GetOption func(*GetOptions)
+// LookupOption option is used to get service
+type LookupOption func(*LookupOptions)
 
 // ListOption option is used to list services
 type ListOption func(*ListOptions)

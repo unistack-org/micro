@@ -8,15 +8,15 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/unistack-org/micro/v3/registry"
-	"github.com/unistack-org/micro/v3/registry/memory"
+	"github.com/unistack-org/micro/v3/register"
+	"github.com/unistack-org/micro/v3/register/memory"
 	"github.com/unistack-org/micro/v3/router"
-	regRouter "github.com/unistack-org/micro/v3/router/registry"
+	regRouter "github.com/unistack-org/micro/v3/router/register"
 )
 
 func TestRoundTripper(t *testing.T) {
-	m := memory.NewRegistry()
-	r := regRouter.NewRouter(router.Registry(m))
+	m := memory.NewRegister()
+	r := regRouter.NewRouter(router.Register(m))
 
 	rt := NewRoundTripper(WithRouter(r))
 
@@ -32,9 +32,9 @@ func TestRoundTripper(t *testing.T) {
 
 	go http.Serve(l, nil)
 
-	m.Register(&registry.Service{
+	m.Register(&register.Service{
 		Name: "example.com",
-		Nodes: []*registry.Node{
+		Nodes: []*register.Node{
 			{
 				Id:      "1",
 				Address: l.Addr().String(),

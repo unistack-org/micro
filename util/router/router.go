@@ -1,7 +1,7 @@
 package router
 
 import (
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 	"github.com/unistack-org/micro/v3/router"
 )
 
@@ -19,7 +19,7 @@ func (r *apiRouter) String() string {
 }
 
 // New router is a hack for API routing
-func New(srvs []*registry.Service) router.Router {
+func New(srvs []*register.Service) router.Router {
 	var routes []router.Route
 
 	for _, srv := range srvs {

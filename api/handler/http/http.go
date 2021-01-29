@@ -11,7 +11,7 @@ import (
 
 	"github.com/unistack-org/micro/v3/api"
 	"github.com/unistack-org/micro/v3/api/handler"
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 )
 
 const (
@@ -70,7 +70,7 @@ func (h *httpHandler) getService(r *http.Request) (string, error) {
 	}
 
 	// get the nodes for this service
-	nodes := make([]*registry.Node, 0, len(service.Services))
+	nodes := make([]*register.Node, 0, len(service.Services))
 	for _, srv := range service.Services {
 		nodes = append(nodes, srv.Nodes...)
 	}

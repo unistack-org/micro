@@ -49,6 +49,10 @@ func NewClient(opts ...Option) Client {
 	return &noopClient{opts: NewOptions(opts...)}
 }
 
+func (n *noopClient) Name() string {
+	return n.opts.Name
+}
+
 func (n *noopRequest) Service() string {
 	return n.service
 }

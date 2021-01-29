@@ -1,4 +1,4 @@
-package registry
+package register
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 )
 
 type Options struct {
+	Name      string
 	Addrs     []string
 	Timeout   time.Duration
 	TLSConfig *tls.Config
@@ -102,14 +103,14 @@ func NewDeregisterOptions(opts ...DeregisterOption) DeregisterOptions {
 	return options
 }
 
-type GetOptions struct {
+type LookupOptions struct {
 	Context context.Context
 	// Domain to scope the request to
 	Domain string
 }
 
-func NewGetOptions(opts ...GetOption) GetOptions {
-	options := GetOptions{
+func NewLookupOptions(opts ...LookupOption) LookupOptions {
+	options := LookupOptions{
 		Domain:  DefaultDomain,
 		Context: context.Background(),
 	}
@@ -136,7 +137,7 @@ func NewListOptions(opts ...ListOption) ListOptions {
 	return options
 }
 
-// Addrs is the registry addresses to use
+// Addrs is the register addresses to use
 func Addrs(addrs ...string) Option {
 	return func(o *Options) {
 		o.Addrs = addrs
@@ -245,14 +246,14 @@ func DeregisterDomain(d string) DeregisterOption {
 	}
 }
 
-func GetContext(ctx context.Context) GetOption {
-	return func(o *GetOptions) {
+func GetContext(ctx context.Context) LookupOption {
+	return func(o *LookupOptions) {
 		o.Context = ctx
 	}
 }
 
-func GetDomain(d string) GetOption {
-	return func(o *GetOptions) {
+func GetDomain(d string) LookupOption {
+	return func(o *LookupOptions) {
 		o.Domain = d
 	}
 }

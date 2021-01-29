@@ -1,9 +1,9 @@
-package registry
+package register
 
 import "time"
 
 // Watcher is an interface that returns updates
-// about services within the registry.
+// about services within the register.
 type Watcher interface {
 	// Next is a blocking call
 	Next() (*Result, error)
@@ -17,7 +17,7 @@ type Result struct {
 	Service *Service
 }
 
-// EventType defines registry event type
+// EventType defines register event type
 type EventType int
 
 const (
@@ -43,14 +43,14 @@ func (t EventType) String() string {
 	}
 }
 
-// Event is registry event
+// Event is register event
 type Event struct {
-	// Id is registry id
+	// Id is register id
 	Id string
 	// Type defines type of event
 	Type EventType
 	// Timestamp is event timestamp
 	Timestamp time.Time
-	// Service is registry service
+	// Service is register service
 	Service *Service
 }

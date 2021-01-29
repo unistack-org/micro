@@ -5,11 +5,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 )
 
 // Options are router options
 type Options struct {
+	Name string
 	// Id is router id
 	Id string
 	// Address is router address
@@ -18,8 +19,8 @@ type Options struct {
 	Gateway string
 	// Network is network address
 	Network string
-	// Registry is the local registry
-	Registry registry.Registry
+	// Register is the local register
+	Register register.Register
 	// Precache routes
 	Precache bool
 	// Logger
@@ -63,10 +64,10 @@ func Logger(l logger.Logger) Option {
 	}
 }
 
-// Registry sets the local registry
-func Registry(r registry.Registry) Option {
+// Register sets the local register
+func Register(r register.Register) Option {
 	return func(o *Options) {
-		o.Registry = r
+		o.Register = r
 	}
 }
 
@@ -77,12 +78,19 @@ func Precache() Option {
 	}
 }
 
+// Name of the router
+func Name(n string) Option {
+	return func(o *Options) {
+		o.Name = n
+	}
+}
+
 // NewOptions returns router default options
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Id:       uuid.New().String(),
 		Network:  DefaultNetwork,
-		Registry: registry.DefaultRegistry,
+		Register: register.DefaultRegister,
 		Logger:   logger.DefaultLogger,
 		Context:  context.Background(),
 	}

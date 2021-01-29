@@ -6,12 +6,12 @@ import (
 	"github.com/unistack-org/micro/v3/api/resolver"
 	"github.com/unistack-org/micro/v3/api/resolver/vpath"
 	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 )
 
 type Options struct {
 	Handler  string
-	Registry registry.Registry
+	Register register.Register
 	Resolver resolver.Resolver
 	Logger   logger.Logger
 	Context  context.Context
@@ -52,10 +52,10 @@ func WithHandler(h string) Option {
 	}
 }
 
-// WithRegistry sets the registry
-func WithRegistry(r registry.Registry) Option {
+// WithRegister sets the register
+func WithRegister(r register.Register) Option {
 	return func(o *Options) {
-		o.Registry = r
+		o.Register = r
 	}
 }
 

@@ -1,22 +1,22 @@
-// Package registry resolves names using the micro registry
-package registry
+// Package register resolves names using the micro register
+package register
 
 import (
 	"context"
 
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 	"github.com/unistack-org/micro/v3/resolver"
 )
 
-// Resolver is a registry network resolver
+// Resolver is a register network resolver
 type Resolver struct {
-	// Registry is the registry to use otherwise we use the defaul
-	Registry registry.Registry
+	// Register is the register to use otherwise we use the defaul
+	Register register.Register
 }
 
 // Resolve assumes ID is a domain name e.g micro.mu
 func (r *Resolver) Resolve(name string) ([]*resolver.Record, error) {
-	services, err := r.Registry.GetService(context.TODO(), name)
+	services, err := r.Register.LookupService(context.TODO(), name)
 	if err != nil {
 		return nil, err
 	}

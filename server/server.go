@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/metadata"
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 )
 
 var (
@@ -29,7 +29,7 @@ var (
 	DefaultRegisterCheck = func(context.Context) error { return nil }
 	// DefaultRegisterInterval holds interval for register
 	DefaultRegisterInterval = time.Second * 30
-	// DefaultRegisterTTL holds registry record ttl, must be multiple of DefaultRegisterInterval
+	// DefaultRegisterTTL holds register record ttl, must be multiple of DefaultRegisterInterval
 	DefaultRegisterTTL = time.Second * 90
 	// DefaultNamespace will be used if no namespace passed
 	DefaultNamespace = "micro"
@@ -43,6 +43,8 @@ var (
 
 // Server is a simple micro server abstraction
 type Server interface {
+	// Name returns server name
+	Name() string
 	// Initialise options
 	Init(...Option) error
 	// Retrieve the options
@@ -147,7 +149,7 @@ type Stream interface {
 type Handler interface {
 	Name() string
 	Handler() interface{}
-	Endpoints() []*registry.Endpoint
+	Endpoints() []*register.Endpoint
 	Options() HandlerOptions
 }
 
@@ -157,6 +159,6 @@ type Handler interface {
 type Subscriber interface {
 	Topic() string
 	Subscriber() interface{}
-	Endpoints() []*registry.Endpoint
+	Endpoints() []*register.Endpoint
 	Options() SubscriberOptions
 }

@@ -1,3 +1,5 @@
+// +build ignore
+
 package micro
 
 import (
@@ -7,9 +9,26 @@ import (
 	"github.com/unistack-org/micro/v3/server"
 )
 
+// Function is a one time executing Service
+type Function interface {
+	// Inherits Service interface
+	Service
+	// Done signals to complete execution
+	Done() error
+	// Handle registers an RPC handler
+	Handle(v interface{}) error
+	// Subscribe registers a subscriber
+	Subscribe(topic string, v interface{}) error
+}
+
 type function struct {
 	cancel context.CancelFunc
 	Service
+}
+
+// NewFunction returns a new Function for a one time executing Service
+func NewFunction(opts ...Option) Function {
+	return newFunction(opts...)
 }
 
 func fnHandlerWrapper(f Function) server.HandlerWrapper {
@@ -45,7 +64,7 @@ func newFunction(opts ...Option) Function {
 	// make context the last thing
 	fopts = append(fopts, Context(ctx))
 
-	service := newService(fopts...)
+	service := &service{opts: NewOptions(opts...)}
 
 	fn := &function{
 		cancel:  cancel,

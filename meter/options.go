@@ -11,6 +11,7 @@ type Option func(*Options)
 
 // Options for metrics implementations:
 type Options struct {
+	Name    string
 	Address string
 	Path    string
 	Labels  Labels

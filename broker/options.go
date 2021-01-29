@@ -7,12 +7,13 @@ import (
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/meter"
-	"github.com/unistack-org/micro/v3/registry"
+	"github.com/unistack-org/micro/v3/register"
 	"github.com/unistack-org/micro/v3/tracer"
 )
 
 // Options struct
 type Options struct {
+	Name string
 	// Addrs useed by broker
 	Addrs []string
 	// ErrorHandler executed when errors occur processing messages
@@ -27,8 +28,8 @@ type Options struct {
 	Tracer tracer.Tracer
 	// TLSConfig for secure communication
 	TLSConfig *tls.Config
-	// Registry used for clustering
-	Registry registry.Registry
+	// Register used for clustering
+	Register register.Register
 	// Context is used for non default options
 	Context context.Context
 }
@@ -36,7 +37,7 @@ type Options struct {
 // NewOptions create new Options
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Registry: registry.DefaultRegistry,
+		Register: register.DefaultRegister,
 		Logger:   logger.DefaultLogger,
 		Context:  context.Background(),
 		Meter:    meter.DefaultMeter,
@@ -202,10 +203,10 @@ func SubscribeGroup(name string) SubscribeOption {
 	}
 }
 
-// Registry sets registry option
-func Registry(r registry.Registry) Option {
+// Register sets register option
+func Register(r register.Register) Option {
 	return func(o *Options) {
-		o.Registry = r
+		o.Register = r
 	}
 }
 
@@ -234,6 +235,13 @@ func Tracer(t tracer.Tracer) Option {
 func Meter(m meter.Meter) Option {
 	return func(o *Options) {
 		o.Meter = m
+	}
+}
+
+// Name sets the name
+func Name(n string) Option {
+	return func(o *Options) {
+		o.Name = n
 	}
 }
 

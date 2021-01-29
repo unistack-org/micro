@@ -15,10 +15,14 @@ var (
 
 // Tracer is an interface for distributed tracing
 type Tracer interface {
+	Name() string
+	Init(...Option) error
 	// Start a trace
 	Start(ctx context.Context, name string) (context.Context, *Span)
 	// Finish the trace
 	Finish(*Span) error
+	// Lookup get span from context
+	Lookup(ctx context.Context) (*Span, error)
 	// Read the traces
 	Read(...ReadOption) ([]*Span, error)
 }
