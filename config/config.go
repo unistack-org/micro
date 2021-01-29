@@ -22,6 +22,7 @@ var (
 
 // Config is an interface abstraction for dynamic configuration
 type Config interface {
+	Name() string
 	// Init the config
 	Init(opts ...Option) error
 	// Options in the config

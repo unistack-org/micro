@@ -251,6 +251,10 @@ func (c *defaultConfig) String() string {
 	return "default"
 }
 
+func (c *defaultConfig) Name() string {
+	return c.opts.Name
+}
+
 func NewConfig(opts ...Option) Config {
 	options := NewOptions(opts...)
 	if len(options.StructTag) == 0 {
