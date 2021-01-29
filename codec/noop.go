@@ -1,6 +1,7 @@
 package codec
 
 import (
+	"encoding/json"
 	"io"
 	"io/ioutil"
 )
@@ -40,7 +41,7 @@ func (c *noopCodec) ReadBody(conn io.Reader, b interface{}) error {
 	case *Frame:
 		v.Data = buf
 	default:
-		return ErrInvalidMessage
+		return json.Unmarshal(buf, v)
 	}
 
 	return nil
@@ -64,7 +65,11 @@ func (c *noopCodec) Write(conn io.Writer, m *Message, b interface{}) error {
 	case []byte:
 		v = vb
 	default:
-		return ErrInvalidMessage
+		var err error
+		v, err = json.Marshal(vb)
+		if err != nil {
+			return err
+		}
 	}
 	_, err := conn.Write(v)
 	return err
@@ -98,11 +103,11 @@ func (c *noopCodec) Marshal(v interface{}) ([]byte, error) {
 	case *Message:
 		return ve.Body, nil
 	}
-	return nil, ErrInvalidMessage
+
+	return json.Marshal(v)
 }
 
 func (c *noopCodec) Unmarshal(d []byte, v interface{}) error {
-	var err error
 	if v == nil {
 		return nil
 	}
@@ -119,9 +124,7 @@ func (c *noopCodec) Unmarshal(d []byte, v interface{}) error {
 		ve.Data = d
 	case *Message:
 		ve.Body = d
-	default:
-		err = ErrInvalidMessage
 	}
 
-	return err
+	return json.Unmarshal(d, v)
 }
