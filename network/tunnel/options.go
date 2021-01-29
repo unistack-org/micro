@@ -22,6 +22,7 @@ type Option func(*Options)
 
 // Options provides network configuration options
 type Options struct {
+	Name string
 	// Id is tunnel id
 	Id string
 	// Address is tunnel address
@@ -179,5 +180,12 @@ func NewOptions(opts ...Option) Options {
 func Tracer(t tracer.Tracer) Option {
 	return func(o *Options) {
 		o.Tracer = t
+	}
+}
+
+// Name sets the name
+func Name(n string) Option {
+	return func(o *Options) {
+		o.Name = n
 	}
 }

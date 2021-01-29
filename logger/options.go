@@ -11,6 +11,7 @@ type Option func(*Options)
 
 // Options holds logger options
 type Options struct {
+	Name string
 	// The logging level the logger should log at. default is `InfoLevel`
 	Level Level
 	// fields to always be logged
@@ -70,5 +71,12 @@ func WithCallerSkipCount(c int) Option {
 func WithContext(ctx context.Context) Option {
 	return func(o *Options) {
 		o.Context = ctx
+	}
+}
+
+// WithName sets the name
+func withName(n string) Option {
+	return func(o *Options) {
+		o.Name = n
 	}
 }

@@ -269,3 +269,10 @@ func ListDomain(d string) ListOption {
 		o.Domain = d
 	}
 }
+
+// Name sets the name
+func Name(n string) Option {
+	return func(o *Options) {
+		o.Name = n
+	}
+}

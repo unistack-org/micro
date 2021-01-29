@@ -12,6 +12,7 @@ import (
 )
 
 type Options struct {
+	Name string
 	// Addrs is the list of intermediary addresses to connect to
 	Addrs []string
 	// Codec is the codec interface to use where headers are not supported
@@ -174,5 +175,12 @@ func WithTimeout(d time.Duration) DialOption {
 func Tracer(t tracer.Tracer) Option {
 	return func(o *Options) {
 		o.Tracer = t
+	}
+}
+
+// Name sets the name
+func Name(n string) Option {
+	return func(o *Options) {
+		o.Name = n
 	}
 }

@@ -53,3 +53,10 @@ func NewOptions(opts ...Option) Options {
 	}
 	return options
 }
+
+// Name sets the name
+func Name(n string) Option {
+	return func(o *Options) {
+		o.Name = n
+	}
+}

@@ -93,3 +93,10 @@ func Label(key, val string) Option {
 		o.Labels.vals = append(o.Labels.vals, val)
 	}
 }
+
+// Name sets the name
+func Name(n string) Option {
+	return func(o *Options) {
+		o.Name = n
+	}
+}

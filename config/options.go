@@ -10,6 +10,7 @@ import (
 )
 
 type Options struct {
+	Name       string
 	AllowFail  bool
 	BeforeLoad []func(context.Context, Config) error
 	AfterLoad  []func(context.Context, Config) error
@@ -114,5 +115,12 @@ func Struct(v interface{}) Option {
 func StructTag(name string) Option {
 	return func(o *Options) {
 		o.StructTag = name
+	}
+}
+
+// Name sets the name
+func Name(n string) Option {
+	return func(o *Options) {
+		o.Name = n
 	}
 }

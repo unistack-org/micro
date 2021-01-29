@@ -25,6 +25,7 @@ func NewOptions(opts ...Option) Options {
 }
 
 type Options struct {
+	Name string
 	// Issuer of the service's account
 	Issuer string
 	// ID is the services auth ID
@@ -60,6 +61,13 @@ type Option func(o *Options)
 func Addrs(addrs ...string) Option {
 	return func(o *Options) {
 		o.Addrs = addrs
+	}
+}
+
+// Name sets the name
+func Name(n string) Option {
+	return func(o *Options) {
+		o.Name = n
 	}
 }
 
