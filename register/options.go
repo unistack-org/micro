@@ -246,13 +246,13 @@ func DeregisterDomain(d string) DeregisterOption {
 	}
 }
 
-func GetContext(ctx context.Context) LookupOption {
+func LookupContext(ctx context.Context) LookupOption {
 	return func(o *LookupOptions) {
 		o.Context = ctx
 	}
 }
 
-func GetDomain(d string) LookupOption {
+func LookupDomain(d string) LookupOption {
 	return func(o *LookupOptions) {
 		o.Domain = d
 	}
