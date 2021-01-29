@@ -91,6 +91,13 @@ func Meter(m meter.Meter) Option {
 	}
 }
 
+// Name the name
+func Name(n string) Option {
+	return func(o *Options) {
+		o.Name = n
+	}
+}
+
 // Tracer sets the tracer
 func Tracer(t tracer.Tracer) Option {
 	return func(o *Options) {
