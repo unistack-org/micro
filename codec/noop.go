@@ -114,16 +114,22 @@ func (c *noopCodec) Unmarshal(d []byte, v interface{}) error {
 	switch ve := v.(type) {
 	case string:
 		ve = string(d)
+		return nil
 	case *string:
 		*ve = string(d)
+		return nil
 	case []byte:
 		ve = d
+		return nil
 	case *[]byte:
 		*ve = d
+		return nil
 	case *Frame:
 		ve.Data = d
+		return nil
 	case *Message:
 		ve.Body = d
+		return nil
 	}
 
 	return json.Unmarshal(d, v)
