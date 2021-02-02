@@ -98,6 +98,7 @@ func Encode(e *Endpoint) map[string]string {
 	set("method", strings.Join(e.Method, ","))
 	set("path", strings.Join(e.Path, ","))
 	set("host", strings.Join(e.Host, ","))
+	set("body", e.Body)
 
 	return ep
 }
@@ -118,6 +119,7 @@ func Decode(e metadata.Metadata) *Endpoint {
 	ephost, _ := e.Get("host")
 	ep.Host = []string{ephost}
 	ep.Handler, _ = e.Get("handler")
+	ep.Body, _ = e.Get("body")
 
 	return ep
 }
