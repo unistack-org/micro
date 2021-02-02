@@ -134,6 +134,14 @@ func BrokerServer(n string) BrokerOption {
 	}
 }
 
+// Client to be used for service
+func Client(c ...client.Client) Option {
+	return func(o *Options) error {
+		o.Clients = c
+		return nil
+	}
+}
+
 // Clients to be used for service
 func Clients(c ...client.Client) Option {
 	return func(o *Options) error {
@@ -161,10 +169,26 @@ func Profile(p profile.Profile) Option {
 }
 */
 
+// Server to be used for service
+func Server(s ...server.Server) Option {
+	return func(o *Options) error {
+		o.Servers = s
+		return nil
+	}
+}
+
 // Servers to be used for service
 func Servers(s ...server.Server) Option {
 	return func(o *Options) error {
 		o.Servers = s
+		return nil
+	}
+}
+
+// Store sets the store to use
+func Store(s ...store.Store) Option {
+	return func(o *Options) error {
+		o.Stores = s
 		return nil
 	}
 }
@@ -274,6 +298,14 @@ func LoggerServer(n string) LoggerOption {
 
 }
 */
+
+// Meter set the meter to use
+func Meter(m ...meter.Meter) Option {
+	return func(o *Options) error {
+		o.Meters = m
+		return nil
+	}
+}
 
 // Meters set the meter to use
 func Meters(m ...meter.Meter) Option {
@@ -449,6 +481,14 @@ func Auth(a auth.Auth) Option {
 	}
 }
 */
+
+// Config sets the config for the service
+func Config(c ...config.Config) Option {
+	return func(o *Options) error {
+		o.Configs = c
+		return nil
+	}
+}
 
 // Configs sets the configs for the service
 func Configs(c ...config.Config) Option {
