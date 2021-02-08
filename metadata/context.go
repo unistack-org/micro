@@ -5,35 +5,64 @@ import (
 	"context"
 )
 
+type mdIncomingKey struct{}
+type mdOutgoingKey struct{}
+type mdKey struct{}
+
+// FromIncomingContext returns metadata from incoming ctx
+// returned metadata shoud not be modified or race condition happens
+func FromIncomingContext(ctx context.Context) (Metadata, bool) {
+	if ctx == nil {
+		return nil, false
+	}
+	md, ok := ctx.Value(mdIncomingKey{}).(Metadata)
+	return md, ok
+}
+
+// FromOutgoingContext returns metadata from outgoing ctx
+// returned metadata shoud not be modified or race condition happens
+func FromOutgoingContext(ctx context.Context) (Metadata, bool) {
+	if ctx == nil {
+		return nil, false
+	}
+	md, ok := ctx.Value(mdOutgoingKey{}).(Metadata)
+	return md, ok
+}
+
 // FromContext returns metadata from the given context
+// returned metadata shoud not be modified or race condition happens
+//
+// Deprecated: use FromIncomingContext or FromOutgoingContext
 func FromContext(ctx context.Context) (Metadata, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	md, ok := ctx.Value(metadataKey{}).(Metadata)
-	if !ok {
-		return nil, ok
-	}
-	nmd := Copy(md)
-	return nmd, ok
+	md, ok := ctx.Value(mdKey{}).(Metadata)
+	return md, ok
 }
 
 // NewContext creates a new context with the given metadata
+//
+// Deprecated: use NewIncomingContext or NewOutgoingContext
 func NewContext(ctx context.Context, md Metadata) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, metadataKey{}, Copy(md))
+	return context.WithValue(ctx, mdKey{}, md)
 }
 
-// MergeContext merges metadata to existing metadata, overwriting if specified
-func MergeContext(ctx context.Context, pmd Metadata, overwrite bool) context.Context {
+// NewIncomingContext creates a new context with incoming metadata attached
+func NewIncomingContext(ctx context.Context, md Metadata) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	md, ok := FromContext(ctx)
-	if !ok {
-		return context.WithValue(ctx, metadataKey{}, Copy(pmd))
+	return context.WithValue(ctx, mdIncomingKey{}, md)
+}
+
+// NewOutgoingContext creates a new context with outcoming metadata attached
+func NewOutgoingContext(ctx context.Context, md Metadata) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
 	}
-	return context.WithValue(ctx, metadataKey{}, Merge(md, pmd, overwrite))
+	return context.WithValue(ctx, mdOutgoingKey{}, md)
 }

@@ -187,7 +187,7 @@ func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOpti
 
 	options := NewPublishOptions(opts...)
 
-	md, ok := metadata.FromContext(ctx)
+	md, ok := metadata.FromOutgoingContext(ctx)
 	if !ok {
 		md = metadata.New(0)
 	}

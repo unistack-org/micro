@@ -10,10 +10,9 @@ import (
 
 func FromRequest(r *http.Request) context.Context {
 	ctx := r.Context()
-	md, ok := metadata.FromContext(ctx)
+	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		// create needed map with specific len
-		md = make(metadata.Metadata, len(r.Header)+2)
+		md = metadata.New(len(r.Header) + 2)
 	}
 	for key, val := range r.Header {
 		md.Set(key, strings.Join(val, ","))
@@ -22,5 +21,5 @@ func FromRequest(r *http.Request) context.Context {
 	md["Host"] = r.Host
 	// pass http method
 	md["Method"] = r.Method
-	return metadata.NewContext(ctx, md)
+	return metadata.NewIncomingContext(ctx, md)
 }

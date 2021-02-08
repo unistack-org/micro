@@ -2,8 +2,6 @@ package metadata
 
 import (
 	"context"
-	"fmt"
-	"reflect"
 	"testing"
 )
 
@@ -32,26 +30,27 @@ func TestIterator(t *testing.T) {
 	var k, v string
 
 	for iter.Next(&k, &v) {
-		fmt.Printf("k: %s, v: %s\n", k, v)
+		//fmt.Printf("k: %s, v: %s\n", k, v)
 	}
 }
 
 func TestMedataCanonicalKey(t *testing.T) {
-	ctx := Set(context.TODO(), "x-request-id", "12345")
-	v, ok := Get(ctx, "x-request-id")
+	md := New(1)
+	md.Set("x-request-id", "12345")
+	v, ok := md.Get("x-request-id")
 	if !ok {
 		t.Fatalf("failed to get x-request-id")
 	} else if v != "12345" {
 		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
 	}
 
-	v, ok = Get(ctx, "X-Request-Id")
+	v, ok = md.Get("X-Request-Id")
 	if !ok {
 		t.Fatalf("failed to get x-request-id")
 	} else if v != "12345" {
 		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
 	}
-	v, ok = Get(ctx, "X-Request-ID")
+	v, ok = md.Get("X-Request-ID")
 	if !ok {
 		t.Fatalf("failed to get x-request-id")
 	} else if v != "12345" {
@@ -61,9 +60,11 @@ func TestMedataCanonicalKey(t *testing.T) {
 }
 
 func TestMetadataSet(t *testing.T) {
-	ctx := Set(context.TODO(), "Key", "val")
+	md := New(1)
 
-	val, ok := Get(ctx, "Key")
+	md.Set("Key", "val")
+
+	val, ok := md.Get("Key")
 	if !ok {
 		t.Fatal("key Key not found")
 	}
@@ -78,15 +79,8 @@ func TestMetadataDelete(t *testing.T) {
 		"Baz": "empty",
 	}
 
-	ctx := NewContext(context.TODO(), md)
-	ctx = Del(ctx, "Baz")
-
-	emd, ok := FromContext(ctx)
-	if !ok {
-		t.Fatal("key Key not found")
-	}
-
-	_, ok = emd["Baz"]
+	md.Del("Baz")
+	_, ok := md.Get("Baz")
 	if ok {
 		t.Fatal("key Baz not deleted")
 	}
@@ -135,44 +129,5 @@ func TestMetadataContext(t *testing.T) {
 
 	if i := len(emd); i != 1 {
 		t.Errorf("Expected metadata length 1 got %d", i)
-	}
-}
-
-func TestMergeContext(t *testing.T) {
-	type args struct {
-		existing  Metadata
-		append    Metadata
-		overwrite bool
-	}
-	tests := []struct {
-		name string
-		args args
-		want Metadata
-	}{
-		{
-			name: "matching key, overwrite false",
-			args: args{
-				existing:  Metadata{"Foo": "bar", "Sumo": "demo"},
-				append:    Metadata{"Sumo": "demo2"},
-				overwrite: false,
-			},
-			want: Metadata{"Foo": "bar", "Sumo": "demo"},
-		},
-		{
-			name: "matching key, overwrite true",
-			args: args{
-				existing:  Metadata{"Foo": "bar", "Sumo": "demo"},
-				append:    Metadata{"Sumo": "demo2"},
-				overwrite: true,
-			},
-			want: Metadata{"Foo": "bar", "Sumo": "demo2"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, _ := FromContext(MergeContext(NewContext(context.TODO(), tt.args.existing), tt.args.append, tt.args.overwrite)); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("MergeContext() = %v, want %v", got, tt.want)
-			}
-		})
 	}
 }

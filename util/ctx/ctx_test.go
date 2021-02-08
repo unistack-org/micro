@@ -28,7 +28,7 @@ func TestRequestToContext(t *testing.T) {
 
 	for _, d := range testData {
 		ctx := FromRequest(d.request)
-		md, ok := metadata.FromContext(ctx)
+		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			t.Fatalf("Expected metadata for request %+v", d.request)
 		}
