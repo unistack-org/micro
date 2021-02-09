@@ -16,6 +16,10 @@ var (
 // from Transport headers.
 type Metadata map[string]string
 
+type rawMetadata struct {
+	md Metadata
+}
+
 var (
 	// defaultMetadataSize used when need to init new Metadata
 	defaultMetadataSize = 2

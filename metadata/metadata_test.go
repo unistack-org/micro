@@ -2,8 +2,31 @@ package metadata
 
 import (
 	"context"
+	"fmt"
 	"testing"
 )
+
+func testCtx(ctx context.Context) {
+	md := New(2)
+	md.Set("Key1", "Val1_new")
+	md.Set("Key3", "Val3")
+	SetOutgoingContext(ctx, md)
+}
+
+func TestPassing(t *testing.T) {
+	ctx := context.TODO()
+	md1 := New(2)
+	md1.Set("Key1", "Val1")
+	md1.Set("Key2", "Val2")
+
+	ctx = NewIncomingContext(ctx, md1)
+	testCtx(ctx)
+	md, ok := FromOutgoingContext(ctx)
+	if !ok {
+		t.Fatalf("missing metadata from outgoing context")
+	}
+	fmt.Printf("%#+v\n", md)
+}
 
 func TestMerge(t *testing.T) {
 	omd := Metadata{
