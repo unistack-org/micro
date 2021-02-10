@@ -2,19 +2,13 @@
   "extends": [
     "config:base"
   ],
-    "packageRules": [
+  "packageRules": [
     {
       "groupName": "all deps",
       "separateMajorMinor": true,
       "groupSlug": "all",
-      "packageRules": [
-        {
-          "packagePatterns": [
-            "*"
-          ],
-          "groupName": "all deps",
-          "groupSlug": "all"
-        }
+      "packagePatterns": [
+        "*"
       ]
     }
   ]
