@@ -46,7 +46,16 @@ type noopRequest struct {
 
 // NewClient returns new noop client
 func NewClient(opts ...Option) Client {
-	return &noopClient{opts: NewOptions(opts...)}
+	nc := &noopClient{opts: NewOptions(opts...)}
+	// wrap in reverse
+
+	c := Client(nc)
+
+	for i := len(nc.opts.Wrappers); i > 0; i-- {
+		c = nc.opts.Wrappers[i-1](c)
+	}
+
+	return c
 }
 
 func (n *noopClient) Name() string {

@@ -46,7 +46,17 @@ type noopServer struct {
 
 // NewServer returns new noop server
 func NewServer(opts ...Option) Server {
-	return &noopServer{opts: NewOptions(opts...)}
+	n := &noopServer{opts: NewOptions(opts...)}
+	if n.handlers == nil {
+		n.handlers = make(map[string]Handler)
+	}
+	if n.subscribers == nil {
+		n.subscribers = make(map[*subscriber][]broker.Subscriber)
+	}
+	if n.exit == nil {
+		n.exit = make(chan chan error)
+	}
+	return n
 }
 
 func (n *noopServer) newCodec(contentType string) (codec.Codec, error) {
