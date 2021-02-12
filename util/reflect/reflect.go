@@ -243,7 +243,7 @@ func MergeMap(a interface{}, b map[string]interface{}) error {
 				if fva.Elem().Type().Kind() == reflect.Struct {
 					for i := 0; i < fva.Elem().NumField(); i++ {
 						field := fva.Elem().Field(i)
-						if field.Type().Kind() == reflect.Ptr && field.IsNil() && fva.Elem().Type().Field(i).Anonymous == true {
+						if field.Type().Kind() == reflect.Ptr && field.IsNil() && fva.Elem().Type().Field(i).Anonymous {
 							field.Set(reflect.New(field.Type().Elem()))
 						}
 					}

@@ -92,7 +92,9 @@ func (s *service) Init(opts ...Option) error {
 	var err error
 	// process options
 	for _, o := range opts {
-		o(&s.opts)
+		if err = o(&s.opts); err != nil {
+			return err
+		}
 	}
 
 	for _, cfg := range s.opts.Configs {

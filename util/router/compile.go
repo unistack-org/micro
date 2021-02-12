@@ -62,7 +62,7 @@ func (l literal) compile() []op {
 }
 
 func (v variable) compile() []op {
-	var ops []op
+	ops := make([]op, 0, len(v.segments))
 	for _, s := range v.segments {
 		ops = append(ops, s.compile()...)
 	}
@@ -78,11 +78,12 @@ func (v variable) compile() []op {
 }
 
 func (t template) Compile() Template {
-	var rawOps []op
+	rawOps := make([]op, 0, len(t.segments))
 	for _, s := range t.segments {
 		rawOps = append(rawOps, s.compile()...)
 	}
 
+	//ops := make([]int, 0, len(rawOps))
 	var (
 		ops    []int
 		pool   []string

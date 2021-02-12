@@ -107,7 +107,7 @@ func (c *defaultConfig) fillValue(ctx context.Context, value reflect.Value, val 
 		if err != nil {
 			return err
 		}
-		value.Set(reflect.ValueOf(float64(v)))
+		value.Set(reflect.ValueOf(v))
 	case reflect.Int:
 		v, err := strconv.ParseInt(val, 10, 0)
 		if err != nil {
@@ -137,7 +137,7 @@ func (c *defaultConfig) fillValue(ctx context.Context, value reflect.Value, val 
 		if err != nil {
 			return err
 		}
-		value.Set(reflect.ValueOf(int64(v)))
+		value.Set(reflect.ValueOf(v))
 	case reflect.Uint:
 		v, err := strconv.ParseUint(val, 10, 0)
 		if err != nil {
@@ -167,7 +167,7 @@ func (c *defaultConfig) fillValue(ctx context.Context, value reflect.Value, val 
 		if err != nil {
 			return err
 		}
-		value.Set(reflect.ValueOf(uint64(v)))
+		value.Set(reflect.ValueOf(v))
 	}
 	return nil
 }
