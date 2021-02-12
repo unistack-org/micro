@@ -2,7 +2,6 @@ package metadata
 
 import (
 	"context"
-	"fmt"
 	"testing"
 )
 
@@ -25,7 +24,9 @@ func TestPassing(t *testing.T) {
 	if !ok {
 		t.Fatalf("missing metadata from outgoing context")
 	}
-	fmt.Printf("%#+v\n", md)
+	if v, ok := md.Get("Key1"); !ok || v != "Val1_new" {
+		t.Fatalf("invalid metadata value %#+v", md)
+	}
 }
 
 func TestMerge(t *testing.T) {

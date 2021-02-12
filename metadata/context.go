@@ -16,7 +16,7 @@ func FromIncomingContext(ctx context.Context) (Metadata, bool) {
 		return nil, false
 	}
 	md, ok := ctx.Value(mdIncomingKey{}).(*rawMetadata)
-	if !ok {
+	if !ok || md.md == nil {
 		return nil, false
 	}
 	return md.md, ok
@@ -29,7 +29,7 @@ func FromOutgoingContext(ctx context.Context) (Metadata, bool) {
 		return nil, false
 	}
 	md, ok := ctx.Value(mdOutgoingKey{}).(*rawMetadata)
-	if !ok {
+	if !ok || md.md == nil {
 		return nil, false
 	}
 	return md.md, ok
@@ -44,7 +44,7 @@ func FromContext(ctx context.Context) (Metadata, bool) {
 		return nil, false
 	}
 	md, ok := ctx.Value(mdKey{}).(*rawMetadata)
-	if !ok {
+	if !ok || md.md == nil {
 		return nil, false
 	}
 	return md.md, ok
