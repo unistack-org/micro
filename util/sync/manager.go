@@ -16,12 +16,9 @@ func (c *syncStore) syncManager() {
 			}
 		}(i, tickerAggregator, ticker)
 	}
-	for {
-		select {
-		case i := <-tickerAggregator:
-			println(i.index, "ticked")
-			c.processQueue(i.index)
-		}
+	for i := range tickerAggregator {
+		println(i.index, "ticked")
+		c.processQueue(i.index)
 	}
 }
 

@@ -7,8 +7,7 @@ import (
 
 // NoopMeter is an noop implementation of Meter
 type noopMeter struct {
-	opts   Options
-	labels Labels
+	opts Options
 }
 
 // NewMeter returns a configured noop reporter:
@@ -39,27 +38,47 @@ func (r *noopMeter) Counter(name string, opts ...Option) Counter {
 
 // FloatCounter implements the Meter interface
 func (r *noopMeter) FloatCounter(name string, opts ...Option) FloatCounter {
-	return &noopFloatCounter{}
+	options := Options{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return &noopFloatCounter{labels: options.Labels}
 }
 
 // Gauge implements the Meter interface
 func (r *noopMeter) Gauge(name string, f func() float64, opts ...Option) Gauge {
-	return &noopGauge{}
+	options := Options{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return &noopGauge{labels: options.Labels}
 }
 
 // Summary implements the Meter interface
 func (r *noopMeter) Summary(name string, opts ...Option) Summary {
-	return &noopSummary{}
+	options := Options{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return &noopSummary{labels: options.Labels}
 }
 
 // SummaryExt implements the Meter interface
 func (r *noopMeter) SummaryExt(name string, window time.Duration, quantiles []float64, opts ...Option) Summary {
-	return &noopSummary{}
+	options := Options{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return &noopSummary{labels: options.Labels}
 }
 
 // Histogram implements the Meter interface
 func (r *noopMeter) Histogram(name string, opts ...Option) Histogram {
-	return &noopHistogram{}
+	options := Options{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return &noopHistogram{labels: options.Labels}
 }
 
 // Set implements the Meter interface
@@ -111,7 +130,9 @@ func (r *noopCounter) Set(uint64) {
 
 }
 
-type noopFloatCounter struct{}
+type noopFloatCounter struct {
+	labels Labels
+}
 
 func (r *noopFloatCounter) Add(float64) {
 
@@ -129,13 +150,17 @@ func (r *noopFloatCounter) Sub(float64) {
 
 }
 
-type noopGauge struct{}
+type noopGauge struct {
+	labels Labels
+}
 
 func (r *noopGauge) Get() float64 {
 	return 0
 }
 
-type noopSummary struct{}
+type noopSummary struct {
+	labels Labels
+}
 
 func (r *noopSummary) Update(float64) {
 
@@ -145,7 +170,9 @@ func (r *noopSummary) UpdateDuration(time.Time) {
 
 }
 
-type noopHistogram struct{}
+type noopHistogram struct {
+	labels Labels
+}
 
 func (r *noopHistogram) Reset() {
 

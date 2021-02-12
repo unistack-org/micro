@@ -72,6 +72,7 @@ func NewOptions(opts ...Option) Options {
 	}
 
 	for _, o := range opts {
+		//nolint:errcheck
 		o(&options)
 	}
 

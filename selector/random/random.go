@@ -22,6 +22,7 @@ func (r *random) Select(routes []string, opts ...selector.SelectOption) (selecto
 		}
 
 		// select a random route from the slice
+		//nolint:gosec
 		return routes[rand.Intn(len(routes))]
 	}, nil
 }
@@ -40,5 +41,5 @@ func (r *random) String() string {
 
 // NewSelector returns a random selector
 func NewSelector(opts ...selector.Option) selector.Selector {
-	return new(random)
+	return &random{}
 }

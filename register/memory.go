@@ -57,26 +57,23 @@ func (m *memory) ttlPrune() {
 	prune := time.NewTicker(ttlPruneTime)
 	defer prune.Stop()
 
-	for {
-		select {
-		case <-prune.C:
-			m.Lock()
-			for domain, services := range m.records {
-				for service, versions := range services {
-					for version, record := range versions {
-						for id, n := range record.Nodes {
-							if n.TTL != 0 && time.Since(n.LastSeen) > n.TTL {
-								if m.opts.Logger.V(logger.DebugLevel) {
-									m.opts.Logger.Debugf(m.opts.Context, "Register TTL expired for node %s of service %s", n.Id, service)
-								}
-								delete(m.records[domain][service][version].Nodes, id)
+	for range prune.C {
+		m.Lock()
+		for domain, services := range m.records {
+			for service, versions := range services {
+				for version, record := range versions {
+					for id, n := range record.Nodes {
+						if n.TTL != 0 && time.Since(n.LastSeen) > n.TTL {
+							if m.opts.Logger.V(logger.DebugLevel) {
+								m.opts.Logger.Debugf(m.opts.Context, "Register TTL expired for node %s of service %s", n.Id, service)
 							}
+							delete(m.records[domain][service][version].Nodes, id)
 						}
 					}
 				}
 			}
-			m.Unlock()
 		}
+		m.Unlock()
 	}
 }
 

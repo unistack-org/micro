@@ -36,7 +36,17 @@ type Route struct {
 // Hash returns route hash sum.
 func (r *Route) Hash() uint64 {
 	h := fnv.New64()
-	h.Reset()
-	h.Write([]byte(r.Service + r.Address + r.Gateway + r.Network + r.Router + r.Link))
+	//nolint:errcheck
+	h.Write([]byte(r.Service))
+	//nolint:errcheck
+	h.Write([]byte(r.Address))
+	//nolint:errcheck
+	h.Write([]byte(r.Gateway))
+	//nolint:errcheck
+	h.Write([]byte(r.Network))
+	//nolint:errcheck
+	h.Write([]byte(r.Router))
+	//nolint:errcheck
+	h.Write([]byte(r.Link))
 	return h.Sum64()
 }

@@ -216,10 +216,13 @@ func (n *noopServer) createSubHandler(sb *subscriber, opts Options) broker.Handl
 
 		hdr := make(map[string]string, len(msg.Header))
 		for k, v := range msg.Header {
+			if k == "Content-Type" {
+				continue
+			}
 			hdr[k] = v
 		}
-		delete(hdr, "Content-Type")
-		ctx := metadata.NewContext(sb.opts.Context, hdr)
+
+		ctx := metadata.NewIncomingContext(sb.opts.Context, hdr)
 
 		results := make(chan error, len(sb.handlers))
 

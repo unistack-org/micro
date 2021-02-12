@@ -36,7 +36,7 @@ func (r *request) Codec() codec.Codec {
 }
 
 func (r *request) Header() metadata.Metadata {
-	md, _ := metadata.FromContext(r.context)
+	md, _ := metadata.FromIncomingContext(r.context)
 	return md
 }
 

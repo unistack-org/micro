@@ -129,10 +129,8 @@ func (m *memoryBroker) Publish(ctx context.Context, topic string, msg *Message, 
 			}
 			if eh != nil {
 				eh(p)
-			} else {
-				if m.opts.Logger.V(logger.ErrorLevel) {
-					m.opts.Logger.Error(m.opts.Context, err.Error())
-				}
+			} else if m.opts.Logger.V(logger.ErrorLevel) {
+				m.opts.Logger.Error(m.opts.Context, err.Error())
 			}
 			continue
 		}

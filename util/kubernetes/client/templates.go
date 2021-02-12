@@ -185,6 +185,7 @@ metadata:
     {{- end }}
 `
 
+//nolint:gosec
 var secretTmpl = `
 apiVersion: v1
 kind: Secret

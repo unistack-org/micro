@@ -11,7 +11,9 @@ import (
 
 func TestMemoryReInit(t *testing.T) {
 	s := store.NewStore(store.Table("aaa"))
-	s.Init(store.Table(""))
+	if err := s.Init(store.Table("")); err != nil {
+		t.Fatal(err)
+	}
 	if len(s.Options().Table) > 0 {
 		t.Error("Init didn't reinitialise the store")
 	}
@@ -19,25 +21,33 @@ func TestMemoryReInit(t *testing.T) {
 
 func TestMemoryBasic(t *testing.T) {
 	s := store.NewStore()
-	s.Init()
+	if err := s.Init(); err != nil {
+		t.Fatal(err)
+	}
 	basictest(s, t)
 }
 
 func TestMemoryPrefix(t *testing.T) {
 	s := store.NewStore()
-	s.Init(store.Table("some-prefix"))
+	if err := s.Init(store.Table("some-prefix")); err != nil {
+		t.Fatal(err)
+	}
 	basictest(s, t)
 }
 
 func TestMemoryNamespace(t *testing.T) {
 	s := store.NewStore()
-	s.Init(store.Database("some-namespace"))
+	if err := s.Init(store.Database("some-namespace")); err != nil {
+		t.Fatal(err)
+	}
 	basictest(s, t)
 }
 
 func TestMemoryNamespacePrefix(t *testing.T) {
 	s := store.NewStore()
-	s.Init(store.Table("some-prefix"), store.Database("some-namespace"))
+	if err := s.Init(store.Table("some-prefix"), store.Database("some-namespace")); err != nil {
+		t.Fatal(err)
+	}
 	basictest(s, t)
 }
 
@@ -53,10 +63,8 @@ func basictest(s store.Store, t *testing.T) {
 	var val []byte
 	if err := s.Read(ctx, "Hello", &val); err != nil {
 		t.Error(err)
-	} else {
-		if string(val) != "World" {
-			t.Errorf("Expected %s, got %s", "World", val)
-		}
+	} else if string(val) != "World" {
+		t.Errorf("Expected %s, got %s", "World", val)
 	}
 	time.Sleep(time.Millisecond * 200)
 	if err := s.Read(ctx, "Hello", &val); err != store.ErrNotFound {

@@ -248,7 +248,8 @@ func (s *Server) handleQuery(query *dns.Msg, from net.Addr) error {
 		return fmt.Errorf("[ERR] mdns: support for DNS requests with high truncated bit not implemented: %v", *query)
 	}
 
-	var unicastAnswer, multicastAnswer []dns.RR
+	unicastAnswer := make([]dns.RR, 0, len(query.Question))
+	multicastAnswer := make([]dns.RR, 0, len(query.Question))
 
 	// Handle each question
 	for _, q := range query.Question {
