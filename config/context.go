@@ -6,6 +6,7 @@ import (
 
 type configKey struct{}
 
+// FromContext returns store from context
 func FromContext(ctx context.Context) (Config, bool) {
 	if ctx == nil {
 		return nil, false
@@ -14,6 +15,7 @@ func FromContext(ctx context.Context) (Config, bool) {
 	return c, ok
 }
 
+// NewContext put store in context
 func NewContext(ctx context.Context, c Config) context.Context {
 	if ctx == nil {
 		ctx = context.Background()

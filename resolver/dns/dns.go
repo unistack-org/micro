@@ -4,18 +4,20 @@ package dns
 import (
 	"context"
 	"net"
+	"sync"
+	"time"
 
-	"github.com/miekg/dns"
 	"github.com/unistack-org/micro/v3/resolver"
 )
 
 // Resolver is a DNS network resolve
 type Resolver struct {
 	// The resolver address to use
-	Address string
+	Address    string
+	goresolver *net.Resolver
+	sync.RWMutex
 }
 
-// Resolve assumes ID is a domain name e.g micro.mu
 func (r *Resolver) Resolve(name string) ([]*resolver.Record, error) {
 	host, port, err := net.SplitHostPort(name)
 	if err != nil {
@@ -28,56 +30,46 @@ func (r *Resolver) Resolve(name string) ([]*resolver.Record, error) {
 	}
 
 	if len(r.Address) == 0 {
-		r.Address = "1.0.0.1:53"
+		r.Address = "1.1.1.1:53"
 	}
-
-	//nolint:prealloc
-	var records []*resolver.Record
 
 	// parsed an actual ip
 	if v := net.ParseIP(host); v != nil {
-		records = append(records, &resolver.Record{
-			Address: net.JoinHostPort(host, port),
-		})
-		return records, nil
+		rec := &resolver.Record{Address: net.JoinHostPort(host, port)}
+		return []*resolver.Record{rec}, nil
 	}
 
-	for _, q := range []uint16{dns.TypeA, dns.TypeAAAA} {
-		m := new(dns.Msg)
-		m.SetQuestion(dns.Fqdn(host), q)
-		rec, err := dns.ExchangeContext(context.Background(), m, r.Address)
-		if err != nil {
-			return nil, err
-		}
+	r.RLock()
+	goresolver := r.goresolver
+	r.RUnlock()
 
-		var addr string
-		for _, answer := range rec.Answer {
-			h := answer.Header()
-			// check record type matches
-			switch h.Rrtype {
-			case dns.TypeA:
-				arec, _ := answer.(*dns.A)
-				addr = arec.A.String()
-			case dns.TypeAAAA:
-				arec, _ := answer.(*dns.AAAA)
-				addr = arec.AAAA.String()
-			default:
-				continue
-			}
-
-			// join resolved record with port
-			address := net.JoinHostPort(addr, port)
-			// append to record set
-			records = append(records, &resolver.Record{
-				Address: address,
-			})
+	if goresolver == nil {
+		r.Lock()
+		r.goresolver = &net.Resolver{
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{
+					Timeout: time.Millisecond * time.Duration(100),
+				}
+				return d.DialContext(ctx, "udp", r.Address)
+			},
 		}
+		r.Unlock()
 	}
 
-	// no records returned so just best effort it
-	if len(records) == 0 {
+	addrs, err := goresolver.LookupIP(context.TODO(), "ip", host)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(addrs) == 0 {
+		rec := &resolver.Record{Address: net.JoinHostPort(host, port)}
+		return []*resolver.Record{rec}, nil
+	}
+
+	records := make([]*resolver.Record, 0, len(addrs))
+	for _, addr := range addrs {
 		records = append(records, &resolver.Record{
-			Address: net.JoinHostPort(host, port),
+			Address: net.JoinHostPort(addr.String(), port),
 		})
 	}
 

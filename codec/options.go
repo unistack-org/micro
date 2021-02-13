@@ -45,6 +45,7 @@ func Meter(m meter.Meter) Option {
 	}
 }
 
+// NewOptions returns new options
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Logger:     logger.DefaultLogger,

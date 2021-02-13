@@ -2,19 +2,16 @@ package meter
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNoopMeter(t *testing.T) {
 	meter := NewMeter(Path("/noop"))
-	assert.NotNil(t, meter)
-	assert.Equal(t, "/noop", meter.Options().Path)
-	assert.Implements(t, new(Meter), meter)
+	if "/noop" != meter.Options().Path {
+		t.Fatalf("invalid options parsing: %v", meter.Options())
+	}
 
 	cnt := meter.Counter("counter", Label("server", "noop"))
 	cnt.Inc()
-
 }
 
 func TestLabels(t *testing.T) {

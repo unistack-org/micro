@@ -20,10 +20,6 @@ var (
 	}
 )
 
-const (
-	defaultContentType = "application/json"
-)
-
 type noopClient struct {
 	opts Options
 }

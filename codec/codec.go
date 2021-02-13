@@ -8,8 +8,8 @@ import (
 	"github.com/unistack-org/micro/v3/metadata"
 )
 
+// Message types
 const (
-	// Message types
 	Error MessageType = iota
 	Request
 	Response
@@ -25,8 +25,9 @@ var (
 
 var (
 	// DefaultMaxMsgSize specifies how much data codec can handle
-	DefaultMaxMsgSize int   = 1024 * 1024 * 4 // 4Mb
-	DefaultCodec      Codec = NewCodec()
+	DefaultMaxMsgSize int = 1024 * 1024 * 4 // 4Mb
+	// DefaultCodec is the global default codec
+	DefaultCodec Codec = NewCodec()
 )
 
 // MessageType

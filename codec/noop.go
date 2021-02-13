@@ -30,12 +30,8 @@ func (c *noopCodec) ReadBody(conn io.Reader, b interface{}) error {
 	}
 
 	switch v := b.(type) {
-	case string:
-		v = string(buf)
 	case *string:
 		*v = string(buf)
-	case []byte:
-		v = buf
 	case *[]byte:
 		*v = buf
 	case *Frame:
@@ -112,14 +108,8 @@ func (c *noopCodec) Unmarshal(d []byte, v interface{}) error {
 		return nil
 	}
 	switch ve := v.(type) {
-	case string:
-		ve = string(d)
-		return nil
 	case *string:
 		*ve = string(d)
-		return nil
-	case []byte:
-		ve = d
 		return nil
 	case *[]byte:
 		*ve = d

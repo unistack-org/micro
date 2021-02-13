@@ -2,7 +2,6 @@ package store_test
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
@@ -53,9 +52,6 @@ func TestMemoryNamespacePrefix(t *testing.T) {
 
 func basictest(s store.Store, t *testing.T) {
 	ctx := context.Background()
-	if len(os.Getenv("IN_TRAVIS_CI")) == 0 {
-		t.Logf("Testing store %s, with options %#+v\n", s.String(), s.Options())
-	}
 	// Read and Write an expiring Record
 	if err := s.Write(ctx, "Hello", "World", store.WriteTTL(time.Millisecond*100)); err != nil {
 		t.Error(err)
@@ -71,5 +67,7 @@ func basictest(s store.Store, t *testing.T) {
 		t.Errorf("Expected %# v, got %# v", store.ErrNotFound, err)
 	}
 
-	s.Disconnect(ctx) // reset the store
+	if err := s.Disconnect(ctx); err != nil {
+		t.Fatal(err)
+	}
 }
