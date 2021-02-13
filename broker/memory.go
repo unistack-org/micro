@@ -235,6 +235,7 @@ func (m *memorySubscriber) Unsubscribe(ctx context.Context) error {
 	return nil
 }
 
+// NewBroker return new memory broker
 func NewBroker(opts ...Option) Broker {
 	rand.Seed(time.Now().UnixNano())
 

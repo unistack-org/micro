@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"github.com/unistack-org/micro/v3/api/resolver/vpath"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestResolve(t *testing.T) {
@@ -62,9 +60,13 @@ func TestResolve(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			r := NewResolver(vpath.NewResolver())
 			result, err := r.Resolve(&http.Request{URL: &url.URL{Host: tc.Host, Path: "foo/bar"}})
-			assert.Nil(t, err, "Expecter err to be nil")
+			if err != nil {
+				t.Fatal(err)
+			}
 			if result != nil {
-				assert.Equal(t, tc.Result, result.Domain, "Expected %v but got %v", tc.Result, result.Domain)
+				if tc.Result != result.Domain {
+					t.Fatalf("Expected %v but got %v", tc.Result, result.Domain)
+				}
 			}
 		})
 	}

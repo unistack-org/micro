@@ -7,6 +7,10 @@ import (
 	"github.com/unistack-org/micro/v3/api"
 )
 
+var (
+	DefaultRouter Router
+)
+
 // Router is used to determine an endpoint for a request
 type Router interface {
 	// Returns options
@@ -23,6 +27,6 @@ type Router interface {
 	Deregister(ep *api.Endpoint) error
 	// Route returns an api.Service route
 	Route(r *http.Request) (*api.Service, error)
-	// String represenation of router
+	// String representation of router
 	String() string
 }

@@ -85,12 +85,12 @@ func CSR(opts ...CertOption) ([]byte, error) {
 }
 
 // Sign decodes a CSR and signs it with the CA
-func Sign(CACrt, CAKey, CSR []byte, opts ...CertOption) ([]byte, error) {
+func Sign(crt, key, csr []byte, opts ...CertOption) ([]byte, error) {
 	options := CertOptions{}
 	for _, o := range opts {
 		o(&options)
 	}
-	asn1CACrt, err := decodePEM(CACrt)
+	asn1CACrt, err := decodePEM(crt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode CA Crt PEM: %w", err)
 	}
@@ -101,7 +101,7 @@ func Sign(CACrt, CAKey, CSR []byte, opts ...CertOption) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ca is not a valid certificate: %w", err)
 	}
-	asn1CAKey, err := decodePEM(CAKey)
+	asn1CAKey, err := decodePEM(key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode CA  Key PEM: %w", err)
 	}
@@ -112,22 +112,22 @@ func Sign(CACrt, CAKey, CSR []byte, opts ...CertOption) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ca key is not a valid private key: %w", err)
 	}
-	asn1CSR, err := decodePEM(CSR)
+	asn1CSR, err := decodePEM(csr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode CSR PEM: %w", err)
 	}
 	if len(asn1CSR) != 1 {
 		return nil, fmt.Errorf("expected 1 CSR, got %d", len(asn1CSR))
 	}
-	csr, err := x509.ParseCertificateRequest(asn1CSR[0].Bytes)
+	caCsr, err := x509.ParseCertificateRequest(asn1CSR[0].Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("csr is invalid: %w", err)
 	}
 	template := &x509.Certificate{
 		SignatureAlgorithm:    x509.PureEd25519,
-		Subject:               csr.Subject,
-		DNSNames:              csr.DNSNames,
-		IPAddresses:           csr.IPAddresses,
+		Subject:               caCsr.Subject,
+		DNSNames:              caCsr.DNSNames,
+		IPAddresses:           caCsr.IPAddresses,
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		NotBefore:             options.NotBefore,

@@ -64,7 +64,7 @@ func newFunction(opts ...Option) Function {
 	// make context the last thing
 	fopts = append(fopts, Context(ctx))
 
-	service := &service{opts: NewOptions(opts...)}
+	service := &service{opts: NewOptions(fopts...)}
 
 	fn := &function{
 		cancel:  cancel,

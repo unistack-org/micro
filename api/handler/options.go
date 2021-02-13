@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/unistack-org/micro/v3/api/router"
 	"github.com/unistack-org/micro/v3/client"
+	"github.com/unistack-org/micro/v3/logger"
 )
 
 var (
@@ -14,13 +15,19 @@ type Options struct {
 	Namespace   string
 	Router      router.Router
 	Client      client.Client
+	Logger      logger.Logger
 }
 
 type Option func(o *Options)
 
 // NewOptions fills in the blanks
 func NewOptions(opts ...Option) Options {
-	var options Options
+	options := Options{
+		Client:      client.DefaultClient,
+		Router:      router.DefaultRouter,
+		Logger:      logger.DefaultLogger,
+		MaxRecvSize: DefaultMaxRecvSize,
+	}
 	for _, o := range opts {
 		o(&options)
 	}
@@ -28,10 +35,6 @@ func NewOptions(opts ...Option) Options {
 	// set namespace if blank
 	if len(options.Namespace) == 0 {
 		WithNamespace("go.micro.api")(&options)
-	}
-
-	if options.MaxRecvSize == 0 {
-		options.MaxRecvSize = DefaultMaxRecvSize
 	}
 
 	return options

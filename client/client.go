@@ -11,7 +11,8 @@ import (
 
 var (
 	// DefaultClient is the global default client
-	DefaultClient Client = NewClient()
+	DefaultClient      Client = NewClient()
+	DefaultContentType        = "application/json"
 )
 
 // Client is the interface used to make requests to services.
