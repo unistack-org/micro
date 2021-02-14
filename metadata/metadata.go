@@ -25,6 +25,7 @@ var (
 	defaultMetadataSize = 2
 )
 
+// Iterator used to iterate over metadata with order
 type Iterator struct {
 	cur  int
 	cnt  int
@@ -32,6 +33,7 @@ type Iterator struct {
 	md   Metadata
 }
 
+// Next advance iterator to next element
 func (iter *Iterator) Next(k, v *string) bool {
 	if iter.cur+1 > iter.cnt {
 		return false
@@ -43,7 +45,7 @@ func (iter *Iterator) Next(k, v *string) bool {
 	return true
 }
 
-// Iterate returns run user func with map key, val sorted by key
+// Iterator returns the itarator for metadata in sorted order
 func (md Metadata) Iterator() *Iterator {
 	iter := &Iterator{md: md, cnt: len(md)}
 	iter.keys = make([]string, 0, iter.cnt)

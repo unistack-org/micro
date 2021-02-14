@@ -186,8 +186,9 @@ func (m *memorySync) String() string {
 	return "memory"
 }
 
+// NewSync return new memory sync
 func NewSync(opts ...Option) Sync {
-	var options Options
+	options := Options{}
 	for _, o := range opts {
 		o(&options)
 	}

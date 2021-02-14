@@ -9,6 +9,7 @@ import (
 	"github.com/unistack-org/micro/v3/tracer"
 )
 
+// Options hold the config options
 type Options struct {
 	Name       string
 	AllowFail  bool
@@ -32,8 +33,10 @@ type Options struct {
 	Context context.Context
 }
 
+// Option function signature
 type Option func(o *Options)
 
+// NewOptions new options struct with filed values
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Logger:  logger.DefaultLogger,
@@ -48,36 +51,42 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+// AllowFail allows config source to fail
 func AllowFail(b bool) Option {
 	return func(o *Options) {
 		o.AllowFail = b
 	}
 }
 
+// BeforeLoad run funcs before config load
 func BeforeLoad(fn ...func(context.Context, Config) error) Option {
 	return func(o *Options) {
 		o.BeforeLoad = fn
 	}
 }
 
+// AfterLoad run funcs after config load
 func AfterLoad(fn ...func(context.Context, Config) error) Option {
 	return func(o *Options) {
 		o.AfterLoad = fn
 	}
 }
 
+// BeforeSave run funcs before save
 func BeforeSave(fn ...func(context.Context, Config) error) Option {
 	return func(o *Options) {
 		o.BeforeSave = fn
 	}
 }
 
+// AfterSave run fncs after save
 func AfterSave(fn ...func(context.Context, Config) error) Option {
 	return func(o *Options) {
 		o.AfterSave = fn
 	}
 }
 
+// Context pass context
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
 		o.Context = ctx
@@ -91,6 +100,7 @@ func Codec(c codec.Codec) Option {
 	}
 }
 
+// Logger sets the logger
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l

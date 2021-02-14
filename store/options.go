@@ -14,6 +14,7 @@ import (
 
 // Options contains configuration for the Store
 type Options struct {
+	// Name specifies store name
 	Name string
 	// Nodes contains the addresses or other connection information of the backing storage.
 	// For example, an etcd implementation would contain the nodes of the cluster.
@@ -33,8 +34,7 @@ type Options struct {
 	Tracer tracer.Tracer
 	// TLSConfig specifies tls.Config for secure
 	TLSConfig *tls.Config
-
-	// Context should contain all implementation specific options, using context.WithValue.
+	// Context should contain all implementation specific options
 	Context context.Context
 }
 
@@ -292,13 +292,16 @@ func ListOffset(o uint) ListOption {
 	}
 }
 
+// ExistsOption specifies Exists call options
 type ExistsOption func(*ExistsOptions)
 
+// ExistsOptions holds options for Exists method
 type ExistsOptions struct {
 	Namespace string
 	Context   context.Context
 }
 
+// NewExistsOptions helper for Exists method
 func NewExistsOptions(opts ...ExistsOption) ExistsOptions {
 	options := ExistsOptions{
 		Context: context.Background(),

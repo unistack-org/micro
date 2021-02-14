@@ -10,6 +10,7 @@ import (
 	"github.com/unistack-org/micro/v3/tracer"
 )
 
+// Options holds options for register
 type Options struct {
 	Name      string
 	Addrs     []string

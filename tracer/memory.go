@@ -89,6 +89,7 @@ func (t *tracer) Name() string {
 	return t.opts.Name
 }
 
+// NewTracer returns new memory tracer
 func NewTracer(opts ...Option) Tracer {
 	return &tracer{
 		opts: NewOptions(opts...),

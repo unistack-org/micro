@@ -11,8 +11,21 @@ import (
 
 var (
 	// DefaultClient is the global default client
-	DefaultClient      Client = NewClient()
-	DefaultContentType        = "application/json"
+	DefaultClient Client = NewClient()
+	// DefaultContentType is the default content-type if not specified
+	DefaultContentType = "application/json"
+	// DefaultBackoff is the default backoff function for retries
+	DefaultBackoff = exponentialBackoff
+	// DefaultRetry is the default check-for-retry function for retries
+	DefaultRetry = RetryNever
+	// DefaultRetries is the default number of times a request is tried
+	DefaultRetries = 0
+	// DefaultRequestTimeout is the default request timeout
+	DefaultRequestTimeout = time.Second * 5
+	// DefaultPoolSize sets the connection pool size
+	DefaultPoolSize = 100
+	// DefaultPoolTTL sets the connection pool ttl
+	DefaultPoolTTL = time.Minute
 )
 
 // Client is the interface used to make requests to services.
@@ -20,10 +33,10 @@ var (
 // It also supports bidirectional streaming of requests.
 type Client interface {
 	Name() string
-	Init(...Option) error
+	Init(opts ...Option) error
 	Options() Options
 	NewMessage(topic string, msg interface{}, opts ...MessageOption) Message
-	NewRequest(service, endpoint string, req interface{}, reqOpts ...RequestOption) Request
+	NewRequest(service string, endpoint string, req interface{}, opts ...RequestOption) Request
 	Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error
 	Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error)
 	Publish(ctx context.Context, msg Message, opts ...PublishOption) error
@@ -74,9 +87,9 @@ type Stream interface {
 	// The response read
 	Response() Response
 	// Send will encode and send a request
-	Send(interface{}) error
+	Send(msg interface{}) error
 	// Recv will decode and read a response
-	Recv(interface{}) error
+	Recv(msg interface{}) error
 	// Error returns the stream error
 	Error() error
 	// Close closes the stream
@@ -97,18 +110,3 @@ type MessageOption func(*MessageOptions)
 
 // RequestOption used by NewRequest
 type RequestOption func(*RequestOptions)
-
-var (
-	// DefaultBackoff is the default backoff function for retries
-	DefaultBackoff = exponentialBackoff
-	// DefaultRetry is the default check-for-retry function for retries
-	DefaultRetry = RetryNever
-	// DefaultRetries is the default number of times a request is tried
-	DefaultRetries = 0
-	// DefaultRequestTimeout is the default request timeout
-	DefaultRequestTimeout = time.Second * 5
-	// DefaultPoolSize sets the connection pool size
-	DefaultPoolSize = 100
-	// DefaultPoolTTL sets the connection pool ttl
-	DefaultPoolTTL = time.Minute
-)

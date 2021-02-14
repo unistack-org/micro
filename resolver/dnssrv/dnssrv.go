@@ -9,7 +9,9 @@ import (
 )
 
 // Resolver is a DNS network resolve
-type Resolver struct{}
+type Resolver struct {
+	Address string
+}
 
 // Resolve assumes ID is a domain name e.g micro.mu
 func (r *Resolver) Resolve(name string) ([]*resolver.Record, error) {

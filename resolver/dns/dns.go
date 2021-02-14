@@ -18,6 +18,7 @@ type Resolver struct {
 	sync.RWMutex
 }
 
+// Resolve tries to resolve endpoint address
 func (r *Resolver) Resolve(name string) ([]*resolver.Record, error) {
 	host, port, err := net.SplitHostPort(name)
 	if err != nil {

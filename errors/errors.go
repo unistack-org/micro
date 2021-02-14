@@ -9,33 +9,33 @@ import (
 )
 
 var (
-	// ErrBadRequest
+	// ErrBadRequest returns then requests contains invalid data
 	ErrBadRequest = &Error{Code: 400}
-	// ErrUnauthorized
+	// ErrUnauthorized returns then user have unauthorized call
 	ErrUnauthorized = &Error{Code: 401}
-	// ErrForbidden
+	// ErrForbidden returns then user have not access the resource
 	ErrForbidden = &Error{Code: 403}
-	// ErrNotFound
+	// ErrNotFound returns then user specify invalid endpoint
 	ErrNotFound = &Error{Code: 404}
-	// ErrMethodNotAllowed
+	// ErrMethodNotAllowed returns then user try to get invalid method
 	ErrMethodNotAllowed = &Error{Code: 405}
-	// ErrTimeout
+	// ErrTimeout returns then timeout exceeded
 	ErrTimeout = &Error{Code: 408}
-	// ErrConflict
+	// ErrConflict returns then request create duplicate resource
 	ErrConflict = &Error{Code: 409}
-	// ErrInternalServerError
+	// ErrInternalServerError returns then server cant process request because of internal error
 	ErrInternalServerError = &Error{Code: 500}
-	// ErNotImplemented
+	// ErNotImplemented returns then server does not have desired endpoint method
 	ErNotImplemented = &Error{Code: 501}
-	// ErrBadGateway
+	// ErrBadGateway returns then server cant process request
 	ErrBadGateway = &Error{Code: 502}
-	// ErrServiceUnavailable
+	// ErrServiceUnavailable returns then service unavailable
 	ErrServiceUnavailable = &Error{Code: 503}
-	// ErrGatewayTimeout
+	// ErrGatewayTimeout returns then server have long time to process request
 	ErrGatewayTimeout = &Error{Code: 504}
 )
 
-// Error tpye
+// Error type
 type Error struct {
 	Id     string
 	Code   int32
@@ -43,6 +43,7 @@ type Error struct {
 	Status string
 }
 
+// Error satisfies error interface
 func (e *Error) Error() string {
 	b, _ := json.Marshal(e)
 	return string(b)

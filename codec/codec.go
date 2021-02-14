@@ -30,7 +30,7 @@ var (
 	DefaultCodec Codec = NewCodec()
 )
 
-// MessageType
+// MessageType specifies message type for codec
 type MessageType int
 
 // Codec encodes/decodes various types of messages used within micro.

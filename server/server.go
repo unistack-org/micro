@@ -50,13 +50,13 @@ type Server interface {
 	// Retrieve the options
 	Options() Options
 	// Register a handler
-	Handle(Handler) error
+	Handle(h Handler) error
 	// Create a new handler
-	NewHandler(interface{}, ...HandlerOption) Handler
+	NewHandler(h interface{}, opts ...HandlerOption) Handler
 	// Create a new subscriber
-	NewSubscriber(string, interface{}, ...SubscriberOption) Subscriber
+	NewSubscriber(topic string, h interface{}, opts ...SubscriberOption) Subscriber
 	// Register a subscriber
-	Subscribe(Subscriber) error
+	Subscribe(s Subscriber) error
 	// Start the server
 	Start() error
 	// Stop the server
@@ -68,9 +68,9 @@ type Server interface {
 // Router handle serving messages
 type Router interface {
 	// ProcessMessage processes a message
-	ProcessMessage(context.Context, Message) error
+	ProcessMessage(ctx context.Context, msg Message) error
 	// ServeRequest processes a request to completion
-	ServeRequest(context.Context, Request, Response) error
+	ServeRequest(ctx context.Context, req Request, rsp Response) error
 }
 
 // Message is an async message interface
@@ -116,7 +116,7 @@ type Response interface {
 	// Encoded writer
 	Codec() codec.Codec
 	// Write the header
-	WriteHeader(metadata.Metadata)
+	WriteHeader(md metadata.Metadata)
 	// write a response directly to the client
 	Write([]byte) error
 }
@@ -128,8 +128,8 @@ type Response interface {
 type Stream interface {
 	Context() context.Context
 	Request() Request
-	Send(interface{}) error
-	Recv(interface{}) error
+	Send(msg interface{}) error
+	Recv(msg interface{}) error
 	Error() error
 	Close() error
 }

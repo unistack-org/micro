@@ -12,9 +12,14 @@ import (
 )
 
 var (
-	bracketSplitter  = regexp.MustCompile(`\[|\]`)
+	// ErrInvalidStruct specifies invalid struct error
 	ErrInvalidStruct = errors.New("invalid struct specified")
-	ErrInvalidParam  = errors.New("invalid url query param provided")
+	// ErrInvalidParam specifies invalid url query params
+	ErrInvalidParam = errors.New("invalid url query param provided")
+)
+
+var (
+	bracketSplitter = regexp.MustCompile(`\[|\]`)
 )
 
 func fieldName(name string) string {
@@ -38,6 +43,7 @@ func fieldName(name string) string {
 	return string(newstr)
 }
 
+// IsEmpty returns true if value empty
 func IsEmpty(v reflect.Value) bool {
 	switch getKind(v) {
 	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
@@ -63,6 +69,7 @@ func IsEmpty(v reflect.Value) bool {
 	return false
 }
 
+// Zero creates new zero interface
 func Zero(src interface{}) (interface{}, error) {
 	sv := reflect.ValueOf(src)
 
@@ -79,6 +86,7 @@ func Zero(src interface{}) (interface{}, error) {
 	return dst.Interface(), nil
 }
 
+// StructFields returns slice of struct fields
 func StructFields(src interface{}) ([]reflect.StructField, error) {
 	var fields []reflect.StructField
 
@@ -149,6 +157,7 @@ func CopyFrom(a, b interface{}) {
 	}
 }
 
+// URLMap returns map of url query params
 func URLMap(query string) (map[string]interface{}, error) {
 	var (
 		mp interface{} = make(map[string]interface{})
@@ -167,6 +176,7 @@ func URLMap(query string) (map[string]interface{}, error) {
 	return mp.(map[string]interface{}), nil
 }
 
+// FlattenMap expand key.subkey to nested map
 func FlattenMap(a map[string]interface{}) map[string]interface{} {
 	// preprocess map
 	nb := make(map[string]interface{}, len(a))
@@ -197,6 +207,7 @@ func FlattenMap(a map[string]interface{}) map[string]interface{} {
 	return nb
 }
 
+// MergeMap merges maps
 func MergeMap(a interface{}, b map[string]interface{}) error {
 	var err error
 
@@ -354,11 +365,11 @@ func mergeBool(va, vb reflect.Value) error {
 			va.SetBool(true)
 		}
 	case reflect.String:
-		if b, err := strconv.ParseBool(vb.String()); err != nil {
+		b, err := strconv.ParseBool(vb.String())
+		if err != nil {
 			return err
-		} else {
-			va.SetBool(b)
 		}
+		va.SetBool(b)
 	default:
 		return fmt.Errorf("cant merge %v %s with %v %s", va, va.Kind(), vb, vb.Kind())
 	}
@@ -390,11 +401,11 @@ func mergeInt(va, vb reflect.Value) error {
 	case reflect.Float32:
 		va.SetInt(int64(vb.Float()))
 	case reflect.String:
-		if f, err := strconv.ParseInt(vb.String(), 10, va.Type().Bits()); err != nil {
+		f, err := strconv.ParseInt(vb.String(), 10, va.Type().Bits())
+		if err != nil {
 			return err
-		} else {
-			va.SetInt(f)
 		}
+		va.SetInt(f)
 	default:
 		return fmt.Errorf("cant merge %v %s with %v %s", va, va.Kind(), vb, vb.Kind())
 	}
@@ -410,11 +421,11 @@ func mergeUint(va, vb reflect.Value) error {
 	case reflect.Float32:
 		va.SetUint(uint64(vb.Float()))
 	case reflect.String:
-		if f, err := strconv.ParseUint(vb.String(), 10, va.Type().Bits()); err != nil {
+		f, err := strconv.ParseUint(vb.String(), 10, va.Type().Bits())
+		if err != nil {
 			return err
-		} else {
-			va.SetUint(f)
 		}
+		va.SetUint(f)
 	default:
 		return fmt.Errorf("cant merge %v %s with %v %s", va, va.Kind(), vb, vb.Kind())
 	}
@@ -430,11 +441,11 @@ func mergeFloat(va, vb reflect.Value) error {
 	case reflect.Float32:
 		va.Set(vb)
 	case reflect.String:
-		if f, err := strconv.ParseFloat(vb.String(), va.Type().Bits()); err != nil {
+		f, err := strconv.ParseFloat(vb.String(), va.Type().Bits())
+		if err != nil {
 			return err
-		} else {
-			va.SetFloat(f)
 		}
+		va.SetFloat(f)
 	default:
 		return fmt.Errorf("cant merge %v %s with %v %s", va, va.Kind(), vb, vb.Kind())
 	}

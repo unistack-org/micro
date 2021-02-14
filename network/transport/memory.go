@@ -251,6 +251,7 @@ func (m *memoryTransport) Name() string {
 	return m.opts.Name
 }
 
+// NewTransport returns new memory transport with options
 func NewTransport(opts ...Option) Transport {
 	options := NewOptions(opts...)
 

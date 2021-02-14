@@ -64,13 +64,13 @@ type CallOptions struct {
 	Address []string
 	// Backoff func
 	Backoff BackoffFunc
-	// Transport Dial Timeout
+	// DialTimeout is the transport Dial Timeout
 	DialTimeout time.Duration
-	// Number of Call attempts
+	// Retries is the number of Call attempts
 	Retries int
-	// Check if retriable func
+	// Retry func to be used for retries
 	Retry RetryFunc
-	// Request/Response timeout
+	// RequestTimeout specifies request timeout
 	RequestTimeout time.Duration
 	// Router to use for this call
 	Router router.Router
@@ -78,15 +78,15 @@ type CallOptions struct {
 	Selector selector.Selector
 	// SelectOptions to use when selecting a route
 	SelectOptions []selector.SelectOption
-	// Stream timeout for the stream
+	// StreamTimeout timeout for the stream
 	StreamTimeout time.Duration
-	// Use the auth token as the authorization header
+	// AuthToken specifies the auth token as the authorization header
 	AuthToken bool
 	// Network to lookup the route within
 	Network string
-	// Middleware for low level call func
+	// CallWrappers is for low level call func
 	CallWrappers []CallWrapper
-	// Context is uded for non default options
+	// Context is used for non default options
 	Context context.Context
 }
 
@@ -110,8 +110,7 @@ func NewPublishOptions(opts ...PublishOption) PublishOptions {
 type PublishOptions struct {
 	// Exchange is the routing exchange for the message
 	Exchange string
-	// Other options for implementations of the interface
-	// can be stored in a context
+	// Context holds additional options
 	Context context.Context
 }
 
@@ -140,10 +139,11 @@ func NewRequestOptions(opts ...RequestOption) RequestOptions {
 
 // RequestOptions holds client request options
 type RequestOptions struct {
+	// ContentType specify content-type of request
 	ContentType string
-	Stream      bool
-	// Other options for implementations of the interface
-	// can be stored in a context
+	// Stream says that request is the streaming
+	Stream bool
+	// Context can hold other options
 	Context context.Context
 }
 
@@ -212,7 +212,7 @@ func Codec(contentType string, c codec.Codec) Option {
 	}
 }
 
-// Default content type of the client
+// ContentType used by default if not specified
 func ContentType(ct string) Option {
 	return func(o *Options) {
 		o.ContentType = ct
@@ -270,22 +270,21 @@ func Selector(s selector.Selector) Option {
 	}
 }
 
-// Adds a Wrapper to a list of options passed into the client
+// Wrap adds a wrapper to the list of options passed into the client
 func Wrap(w Wrapper) Option {
 	return func(o *Options) {
 		o.Wrappers = append(o.Wrappers, w)
 	}
 }
 
-// Adds a Wrapper to the list of CallFunc wrappers
+// WrapCall adds a wrapper to the list of CallFunc wrappers
 func WrapCall(cw ...CallWrapper) Option {
 	return func(o *Options) {
 		o.CallOptions.CallWrappers = append(o.CallOptions.CallWrappers, cw...)
 	}
 }
 
-// Backoff is used to set the backoff function used
-// when retrying Calls
+// Backoff is used to set the backoff function used when retrying Calls
 func Backoff(fn BackoffFunc) Option {
 	return func(o *Options) {
 		o.CallOptions.Backoff = fn
@@ -307,7 +306,6 @@ func Lookup(l LookupFunc) Option {
 }
 
 // Retries sets the retry count when making the request.
-// Should this be a Call Option?
 func Retries(i int) Option {
 	return func(o *Options) {
 		o.CallOptions.Retries = i
@@ -322,7 +320,6 @@ func Retry(fn RetryFunc) Option {
 }
 
 // RequestTimeout is the request timeout.
-// Should this be a Call Option?
 func RequestTimeout(d time.Duration) Option {
 	return func(o *Options) {
 		o.CallOptions.RequestTimeout = d
@@ -462,8 +459,6 @@ func WithMessageContentType(ct string) MessageOption {
 		o.ContentType = ct
 	}
 }
-
-// Request Options
 
 // WithContentType specifies request content type
 func WithContentType(ct string) RequestOption {

@@ -6,7 +6,7 @@ import "context"
 var (
 	// DefaultLogger variable
 	DefaultLogger Logger = NewLogger()
-	// DefaultLogger level
+	// DefaultLevel used by logger
 	DefaultLevel Level = InfoLevel
 )
 
