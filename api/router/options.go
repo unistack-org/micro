@@ -9,6 +9,7 @@ import (
 	"github.com/unistack-org/micro/v3/register"
 )
 
+// Options holds the options for api router
 type Options struct {
 	Handler  string
 	Register register.Register
@@ -17,8 +18,10 @@ type Options struct {
 	Context  context.Context
 }
 
+// Option func signature
 type Option func(o *Options)
 
+// NewOptions returns options struct filled by opts
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Context: context.Background(),

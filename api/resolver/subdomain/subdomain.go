@@ -12,17 +12,19 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
+// NewResolver creates new subdomain api resolver
 func NewResolver(parent resolver.Resolver, opts ...resolver.Option) resolver.Resolver {
 	options := resolver.NewOptions(opts...)
-	return &Resolver{options, parent}
+	return &subdomainResolver{options, parent}
 }
 
-type Resolver struct {
+type subdomainResolver struct {
 	opts resolver.Options
 	resolver.Resolver
 }
 
-func (r *Resolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*resolver.Endpoint, error) {
+// Resolve resolve endpoint based on subdomain
+func (r *subdomainResolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*resolver.Endpoint, error) {
 	if dom := r.Domain(req); len(dom) > 0 {
 		opts = append(opts, resolver.Domain(dom))
 	}
@@ -30,7 +32,8 @@ func (r *Resolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*
 	return r.Resolver.Resolve(req, opts...)
 }
 
-func (r *Resolver) Domain(req *http.Request) string {
+// Domain returns domain
+func (r *subdomainResolver) Domain(req *http.Request) string {
 	// determine the host, e.g. foobar.m3o.app
 	host := req.URL.Hostname()
 	if len(host) == 0 {
@@ -82,6 +85,6 @@ func (r *Resolver) Domain(req *http.Request) string {
 	return strings.Join(comps, "-")
 }
 
-func (r *Resolver) String() string {
+func (r *subdomainResolver) String() string {
 	return "subdomain"
 }

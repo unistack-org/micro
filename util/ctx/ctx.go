@@ -8,6 +8,7 @@ import (
 	"github.com/unistack-org/micro/v3/metadata"
 )
 
+// FromRequest creates context with metadata from http.Request
 func FromRequest(r *http.Request) context.Context {
 	ctx := r.Context()
 	md, ok := metadata.FromIncomingContext(ctx)

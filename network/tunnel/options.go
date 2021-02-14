@@ -13,11 +13,11 @@ import (
 var (
 	// DefaultAddress is default tunnel bind address
 	DefaultAddress = ":0"
-	// The shared default token
+	// DefaultToken the shared default token
 	DefaultToken = "go.micro.tunnel"
 )
 
-// Option func
+// Option func signature
 type Option func(*Options)
 
 // Options provides network configuration options
@@ -160,7 +160,7 @@ func DialWait(b bool) DialOption {
 	}
 }
 
-// DefaultOptions returns router default options
+// NewOptions returns router default options with filled values
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Id:      uuid.New().String(),

@@ -4,11 +4,13 @@ import (
 	"sync"
 )
 
+// Pool holds the socket pool
 type Pool struct {
 	sync.RWMutex
 	pool map[string]*Socket
 }
 
+// Get socket from pool
 func (p *Pool) Get(id string) (*Socket, bool) {
 	// attempt to get existing socket
 	p.RLock()
@@ -35,6 +37,7 @@ func (p *Pool) Get(id string) (*Socket, bool) {
 	return socket, false
 }
 
+// Release close the socket and delete from pool
 func (p *Pool) Release(s *Socket) {
 	p.Lock()
 	defer p.Unlock()

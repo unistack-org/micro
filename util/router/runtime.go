@@ -54,6 +54,7 @@ type PatternOpt func(*patternOptions)
 // "verb" is the verb part of the pattern. It is empty if the pattern does not have the part.
 // "version" must be 1 for now.
 // It returns an error if the given definition is invalid.
+//nolint:gocyclo
 func NewPattern(version int, ops []int, pool []string, verb string, opts ...PatternOpt) (Pattern, error) {
 	options := patternOptions{
 		assumeColonVerb: true,
@@ -182,6 +183,7 @@ func MustPattern(p Pattern, err error) Pattern {
 // Match examines components if it matches to the Pattern.
 // If it matches, the function returns a mapping from field paths to their captured values.
 // If otherwise, the function returns an error.
+//nolint:gocyclo
 func (p Pattern) Match(components []string, verb string) (map[string]string, error) {
 	if p.verb != verb {
 		if p.assumeColonVerb || p.verb != "" {

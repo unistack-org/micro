@@ -30,6 +30,7 @@ type Options struct {
 // Option func signature
 type Option func(o *Options)
 
+// NewOptions returns new options struct that filled by opts
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Logger: logger.DefaultLogger,

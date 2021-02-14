@@ -44,6 +44,7 @@ func WriteInternalServerError(w http.ResponseWriter, err error) {
 	Write(w, "application/json", 500, string(rawBody))
 }
 
+// NewRoundTripper creates new http RoundTripper
 func NewRoundTripper(opts ...Option) http.RoundTripper {
 	options := Options{}
 	for _, o := range opts {

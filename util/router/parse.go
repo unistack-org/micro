@@ -276,6 +276,7 @@ func (p *parser) accept(term termType) (string, error) {
 //   sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
 //                 / "*" / "+" / "," / ";" / "="
 //   pct-encoded   = "%" HEXDIG HEXDIG
+//nolint:gocyclo
 func expectPChars(t string) error {
 	const (
 		init = iota

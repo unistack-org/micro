@@ -6,6 +6,7 @@ import (
 	"github.com/unistack-org/micro/v3/store"
 )
 
+// Options holds the options for token
 type Options struct {
 	// Store to persist the tokens
 	Store store.Store
@@ -15,6 +16,7 @@ type Options struct {
 	PrivateKey string
 }
 
+// Option func signature
 type Option func(o *Options)
 
 // WithStore sets the token providers store
@@ -38,8 +40,9 @@ func WithPrivateKey(key string) Option {
 	}
 }
 
+// NewOptions returns options struct filled by opts
 func NewOptions(opts ...Option) Options {
-	var options Options
+	options := Options{}
 	for _, o := range opts {
 		o(&options)
 	}
@@ -50,11 +53,13 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+// GenerateOptions holds the generate options
 type GenerateOptions struct {
 	// Expiry for the token
 	Expiry time.Duration
 }
 
+// GenerateOption func signature
 type GenerateOption func(o *GenerateOptions)
 
 // WithExpiry for the generated account's token expires

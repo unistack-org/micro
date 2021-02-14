@@ -175,6 +175,7 @@ func (t *tunEvent) Error() error {
 	return nil
 }
 
+// NewBroker returns new tunnel broker
 func NewBroker(opts ...broker.Option) (broker.Broker, error) {
 	options := broker.NewOptions(opts...)
 

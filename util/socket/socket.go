@@ -22,10 +22,12 @@ type Socket struct {
 	recv chan *transport.Message
 }
 
+// SetLocal sets the local addr
 func (s *Socket) SetLocal(l string) {
 	s.local = l
 }
 
+// SetRemote sets the remote addr
 func (s *Socket) SetRemote(r string) {
 	s.remote = r
 }
@@ -58,14 +60,17 @@ func (s *Socket) Process(m *transport.Message) error {
 	return nil
 }
 
+// Remote returns remote addr
 func (s *Socket) Remote() string {
 	return s.remote
 }
 
+// Local returns local addr
 func (s *Socket) Local() string {
 	return s.local
 }
 
+// Send message by via transport
 func (s *Socket) Send(m *transport.Message) error {
 	// send a message
 	select {
@@ -77,6 +82,7 @@ func (s *Socket) Send(m *transport.Message) error {
 	return nil
 }
 
+// Recv message from transport
 func (s *Socket) Recv(m *transport.Message) error {
 	// receive a message
 	select {

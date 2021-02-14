@@ -1,4 +1,4 @@
-// Package dns srv resolves names to dns srv records
+// Package dnssrv resolves names to dns srv records
 package dnssrv
 
 import (

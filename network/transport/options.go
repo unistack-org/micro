@@ -11,6 +11,7 @@ import (
 	"github.com/unistack-org/micro/v3/tracer"
 )
 
+// Options struct holds the transport options
 type Options struct {
 	Name string
 	// Addrs is the list of intermediary addresses to connect to
@@ -18,10 +19,6 @@ type Options struct {
 	// Codec is the codec interface to use where headers are not supported
 	// by the transport and the entire payload must be encoded
 	Codec codec.Codec
-	// Secure tells the transport to secure the connection.
-	// In the case TLSConfig is not specified best effort self-signed
-	// certs should be used
-	Secure bool
 	// TLSConfig to secure the connection. The assumption is that this
 	// is mTLS keypair
 	TLSConfig *tls.Config
@@ -31,7 +28,7 @@ type Options struct {
 	Logger logger.Logger
 	// Meter sets the meter
 	Meter meter.Meter
-	// Tracer
+	// Tracer sets the tracer
 	Tracer tracer.Tracer
 	// Other options for implementations of the interface
 	// can be stored in a context

@@ -10,7 +10,7 @@ import (
 	"github.com/unistack-org/micro/v3/metadata"
 )
 
-// Extract *Value from reflect.Type
+// ExtractValue from reflect.Type from specified depth
 func ExtractValue(v reflect.Type, d int) *Value {
 	if d == 3 {
 		return nil

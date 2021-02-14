@@ -208,6 +208,7 @@ func FlattenMap(a map[string]interface{}) map[string]interface{} {
 }
 
 // MergeMap merges maps
+//nolint:gocyclo
 func MergeMap(a interface{}, b map[string]interface{}) error {
 	var err error
 
@@ -281,6 +282,7 @@ func MergeMap(a interface{}, b map[string]interface{}) error {
 	return nil
 }
 
+//nolint:gocyclo
 func mergeSlice(va, vb reflect.Value) error {
 	switch getKind(vb) {
 	/*

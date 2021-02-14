@@ -111,12 +111,11 @@ func (p *profiler) String() string {
 	return "pprof"
 }
 
-func NewProfile(opts ...profile.Option) profile.Profile {
-	var options profile.Options
+// NewProfile create new profiler
+func NewProfile(opts ...profile.Option) profile.Profiler {
+	options := profile.Options{}
 	for _, o := range opts {
 		o(&options)
 	}
-	p := new(profiler)
-	p.opts = options
-	return p
+	return &profiler{opts: options}
 }

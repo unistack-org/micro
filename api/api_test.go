@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+//nolint:gocyclo
 func TestEncoding(t *testing.T) {
 	testData := []*Endpoint{
 		nil,

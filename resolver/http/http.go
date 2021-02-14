@@ -11,24 +11,23 @@ import (
 	"github.com/unistack-org/micro/v3/resolver"
 )
 
-// Resolver is a HTTP network resolver
-type Resolver struct {
-	// If not set, defaults to http
+// HTTPResolver is a HTTP network resolver
+type HTTPResolver struct {
+	// Proto if not set, defaults to http
 	Proto string
-
 	// Path sets the path to lookup. Defaults to /network
 	Path string
-
 	// Host url to use for the query
 	Host string
 }
 
+// Response contains resolver.Record
 type Response struct {
 	Nodes []*resolver.Record `json:"nodes,omitempty"`
 }
 
 // Resolve assumes ID is a domain which can be converted to a http://name/network request
-func (r *Resolver) Resolve(name string) ([]*resolver.Record, error) {
+func (r *HTTPResolver) Resolve(name string) ([]*resolver.Record, error) {
 	proto := "http"
 	host := "localhost:8080"
 	path := "/network/nodes"

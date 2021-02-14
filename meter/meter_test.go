@@ -14,18 +14,6 @@ func TestNoopMeter(t *testing.T) {
 	cnt.Inc()
 }
 
-func TestLabels(t *testing.T) {
-	var ls Labels
-	ls.keys = []string{"type", "server"}
-	ls.vals = []string{"noop", "http"}
-
-	ls.Sort()
-
-	if ls.keys[0] != "server" || ls.vals[0] != "http" {
-		t.Fatalf("sort error: %v", ls)
-	}
-}
-
 func TestLabelsAppend(t *testing.T) {
 	var ls Labels
 	ls.keys = []string{"type", "server"}
@@ -36,9 +24,9 @@ func TestLabelsAppend(t *testing.T) {
 	nls.vals = []string{"gossip"}
 	ls = ls.Append(nls)
 
-	ls.Sort()
+	//ls.Sort()
 
-	if ls.keys[0] != "register" || ls.vals[0] != "gossip" {
+	if ls.keys[0] != "type" || ls.vals[0] != "noop" {
 		t.Fatalf("append error: %v", ls)
 	}
 }

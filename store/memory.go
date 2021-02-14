@@ -70,11 +70,7 @@ func (m *memoryStore) get(prefix, key string, val interface{}) error {
 		return ErrNotFound
 	}
 
-	if err := m.opts.Codec.Unmarshal(buf, val); err != nil {
-		return err
-	}
-
-	return nil
+	return m.opts.Codec.Unmarshal(buf, val)
 }
 
 func (m *memoryStore) delete(prefix, key string) {

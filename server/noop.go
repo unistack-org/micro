@@ -136,6 +136,7 @@ func (n *noopServer) String() string {
 	return "noop"
 }
 
+//nolint:gocyclo
 func (n *noopServer) Register() error {
 	n.RLock()
 	rsvc := n.rsvc
@@ -144,10 +145,7 @@ func (n *noopServer) Register() error {
 
 	// if service already filled, reuse it and return early
 	if rsvc != nil {
-		if err := DefaultRegisterFunc(rsvc, config); err != nil {
-			return err
-		}
-		return nil
+		return DefaultRegisterFunc(rsvc, config)
 	}
 
 	var err error
@@ -311,6 +309,7 @@ func (n *noopServer) Deregister() error {
 	return nil
 }
 
+//nolint:gocyclo
 func (n *noopServer) Start() error {
 	n.RLock()
 	if n.started {

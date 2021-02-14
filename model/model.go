@@ -1,3 +1,5 @@
+// +build ignore
+
 // Package model is an interface for data modelling
 package model
 

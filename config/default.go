@@ -53,6 +53,7 @@ func (c *defaultConfig) Load(ctx context.Context) error {
 	return nil
 }
 
+//nolint:gocyclo
 func (c *defaultConfig) fillValue(ctx context.Context, value reflect.Value, val string) error {
 	if !rutil.IsEmpty(value) {
 		return nil

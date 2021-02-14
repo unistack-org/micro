@@ -8,6 +8,7 @@ import (
 	"github.com/unistack-org/micro/v3/tracer"
 )
 
+// Options holds the sync options
 type Options struct {
 	Nodes  []string
 	Prefix string
@@ -16,8 +17,10 @@ type Options struct {
 	Meter  meter.Meter
 }
 
+// Option func signature
 type Option func(o *Options)
 
+// NewOptions returns options that filled by opts
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Logger: logger.DefaultLogger,
@@ -32,15 +35,19 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+// LeaderOptions holds the leader options
 type LeaderOptions struct{}
 
+// LeaderOption func signature
 type LeaderOption func(o *LeaderOptions)
 
+// LockOptions holds the lock options
 type LockOptions struct {
 	TTL  time.Duration
 	Wait time.Duration
 }
 
+// LockOption func signature
 type LockOption func(o *LockOptions)
 
 // Logger sets the logger

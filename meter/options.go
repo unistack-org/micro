@@ -16,10 +16,12 @@ type Options struct {
 	Path    string
 	Labels  Labels
 	//TimingObjectives map[float64]float64
-	Logger       logger.Logger
-	Context      context.Context
-	MetricPrefix string
-	LabelPrefix  string
+	Logger              logger.Logger
+	Context             context.Context
+	MetricPrefix        string
+	LabelPrefix         string
+	WriteProcessMetrics bool
+	WriteFDMetrics      bool
 }
 
 // NewOptions prepares a set of options:
@@ -98,5 +100,19 @@ func Label(key, val string) Option {
 func Name(n string) Option {
 	return func(o *Options) {
 		o.Name = n
+	}
+}
+
+// WriteProcessMetrics enable process metrics output for write
+func WriteProcessMetrics(b bool) Option {
+	return func(o *Options) {
+		o.WriteProcessMetrics = b
+	}
+}
+
+// WriteFDMetrics enable fd metrics output for write
+func WriteFDMetrics(b bool) Option {
+	return func(o *Options) {
+		o.WriteFDMetrics = b
 	}
 }

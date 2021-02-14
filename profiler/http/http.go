@@ -17,6 +17,7 @@ type httpProfile struct {
 }
 
 var (
+	// DefaultAddress for http profiler
 	DefaultAddress = ":6060"
 )
 
@@ -60,7 +61,8 @@ func (h *httpProfile) String() string {
 	return "http"
 }
 
-func NewProfile(opts ...profile.Option) profile.Profile {
+// NewProfile returns new http profiler
+func NewProfile(opts ...profile.Option) profile.Profiler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/debug/pprof/", pprof.Index)

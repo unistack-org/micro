@@ -24,6 +24,7 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+// Options struct holds auth options
 type Options struct {
 	Name string
 	// Issuer of the service's account

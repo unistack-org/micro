@@ -8,10 +8,12 @@ import (
 	"github.com/unistack-org/micro/v3/api/resolver"
 )
 
+// Resolver the path resolver
 type Resolver struct {
 	opts resolver.Options
 }
 
+// Resolve resolves endpoint
 func (r *Resolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*resolver.Endpoint, error) {
 	// parse options
 	options := resolver.NewResolveOptions(opts...)
@@ -31,10 +33,12 @@ func (r *Resolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*
 	}, nil
 }
 
+// String retruns the string representation
 func (r *Resolver) String() string {
 	return "path"
 }
 
+// NewResolver returns new path resolver
 func NewResolver(opts ...resolver.Option) resolver.Resolver {
 	return &Resolver{opts: resolver.NewOptions(opts...)}
 }

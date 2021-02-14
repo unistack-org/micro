@@ -75,6 +75,7 @@ var (
 	}
 )
 
+//nolint:gocyclo
 func TestMemoryRegistry(t *testing.T) {
 	ctx := context.TODO()
 	m := NewRegister()

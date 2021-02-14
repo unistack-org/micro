@@ -18,6 +18,7 @@ type Pool interface {
 	Release(c Conn, status error) error
 }
 
+// Conn conn pool interface
 type Conn interface {
 	// unique id of connection
 	Id() string
@@ -27,8 +28,9 @@ type Conn interface {
 	transport.Client
 }
 
+// NewPool creates new connection pool
 func NewPool(opts ...Option) Pool {
-	var options Options
+	options := Options{}
 	for _, o := range opts {
 		o(&options)
 	}

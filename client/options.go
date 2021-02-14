@@ -333,14 +333,12 @@ func StreamTimeout(d time.Duration) Option {
 	}
 }
 
-// Transport dial timeout
+// DialTimeout sets the dial timeout
 func DialTimeout(d time.Duration) Option {
 	return func(o *Options) {
 		o.CallOptions.DialTimeout = d
 	}
 }
-
-// Call Options
 
 // WithExchange sets the exchange to route a message through
 func WithExchange(e string) PublishOption {

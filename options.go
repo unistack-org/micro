@@ -17,7 +17,7 @@ import (
 	"github.com/unistack-org/micro/v3/server"
 	"github.com/unistack-org/micro/v3/store"
 	"github.com/unistack-org/micro/v3/tracer"
-	//	"github.com/unistack-org/micro/v3/debug/profile"
+	//	"github.com/unistack-org/micro/v3/profiler"
 	//	"github.com/unistack-org/micro/v3/runtime"
 )
 
@@ -121,14 +121,17 @@ type brokerOptions struct {
 	clients []string
 }
 
+// BrokerOption func signature
 type BrokerOption func(*brokerOptions)
 
+// BrokerClient specifies clients for broker
 func BrokerClient(n string) BrokerOption {
 	return func(o *brokerOptions) {
 		o.clients = append(o.clients, n)
 	}
 }
 
+// BrokerServer specifies servers for broker
 func BrokerServer(n string) BrokerOption {
 	return func(o *brokerOptions) {
 		o.servers = append(o.servers, n)
@@ -203,6 +206,7 @@ func Stores(s ...store.Store) Option {
 }
 
 // Logger set the logger to use
+//nolint:gocyclo
 func Logger(l logger.Logger, opts ...LoggerOption) Option {
 	return func(o *Options) error {
 		var err error
@@ -282,8 +286,10 @@ func Logger(l logger.Logger, opts ...LoggerOption) Option {
 	}
 }
 
+// LoggerOption func signature
 type LoggerOption func(*loggerOptions)
 
+// loggerOptions
 type loggerOptions struct {
 	servers   []string
 	clients   []string
@@ -318,6 +324,7 @@ func Meters(m ...meter.Meter) Option {
 
 // Register sets the register for the service
 // and the underlying components
+//nolint:gocyclo
 func Register(r register.Register, opts ...RegisterOption) Option {
 	return func(o *Options) error {
 		var err error
@@ -366,26 +373,32 @@ type registerOptions struct {
 	brokers []string
 }
 
+// RegisterOption func signature
 type RegisterOption func(*registerOptions)
 
+// RegisterRouter speciefies routers for register
 func RegisterRouter(n string) RegisterOption {
 	return func(o *registerOptions) {
 		o.routers = append(o.routers, n)
 	}
 }
 
+// RegisterServer specifies servers for register
 func RegisterServer(n string) RegisterOption {
 	return func(o *registerOptions) {
 		o.servers = append(o.servers, n)
 	}
 }
 
+// RegisterBroker specifies broker for register
 func RegisterBroker(n string) RegisterOption {
 	return func(o *registerOptions) {
 		o.brokers = append(o.brokers, n)
 	}
 }
 
+// Tracer sets the tracer
+//nolint:gocyclo
 func Tracer(t tracer.Tracer, opts ...TracerOption) Option {
 	return func(o *Options) error {
 		var err error
@@ -444,26 +457,31 @@ type tracerOptions struct {
 	stores  []string
 }
 
+// TracerOption func signature
 type TracerOption func(*tracerOptions)
 
+// TracerClient sets the clients for tracer
 func TracerClient(n string) TracerOption {
 	return func(o *tracerOptions) {
 		o.clients = append(o.clients, n)
 	}
 }
 
+// TracerServer sets the servers for tracer
 func TracerServer(n string) TracerOption {
 	return func(o *tracerOptions) {
 		o.servers = append(o.servers, n)
 	}
 }
 
+// TracerBroker sets the broker for tracer
 func TracerBroker(n string) TracerOption {
 	return func(o *tracerOptions) {
 		o.brokers = append(o.brokers, n)
 	}
 }
 
+// TracerStore sets the store for tracer
 func TracerStore(n string) TracerOption {
 	return func(o *tracerOptions) {
 		o.stores = append(o.stores, n)
@@ -548,8 +566,10 @@ type routerOptions struct {
 	clients []string
 }
 
+// RouterOption func signature
 type RouterOption func(*routerOptions)
 
+// RouterClient sets the clients for router
 func RouterClient(n string) RouterOption {
 	return func(o *routerOptions) {
 		o.clients = append(o.clients, n)

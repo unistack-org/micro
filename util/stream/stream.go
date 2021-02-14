@@ -11,10 +11,11 @@ import (
 	"github.com/unistack-org/micro/v3/server"
 )
 
+// Stream interface
 type Stream interface {
 	Context() context.Context
-	SendMsg(interface{}) error
-	RecvMsg(interface{}) error
+	SendMsg(msg interface{}) error
+	RecvMsg(msg interface{}) error
 	Close() error
 }
 
@@ -31,23 +32,28 @@ type request struct {
 	context context.Context
 }
 
+// Codec returns codec.Codec
 func (r *request) Codec() codec.Codec {
 	return r.Request.Codec()
 }
 
+// Header returns metadata header
 func (r *request) Header() metadata.Metadata {
 	md, _ := metadata.FromIncomingContext(r.context)
 	return md
 }
 
+// Read returns stream data
 func (r *request) Read() ([]byte, error) {
 	return nil, nil
 }
 
+// Request returns server.Request
 func (s *stream) Request() server.Request {
 	return s.request
 }
 
+// Send sends message
 func (s *stream) Send(v interface{}) error {
 	err := s.Stream.SendMsg(v)
 	if err != nil {
@@ -58,6 +64,7 @@ func (s *stream) Send(v interface{}) error {
 	return err
 }
 
+// Recv receives data
 func (s *stream) Recv(v interface{}) error {
 	err := s.Stream.RecvMsg(v)
 	if err != nil {
@@ -68,6 +75,7 @@ func (s *stream) Recv(v interface{}) error {
 	return err
 }
 
+// Error returns error that stream holds
 func (s *stream) Error() error {
 	s.RLock()
 	defer s.RUnlock()

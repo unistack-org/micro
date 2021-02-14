@@ -10,11 +10,12 @@ import (
 	"github.com/unistack-org/micro/v3/api/resolver"
 )
 
+// NewResolver creates new vpath api resolver
 func NewResolver(opts ...resolver.Option) resolver.Resolver {
-	return &Resolver{opts: resolver.NewOptions(opts...)}
+	return &vpathResolver{opts: resolver.NewOptions(opts...)}
 }
 
-type Resolver struct {
+type vpathResolver struct {
 	opts resolver.Options
 }
 
@@ -22,7 +23,8 @@ var (
 	re = regexp.MustCompile("^v[0-9]+$")
 )
 
-func (r *Resolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*resolver.Endpoint, error) {
+// Resolve endpoint
+func (r *vpathResolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*resolver.Endpoint, error) {
 	if req.URL.Path == "/" {
 		return nil, errors.New("unknown name")
 	}
@@ -60,12 +62,12 @@ func (r *Resolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*
 	}, nil
 }
 
-func (r *Resolver) String() string {
-	return "path"
+func (r *vpathResolver) String() string {
+	return "vpath"
 }
 
 // withPrefix transforms "foo" into "go.micro.api.foo"
-func (r *Resolver) withPrefix(parts ...string) string {
+func (r *vpathResolver) withPrefix(parts ...string) string {
 	p := r.opts.ServicePrefix
 	if len(p) > 0 {
 		parts = append([]string{p}, parts...)

@@ -7,9 +7,11 @@ import (
 )
 
 var (
+	// DefaultMaxRecvSize specifies max recv size for handler
 	DefaultMaxRecvSize int64 = 1024 * 1024 * 100 // 10Mb
 )
 
+// Options struct holds handler options
 type Options struct {
 	MaxRecvSize int64
 	Namespace   string
@@ -18,9 +20,10 @@ type Options struct {
 	Logger      logger.Logger
 }
 
+// Option func signature
 type Option func(o *Options)
 
-// NewOptions fills in the blanks
+// NewOptions creates new options struct and fills it
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Client:      client.DefaultClient,
@@ -54,6 +57,7 @@ func WithRouter(r router.Router) Option {
 	}
 }
 
+// WithClient specifies client to be used by the handler
 func WithClient(c client.Client) Option {
 	return func(o *Options) {
 		o.Client = c

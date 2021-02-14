@@ -10,6 +10,7 @@ import (
 	"github.com/unistack-org/micro/v3/server"
 )
 
+// Api interface
 type Api interface {
 	// Initialise options
 	Init(...Option) error
@@ -23,23 +24,25 @@ type Api interface {
 	String() string
 }
 
+// Options holds the options
 type Options struct{}
 
+// Option func signature
 type Option func(*Options) error
 
 // Endpoint is a mapping between an RPC method and HTTP endpoint
 type Endpoint struct {
-	// RPC Method e.g. Greeter.Hello
+	// Name Greeter.Hello
 	Name string
 	// Description e.g what's this endpoint for
 	Description string
-	// API Handler e.g rpc, proxy
+	// Handler e.g rpc, proxy
 	Handler string
-	// HTTP Host e.g example.com
+	// Host e.g example.com
 	Host []string
-	// HTTP Methods e.g GET, POST
+	// Method e.g GET, POST
 	Method []string
-	// HTTP Path e.g /greeter. Expect POSIX regex
+	// Path e.g /greeter. Expect POSIX regex
 	Path []string
 	// Body destination
 	// "*" or "" - top level message value
@@ -53,9 +56,9 @@ type Endpoint struct {
 type Service struct {
 	// Name of service
 	Name string
-	// The endpoint for this service
+	// Endpoint for this service
 	Endpoint *Endpoint
-	// Versions of this service
+	// Services that provides service
 	Services []*register.Service
 }
 

@@ -183,6 +183,7 @@ func newSubscriber(topic string, sub interface{}, opts ...SubscriberOption) Subs
 	}
 }
 
+//nolint:gocyclo
 func (n *noopServer) createSubHandler(sb *subscriber, opts Options) broker.Handler {
 	return func(p broker.Event) (err error) {
 		defer func() {

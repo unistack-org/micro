@@ -1,4 +1,4 @@
-// Package syncs will sync multiple stores
+// Package sync will sync multiple stores
 package sync
 
 import (

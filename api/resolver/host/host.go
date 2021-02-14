@@ -7,11 +7,12 @@ import (
 	"github.com/unistack-org/micro/v3/api/resolver"
 )
 
-type Resolver struct {
+type hostResolver struct {
 	opts resolver.Options
 }
 
-func (r *Resolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*resolver.Endpoint, error) {
+// Resolve endpoint
+func (r *hostResolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*resolver.Endpoint, error) {
 	// parse options
 	options := resolver.NewResolveOptions(opts...)
 
@@ -24,10 +25,11 @@ func (r *Resolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*
 	}, nil
 }
 
-func (r *Resolver) String() string {
+func (r *hostResolver) String() string {
 	return "host"
 }
 
+// NewResolver creates new host api resolver
 func NewResolver(opts ...resolver.Option) resolver.Resolver {
-	return &Resolver{opts: resolver.NewOptions(opts...)}
+	return &hostResolver{opts: resolver.NewOptions(opts...)}
 }

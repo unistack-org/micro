@@ -10,15 +10,16 @@ import (
 )
 
 var (
+	// DefaultTunnel contains default tunnel implementation
 	DefaultTunnel Tunnel
 )
 
 const (
-	// send over one link
+	// Unicast send over one link
 	Unicast Mode = iota
-	// send to all channel listeners
+	// Multicast send to all channel listeners
 	Multicast
-	// send to all links
+	// Broadcast send to all links
 	Broadcast
 )
 
@@ -33,7 +34,7 @@ var (
 	ErrLinkNotFound = errors.New("link not found")
 	// ErrLinkDisconnected is returned when a link we attempt to send to is disconnected
 	ErrLinkDisconnected = errors.New("link not connected")
-	// ErrLinkLoppback is returned when attempting to send an outbound message over loopback link
+	// ErrLinkLoopback is returned when attempting to send an outbound message over loopback link
 	ErrLinkLoopback = errors.New("link is loopback")
 	// ErrLinkRemote is returned when attempting to send a loopback message over remote link
 	ErrLinkRemote = errors.New("link is remote")
@@ -87,7 +88,7 @@ type Link interface {
 	transport.Socket
 }
 
-// The listener provides similar constructs to the transport.Listener
+// Listener provides similar constructs to the transport.Listener
 type Listener interface {
 	Accept() (Session, error)
 	Channel() string

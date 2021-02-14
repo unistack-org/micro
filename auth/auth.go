@@ -19,6 +19,7 @@ const (
 )
 
 var (
+	// DefaultAuth holds default auth implementation
 	DefaultAuth Auth = NewAuth()
 	// ErrInvalidToken is when the token provided is not valid
 	ErrInvalidToken = errors.New("invalid token provided")

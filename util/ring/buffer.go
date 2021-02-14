@@ -78,7 +78,7 @@ func (b *Buffer) Get(n int) []*Entry {
 	return b.vals[delta:]
 }
 
-// Return the entries since a specific time
+// Since returns the entries since a specific time
 func (b *Buffer) Since(t time.Time) []*Entry {
 	b.RLock()
 	defer b.RUnlock()

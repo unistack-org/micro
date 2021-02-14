@@ -5,6 +5,7 @@ import (
 	"github.com/unistack-org/micro/v3/resolver"
 )
 
+// Resolver contains noop resolver
 type Resolver struct{}
 
 // Resolve returns the list of nodes

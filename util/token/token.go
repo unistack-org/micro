@@ -23,6 +23,7 @@ type Provider interface {
 	String() string
 }
 
+// Token holds the auth token
 type Token struct {
 	// The actual token
 	Token string `json:"token"`

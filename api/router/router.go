@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	// DefaultRouter contains default router implementation
 	DefaultRouter Router
 )
 

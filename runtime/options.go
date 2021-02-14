@@ -8,8 +8,6 @@ import (
 	"github.com/unistack-org/micro/v3/logger"
 )
 
-type Option func(o *Options)
-
 // Options configure runtime
 type Options struct {
 	// Scheduler for updates
@@ -25,6 +23,9 @@ type Options struct {
 	// Logger
 	Logger logger.Logger
 }
+
+// Option func signature
+type Option func(o *Options)
 
 // WithLogger sets the logger
 func WithLogger(l logger.Logger) Option {
@@ -68,8 +69,10 @@ func WithClient(c client.Client) Option {
 	}
 }
 
+// CreateOption func signature
 type CreateOption func(o *CreateOptions)
 
+// ReadOption func signature
 type ReadOption func(o *ReadOptions)
 
 // CreateOptions configure runtime services
@@ -230,8 +233,10 @@ func ReadContext(ctx context.Context) ReadOption {
 	}
 }
 
+// UpdateOption func signature
 type UpdateOption func(o *UpdateOptions)
 
+// UpdateOptions struct
 type UpdateOptions struct {
 	// Namespace the service is running in
 	Namespace string
@@ -241,7 +246,7 @@ type UpdateOptions struct {
 	Secrets map[string]string
 }
 
-// WithSecret sets a secret to provide the service with
+// UpdateSecret sets a secret to provide the service with
 func UpdateSecret(key, value string) UpdateOption {
 	return func(o *UpdateOptions) {
 		if o.Secrets == nil {
@@ -266,8 +271,10 @@ func UpdateContext(ctx context.Context) UpdateOption {
 	}
 }
 
+// DeleteOption func signature
 type DeleteOption func(o *DeleteOptions)
 
+// DeleteOptions struct
 type DeleteOptions struct {
 	// Namespace the service is running in
 	Namespace string
@@ -304,7 +311,7 @@ type LogsOptions struct {
 	Context context.Context
 }
 
-// LogsExistingCount confiures how many existing lines to show
+// LogsCount confiures how many existing lines to show
 func LogsCount(count int64) LogsOption {
 	return func(l *LogsOptions) {
 		l.Count = count

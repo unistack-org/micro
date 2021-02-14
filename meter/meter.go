@@ -14,26 +14,28 @@ var (
 	DefaultAddress = ":9090"
 	// DefaultPath the meter endpoint where the Meter data will be made available
 	DefaultPath = "/metrics"
-	// timingObjectives is the default spread of stats we maintain for timings / histograms:
-	//defaultTimingObjectives = map[float64]float64{0.0: 0, 0.5: 0.05, 0.75: 0.04, 0.90: 0.03, 0.95: 0.02, 0.98: 0.001, 1: 0}
-	// default metric prefix
+	// DefaultMetricPrefix holds the string that prepends to all metrics
 	DefaultMetricPrefix = "micro_"
-	// default label prefix
+	// DefaultLabelPrefix holds the string that prepends to all labels
 	DefaultLabelPrefix = "micro_"
+	// DefaultSummaryQuantiles is the default spread of stats for summary
+	DefaultSummaryQuantiles = []float64{0.5, 0.9, 0.97, 0.99, 1}
+	// DefaultSummaryWindow is the default window for summary
+	DefaultSummaryWindow = 5 * time.Minute
 )
 
 // Meter is an interface for collecting and instrumenting metrics
 type Meter interface {
 	Name() string
-	Init(...Option) error
-	Counter(string, ...Option) Counter
-	FloatCounter(string, ...Option) FloatCounter
-	Gauge(string, func() float64, ...Option) Gauge
-	Set(...Option) Meter
-	Histogram(string, ...Option) Histogram
-	Summary(string, ...Option) Summary
-	SummaryExt(string, time.Duration, []float64, ...Option) Summary
-	Write(io.Writer, bool) error
+	Init(opts ...Option) error
+	Counter(name string, opts ...Option) Counter
+	FloatCounter(name string, opts ...Option) FloatCounter
+	Gauge(name string, fn func() float64, opts ...Option) Gauge
+	Set(opts ...Option) Meter
+	Histogram(name string, opts ...Option) Histogram
+	Summary(name string, opts ...Option) Summary
+	SummaryExt(name string, window time.Duration, quantiles []float64, opts ...Option) Summary
+	Write(w io.Writer, opts ...Option) error
 	Options() Options
 	String() string
 }
@@ -74,28 +76,32 @@ type Summary interface {
 	UpdateDuration(time.Time)
 }
 
+// Labels holds the metrics labels with k, v
 type Labels struct {
 	keys []string
 	vals []string
 }
 
-func (ls Labels) Len() int {
+type labels Labels
+
+func (ls labels) sort() {
+	sort.Sort(ls)
+}
+
+func (ls labels) Len() int {
 	return len(ls.keys)
 }
 
-func (ls Labels) Swap(i, j int) {
+func (ls labels) Swap(i, j int) {
 	ls.keys[i], ls.keys[j] = ls.keys[j], ls.keys[i]
 	ls.vals[i], ls.vals[j] = ls.vals[j], ls.vals[i]
 }
 
-func (ls Labels) Less(i, j int) bool {
+func (ls labels) Less(i, j int) bool {
 	return ls.vals[i] < ls.vals[j]
 }
 
-func (ls Labels) Sort() {
-	sort.Sort(ls)
-}
-
+// Append adds labels to label set
 func (ls Labels) Append(nls Labels) Labels {
 	for n := range nls.keys {
 		ls.keys = append(ls.keys, nls.keys[n])
@@ -104,17 +110,20 @@ func (ls Labels) Append(nls Labels) Labels {
 	return ls
 }
 
+// LabelIter holds the
 type LabelIter struct {
 	labels Labels
 	cnt    int
 	cur    int
 }
 
+// Iter returns labels iterator
 func (ls Labels) Iter() *LabelIter {
-	ls.Sort()
+	labels(ls).sort()
 	return &LabelIter{labels: ls, cnt: len(ls.keys)}
 }
 
+// Next advance itarator to new pos
 func (iter *LabelIter) Next(k, v *string) bool {
 	if iter.cur+1 > iter.cnt {
 		return false

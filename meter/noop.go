@@ -92,7 +92,7 @@ func (r *noopMeter) Set(opts ...Option) Meter {
 	return m
 }
 
-func (r *noopMeter) Write(w io.Writer, withProcessMetrics bool) error {
+func (r *noopMeter) Write(w io.Writer, opts ...Option) error {
 	return nil
 }
 

@@ -121,7 +121,7 @@ func Struct(v interface{}) Option {
 	}
 }
 
-// StructTag
+// StructTag sets the struct tag that used for filling
 func StructTag(name string) Option {
 	return func(o *Options) {
 		o.StructTag = name

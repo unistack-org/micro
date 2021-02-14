@@ -1,7 +1,8 @@
-// Package profile is for profilers
-package profile
+// Package profiler is for profilers
+package profiler
 
-type Profile interface {
+// Profiler interface
+type Profiler interface {
 	// Start the profiler
 	Start() error
 	// Stop the profiler
@@ -11,28 +12,17 @@ type Profile interface {
 }
 
 var (
-	DefaultProfile Profile = &NoopProfile{}
+	// DefaultProfiler holds the default profiler
+	DefaultProfiler Profiler = NewProfiler()
 )
 
-type NoopProfile struct{}
-
-func (p *NoopProfile) Start() error {
-	return nil
-}
-
-func (p *NoopProfile) Stop() error {
-	return nil
-}
-
-func (p *NoopProfile) String() string {
-	return "noop"
-}
-
+// Options holds the options for profiler
 type Options struct {
 	// Name to use for the profile
 	Name string
 }
 
+// Option func signature
 type Option func(o *Options)
 
 // Name of the profile
