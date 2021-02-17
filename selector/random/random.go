@@ -1,9 +1,8 @@
 package random
 
 import (
-	"math/rand"
-
 	"github.com/unistack-org/micro/v3/selector"
+	"github.com/unistack-org/micro/v3/util/rand"
 )
 
 type random struct{}
@@ -20,10 +19,9 @@ func (r *random) Select(routes []string, opts ...selector.SelectOption) (selecto
 		if len(routes) == 1 {
 			return routes[0]
 		}
-
+		var rng rand.Rand
 		// select a random route from the slice
-		//nolint:gosec
-		return routes[rand.Intn(len(routes))]
+		return routes[rng.Intn(len(routes))]
 	}, nil
 }
 

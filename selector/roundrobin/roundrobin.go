@@ -1,9 +1,8 @@
 package roundrobin
 
 import (
-	"math/rand"
-
 	"github.com/unistack-org/micro/v3/selector"
+	"github.com/unistack-org/micro/v3/util/rand"
 )
 
 // NewSelector returns an initialised round robin selector
@@ -18,8 +17,8 @@ func (r *roundrobin) Select(routes []string, opts ...selector.SelectOption) (sel
 	if len(routes) == 0 {
 		return nil, selector.ErrNoneAvailable
 	}
-
-	i := rand.Intn(len(routes))
+	var rng rand.Rand
+	i := rng.Intn(len(routes))
 
 	return func() string {
 		route := routes[i%len(routes)]
