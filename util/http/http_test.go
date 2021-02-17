@@ -3,7 +3,6 @@
 package http
 
 import (
-	"io/ioutil"
 	"net"
 	"net/http"
 	"testing"
@@ -52,7 +51,7 @@ func TestRoundTripper(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b, err := ioutil.ReadAll(w.Body)
+	b, err := io.ReadAll(w.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +71,7 @@ func TestRoundTripper(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b, err = ioutil.ReadAll(rsp.Body)
+	b, err = io.ReadAll(rsp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
