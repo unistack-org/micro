@@ -175,7 +175,7 @@ func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opt
 }
 
 func (n *noopClient) NewRequest(service, endpoint string, req interface{}, opts ...RequestOption) Request {
-	return &noopRequest{}
+	return &noopRequest{service: service, endpoint: endpoint}
 }
 
 func (n *noopClient) NewMessage(topic string, msg interface{}, opts ...MessageOption) Message {

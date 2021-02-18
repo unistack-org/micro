@@ -82,25 +82,6 @@ type Labels struct {
 	vals []string
 }
 
-type labels Labels
-
-func (ls labels) sort() {
-	sort.Sort(ls)
-}
-
-func (ls labels) Len() int {
-	return len(ls.keys)
-}
-
-func (ls labels) Swap(i, j int) {
-	ls.keys[i], ls.keys[j] = ls.keys[j], ls.keys[i]
-	ls.vals[i], ls.vals[j] = ls.vals[j], ls.vals[i]
-}
-
-func (ls labels) Less(i, j int) bool {
-	return ls.vals[i] < ls.vals[j]
-}
-
 // Append adds labels to label set
 func (ls Labels) Append(nls Labels) Labels {
 	for n := range nls.keys {
@@ -110,8 +91,28 @@ func (ls Labels) Append(nls Labels) Labels {
 	return ls
 }
 
+// Len returns number of labels
 func (ls Labels) Len() int {
 	return len(ls.keys)
+}
+
+type labels Labels
+
+func (ls labels) Len() int {
+	return len(ls.keys)
+}
+
+func (ls labels) Sort() {
+	sort.Sort(ls)
+}
+
+func (ls labels) Swap(i, j int) {
+	ls.keys[i], ls.keys[j] = ls.keys[j], ls.keys[i]
+	ls.vals[i], ls.vals[j] = ls.vals[j], ls.vals[i]
+}
+
+func (ls labels) Less(i, j int) bool {
+	return ls.keys[i] < ls.keys[j]
 }
 
 // LabelIter holds the
@@ -123,7 +124,7 @@ type LabelIter struct {
 
 // Iter returns labels iterator
 func (ls Labels) Iter() *LabelIter {
-	labels(ls).sort()
+	labels(ls).Sort()
 	return &LabelIter{labels: ls, cnt: len(ls.keys)}
 }
 

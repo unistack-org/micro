@@ -31,16 +31,14 @@ var (
 )
 
 type Options struct {
-	Meter   meter.Meter
-	Name    string
-	Version string
-	ID      string
+	Meter meter.Meter
+	lopts []meter.Option
 }
 
 type Option func(*Options)
 
 func NewOptions(opts ...Option) Options {
-	options := Options{}
+	options := Options{lopts: make([]meter.Option, 0, 5)}
 	for _, o := range opts {
 		o(&options)
 	}
@@ -49,19 +47,19 @@ func NewOptions(opts ...Option) Options {
 
 func ServiceName(name string) Option {
 	return func(o *Options) {
-		o.Name = name
+		o.lopts = append(o.lopts, meter.Label("name", name))
 	}
 }
 
 func ServiceVersion(version string) Option {
 	return func(o *Options) {
-		o.Version = version
+		o.lopts = append(o.lopts, meter.Label("version", version))
 	}
 }
 
 func ServiceID(id string) Option {
 	return func(o *Options) {
-		o.ID = id
+		o.lopts = append(o.lopts, meter.Label("id", id))
 	}
 }
 
@@ -104,7 +102,7 @@ func (w *wrapper) CallFunc(ctx context.Context, addr string, req client.Request,
 	err := w.callFunc(ctx, addr, req, rsp, opts)
 	te := time.Since(ts)
 
-	lopts := make([]meter.Option, 0, 2)
+	lopts := w.opts.lopts
 	lopts = append(lopts, meter.Label(labelEndpoint, endpoint))
 
 	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
@@ -127,7 +125,7 @@ func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{},
 	err := w.Client.Call(ctx, req, rsp, opts...)
 	te := time.Since(ts)
 
-	lopts := make([]meter.Option, 0, 2)
+	lopts := w.opts.lopts
 	lopts = append(lopts, meter.Label(labelEndpoint, endpoint))
 
 	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
@@ -150,7 +148,7 @@ func (w *wrapper) Stream(ctx context.Context, req client.Request, opts ...client
 	stream, err := w.Client.Stream(ctx, req, opts...)
 	te := time.Since(ts)
 
-	lopts := make([]meter.Option, 0, 2)
+	lopts := w.opts.lopts
 	lopts = append(lopts, meter.Label(labelEndpoint, endpoint))
 
 	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
@@ -173,7 +171,7 @@ func (w *wrapper) Publish(ctx context.Context, p client.Message, opts ...client.
 	err := w.Client.Publish(ctx, p, opts...)
 	te := time.Since(ts)
 
-	lopts := make([]meter.Option, 0, 2)
+	lopts := w.opts.lopts
 	lopts = append(lopts, meter.Label(labelEndpoint, endpoint))
 
 	w.opts.Meter.Summary(PublishMessageLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
@@ -204,7 +202,7 @@ func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 		err := fn(ctx, req, rsp)
 		te := time.Since(ts)
 
-		lopts := make([]meter.Option, 0, 2)
+		lopts := w.opts.lopts
 		lopts = append(lopts, meter.Label(labelEndpoint, endpoint))
 
 		w.opts.Meter.Summary(ServerRequestLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
@@ -236,7 +234,7 @@ func (w *wrapper) SubscriberFunc(fn server.SubscriberFunc) server.SubscriberFunc
 		err := fn(ctx, msg)
 		te := time.Since(ts)
 
-		lopts := make([]meter.Option, 0, 2)
+		lopts := w.opts.lopts
 		lopts = append(lopts, meter.Label(labelEndpoint, endpoint))
 
 		w.opts.Meter.Summary(SubscribeMessageLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
