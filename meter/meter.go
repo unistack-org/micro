@@ -110,6 +110,10 @@ func (ls Labels) Append(nls Labels) Labels {
 	return ls
 }
 
+func (ls Labels) Len() int {
+	return len(ls.keys)
+}
+
 // LabelIter holds the
 type LabelIter struct {
 	labels Labels
