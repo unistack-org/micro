@@ -64,15 +64,6 @@ func Address(value string) Option {
 }
 
 /*
-// Labels be added to every metric
-func Labels(labels []string) Option {
-	return func(o *Options) {
-		o.Labels = labels
-	}
-}
-*/
-
-/*
 // TimingObjectives defines the desired spread of statistics for histogram / timing metrics:
 func TimingObjectives(value map[float64]float64) Option {
 	return func(o *Options) {
