@@ -1,7 +1,7 @@
 package jwt
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -10,7 +10,7 @@ import (
 )
 
 func TestGenerate(t *testing.T) {
-	privKey, err := ioutil.ReadFile("test/sample_key")
+	privKey, err := os.ReadFile("test/sample_key")
 	if err != nil {
 		t.Fatalf("Unable to read private key: %v", err)
 	}
@@ -26,11 +26,11 @@ func TestGenerate(t *testing.T) {
 }
 
 func TestInspect(t *testing.T) {
-	pubKey, err := ioutil.ReadFile("test/sample_key.pub")
+	pubKey, err := os.ReadFile("test/sample_key.pub")
 	if err != nil {
 		t.Fatalf("Unable to read public key: %v", err)
 	}
-	privKey, err := ioutil.ReadFile("test/sample_key")
+	privKey, err := os.ReadFile("test/sample_key")
 	if err != nil {
 		t.Fatalf("Unable to read private key: %v", err)
 	}

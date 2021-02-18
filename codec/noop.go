@@ -3,7 +3,6 @@ package codec
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 )
 
 type noopCodec struct {
@@ -20,7 +19,7 @@ func (c *noopCodec) ReadHeader(conn io.Reader, m *Message, t MessageType) error 
 
 func (c *noopCodec) ReadBody(conn io.Reader, b interface{}) error {
 	// read bytes
-	buf, err := ioutil.ReadAll(conn)
+	buf, err := io.ReadAll(conn)
 	if err != nil {
 		return err
 	}

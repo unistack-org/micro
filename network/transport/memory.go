@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
 	"net"
 	"sync"
 	"time"
 
 	maddr "github.com/unistack-org/micro/v3/util/addr"
 	mnet "github.com/unistack-org/micro/v3/util/net"
+	"github.com/unistack-org/micro/v3/util/rand"
 )
 
 type memorySocket struct {
@@ -207,7 +207,8 @@ func (m *memoryTransport) Listen(ctx context.Context, addr string, opts ...Liste
 
 	// if zero port then randomly assign one
 	if len(port) > 0 && port == "0" {
-		i := rand.Intn(20000)
+		var rng rand.Rand
+		i := rng.Intn(20000)
 		port = fmt.Sprintf("%d", 10000+i)
 	}
 
@@ -254,8 +255,6 @@ func (m *memoryTransport) Name() string {
 // NewTransport returns new memory transport with options
 func NewTransport(opts ...Option) Transport {
 	options := NewOptions(opts...)
-
-	rand.Seed(time.Now().UnixNano())
 
 	return &memoryTransport{
 		opts:      options,

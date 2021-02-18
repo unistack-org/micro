@@ -3,14 +3,13 @@ package broker
 import (
 	"context"
 	"errors"
-	"math/rand"
 	"sync"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/logger"
 	maddr "github.com/unistack-org/micro/v3/util/addr"
 	mnet "github.com/unistack-org/micro/v3/util/net"
+	"github.com/unistack-org/micro/v3/util/rand"
 )
 
 type memoryBroker struct {
@@ -59,7 +58,8 @@ func (m *memoryBroker) Connect(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	i := rand.Intn(20000)
+	var rng rand.Rand
+	i := rng.Intn(20000)
 	// set addr with port
 	addr = mnet.HostPort(addr, 10000+i)
 
@@ -237,8 +237,6 @@ func (m *memorySubscriber) Unsubscribe(ctx context.Context) error {
 
 // NewBroker return new memory broker
 func NewBroker(opts ...Option) Broker {
-	rand.Seed(time.Now().UnixNano())
-
 	return &memoryBroker{
 		opts:        NewOptions(opts...),
 		Subscribers: make(map[string][]*memorySubscriber),

@@ -4,7 +4,7 @@ package http
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -61,7 +61,7 @@ func (r *HTTPResolver) Resolve(name string) ([]*resolver.Record, error) {
 	if rsp.StatusCode != 200 {
 		return nil, errors.New("non 200 response")
 	}
-	b, err := ioutil.ReadAll(rsp.Body)
+	b, err := io.ReadAll(rsp.Body)
 	if err != nil {
 		return nil, err
 	}
