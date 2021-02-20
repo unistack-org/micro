@@ -332,6 +332,7 @@ type SubscriberOptions struct {
 	AutoAck  bool
 	Queue    string
 	Internal bool
+	BodyOnly bool
 	Context  context.Context
 }
 
@@ -386,6 +387,20 @@ func DisableAutoAck() SubscriberOption {
 func SubscriberQueue(n string) SubscriberOption {
 	return func(o *SubscriberOptions) {
 		o.Queue = n
+	}
+}
+
+// SubscriberGroup sets the shared group name distributed messages across subscribers
+func SubscriberGroup(n string) SubscriberOption {
+	return func(o *SubscriberOptions) {
+		o.Queue = n
+	}
+}
+
+// SubscriberBodyOnly says broker that message contains raw data with absence of micro broker.Message format
+func SubscriberBodyOnly(b bool) SubscriberOption {
+	return func(o *SubscriberOptions) {
+		o.BodyOnly = b
 	}
 }
 
