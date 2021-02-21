@@ -106,3 +106,27 @@ func NewOutgoingContext(ctx context.Context, md Metadata) context.Context {
 	ctx = context.WithValue(ctx, mdIncomingKey{}, &rawMetadata{})
 	return ctx
 }
+
+// AppendOutgoingContext apends new md to context
+func AppendOutgoingContext(ctx context.Context, md Metadata) context.Context {
+	omd, ok := FromOutgoingContext(ctx)
+	if !ok {
+		return NewOutgoingContext(ctx, md)
+	}
+	for k, v := range md {
+		omd.Set(k, v)
+	}
+	return NewOutgoingContext(ctx, omd)
+}
+
+// AppendIncomingContext apends new md to context
+func AppendIncomingContext(ctx context.Context, md Metadata) context.Context {
+	omd, ok := FromIncomingContext(ctx)
+	if !ok {
+		return NewIncomingContext(ctx, md)
+	}
+	for k, v := range md {
+		omd.Set(k, v)
+	}
+	return NewIncomingContext(ctx, omd)
+}
