@@ -5,6 +5,28 @@ import (
 	"testing"
 )
 
+func TestAppend(t *testing.T) {
+	ctx := context.Background()
+	ctx = AppendIncomingContext(ctx, "key1", "val1", "key2", "val2")
+	md, ok := FromIncomingContext(ctx)
+	if !ok {
+		t.Fatal("metadata empty")
+	}
+	if _, ok := md.Get("key1"); !ok {
+		t.Fatal("key1 not found")
+	}
+}
+
+func TestPairs(t *testing.T) {
+	md, ok := Pairs("key1", "val1", "key2", "val2")
+	if !ok {
+		t.Fatal("odd number of kv")
+	}
+	if _, ok = md.Get("key1"); !ok {
+		t.Fatal("key1 not found")
+	}
+}
+
 func testCtx(ctx context.Context) {
 	md := New(2)
 	md.Set("Key1", "Val1_new")

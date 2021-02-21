@@ -111,3 +111,19 @@ func Merge(omd Metadata, mmd Metadata, overwrite bool) Metadata {
 	}
 	return nmd
 }
+
+func Pairs(kv ...string) (Metadata, bool) {
+	if len(kv)%2 == 1 {
+		return nil, false
+	}
+	md := New(len(kv) / 2)
+	var k string
+	for i, v := range kv {
+		if i%2 == 0 {
+			k = v
+			continue
+		}
+		md.Set(k, v)
+	}
+	return md, true
+}

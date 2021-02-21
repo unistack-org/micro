@@ -108,7 +108,11 @@ func NewOutgoingContext(ctx context.Context, md Metadata) context.Context {
 }
 
 // AppendOutgoingContext apends new md to context
-func AppendOutgoingContext(ctx context.Context, md Metadata) context.Context {
+func AppendOutgoingContext(ctx context.Context, kv ...string) context.Context {
+	md, ok := Pairs(kv...)
+	if !ok {
+		return ctx
+	}
 	omd, ok := FromOutgoingContext(ctx)
 	if !ok {
 		return NewOutgoingContext(ctx, md)
@@ -120,7 +124,11 @@ func AppendOutgoingContext(ctx context.Context, md Metadata) context.Context {
 }
 
 // AppendIncomingContext apends new md to context
-func AppendIncomingContext(ctx context.Context, md Metadata) context.Context {
+func AppendIncomingContext(ctx context.Context, kv ...string) context.Context {
+	md, ok := Pairs(kv...)
+	if !ok {
+		return ctx
+	}
 	omd, ok := FromIncomingContext(ctx)
 	if !ok {
 		return NewIncomingContext(ctx, md)
