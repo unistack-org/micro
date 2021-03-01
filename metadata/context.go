@@ -93,7 +93,9 @@ func NewIncomingContext(ctx context.Context, md Metadata) context.Context {
 		ctx = context.Background()
 	}
 	ctx = context.WithValue(ctx, mdIncomingKey{}, &rawMetadata{md})
-	ctx = context.WithValue(ctx, mdOutgoingKey{}, &rawMetadata{})
+	if v, ok := ctx.Value(mdOutgoingKey{}).(*rawMetadata); !ok || v == nil {
+		ctx = context.WithValue(ctx, mdOutgoingKey{}, &rawMetadata{})
+	}
 	return ctx
 }
 
@@ -103,7 +105,9 @@ func NewOutgoingContext(ctx context.Context, md Metadata) context.Context {
 		ctx = context.Background()
 	}
 	ctx = context.WithValue(ctx, mdOutgoingKey{}, &rawMetadata{md})
-	ctx = context.WithValue(ctx, mdIncomingKey{}, &rawMetadata{})
+	if v, ok := ctx.Value(mdIncomingKey{}).(*rawMetadata); !ok || v == nil {
+		ctx = context.WithValue(ctx, mdIncomingKey{}, &rawMetadata{})
+	}
 	return ctx
 }
 
