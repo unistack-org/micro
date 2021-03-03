@@ -3,9 +3,6 @@ package tracer
 
 import (
 	"context"
-	"time"
-
-	"github.com/unistack-org/micro/v3/metadata"
 )
 
 var (
@@ -15,44 +12,54 @@ var (
 
 // Tracer is an interface for distributed tracing
 type Tracer interface {
+	// Name return tracer name
 	Name() string
+	// Init tracer with options
 	Init(...Option) error
 	// Start a trace
-	Start(ctx context.Context, name string) (context.Context, *Span)
-	// Finish the trace
-	Finish(*Span) error
-	// Lookup get span from context
-	Lookup(ctx context.Context) (*Span, error)
-	// Read the traces
-	Read(...ReadOption) ([]*Span, error)
+	Start(ctx context.Context, name string, opts ...SpanOption) (context.Context, Span)
 }
 
-// SpanType describe the nature of the trace span
-type SpanType int
+type Span interface {
+	// Tracer return underlining tracer
+	Tracer() Tracer
+	// Finish complete and send span
+	Finish(opts ...SpanOption)
+	// AddEvent add event to span
+	AddEvent(name string, opts ...EventOption)
+	// Context return context with span
+	Context() context.Context
+	// SetName set the span name
+	SetName(name string)
+	// SetLabels set the span labels
+	SetLabels(labels ...Label)
+}
 
-const (
-	// SpanTypeRequestInbound is a span created when serving a request
-	SpanTypeRequestInbound SpanType = iota
-	// SpanTypeRequestOutbound is a span created when making a service call
-	SpanTypeRequestOutbound
-)
+type Label struct {
+	key string
+	val interface{}
+}
 
-// Span is used to record an entry
-type Span struct {
-	// Id of the trace
-	Trace string
-	// name of the span
-	Name string
-	// id of the span
-	Id string
-	// parent span id
-	Parent string
-	// Start time
-	Started time.Time
-	// Duration in nano seconds
-	Duration time.Duration
-	// associated data
-	Metadata metadata.Metadata
-	// Type
-	Type SpanType
+func Any(k string, v interface{}) Label {
+	return Label{k, v}
+}
+
+func String(k string, v string) Label {
+	return Label{k, v}
+}
+
+func Int(k string, v int) Label {
+	return Label{k, v}
+}
+
+func Int64(k string, v int64) Label {
+	return Label{k, v}
+}
+
+func Float64(k string, v float64) Label {
+	return Label{k, v}
+}
+
+func Bool(k string, v bool) Label {
+	return Label{k, v}
 }

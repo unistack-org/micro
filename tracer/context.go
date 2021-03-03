@@ -3,41 +3,46 @@ package tracer
 
 import (
 	"context"
-
-	"github.com/unistack-org/micro/v3/metadata"
 )
 
-const (
-	traceIDKey = "Micro-Trace-Id"
-	spanIDKey  = "Micro-Span-Id"
-)
+type tracerKey struct{}
 
-// FromContext returns a span from context
-func FromContext(ctx context.Context) (traceID string, parentSpanID string, isFound bool) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return "", "", false
+// FromContext returns a tracer from context
+func FromContext(ctx context.Context) Tracer {
+	if ctx == nil {
+		return DefaultTracer
 	}
-	traceID, traceOk := md.Get(traceIDKey)
-	microID, microOk := md.Get("Micro-Id")
-	if !traceOk && !microOk {
-		isFound = false
-		return
+	if tracer, ok := ctx.Value(tracerKey{}).(Tracer); ok {
+		return tracer
 	}
-	if !traceOk {
-		traceID = microID
-	}
-	parentSpanID, ok = md.Get(spanIDKey)
-	return traceID, parentSpanID, ok
+	return DefaultTracer
 }
 
-// NewContext saves the trace and span ids in the context
-func NewContext(ctx context.Context, traceID, parentSpanID string) context.Context {
-	md, ok := metadata.FromContext(ctx)
-	if !ok {
-		md = metadata.New(2)
+// NewContext saves the tracer in the context
+func NewContext(ctx context.Context, tracer Tracer) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
 	}
-	md.Set(traceIDKey, traceID)
-	md.Set(spanIDKey, parentSpanID)
-	return metadata.NewContext(ctx, md)
+	return context.WithValue(ctx, tracerKey{}, tracer)
+}
+
+type spanKey struct{}
+
+// SpanFromContext returns a span from context
+func SpanFromContext(ctx context.Context) Span {
+	if ctx == nil {
+		return &noopSpan{}
+	}
+	if span, ok := ctx.Value(spanKey{}).(Span); ok {
+		return span
+	}
+	return &noopSpan{}
+}
+
+// NewSpanContext saves the span in the context
+func NewSpanContext(ctx context.Context, span Span) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return context.WithValue(ctx, spanKey{}, span)
 }
