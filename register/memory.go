@@ -369,9 +369,9 @@ func (m *memory) ListServices(ctx context.Context, opts ...ListOption) ([]*Servi
 	// serialize the result, each version counts as an individual service
 	var result []*Service
 
-	for domain, service := range services {
+	for _, service := range services {
 		for _, version := range service {
-			result = append(result, recordToService(version, domain))
+			result = append(result, recordToService(version, options.Domain))
 		}
 	}
 
