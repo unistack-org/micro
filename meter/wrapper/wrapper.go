@@ -38,7 +38,10 @@ type Options struct {
 type Option func(*Options)
 
 func NewOptions(opts ...Option) Options {
-	options := Options{lopts: make([]meter.Option, 0, 5)}
+	options := Options{
+		Meter: meter.DefaultMeter,
+		lopts: make([]meter.Option, 0, 5),
+	}
 	for _, o := range opts {
 		o(&options)
 	}
