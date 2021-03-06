@@ -1,4 +1,4 @@
-// Package wrapper provides wrapper for Tracer
+// Package wrapper provides wrapper for Logger
 package wrapper
 
 import (
@@ -7,6 +7,56 @@ import (
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/server"
+)
+
+var (
+	DefaultClientCallObserver = func(ctx context.Context, req client.Request, rsp interface{}, opts []client.CallOption, err error) []string {
+		labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
+		if err != nil {
+			labels = append(labels, "error", err.Error())
+		}
+		return labels
+	}
+
+	DefaultClientStreamObserver = func(ctx context.Context, req client.Request, opts []client.CallOption, stream client.Stream, err error) []string {
+		labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
+		if err != nil {
+			labels = append(labels, "error", err.Error())
+		}
+		return labels
+	}
+
+	DefaultClientPublishObserver = func(ctx context.Context, msg client.Message, opts []client.PublishOption, err error) []string {
+		labels := []string{"endpoint", msg.Topic()}
+		if err != nil {
+			labels = append(labels, "error", err.Error())
+		}
+		return labels
+	}
+
+	DefaultServerHandlerObserver = func(ctx context.Context, req server.Request, rsp interface{}, err error) []string {
+		labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
+		if err != nil {
+			labels = append(labels, "error", err.Error())
+		}
+		return labels
+	}
+
+	DefaultServerSubscriberObserver = func(ctx context.Context, msg server.Message, err error) []string {
+		labels := []string{"endpoint", msg.Topic()}
+		if err != nil {
+			labels = append(labels, "error", err.Error())
+		}
+		return labels
+	}
+
+	DefaultClientCallFuncObserver = func(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions, err error) []string {
+		labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
+		if err != nil {
+			labels = append(labels, "error", err.Error())
+		}
+		return labels
+	}
 )
 
 type lWrapper struct {
@@ -24,20 +74,32 @@ type ClientCallFuncObserver func(context.Context, string, client.Request, interf
 type ServerHandlerObserver func(context.Context, server.Request, interface{}, error) []string
 type ServerSubscriberObserver func(context.Context, server.Message, error) []string
 
+// Options struct for wrapper
 type Options struct {
-	Logger                    logger.Logger
-	Level                     logger.Level
-	Enabled                   bool
-	ClientCallObservers       []ClientCallObserver
-	ClientStreamObservers     []ClientStreamObserver
-	ClientPublishObservers    []ClientPublishObserver
-	ClientCallFuncObservers   []ClientCallFuncObserver
-	ServerHandlerObservers    []ServerHandlerObserver
+	// Logger that used for log
+	Logger logger.Logger
+	// Level for logger
+	Level logger.Level
+	// Enabled flag
+	Enabled bool
+	// ClientCallObservers funcs
+	ClientCallObservers []ClientCallObserver
+	// ClientStreamObservers funcs
+	ClientStreamObservers []ClientStreamObserver
+	// ClientPublishObservers funcs
+	ClientPublishObservers []ClientPublishObserver
+	// ClientCallFuncObservers funcs
+	ClientCallFuncObservers []ClientCallFuncObserver
+	// ServerHandlerObservers funcs
+	ServerHandlerObservers []ServerHandlerObserver
+	// ServerSubscriberObservers funcs
 	ServerSubscriberObservers []ServerSubscriberObserver
 }
 
+// Option func signature
 type Option func(*Options)
 
+// NewOptions creates Options from Option slice
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Logger:                    logger.DefaultLogger,
@@ -57,106 +119,67 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+// WithEnabled enable/diable flag
 func WithEnabled(b bool) Option {
 	return func(o *Options) {
 		o.Enabled = b
 	}
 }
 
+// WithLevel log level
 func WithLevel(l logger.Level) Option {
 	return func(o *Options) {
 		o.Level = l
 	}
 }
 
+// WithLogger logger
 func WithLogger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
 	}
 }
 
+// WithClientCallObservers funcs
 func WithClientCallObservers(ob ...ClientCallObserver) Option {
 	return func(o *Options) {
 		o.ClientCallObservers = ob
 	}
 }
 
+// WithClientStreamObservers funcs
 func WithClientStreamObservers(ob ...ClientStreamObserver) Option {
 	return func(o *Options) {
 		o.ClientStreamObservers = ob
 	}
 }
 
+// WithClientPublishObservers funcs
 func WithClientPublishObservers(ob ...ClientPublishObserver) Option {
 	return func(o *Options) {
 		o.ClientPublishObservers = ob
 	}
 }
 
+// WithClientCallFuncObservers funcs
 func WithClientCallFuncObservers(ob ...ClientCallFuncObserver) Option {
 	return func(o *Options) {
 		o.ClientCallFuncObservers = ob
 	}
 }
 
+// WithServerHandlerObservers funcs
 func WithServerHandlerObservers(ob ...ServerHandlerObserver) Option {
 	return func(o *Options) {
 		o.ServerHandlerObservers = ob
 	}
 }
 
+// WithServerSubscriberObservers funcs
 func WithServerSubscriberObservers(ob ...ServerSubscriberObserver) Option {
 	return func(o *Options) {
 		o.ServerSubscriberObservers = ob
 	}
-}
-
-func DefaultClientCallObserver(ctx context.Context, req client.Request, rsp interface{}, opts []client.CallOption, err error) []string {
-	labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
-	if err != nil {
-		labels = append(labels, "error", err.Error())
-	}
-	return labels
-}
-
-func DefaultClientStreamObserver(ctx context.Context, req client.Request, opts []client.CallOption, stream client.Stream, err error) []string {
-	labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
-	if err != nil {
-		labels = append(labels, "error", err.Error())
-	}
-	return labels
-}
-
-func DefaultClientPublishObserver(ctx context.Context, msg client.Message, opts []client.PublishOption, err error) []string {
-	labels := []string{"endpoint", msg.Topic()}
-	if err != nil {
-		labels = append(labels, "error", err.Error())
-	}
-	return labels
-}
-
-func DefaultServerHandlerObserver(ctx context.Context, req server.Request, rsp interface{}, err error) []string {
-	labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
-	if err != nil {
-		labels = append(labels, "error", err.Error())
-	}
-	return labels
-}
-
-func DefaultServerSubscriberObserver(ctx context.Context, msg server.Message, err error) []string {
-	labels := []string{"endpoint", msg.Topic()}
-	if err != nil {
-		labels = append(labels, "error", err.Error())
-	}
-	return labels
-}
-
-func DefaultClientCallFuncObserver(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions, err error) []string {
-	labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
-	if err != nil {
-		labels = append(labels, "error", err.Error())
-	}
-	return labels
 }
 
 func (l *lWrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
@@ -259,7 +282,7 @@ func (l *lWrapper) ServerSubscriber(ctx context.Context, msg server.Message) err
 	return err
 }
 
-// NewClientWrapper accepts an open tracing Trace and returns a Client Wrapper
+// NewClientWrapper accepts an open options and returns a Client Wrapper
 func NewClientWrapper(opts ...Option) client.Wrapper {
 	return func(c client.Client) client.Client {
 		options := NewOptions()
@@ -270,7 +293,7 @@ func NewClientWrapper(opts ...Option) client.Wrapper {
 	}
 }
 
-// NewClientCallWrapper accepts an opentracing Tracer and returns a Call Wrapper
+// NewClientCallWrapper accepts an options and returns a Call Wrapper
 func NewClientCallWrapper(opts ...Option) client.CallWrapper {
 	return func(h client.CallFunc) client.CallFunc {
 		options := NewOptions()
@@ -316,7 +339,7 @@ func NewServerHandlerWrapper(opts ...Option) server.HandlerWrapper {
 	}
 }
 
-// NewServerSubscriberWrapper accepts an opentracing Tracer and returns a Subscriber Wrapper
+// NewServerSubscriberWrapper accepts an options and returns a Subscriber Wrapper
 func NewServerSubscriberWrapper(opts ...Option) server.SubscriberWrapper {
 	return func(h server.SubscriberFunc) server.SubscriberFunc {
 		options := NewOptions()

@@ -11,6 +11,98 @@ import (
 	"github.com/unistack-org/micro/v3/tracer"
 )
 
+var (
+	DefaultClientCallObserver = func(ctx context.Context, req client.Request, rsp interface{}, opts []client.CallOption, sp tracer.Span, err error) {
+		sp.SetName(fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
+		var labels []tracer.Label
+		if md, ok := metadata.FromOutgoingContext(ctx); ok {
+			labels = make([]tracer.Label, 0, len(md))
+			for k, v := range md {
+				labels = append(labels, tracer.String(k, v))
+			}
+		}
+		if err != nil {
+			labels = append(labels, tracer.Bool("error", true))
+		}
+		sp.SetLabels(labels...)
+	}
+
+	DefaultClientStreamObserver = func(ctx context.Context, req client.Request, opts []client.CallOption, stream client.Stream, sp tracer.Span, err error) {
+		sp.SetName(fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
+		var labels []tracer.Label
+		if md, ok := metadata.FromOutgoingContext(ctx); ok {
+			labels = make([]tracer.Label, 0, len(md))
+			for k, v := range md {
+				labels = append(labels, tracer.String(k, v))
+			}
+		}
+		if err != nil {
+			labels = append(labels, tracer.Bool("error", true))
+		}
+		sp.SetLabels(labels...)
+	}
+
+	DefaultClientPublishObserver = func(ctx context.Context, msg client.Message, opts []client.PublishOption, sp tracer.Span, err error) {
+		sp.SetName(fmt.Sprintf("Pub to %s", msg.Topic()))
+		var labels []tracer.Label
+		if md, ok := metadata.FromOutgoingContext(ctx); ok {
+			labels = make([]tracer.Label, 0, len(md))
+			for k, v := range md {
+				labels = append(labels, tracer.String(k, v))
+			}
+		}
+		if err != nil {
+			labels = append(labels, tracer.Bool("error", true))
+		}
+		sp.SetLabels(labels...)
+	}
+
+	DefaultServerHandlerObserver = func(ctx context.Context, req server.Request, rsp interface{}, sp tracer.Span, err error) {
+		sp.SetName(fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
+		var labels []tracer.Label
+		if md, ok := metadata.FromIncomingContext(ctx); ok {
+			labels = make([]tracer.Label, 0, len(md))
+			for k, v := range md {
+				labels = append(labels, tracer.String(k, v))
+			}
+		}
+		if err != nil {
+			labels = append(labels, tracer.Bool("error", true))
+		}
+		sp.SetLabels(labels...)
+	}
+
+	DefaultServerSubscriberObserver = func(ctx context.Context, msg server.Message, sp tracer.Span, err error) {
+		sp.SetName(fmt.Sprintf("Sub from %s", msg.Topic()))
+		var labels []tracer.Label
+		if md, ok := metadata.FromIncomingContext(ctx); ok {
+			labels = make([]tracer.Label, 0, len(md))
+			for k, v := range md {
+				labels = append(labels, tracer.String(k, v))
+			}
+		}
+		if err != nil {
+			labels = append(labels, tracer.Bool("error", true))
+		}
+		sp.SetLabels(labels...)
+	}
+
+	DefaultClientCallFuncObserver = func(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions, sp tracer.Span, err error) {
+		sp.SetName(fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
+		var labels []tracer.Label
+		if md, ok := metadata.FromOutgoingContext(ctx); ok {
+			labels = make([]tracer.Label, 0, len(md))
+			for k, v := range md {
+				labels = append(labels, tracer.String(k, v))
+			}
+		}
+		if err != nil {
+			labels = append(labels, tracer.Bool("error", true))
+		}
+		sp.SetLabels(labels...)
+	}
+)
+
 type tWrapper struct {
 	client.Client
 	serverHandler    server.HandlerFunc
@@ -26,18 +118,28 @@ type ClientCallFuncObserver func(context.Context, string, client.Request, interf
 type ServerHandlerObserver func(context.Context, server.Request, interface{}, tracer.Span, error)
 type ServerSubscriberObserver func(context.Context, server.Message, tracer.Span, error)
 
+// Options struct
 type Options struct {
-	Tracer                    tracer.Tracer
-	ClientCallObservers       []ClientCallObserver
-	ClientStreamObservers     []ClientStreamObserver
-	ClientPublishObservers    []ClientPublishObserver
-	ClientCallFuncObservers   []ClientCallFuncObserver
-	ServerHandlerObservers    []ServerHandlerObserver
+	// Tracer that used for tracing
+	Tracer tracer.Tracer
+	// ClientCallObservers funcs
+	ClientCallObservers []ClientCallObserver
+	// ClientStreamObservers funcs
+	ClientStreamObservers []ClientStreamObserver
+	// ClientPublishObservers funcs
+	ClientPublishObservers []ClientPublishObserver
+	// ClientCallFuncObservers funcs
+	ClientCallFuncObservers []ClientCallFuncObserver
+	// ServerHandlerObservers funcs
+	ServerHandlerObservers []ServerHandlerObserver
+	// ServerSubscriberObservers funcs
 	ServerSubscriberObservers []ServerSubscriberObserver
 }
 
+// Option func signature
 type Option func(*Options)
 
+// NewOptions create Options from Option slice
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Tracer:                    tracer.DefaultTracer,
@@ -56,136 +158,53 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+// WithTracer pass tracer
 func WithTracer(t tracer.Tracer) Option {
 	return func(o *Options) {
 		o.Tracer = t
 	}
 }
 
+// WithClientCallObservers funcs
 func WithClientCallObservers(ob ...ClientCallObserver) Option {
 	return func(o *Options) {
 		o.ClientCallObservers = ob
 	}
 }
 
+// WithClientStreamObservers funcs
 func WithClientStreamObservers(ob ...ClientStreamObserver) Option {
 	return func(o *Options) {
 		o.ClientStreamObservers = ob
 	}
 }
 
+// WithClientPublishObservers funcs
 func WithClientPublishObservers(ob ...ClientPublishObserver) Option {
 	return func(o *Options) {
 		o.ClientPublishObservers = ob
 	}
 }
 
+// WithClientCallFuncObservers funcs
 func WithClientCallFuncObservers(ob ...ClientCallFuncObserver) Option {
 	return func(o *Options) {
 		o.ClientCallFuncObservers = ob
 	}
 }
 
+// WithServerHandlerObservers funcs
 func WithServerHandlerObservers(ob ...ServerHandlerObserver) Option {
 	return func(o *Options) {
 		o.ServerHandlerObservers = ob
 	}
 }
 
+// WithServerSubscriberObservers funcs
 func WithServerSubscriberObservers(ob ...ServerSubscriberObserver) Option {
 	return func(o *Options) {
 		o.ServerSubscriberObservers = ob
 	}
-}
-
-func DefaultClientCallObserver(ctx context.Context, req client.Request, rsp interface{}, opts []client.CallOption, sp tracer.Span, err error) {
-	sp.SetName(fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
-	var labels []tracer.Label
-	if md, ok := metadata.FromOutgoingContext(ctx); ok {
-		labels = make([]tracer.Label, 0, len(md))
-		for k, v := range md {
-			labels = append(labels, tracer.String(k, v))
-		}
-	}
-	if err != nil {
-		labels = append(labels, tracer.Bool("error", true))
-	}
-	sp.SetLabels(labels...)
-}
-
-func DefaultClientStreamObserver(ctx context.Context, req client.Request, opts []client.CallOption, stream client.Stream, sp tracer.Span, err error) {
-	sp.SetName(fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
-	var labels []tracer.Label
-	if md, ok := metadata.FromOutgoingContext(ctx); ok {
-		labels = make([]tracer.Label, 0, len(md))
-		for k, v := range md {
-			labels = append(labels, tracer.String(k, v))
-		}
-	}
-	if err != nil {
-		labels = append(labels, tracer.Bool("error", true))
-	}
-	sp.SetLabels(labels...)
-}
-
-func DefaultClientPublishObserver(ctx context.Context, msg client.Message, opts []client.PublishOption, sp tracer.Span, err error) {
-	sp.SetName(fmt.Sprintf("Pub to %s", msg.Topic()))
-	var labels []tracer.Label
-	if md, ok := metadata.FromOutgoingContext(ctx); ok {
-		labels = make([]tracer.Label, 0, len(md))
-		for k, v := range md {
-			labels = append(labels, tracer.String(k, v))
-		}
-	}
-	if err != nil {
-		labels = append(labels, tracer.Bool("error", true))
-	}
-	sp.SetLabels(labels...)
-}
-
-func DefaultServerHandlerObserver(ctx context.Context, req server.Request, rsp interface{}, sp tracer.Span, err error) {
-	sp.SetName(fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
-	var labels []tracer.Label
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		labels = make([]tracer.Label, 0, len(md))
-		for k, v := range md {
-			labels = append(labels, tracer.String(k, v))
-		}
-	}
-	if err != nil {
-		labels = append(labels, tracer.Bool("error", true))
-	}
-	sp.SetLabels(labels...)
-}
-
-func DefaultServerSubscriberObserver(ctx context.Context, msg server.Message, sp tracer.Span, err error) {
-	sp.SetName(fmt.Sprintf("Sub from %s", msg.Topic()))
-	var labels []tracer.Label
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		labels = make([]tracer.Label, 0, len(md))
-		for k, v := range md {
-			labels = append(labels, tracer.String(k, v))
-		}
-	}
-	if err != nil {
-		labels = append(labels, tracer.Bool("error", true))
-	}
-	sp.SetLabels(labels...)
-}
-
-func DefaultClientCallFuncObserver(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions, sp tracer.Span, err error) {
-	sp.SetName(fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
-	var labels []tracer.Label
-	if md, ok := metadata.FromOutgoingContext(ctx); ok {
-		labels = make([]tracer.Label, 0, len(md))
-		for k, v := range md {
-			labels = append(labels, tracer.String(k, v))
-		}
-	}
-	if err != nil {
-		labels = append(labels, tracer.Bool("error", true))
-	}
-	sp.SetLabels(labels...)
 }
 
 func (ot *tWrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {

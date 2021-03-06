@@ -112,6 +112,7 @@ func Merge(omd Metadata, mmd Metadata, overwrite bool) Metadata {
 	return nmd
 }
 
+// Pairs from which metadata created
 func Pairs(kv ...string) (Metadata, bool) {
 	if len(kv)%2 == 1 {
 		return nil, false
