@@ -49,10 +49,18 @@ func (l *defaultLogger) V(level Level) bool {
 }
 
 func (l *defaultLogger) Fields(fields map[string]interface{}) Logger {
-	l.Lock()
-	l.opts.Fields = copyFields(fields)
-	l.Unlock()
-	return l
+	nl := &defaultLogger{opts: l.opts, enc: l.enc}
+	nl.opts.Fields = make(map[string]interface{}, len(l.opts.Fields)+len(fields))
+	l.RLock()
+	for k, v := range l.opts.Fields {
+		nl.opts.Fields[k] = v
+	}
+	l.RUnlock()
+
+	for k, v := range fields {
+		nl.opts.Fields[k] = v
+	}
+	return nl
 }
 
 func copyFields(src map[string]interface{}) map[string]interface{} {
@@ -153,7 +161,9 @@ func (l *defaultLogger) Log(ctx context.Context, level Level, args ...interface{
 	}
 
 	fields["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
-	fields["msg"] = fmt.Sprint(args...)
+	if len(args) > 0 {
+		fields["msg"] = fmt.Sprint(args...)
+	}
 
 	l.RLock()
 	_ = l.enc.Encode(fields)
@@ -178,7 +188,7 @@ func (l *defaultLogger) Logf(ctx context.Context, level Level, msg string, args 
 	fields["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
 	if len(args) > 0 {
 		fields["msg"] = fmt.Sprintf(msg, args...)
-	} else {
+	} else if msg != "" {
 		fields["msg"] = msg
 	}
 	l.RLock()
