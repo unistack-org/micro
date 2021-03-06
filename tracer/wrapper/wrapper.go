@@ -12,11 +12,11 @@ import (
 )
 
 type tWrapper struct {
-	opts             Options
+	client.Client
 	serverHandler    server.HandlerFunc
 	serverSubscriber server.SubscriberFunc
 	clientCallFunc   client.CallFunc
-	client.Client
+	opts             Options
 }
 
 type ClientCallObserver func(context.Context, client.Request, interface{}, []client.CallOption, tracer.Span, error)

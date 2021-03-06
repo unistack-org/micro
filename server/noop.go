@@ -32,16 +32,16 @@ const (
 )
 
 type noopServer struct {
-	h           Handler
 	opts        Options
+	h           Handler
 	rsvc        *register.Service
 	handlers    map[string]Handler
 	subscribers map[*subscriber][]broker.Subscriber
-	registered  bool
-	started     bool
 	exit        chan chan error
 	wg          *sync.WaitGroup
 	sync.RWMutex
+	registered bool
+	started    bool
 }
 
 // NewServer returns new noop server

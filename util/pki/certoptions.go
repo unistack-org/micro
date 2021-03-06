@@ -11,17 +11,16 @@ import (
 
 // CertOptions are passed to cert options
 type CertOptions struct {
-	IsCA         bool
+	NotAfter     time.Time
+	NotBefore    time.Time
+	Parent       *x509.Certificate
+	SerialNumber *big.Int
 	Subject      pkix.Name
 	DNSNames     []string
 	IPAddresses  []net.IP
-	SerialNumber *big.Int
-	NotBefore    time.Time
-	NotAfter     time.Time
-
-	Parent *x509.Certificate
-	Pub    ed25519.PublicKey
-	Priv   ed25519.PrivateKey
+	Pub          ed25519.PublicKey
+	Priv         ed25519.PrivateKey
+	IsCA         bool
 }
 
 // CertOption sets CertOptions

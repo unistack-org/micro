@@ -7,10 +7,10 @@ import (
 )
 
 type rpcHandler struct {
-	name      string
-	handler   interface{}
-	endpoints []*register.Endpoint
 	opts      HandlerOptions
+	handler   interface{}
+	name      string
+	endpoints []*register.Endpoint
 }
 
 func newRpcHandler(handler interface{}, opts ...HandlerOption) Handler {

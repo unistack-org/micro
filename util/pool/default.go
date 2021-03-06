@@ -10,18 +10,17 @@ import (
 )
 
 type pool struct {
-	size int
-	ttl  time.Duration
-	tr   transport.Transport
-
-	sync.Mutex
+	tr    transport.Transport
 	conns map[string][]*poolConn
+	size  int
+	ttl   time.Duration
+	sync.Mutex
 }
 
 type poolConn struct {
-	transport.Client
-	id      string
 	created time.Time
+	transport.Client
+	id string
 }
 
 func newPool(options Options) *pool {

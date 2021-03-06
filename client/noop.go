@@ -31,12 +31,12 @@ type noopMessage struct {
 }
 
 type noopRequest struct {
+	body        interface{}
+	codec       codec.Codec
 	service     string
 	method      string
 	endpoint    string
 	contentType string
-	body        interface{}
-	codec       codec.Codec
 	stream      bool
 }
 

@@ -13,26 +13,24 @@ import (
 
 // Options struct holds the transport options
 type Options struct {
-	Name string
-	// Addrs is the list of intermediary addresses to connect to
-	Addrs []string
-	// Codec is the codec interface to use where headers are not supported
-	// by the transport and the entire payload must be encoded
-	Codec codec.Codec
-	// TLSConfig to secure the connection. The assumption is that this
-	// is mTLS keypair
-	TLSConfig *tls.Config
-	// Timeout sets the timeout for Send/Recv
-	Timeout time.Duration
-	// Logger sets the logger
-	Logger logger.Logger
-	// Meter sets the meter
+	// Meter used for metrics
 	Meter meter.Meter
-	// Tracer sets the tracer
+	// Tracer used for tracing
 	Tracer tracer.Tracer
-	// Other options for implementations of the interface
-	// can be stored in a context
+	// Codec used for marshal/unmarshal messages
+	Codec codec.Codec
+	// Logger used for logging
+	Logger logger.Logger
+	// Context holds external options
 	Context context.Context
+	// TLSConfig holds tls.TLSConfig options
+	TLSConfig *tls.Config
+	// Name holds the transport name
+	Name string
+	// Addrs holds the transport addrs
+	Addrs []string
+	// Timeout holds the timeout
+	Timeout time.Duration
 }
 
 // NewOptions returns new options
@@ -53,18 +51,12 @@ func NewOptions(opts ...Option) Options {
 
 // DialOptions struct
 type DialOptions struct {
-	// Tells the transport this is a streaming connection with
-	// multiple calls to send/recv and that send may not even be called
-	Stream bool
-	// Timeout for dialing
-	Timeout time.Duration
-
-	// TODO: add tls options when dialling
-	// Currently set in global options
-
-	// Other options for implementations of the interface
-	// can be stored in a context
+	// Context holds the external options
 	Context context.Context
+	// Timeout holds the timeout
+	Timeout time.Duration
+	// Stream flag
+	Stream bool
 }
 
 // NewDialOptions returns new DialOptions
@@ -85,10 +77,10 @@ func NewDialOptions(opts ...DialOption) DialOptions {
 type ListenOptions struct {
 	// TODO: add tls options when listening
 	// Currently set in global options
-
-	// Other options for implementations of the interface
-	// can be stored in a context
+	// Context holds the external options
 	Context context.Context
+	// TLSConfig holds the *tls.Config options
+	TLSConfig *tls.Config
 }
 
 // NewListenOptions returns new ListenOptions

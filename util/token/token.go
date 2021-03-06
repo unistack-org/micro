@@ -25,10 +25,10 @@ type Provider interface {
 
 // Token holds the auth token
 type Token struct {
-	// The actual token
-	Token string `json:"token"`
-	// Time of token creation
+	// Created time of token created
 	Created time.Time `json:"created"`
-	// Time of token expiry
+	// Expiry ime of the token
 	Expiry time.Time `json:"expiry"`
+	// Token holds the actual token
+	Token string `json:"token"`
 }

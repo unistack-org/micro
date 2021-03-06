@@ -11,10 +11,14 @@ type Option func(*Options)
 
 // Options contains codec options
 type Options struct {
+	// Meter used for metrics
+	Meter meter.Meter
+	// Logger used for logging
+	Logger logger.Logger
+	// Tracer used for tracing
+	Tracer tracer.Tracer
+	// MaxMsgSize specifies max messages size that reads by codec
 	MaxMsgSize int
-	Meter      meter.Meter
-	Logger     logger.Logger
-	Tracer     tracer.Tracer
 }
 
 // MaxMsgSize sets the max message size

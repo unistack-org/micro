@@ -23,33 +23,44 @@ import (
 
 // Options for micro service
 type Options struct {
-	Name     string
-	Version  string
-	Metadata metadata.Metadata
-
-	Auths     []auth.Auth
-	Brokers   []broker.Broker
-	Loggers   []logger.Logger
-	Meters    []meter.Meter
-	Configs   []config.Config
-	Clients   []client.Client
-	Servers   []server.Server
-	Stores    []store.Store
-	Registers []register.Register
-	Tracers   []tracer.Tracer
-	Routers   []router.Router
-	//	Runtime  runtime.Runtime
-	//	Profile  profile.Profile
-
-	// Before and After funcs
-	BeforeStart []func(context.Context) error
-	BeforeStop  []func(context.Context) error
-	AfterStart  []func(context.Context) error
-	AfterStop   []func(context.Context) error
-
-	// Other options for implementations of the interface
-	// can be stored in a context
+	// Context holds external options or cancel stuff
 	Context context.Context
+	// Metadata holds service metadata
+	Metadata metadata.Metadata
+	// Version holds service version
+	Version string
+	// Name holds service name
+	Name string
+	// Brokers holds brokers
+	Brokers []broker.Broker
+	// Loggers holds loggers
+	Loggers []logger.Logger
+	// Meters holds meter
+	Meters []meter.Meter
+	// Configs holds config
+	Configs []config.Config
+	// Clients holds clients
+	Clients []client.Client
+	// Auths holds auths
+	Auths []auth.Auth
+	// Stores holds stores
+	Stores []store.Store
+	// Registers holds registers
+	Registers []register.Register
+	// Tracers holds tracers
+	Tracers []tracer.Tracer
+	// Routers holds routers
+	Routers []router.Router
+	// BeforeStart holds funcs that runs before service starts
+	BeforeStart []func(context.Context) error
+	// BeforeStop holds funcs that runs before service stops
+	BeforeStop []func(context.Context) error
+	// AfterStart holds funcs that runs after service starts
+	AfterStart []func(context.Context) error
+	// AfterStop holds funcs that runs after service stops
+	AfterStop []func(context.Context) error
+	// Servers holds servers
+	Servers []server.Server
 }
 
 // NewOptions returns new Options filled with defaults and overrided by provided opts

@@ -11,17 +11,26 @@ type Option func(*Options)
 
 // Options for metrics implementations:
 type Options struct {
-	Name    string
+	// Logger used for logging
+	Logger logger.Logger
+	// Context holds external options
+	Context context.Context
+	// Name holds the meter name
+	Name string
+	// Address holds the address that serves metrics
 	Address string
-	Path    string
-	Labels  Labels
-	//TimingObjectives map[float64]float64
-	Logger              logger.Logger
-	Context             context.Context
-	MetricPrefix        string
-	LabelPrefix         string
+	// Path holds the path for metrics
+	Path string
+	// MetricPrefix holds the prefix for all metrics
+	MetricPrefix string
+	// LabelPrefix holds the prefix for all labels
+	LabelPrefix string
+	// Labels holds the default labels
+	Labels Labels
+	// WriteProcessMetrics flag to write process metrics
 	WriteProcessMetrics bool
-	WriteFDMetrics      bool
+	// WriteFDMetrics flag to write fd metrics
+	WriteFDMetrics bool
 }
 
 // NewOptions prepares a set of options:

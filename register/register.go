@@ -52,17 +52,17 @@ type Service struct {
 
 // Node holds node register info
 type Node struct {
+	Metadata metadata.Metadata `json:"metadata"`
 	Id       string            `json:"id"`
 	Address  string            `json:"address"`
-	Metadata metadata.Metadata `json:"metadata"`
 }
 
 // Endpoint holds endpoint register info
 type Endpoint struct {
-	Name     string            `json:"name"`
 	Request  *Value            `json:"request"`
 	Response *Value            `json:"response"`
 	Metadata metadata.Metadata `json:"metadata"`
+	Name     string            `json:"name"`
 }
 
 // Value holds additional kv stuff

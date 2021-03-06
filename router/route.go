@@ -15,10 +15,10 @@ var (
 
 // Route is network route
 type Route struct {
+	// Metadata for the route
+	Metadata metadata.Metadata
 	// Service is destination service name
 	Service string
-	// Address is service node address
-	Address string
 	// Gateway is route gateway
 	Gateway string
 	// Network is network address
@@ -27,10 +27,10 @@ type Route struct {
 	Router string
 	// Link is network link
 	Link string
+	// Address is service node address
+	Address string
 	// Metric is the route cost metric
 	Metric int64
-	// Metadata for the route
-	Metadata metadata.Metadata
 }
 
 // Hash returns route hash sum.

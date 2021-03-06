@@ -13,16 +13,12 @@ import (
 )
 
 type profiler struct {
-	opts profile.Options
-
+	exit    chan bool
+	cpuFile *os.File
+	memFile *os.File
+	opts    profile.Options
 	sync.Mutex
 	running bool
-	exit    chan bool
-
-	// where the cpu profile is written
-	cpuFile *os.File
-	// where the mem profile is written
-	memFile *os.File
 }
 
 func (p *profiler) writeHeap(f *os.File) {

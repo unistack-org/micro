@@ -11,20 +11,20 @@ import (
 
 // Options for proxy
 type Options struct {
-	// Specific endpoint to always call
-	Endpoint string
-	// The default client to use
-	Client client.Client
-	// The default router to use
-	Router router.Router
-	// Extra links for different clients
-	Links map[string]client.Client
-	// Logger
-	Logger logger.Logger
-	// Meter
-	Meter meter.Meter
-	// Tracer
+	// Tracer used for tracing
 	Tracer tracer.Tracer
+	// Client for communication
+	Client client.Client
+	// Router for routing
+	Router router.Router
+	// Logger used for logging
+	Logger logger.Logger
+	// Meter used for metrics
+	Meter meter.Meter
+	// Links holds the communication links
+	Links map[string]client.Client
+	// Endpoint holds the destination address
+	Endpoint string
 }
 
 // Option func signature

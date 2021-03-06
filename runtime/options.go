@@ -10,18 +10,12 @@ import (
 
 // Options configure runtime
 type Options struct {
-	// Scheduler for updates
 	Scheduler Scheduler
-	// Service type to manage
-	Type string
-	// Source of the services repository
-	Source string
-	// Base image to use
-	Image string
-	// Client to use when making requests
-	Client client.Client
-	// Logger
-	Logger logger.Logger
+	Client    client.Client
+	Logger    logger.Logger
+	Type      string
+	Source    string
+	Image     string
 }
 
 // Option func signature
@@ -77,42 +71,26 @@ type ReadOption func(o *ReadOptions)
 
 // CreateOptions configure runtime services
 type CreateOptions struct {
-	// Command to execut
-	Command []string
-	// Args to pass into command
-	Args []string
-	// Environment to configure
-	Env []string
-	// Log output
-	Output io.Writer
-	// Type of service to create
-	Type string
-	// Retries before failing deploy
-	Retries int
-	// Specify the image to use
-	Image string
-	// Namespace to create the service in
-	Namespace string
-	// Specify the context to use
-	Context context.Context
-	// Secrets to use
-	Secrets map[string]string
-	// Resources to allocate the service
+	Context   context.Context
+	Output    io.Writer
 	Resources *Resources
+	Secrets   map[string]string
+	Image     string
+	Namespace string
+	Type      string
+	Command   []string
+	Args      []string
+	Env       []string
+	Retries   int
 }
 
 // ReadOptions queries runtime services
 type ReadOptions struct {
-	// Service name
-	Service string
-	// Version queries services with given version
-	Version string
-	// Type of service
-	Type string
-	// Namespace the service is running in
+	Context   context.Context
+	Service   string
+	Version   string
+	Type      string
 	Namespace string
-	// Specify the context to use
-	Context context.Context
 }
 
 // CreateType sets the type of service to create
@@ -238,12 +216,9 @@ type UpdateOption func(o *UpdateOptions)
 
 // UpdateOptions struct
 type UpdateOptions struct {
-	// Namespace the service is running in
+	Context   context.Context
+	Secrets   map[string]string
 	Namespace string
-	// Specify the context to use
-	Context context.Context
-	// Secrets to use
-	Secrets map[string]string
 }
 
 // UpdateSecret sets a secret to provide the service with
@@ -276,10 +251,8 @@ type DeleteOption func(o *DeleteOptions)
 
 // DeleteOptions struct
 type DeleteOptions struct {
-	// Namespace the service is running in
+	Context   context.Context
 	Namespace string
-	// Specify the context to use
-	Context context.Context
 }
 
 // DeleteNamespace sets the namespace
@@ -301,14 +274,10 @@ type LogsOption func(o *LogsOptions)
 
 // LogsOptions configure runtime logging
 type LogsOptions struct {
-	// How many existing lines to show
-	Count int64
-	// Stream new lines?
-	Stream bool
-	// Namespace the service is running in
+	Context   context.Context
 	Namespace string
-	// Specify the context to use
-	Context context.Context
+	Count     int64
+	Stream    bool
 }
 
 // LogsCount confiures how many existing lines to show

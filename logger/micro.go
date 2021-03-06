@@ -21,9 +21,9 @@ func init() {
 }
 
 type defaultLogger struct {
-	sync.RWMutex
 	opts Options
 	enc  *json.Encoder
+	sync.RWMutex
 }
 
 // Init(opts...) should only overwrite provided options

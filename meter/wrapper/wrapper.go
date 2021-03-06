@@ -73,9 +73,9 @@ func Meter(m meter.Meter) Option {
 }
 
 type wrapper struct {
-	opts     Options
-	callFunc client.CallFunc
 	client.Client
+	callFunc client.CallFunc
+	opts     Options
 }
 
 func NewClientWrapper(opts ...Option) client.Wrapper {

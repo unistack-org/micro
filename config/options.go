@@ -11,26 +11,32 @@ import (
 
 // Options hold the config options
 type Options struct {
-	Name       string
-	AllowFail  bool
-	BeforeLoad []func(context.Context, Config) error
-	AfterLoad  []func(context.Context, Config) error
-	BeforeSave []func(context.Context, Config) error
-	AfterSave  []func(context.Context, Config) error
-	// Struct that holds config data
+	// Struct holds the destination config struct
 	Struct interface{}
-	// StructTag name
-	StructTag string
-	// Logger that will be used
-	Logger logger.Logger
-	// Meter that will be used
-	Meter meter.Meter
-	// Tracer used for trace
-	Tracer tracer.Tracer
 	// Codec that used for load/save
 	Codec codec.Codec
-	// Context for alternative data
+	// Tracer that will be used
+	Tracer tracer.Tracer
+	// Meter that will be used
+	Meter meter.Meter
+	// Logger that will be used
+	Logger logger.Logger
+	// Context used for external options
 	Context context.Context
+	// Name of the config
+	Name string
+	// StructTag name
+	StructTag string
+	// BeforeSave contains slice of funcs that runs before save
+	BeforeSave []func(context.Context, Config) error
+	// AfterLoad contains slice of funcs that runs after load
+	AfterLoad []func(context.Context, Config) error
+	// BeforeLoad contains slice of funcs that runs before load
+	BeforeLoad []func(context.Context, Config) error
+	// AfterSave contains slice of funcs that runs after save
+	AfterSave []func(context.Context, Config) error
+	// AllowFail flag to allow fail in config source
+	AllowFail bool
 }
 
 // Option function signature

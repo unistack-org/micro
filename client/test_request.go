@@ -5,13 +5,13 @@ import (
 )
 
 type testRequest struct {
-	service     string
+	opts        RequestOptions
+	codec       codec.Codec
+	body        interface{}
 	method      string
 	endpoint    string
 	contentType string
-	codec       codec.Codec
-	body        interface{}
-	opts        RequestOptions
+	service     string
 }
 
 func (r *testRequest) ContentType() string {

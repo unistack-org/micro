@@ -22,23 +22,24 @@ type Option func(*Options)
 
 // Options provides network configuration options
 type Options struct {
-	Name string
-	// Id is tunnel id
-	Id string
-	// Address is tunnel address
-	Address string
-	// Nodes are remote nodes
-	Nodes []string
-	// The shared auth token
-	Token string
-	// Transport listens to incoming connections
-	Transport transport.Transport
-	// Logger
+	// Logger used for logging
 	Logger logger.Logger
-	// Meter
+	// Meter used for metrics
 	Meter meter.Meter
-	// Tracer
+	// Tracer used for tracing
 	Tracer tracer.Tracer
+	// Transport used for communication
+	Transport transport.Transport
+	// Token the shared auth token
+	Token string
+	// Name holds the tunnel name
+	Name string
+	// Id holds the tunnel id
+	Id string
+	// Address holds the tunnel address
+	Address string
+	// Nodes holds the tunnel nodes
+	Nodes []string
 }
 
 // DialOption func
@@ -61,9 +62,9 @@ type ListenOption func(*ListenOptions)
 
 // ListenOptions provides listen options
 type ListenOptions struct {
-	// specify mode of the session
+	// Mode specify mode of the session
 	Mode Mode
-	// The read timeout
+	// Timeout the read timeout
 	Timeout time.Duration
 }
 

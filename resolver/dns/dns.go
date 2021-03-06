@@ -12,9 +12,9 @@ import (
 
 // Resolver is a DNS network resolve
 type Resolver struct {
-	// The resolver address to use
-	Address    string
 	goresolver *net.Resolver
+	// Address of resolver to use
+	Address string
 	sync.RWMutex
 }
 

@@ -17,17 +17,16 @@ type tunBroker struct {
 }
 
 type tunSubscriber struct {
-	topic   string
-	handler broker.Handler
-	opts    broker.SubscribeOptions
-
-	closed   chan bool
+	opts     broker.SubscribeOptions
 	listener tunnel.Listener
+	handler  broker.Handler
+	closed   chan bool
+	topic    string
 }
 
 type tunEvent struct {
-	topic   string
 	message *broker.Message
+	topic   string
 }
 
 // used to access tunnel from options context

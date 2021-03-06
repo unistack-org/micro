@@ -16,9 +16,9 @@ var (
 )
 
 type node struct {
-	*Node
-	TTL      time.Duration
 	LastSeen time.Time
+	*Node
+	TTL time.Duration
 }
 
 type record struct {
@@ -405,10 +405,10 @@ func (m *memory) String() string {
 }
 
 type watcher struct {
-	id   string
-	wo   WatchOptions
 	res  chan *Result
 	exit chan bool
+	wo   WatchOptions
+	id   string
 }
 
 func (m *watcher) Next() (*Result, error) {

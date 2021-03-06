@@ -37,15 +37,20 @@ type Runtime interface {
 
 // Logs returns a log stream
 type Logs interface {
+	// Error retuns error
 	Error() error
+	// Chan return chan log
 	Chan() chan Log
+	// Stop stops the log stream
 	Stop() error
 }
 
 // Log is a log message
 type Log struct {
-	Message  string
+	// Metadata holds metadata
 	Metadata metadata.Metadata
+	// Message holds the message
+	Message string
 }
 
 // Scheduler is a runtime service scheduler
@@ -84,28 +89,28 @@ func (t EventType) String() string {
 
 // Event is notification event
 type Event struct {
-	// ID of the event
-	ID string
-	// Type is event type
-	Type EventType
-	// Timestamp is event timestamp
+	// Timestamp of event
 	Timestamp time.Time
 	// Service the event relates to
 	Service *Service
 	// Options to use when processing the event
 	Options *CreateOptions
+	// ID of the event
+	ID string
+	// Type is event type
+	Type EventType
 }
 
 // Service is runtime service
 type Service struct {
+	// Metadata stores metadata
+	Metadata metadata.Metadata
 	// Name of the service
 	Name string
 	// Version of the service
 	Version string
-	// url location of source
+	// Name of the service
 	Source string
-	// Metadata stores metadata
-	Metadata metadata.Metadata
 }
 
 // Resources which are allocated to a serivce

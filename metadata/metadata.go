@@ -27,10 +27,10 @@ var (
 
 // Iterator used to iterate over metadata with order
 type Iterator struct {
+	md   Metadata
+	keys []string
 	cur  int
 	cnt  int
-	keys []string
-	md   Metadata
 }
 
 // Next advance iterator to next element

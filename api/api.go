@@ -34,20 +34,20 @@ type Option func(*Options) error
 type Endpoint struct {
 	// Name Greeter.Hello
 	Name string
-	// Description e.g what's this endpoint for
+	// Desciption for endpoint
 	Description string
 	// Handler e.g rpc, proxy
 	Handler string
+	// Body destination
+	// "*" or "" - top level message value
+	// "string" - inner message value
+	Body string
 	// Host e.g example.com
 	Host []string
 	// Method e.g GET, POST
 	Method []string
 	// Path e.g /greeter. Expect POSIX regex
 	Path []string
-	// Body destination
-	// "*" or "" - top level message value
-	// "string" - inner message value
-	Body string
 	// Stream flag
 	Stream bool
 }

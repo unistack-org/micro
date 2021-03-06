@@ -14,28 +14,27 @@ import (
 
 // Options contains configuration for the Store
 type Options struct {
+	// Meter used for metrics
+	Meter meter.Meter
+	// Tracer used for tracing
+	Tracer tracer.Tracer
+	// Context holds external options
+	Context context.Context
+	// Codec used to marshal/unmarshal
+	Codec codec.Codec
+	// Logger used for logging
+	Logger logger.Logger
+	// TLSConfig holds tls.TLSConfig options
+	TLSConfig *tls.Config
 	// Name specifies store name
 	Name string
-	// Nodes contains the addresses or other connection information of the backing storage.
-	// For example, an etcd implementation would contain the nodes of the cluster.
-	// A SQL implementation could contain one or more connection strings.
-	Nodes []string
-	// Database allows multiple isolated stores to be kept in one backend, if supported.
+	// Database specifies store database
 	Database string
-	// Table is analag for a table in database backends or a key prefix in KV backends
+	// Table specifies store table
 	Table string
-	// Codec that used for marshal/unmarshal value
-	Codec codec.Codec
-	// Logger the logger
-	Logger logger.Logger
-	// Meter the meter
-	Meter meter.Meter
-	// Tracer the tacer
-	Tracer tracer.Tracer
-	// TLSConfig specifies tls.Config for secure
-	TLSConfig *tls.Config
-	// Context should contain all implementation specific options
-	Context context.Context
+	// Nodes contains store address
+	// TODO: replace with Addrs
+	Nodes []string
 }
 
 // NewOptions creates options struct
@@ -139,10 +138,14 @@ func NewReadOptions(opts ...ReadOption) ReadOptions {
 
 // ReadOptions configures an individual Read operation
 type ReadOptions struct {
-	Database  string
-	Table     string
+	// Context holds external options
+	Context context.Context
+	// Database holds the database name
+	Database string
+	// Table holds table name
+	Table string
+	// Namespace holds namespace
 	Namespace string
-	Context   context.Context
 }
 
 // ReadOption sets values in ReadOptions
@@ -167,12 +170,18 @@ func NewWriteOptions(opts ...WriteOption) WriteOptions {
 
 // WriteOptions configures an individual Write operation
 type WriteOptions struct {
-	Database  string
-	Table     string
-	TTL       time.Duration
-	Metadata  metadata.Metadata
+	// Context holds external options
+	Context context.Context
+	// Metadata contains additional metadata
+	Metadata metadata.Metadata
+	// Database holds database name
+	Database string
+	// Table holds table name
+	Table string
+	// Namespace holds namespace
 	Namespace string
-	Context   context.Context
+	// TTL specifies key TTL
+	TTL time.Duration
 }
 
 // WriteOption sets values in WriteOptions
@@ -211,10 +220,14 @@ func NewDeleteOptions(opts ...DeleteOption) DeleteOptions {
 
 // DeleteOptions configures an individual Delete operation
 type DeleteOptions struct {
-	Database  string
-	Table     string
+	// Context holds external options
+	Context context.Context
+	// Database holds database name
+	Database string
+	// Table holds table name
+	Table string
+	// Namespace holds namespace
 	Namespace string
-	Context   context.Context
 }
 
 // DeleteOption sets values in DeleteOptions
@@ -239,18 +252,14 @@ func NewListOptions(opts ...ListOption) ListOptions {
 
 // ListOptions configures an individual List operation
 type ListOptions struct {
-	// List from the following
-	Database, Table string
-	// Prefix returns all keys that are prefixed with key
-	Prefix string
-	// Suffix returns all keys that end with key
-	Suffix string
-	// Limit limits the number of returned keys
-	Limit uint
-	// Offset when combined with Limit supports pagination
-	Offset    uint
-	Namespace string
 	Context   context.Context
+	Database  string
+	Prefix    string
+	Suffix    string
+	Namespace string
+	Table     string
+	Limit     uint
+	Offset    uint
 }
 
 // ListOption sets values in ListOptions
@@ -297,8 +306,10 @@ type ExistsOption func(*ExistsOptions)
 
 // ExistsOptions holds options for Exists method
 type ExistsOptions struct {
+	// Context holds external options
+	Context context.Context
+	// Namespace contains namespace
 	Namespace string
-	Context   context.Context
 }
 
 // NewExistsOptions helper for Exists method

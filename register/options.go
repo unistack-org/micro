@@ -12,20 +12,22 @@ import (
 
 // Options holds options for register
 type Options struct {
-	Name      string
-	Addrs     []string
-	Timeout   time.Duration
-	TLSConfig *tls.Config
-
-	// Logger that will be used
-	Logger logger.Logger
-	// Meter that will be used
-	Meter meter.Meter
-	// Tracer
+	// Tracer used for tracing
 	Tracer tracer.Tracer
-	// Other options for implementations of the interface
-	// can be stored in a context
+	// Context holds external options
 	Context context.Context
+	// Logged used for logging
+	Logger logger.Logger
+	// Meter used for metrics
+	Meter meter.Meter
+	// TLSConfig holds tls.TLSConfig options
+	TLSConfig *tls.Config
+	// Name holds the name of register
+	Name string
+	// Addrs specifies register addrs
+	Addrs []string
+	// Timeout specifies timeout
+	Timeout time.Duration
 }
 
 // NewOptions returns options that filled by opts
@@ -44,13 +46,9 @@ func NewOptions(opts ...Option) Options {
 
 // RegisterOptions holds options for register method
 type RegisterOptions struct {
-	TTL time.Duration
-	// Other options for implementations of the interface
-	// can be stored in a context
-	Context context.Context
-	// Domain to register the service in
-	Domain string
-	// Attempts specify attempts for register
+	Context  context.Context
+	Domain   string
+	TTL      time.Duration
 	Attempts int
 }
 

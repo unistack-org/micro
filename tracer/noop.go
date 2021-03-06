@@ -32,9 +32,9 @@ func (t *noopTracer) Name() string {
 }
 
 type noopSpan struct {
-	name   string
 	ctx    context.Context
 	tracer Tracer
+	name   string
 }
 
 func (s *noopSpan) Finish(opts ...SpanOption) {

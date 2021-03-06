@@ -9,17 +9,12 @@ import (
 
 // Socket is our pseudo socket for transport.Socket
 type Socket struct {
-	id string
-	// closed
 	closed chan bool
-	// remote addr
+	send   chan *transport.Message
+	recv   chan *transport.Message
+	id     string
 	remote string
-	// local addr
-	local string
-	// send chan
-	send chan *transport.Message
-	// recv chan
-	recv chan *transport.Message
+	local  string
 }
 
 // SetLocal sets the local addr

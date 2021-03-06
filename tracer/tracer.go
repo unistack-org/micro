@@ -36,30 +36,30 @@ type Span interface {
 }
 
 type Label struct {
-	key string
 	val interface{}
+	key string
 }
 
 func Any(k string, v interface{}) Label {
-	return Label{k, v}
+	return Label{key: k, val: v}
 }
 
 func String(k string, v string) Label {
-	return Label{k, v}
+	return Label{key: k, val: v}
 }
 
 func Int(k string, v int) Label {
-	return Label{k, v}
+	return Label{key: k, val: v}
 }
 
 func Int64(k string, v int64) Label {
-	return Label{k, v}
+	return Label{key: k, val: v}
 }
 
 func Float64(k string, v float64) Label {
-	return Label{k, v}
+	return Label{key: k, val: v}
 }
 
 func Bool(k string, v bool) Label {
-	return Label{k, v}
+	return Label{key: k, val: v}
 }

@@ -25,9 +25,10 @@ type rop struct {
 
 // Pattern is a template pattern of http request paths defined in github.com/googleapis/googleapis/google/api/http.proto.
 type Pattern struct {
+	verb string
 	// ops is a list of operations
 	ops []rop
-	// pool is a constant pool indexed by the operands or vars.
+	// pool is a constant pool indexed by the operands or vars
 	pool []string
 	// vars is a list of variables names to be bound by this pattern
 	vars []string
@@ -35,8 +36,6 @@ type Pattern struct {
 	stacksize int
 	// tailLen is the length of the fixed-size segments after a deep wildcard
 	tailLen int
-	// verb is the VERB part of the path pattern. It is empty if the pattern does not have VERB part.
-	verb string
 	// assumeColonVerb indicates whether a path suffix after a final
 	// colon may only be interpreted as a verb.
 	assumeColonVerb bool

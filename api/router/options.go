@@ -11,11 +11,16 @@ import (
 
 // Options holds the options for api router
 type Options struct {
-	Handler  string
+	// Register for service lookup
 	Register register.Register
+	// Resolver to use
 	Resolver resolver.Resolver
-	Logger   logger.Logger
-	Context  context.Context
+	// Logger micro logger
+	Logger logger.Logger
+	// Context is for external options
+	Context context.Context
+	// Handler name
+	Handler string
 }
 
 // Option func signature

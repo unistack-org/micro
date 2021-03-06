@@ -51,16 +51,14 @@ type Codec interface {
 // the communication, likely followed by the body.
 // In the case of an error, body may be nil.
 type Message struct {
-	Id       string
-	Type     MessageType
+	Header   metadata.Metadata
 	Target   string
 	Method   string
 	Endpoint string
 	Error    string
-
-	// The values read from the socket
-	Header metadata.Metadata
-	Body   []byte
+	Id       string
+	Body     []byte
+	Type     MessageType
 }
 
 // NewMessage creates new codec message

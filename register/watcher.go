@@ -7,14 +7,17 @@ import "time"
 type Watcher interface {
 	// Next is a blocking call
 	Next() (*Result, error)
+	// Stop stops the watcher
 	Stop()
 }
 
 // Result is returned by a call to Next on
 // the watcher. Actions can be create, update, delete
 type Result struct {
-	Action  string
+	// Service holds register service
 	Service *Service
+	// Action holds the action
+	Action string
 }
 
 // EventType defines register event type
@@ -45,12 +48,12 @@ func (t EventType) String() string {
 
 // Event is register event
 type Event struct {
-	// Id is register id
-	Id string
-	// Type defines type of event
-	Type EventType
 	// Timestamp is event timestamp
 	Timestamp time.Time
 	// Service is register service
 	Service *Service
+	// Id is register id
+	Id string
+	// Type defines type of event
+	Type EventType
 }

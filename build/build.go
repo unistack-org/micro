@@ -21,12 +21,12 @@ type Source struct {
 
 // Package is packaged format for source
 type Package struct {
+	// Source of the package
+	Source *Source
 	// Name of the package
 	Name string
 	// Location of the package
 	Path string
 	// Type of package e.g tarball, binary, docker
 	Type string
-	// Source of the package
-	Source *Source
 }

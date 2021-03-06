@@ -23,50 +23,62 @@ type Option func(*Options)
 
 // Options server struct
 type Options struct {
-	Codecs       map[string]codec.Codec
-	Broker       broker.Broker
-	Register     register.Register
-	Tracer       tracer.Tracer
-	Auth         auth.Auth
-	Logger       logger.Logger
-	Meter        meter.Meter
-	Transport    transport.Transport
-	Metadata     metadata.Metadata
-	Name         string
-	Address      string
-	Advertise    string
-	Id           string
-	Namespace    string
-	Version      string
-	HdlrWrappers []HandlerWrapper
-	SubWrappers  []SubscriberWrapper
-
-	// RegisterCheck runs a check function before registering the service
-	RegisterCheck func(context.Context) error
-	// The register expiry time
-	RegisterTTL time.Duration
-	// The interval on which to register
-	RegisterInterval time.Duration
-	// RegisterAttempts specify how many times try to register
-	RegisterAttempts int
-	// DeegisterAttempts specify how many times try to deregister
-	DeregisterAttempts int
-
-	// The router for requests
+	// Context holds the external options and can be used for server shutdown
+	Context context.Context
+	// Broker holds the server broker
+	Broker broker.Broker
+	// Register holds the register
+	Register register.Register
+	// Tracer holds the tracer
+	Tracer tracer.Tracer
+	// Auth holds the auth
+	Auth auth.Auth
+	// Logger holds the logger
+	Logger logger.Logger
+	// Meter holds the meter
+	Meter meter.Meter
+	// Transport holds the transport
+	Transport transport.Transport
+	// Router for requests
 	Router Router
-
-	// TLSConfig specifies tls.Config for secure serving
-	TLSConfig *tls.Config
-
-	Wait *sync.WaitGroup
-
 	// Listener may be passed if already created
 	Listener net.Listener
-	// MaxConn limit connections to server
+	// Wait group
+	Wait *sync.WaitGroup
+	// TLSConfig specifies tls.Config for secure serving
+	TLSConfig *tls.Config
+	// Metadata holds the server metadata
+	Metadata metadata.Metadata
+	// RegisterCheck run before register server
+	RegisterCheck func(context.Context) error
+	// Codecs map to handle content-type
+	Codecs map[string]codec.Codec
+	// Id holds the id of the server
+	Id string
+	// Namespace for te server
+	Namespace string
+	// Name holds the server name
+	Name string
+	// Address holds the server address
+	Address string
+	// Advertise holds the advertie addres
+	Advertise string
+	// Version holds the server version
+	Version string
+	// SubWrappers holds the server subscribe wrappers
+	SubWrappers []SubscriberWrapper
+	// HdlrWrappers holds the handler wrappers
+	HdlrWrappers []HandlerWrapper
+	// RegisterAttempts holds the number of register attempts before error
+	RegisterAttempts int
+	// RegisterInterval holds he interval for re-register
+	RegisterInterval time.Duration
+	// RegisterTTL specifies TTL for register record
+	RegisterTTL time.Duration
+	// MaxConn limits number of connections
 	MaxConn int
-	// Other options for implementations of the interface
-	// can be stored in a context
-	Context context.Context
+	// DeregisterAttempts holds the number of deregister attempts before error
+	DeregisterAttempts int
 }
 
 // NewOptions returns new options struct with default or passed values
@@ -303,9 +315,12 @@ type HandlerOption func(*HandlerOptions)
 
 // HandlerOptions struct
 type HandlerOptions struct {
-	Internal bool
+	// Context holds external options
+	Context context.Context
+	// Metadata for hondler
 	Metadata map[string]metadata.Metadata
-	Context  context.Context
+	// Internal flag limits exporting to other nodes via register
+	Internal bool
 }
 
 // NewHandlerOptions creates new HandlerOptions
@@ -327,13 +342,16 @@ type SubscriberOption func(*SubscriberOptions)
 
 // SubscriberOptions struct
 type SubscriberOptions struct {
-	// AutoAck defaults to true. When a handler returns
-	// with a nil error the message is acked.
-	AutoAck  bool
-	Queue    string
+	// Context holds the external options
+	Context context.Context
+	// Queue holds the subscribtion queue
+	Queue string
+	// AutoAck flag for auto ack messages after processing
+	AutoAck bool
+	// Internal flag limit exporting info via register
 	Internal bool
+	// BodyOnly flag specifies that message without headers
 	BodyOnly bool
-	Context  context.Context
 }
 
 // NewSubscriberOptions create new SubscriberOptions

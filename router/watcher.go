@@ -38,14 +38,14 @@ func (t EventType) String() string {
 
 // Event is returned by a call to Next on the watcher.
 type Event struct {
-	// Unique id of the event
+	// Route is table route
+	Route Route
+	// Timestamp is event timestamp
+	Timestamp time.Time
+	// Id of the event
 	Id string
 	// Type defines type of event
 	Type EventType
-	// Timestamp is event timestamp
-	Timestamp time.Time
-	// Route is table route
-	Route Route
 }
 
 // Watcher defines routing table watcher interface

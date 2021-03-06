@@ -7,23 +7,22 @@ import (
 
 type memorySync struct {
 	options Options
-
-	mtx   gosync.RWMutex
-	locks map[string]*memoryLock
+	locks   map[string]*memoryLock
+	mtx     gosync.RWMutex
 }
 
 type memoryLock struct {
-	id      string
 	time    time.Time
-	ttl     time.Duration
 	release chan bool
+	id      string
+	ttl     time.Duration
 }
 
 type memoryLeader struct {
 	opts   LeaderOptions
-	id     string
 	resign func(id string) error
 	status chan bool
+	id     string
 }
 
 func (m *memoryLeader) Resign() error {

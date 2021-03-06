@@ -13,25 +13,26 @@ import (
 
 // Options struct
 type Options struct {
-	Name string
-	// Addrs useed by broker
-	Addrs []string
-	// ErrorHandler executed when errors occur processing messages
-	ErrorHandler Handler
-	// Codec used to marshal/unmarshal messages
-	Codec codec.Codec
-	// Logger the used logger
-	Logger logger.Logger
-	// Meter the used for metrics
-	Meter meter.Meter
-	// Tracer used for trace
+	// Tracer used for tracing
 	Tracer tracer.Tracer
-	// TLSConfig for secure communication
-	TLSConfig *tls.Config
-	// Register used for clustering
+	// Register can be used for clustering
 	Register register.Register
-	// Context is used for non default options
+	// Codec holds the codec for marshal/unmarshal
+	Codec codec.Codec
+	// Logger used for logging
+	Logger logger.Logger
+	// Meter used for metrics
+	Meter meter.Meter
+	// Context holds external options
 	Context context.Context
+	// TLSConfig holds tls.TLSConfig options
+	TLSConfig *tls.Config
+	// ErrorHandler used when broker can't unmarshal incoming message
+	ErrorHandler Handler
+	// Name holds the broker name
+	Name string
+	// Addrs holds the broker address
+	Addrs []string
 }
 
 // NewOptions create new Options
@@ -59,10 +60,10 @@ func Context(ctx context.Context) Option {
 
 // PublishOptions struct
 type PublishOptions struct {
-	// BodyOnly says that only body of the message must be published
-	BodyOnly bool
-	// Context for non default options
+	// Context holds external options
 	Context context.Context
+	// BodyOnly flag says the message contains raw body bytes
+	BodyOnly bool
 }
 
 // NewPublishOptions creates PublishOptions struct
@@ -80,22 +81,16 @@ func NewPublishOptions(opts ...PublishOption) PublishOptions {
 
 // SubscribeOptions struct
 type SubscribeOptions struct {
-	// AutoAck ack messages if handler returns nil err
-	AutoAck bool
-
-	// ErrorHandler executed when errors occur processing messages
-	ErrorHandler Handler
-
-	// Group for subscriber, Subscribers with the same group name
-	// will create a shared subscription where each
-	// receives a subset of messages.
-	Group string
-
-	// BodyOnly says that consumed only body of the message
-	BodyOnly bool
-
-	// Context is used for non default options
+	// Context holds external options
 	Context context.Context
+	// ErrorHandler used when broker can't unmarshal incoming message
+	ErrorHandler Handler
+	// Group holds consumer group
+	Group string
+	// AutoAck flag specifies auto ack of incoming message when no error happens
+	AutoAck bool
+	// BodyOnly flag specifies that message contains only body bytes without header
+	BodyOnly bool
 }
 
 // Option func

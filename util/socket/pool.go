@@ -6,8 +6,8 @@ import (
 
 // Pool holds the socket pool
 type Pool struct {
-	sync.RWMutex
 	pool map[string]*Socket
+	sync.RWMutex
 }
 
 // Get socket from pool

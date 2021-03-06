@@ -8,9 +8,12 @@ import (
 
 // Options struct
 type Options struct {
-	Handler       string
+	// Context is for external defined options
+	Context context.Context
+	// Handler name
+	Handler string
+	// ServicePrefix is the prefix
 	ServicePrefix string
-	Context       context.Context
 }
 
 // Option func

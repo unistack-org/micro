@@ -14,19 +14,14 @@ import (
 )
 
 type memorySocket struct {
-	recv chan *Message
-	send chan *Message
-	// sock exit
-	exit chan bool
-	// listener exit
-	lexit chan bool
-
-	local  string
-	remote string
-
-	// for send/recv transport.Timeout
-	timeout time.Duration
 	ctx     context.Context
+	recv    chan *Message
+	exit    chan bool
+	lexit   chan bool
+	send    chan *Message
+	local   string
+	remote  string
+	timeout time.Duration
 	sync.RWMutex
 }
 
@@ -36,19 +31,19 @@ type memoryClient struct {
 }
 
 type memoryListener struct {
-	addr  string
+	topts Options
+	ctx   context.Context
+	lopts ListenOptions
 	exit  chan bool
 	conn  chan *memorySocket
-	lopts ListenOptions
-	topts Options
+	addr  string
 	sync.RWMutex
-	ctx context.Context
 }
 
 type memoryTransport struct {
-	opts Options
-	sync.RWMutex
+	opts      Options
 	listeners map[string]*memoryListener
+	sync.RWMutex
 }
 
 func (ms *memorySocket) Recv(m *Message) error {

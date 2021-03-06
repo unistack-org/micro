@@ -13,11 +13,11 @@ var (
 
 // Options struct holds handler options
 type Options struct {
-	MaxRecvSize int64
-	Namespace   string
 	Router      router.Router
 	Client      client.Client
 	Logger      logger.Logger
+	Namespace   string
+	MaxRecvSize int64
 }
 
 // Option func signature

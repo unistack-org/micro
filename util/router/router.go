@@ -6,8 +6,8 @@ import (
 )
 
 type apiRouter struct {
-	routes []router.Route
 	router.Router
+	routes []router.Route
 }
 
 func (r *apiRouter) Lookup(...router.QueryOption) ([]router.Route, error) {

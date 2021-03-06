@@ -10,23 +10,15 @@ import (
 
 // Options are router options
 type Options struct {
-	Name string
-	// Id is router id
-	Id string
-	// Address is router address
-	Address string
-	// Gateway is network gateway
-	Gateway string
-	// Network is network address
-	Network string
-	// Register is the local register
+	Logger   logger.Logger
+	Context  context.Context
 	Register register.Register
-	// Precache routes
+	Name     string
+	Gateway  string
+	Network  string
+	Id       string
+	Address  string
 	Precache bool
-	// Logger
-	Logger logger.Logger
-	// Context for additional options
-	Context context.Context
 }
 
 // Id sets Router Id

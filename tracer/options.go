@@ -14,10 +14,10 @@ type EventOption func(o *EventOptions)
 
 // Options struct
 type Options struct {
+	// Logger used for logging
+	Logger logger.Logger
 	// Name of the tracer
 	Name string
-	// Logger is the logger for messages
-	Logger logger.Logger
 }
 
 // Option func

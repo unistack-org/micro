@@ -11,17 +11,18 @@ type Option func(*Options)
 
 // Options holds logger options
 type Options struct {
-	Name string
-	// The logging level the logger should log at. default is `InfoLevel`
-	Level Level
-	// fields to always be logged
-	Fields map[string]interface{}
-	// It's common to set this to a file, or leave it default which is `os.Stderr`
+	// Out holds the output writer
 	Out io.Writer
-	// Caller skip frame count for file:line info
-	CallerSkipCount int
-	// Alternative options
+	// Context holds exernal options
 	Context context.Context
+	// Fields holds additional metadata
+	Fields map[string]interface{}
+	// Name holds the logger name
+	Name string
+	// CallerSkipCount number of frmaes to skip
+	CallerSkipCount int
+	// The logging level the logger should log
+	Level Level
 }
 
 // NewOptions creates new options struct

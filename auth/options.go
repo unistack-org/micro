@@ -26,33 +26,34 @@ func NewOptions(opts ...Option) Options {
 
 // Options struct holds auth options
 type Options struct {
-	Name string
-	// Issuer of the service's account
-	Issuer string
-	// ID is the services auth ID
-	ID string
-	// Secret is used to authenticate the service
-	Secret string
+	// Context holds the external options
+	Context context.Context
+	// Meter used for metrics
+	Meter meter.Meter
+	// Logger used for logging
+	Logger logger.Logger
+	// Tracer used for tracing
+	Tracer tracer.Tracer
+	// Store used for stre data
+	Store store.Store
 	// Token is the services token used to authenticate itself
 	Token *Token
-	// PublicKey for decoding JWTs
-	PublicKey string
-	// PrivateKey for encoding JWTs
-	PrivateKey string
 	// LoginURL is the relative url path where a user can login
 	LoginURL string
-	// Store to back auth
-	Store store.Store
+	// PrivateKey for encoding JWTs
+	PrivateKey string
+	// PublicKey for decoding JWTs
+	PublicKey string
+	// Secret is used to authenticate the service
+	Secret string
+	// ID is the services auth ID
+	ID string
+	// Issuer of the service's account
+	Issuer string
+	// Name holds the auth name
+	Name string
 	// Addrs sets the addresses of auth
 	Addrs []string
-	// Logger sets the logger
-	Logger logger.Logger
-	// Meter sets tht meter
-	Meter meter.Meter
-	// Tracer
-	Tracer tracer.Tracer
-	// Context to store other options
-	Context context.Context
 }
 
 // Option func
@@ -124,18 +125,12 @@ func LoginURL(url string) Option {
 
 // GenerateOptions struct
 type GenerateOptions struct {
-	// Metadata associated with the account
 	Metadata metadata.Metadata
-	// Scopes the account has access too
-	Scopes []string
-	// Provider of the account, e.g. oauth
 	Provider string
-	// Type of the account, e.g. user
-	Type string
-	// Secret used to authenticate the account
-	Secret string
-	// Issuer of the account, e.g. micro
-	Issuer string
+	Type     string
+	Secret   string
+	Issuer   string
+	Scopes   []string
 }
 
 // GenerateOption func
@@ -194,16 +189,11 @@ func NewGenerateOptions(opts ...GenerateOption) GenerateOptions {
 
 // TokenOptions struct
 type TokenOptions struct {
-	// ID for the account
-	ID string
-	// Secret for the account
-	Secret string
-	// RefreshToken is used to refesh a token
+	ID           string
+	Secret       string
 	RefreshToken string
-	// Expiry is the time the token should live for
-	Expiry time.Duration
-	// Issuer of the account
-	Issuer string
+	Issuer       string
+	Expiry       time.Duration
 }
 
 // TokenOption func

@@ -6,12 +6,12 @@ import (
 )
 
 type rpcMessage struct {
+	payload     interface{}
+	codec       codec.Codec
+	header      metadata.Metadata
 	topic       string
 	contentType string
-	payload     interface{}
-	header      metadata.Metadata
 	body        []byte
-	codec       codec.Codec
 }
 
 func (r *rpcMessage) ContentType() string {

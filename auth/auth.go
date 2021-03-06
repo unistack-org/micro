@@ -53,30 +53,30 @@ type Auth interface {
 
 // Account provided by an auth provider
 type Account struct {
-	// ID of the account e.g. email
+	// Metadata any other associated metadata
+	Metadata metadata.Metadata `json:"metadata"`
+	// ID of the account e.g. email or uuid
 	ID string `json:"id"`
 	// Type of the account, e.g. service
 	Type string `json:"type"`
 	// Issuer of the account
 	Issuer string `json:"issuer"`
-	// Any other associated metadata
-	Metadata metadata.Metadata `json:"metadata"`
-	// Scopes the account has access to
-	Scopes []string `json:"scopes"`
 	// Secret for the account, e.g. the password
 	Secret string `json:"secret"`
+	// Scopes the account has access to
+	Scopes []string `json:"scopes"`
 }
 
 // Token can be short or long lived
 type Token struct {
-	// The token to be used for accessing resources
-	AccessToken string `json:"access_token"`
-	// RefreshToken to be used to generate a new token
-	RefreshToken string `json:"refresh_token"`
 	// Time of token creation
 	Created time.Time `json:"created"`
 	// Time of token expiry
 	Expiry time.Time `json:"expiry"`
+	// The token to be used for accessing resources
+	AccessToken string `json:"access_token"`
+	// RefreshToken to be used to generate a new token
+	RefreshToken string `json:"refresh_token"`
 }
 
 // Expired returns a boolean indicating if the token needs to be refreshed
@@ -106,17 +106,15 @@ const (
 
 // Rule is used to verify access to a resource
 type Rule struct {
-	// ID of the rule, e.g. "public"
-	ID string
-	// Scope the rule requires, a blank scope indicates open to the public and * indicates the rule
-	// applies to any valid account
-	Scope string
-	// Resource the rule applies to
+	// Resource that rule belongs to
 	Resource *Resource
-	// Access determines if the rule grants or denies access to the resource
+	// ID of the rule
+	ID string
+	// Scope of the rule
+	Scope string
+	// Access flag allow/deny
 	Access Access
-	// Priority the rule should take when verifying a request, the higher the value the sooner the
-	// rule will be applied
+	// Priority holds the rule priority
 	Priority int32
 }
 

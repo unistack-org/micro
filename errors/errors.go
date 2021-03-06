@@ -37,10 +37,14 @@ var (
 
 // Error type
 type Error struct {
-	Id     string
-	Code   int32
+	// Id holds error id or service, usually someting like my_service or uuid
+	Id string
+	// Detail holds some useful details about error
 	Detail string
+	// Status usually holds text of http status
 	Status string
+	// Code holds error code
+	Code int32
 }
 
 // Error satisfies error interface
@@ -49,7 +53,7 @@ func (e *Error) Error() string {
 	return string(b)
 }
 
-// New generates a custom error.
+// New generates a custom error
 func New(id, detail string, code int32) error {
 	return &Error{
 		Id:     id,

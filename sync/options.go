@@ -10,11 +10,17 @@ import (
 
 // Options holds the sync options
 type Options struct {
-	Nodes  []string
-	Prefix string
+	// Logger used for logging
 	Logger logger.Logger
+	// Tracer used for tracing
 	Tracer tracer.Tracer
-	Meter  meter.Meter
+	// Meter used for merics
+	Meter meter.Meter
+	// Prefix holds prefix?
+	Prefix string
+	// Nodes holds the nodes
+	// TODO: change to Addrs ?
+	Nodes []string
 }
 
 // Option func signature

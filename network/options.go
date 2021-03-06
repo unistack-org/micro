@@ -15,6 +15,18 @@ type Option func(*Options)
 
 // Options configure network
 type Options struct {
+	// Router used for routing
+	Router router.Router
+	// Proxy holds the proxy
+	Proxy proxy.Proxy
+	// Logger used for logging
+	Logger logger.Logger
+	// Meter used for metrics
+	Meter meter.Meter
+	// Tracer used for tracing
+	Tracer tracer.Tracer
+	// Tunnel used for transfer data
+	Tunnel tunnel.Tunnel
 	// Id of the node
 	Id string
 	// Name of the network
@@ -25,18 +37,6 @@ type Options struct {
 	Advertise string
 	// Nodes is a list of nodes to connect to
 	Nodes []string
-	// Tunnel is network tunnel
-	Tunnel tunnel.Tunnel
-	// Router is network router
-	Router router.Router
-	// Proxy is network proxy
-	Proxy proxy.Proxy
-	// Logger
-	Logger logger.Logger
-	// Meter
-	Meter meter.Meter
-	// Tracer
-	Tracer tracer.Tracer
 }
 
 // Id sets the id of the network node
