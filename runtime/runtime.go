@@ -37,7 +37,7 @@ type Runtime interface {
 
 // Logs returns a log stream
 type Logs interface {
-	// Error retuns error
+	// Error returns error
 	Error() error
 	// Chan return chan log
 	Chan() chan Log

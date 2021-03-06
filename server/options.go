@@ -61,7 +61,7 @@ type Options struct {
 	Name string
 	// Address holds the server address
 	Address string
-	// Advertise holds the advertie addres
+	// Advertise holds the advertise address
 	Advertise string
 	// Version holds the server version
 	Version string
@@ -344,7 +344,7 @@ type SubscriberOption func(*SubscriberOptions)
 type SubscriberOptions struct {
 	// Context holds the external options
 	Context context.Context
-	// Queue holds the subscribtion queue
+	// Queue holds the subscription queue
 	Queue string
 	// AutoAck flag for auto ack messages after processing
 	AutoAck bool

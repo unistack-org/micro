@@ -50,7 +50,7 @@ type Options struct {
 	Wrappers []Wrapper
 	// PoolSize connection pool size
 	PoolSize int
-	// PoolTTL conection pool ttl
+	// PoolTTL connection pool ttl
 	PoolTTL time.Duration
 }
 
