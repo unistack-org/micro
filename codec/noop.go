@@ -8,11 +8,6 @@ import (
 type noopCodec struct {
 }
 
-// Frame gives us the ability to define raw data to send over the pipes
-type Frame struct {
-	Data []byte
-}
-
 func (c *noopCodec) ReadHeader(conn io.Reader, m *Message, t MessageType) error {
 	return nil
 }
