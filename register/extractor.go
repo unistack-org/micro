@@ -23,7 +23,8 @@ func ExtractValue(v reflect.Type, d int) *Value {
 		v = v.Elem()
 	}
 
-	if len(v.Name()) == 0 {
+	// slices and maps don't have a defined name
+	if v.Kind() != reflect.Slice && v.Kind() != reflect.Map && len(v.Name()) == 0 {
 		return nil
 	}
 
@@ -71,6 +72,16 @@ func ExtractValue(v reflect.Type, d int) *Value {
 			p = p.Elem()
 		}
 		arg.Type = "[]" + p.Name()
+	case reflect.Map:
+		p := v.Elem()
+		if p.Kind() == reflect.Ptr {
+			p = p.Elem()
+		}
+		key := v.Key()
+		if key.Kind() == reflect.Ptr {
+			key = key.Elem()
+		}
+		arg.Type = fmt.Sprintf("map[%s]%s", key.Name(), p.Name())
 	}
 
 	return arg
