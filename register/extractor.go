@@ -24,7 +24,7 @@ func ExtractValue(v reflect.Type, d int) *Value {
 	}
 
 	// slices and maps don't have a defined name
-	if v.Kind() != reflect.Slice && v.Kind() != reflect.Map && len(v.Name()) == 0 {
+	if (v.Kind() == reflect.Slice || v.Kind() == reflect.Map) || len(v.Name()) == 0 {
 		return nil
 	}
 
