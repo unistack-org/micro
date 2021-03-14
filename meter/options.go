@@ -26,7 +26,7 @@ type Options struct {
 	// LabelPrefix holds the prefix for all labels
 	LabelPrefix string
 	// Labels holds the default labels
-	Labels Labels
+	Labels []string
 	// WriteProcessMetrics flag to write process metrics
 	WriteProcessMetrics bool
 	// WriteFDMetrics flag to write fd metrics
@@ -88,11 +88,9 @@ func Logger(l logger.Logger) Option {
 	}
 }
 
-// Label sets the label
-func Label(key, val string) Option {
+func Labels(ls ...string) Option {
 	return func(o *Options) {
-		o.Labels.keys = append(o.Labels.keys, key)
-		o.Labels.vals = append(o.Labels.vals, val)
+		o.Labels = ls
 	}
 }
 

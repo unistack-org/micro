@@ -3,6 +3,7 @@ package meter
 
 import (
 	"io"
+	"reflect"
 	"sort"
 	"time"
 )
@@ -76,66 +77,36 @@ type Summary interface {
 	UpdateDuration(time.Time)
 }
 
-// Labels holds the metrics labels with k, v
-type Labels struct {
-	keys []string
-	vals []string
+type byKey []string
+
+func (k byKey) Len() int           { return len(k) / 2 }
+func (k byKey) Less(i, j int) bool { return k[i*2] < k[j*2] }
+func (k byKey) Swap(i, j int) {
+	k[i*2], k[i*2+1], k[j*2], k[j*2+1] = k[j*2], k[j*2+1], k[i*2], k[i*2+1]
 }
 
-// Append adds labels to label set
-func (ls Labels) Append(nls Labels) Labels {
-	for n := range nls.keys {
-		ls.keys = append(ls.keys, nls.keys[n])
-		ls.vals = append(ls.vals, nls.vals[n])
+func Sort(slice *[]string) {
+	bk := byKey(*slice)
+	if bk.Len() <= 1 {
+		return
 	}
-	return ls
-}
-
-// Len returns number of labels
-func (ls Labels) Len() int {
-	return len(ls.keys)
-}
-
-type labels Labels
-
-func (ls labels) Len() int {
-	return len(ls.keys)
-}
-
-func (ls labels) Sort() {
-	sort.Sort(ls)
-}
-
-func (ls labels) Swap(i, j int) {
-	ls.keys[i], ls.keys[j] = ls.keys[j], ls.keys[i]
-	ls.vals[i], ls.vals[j] = ls.vals[j], ls.vals[i]
-}
-
-func (ls labels) Less(i, j int) bool {
-	return ls.keys[i] < ls.keys[j]
-}
-
-// LabelIter holds the
-type LabelIter struct {
-	labels Labels
-	cnt    int
-	cur    int
-}
-
-// Iter returns labels iterator
-func (ls Labels) Iter() *LabelIter {
-	labels(ls).Sort()
-	return &LabelIter{labels: ls, cnt: len(ls.keys)}
-}
-
-// Next advance itarator to new pos
-func (iter *LabelIter) Next(k, v *string) bool {
-	if iter.cur+1 > iter.cnt {
-		return false
+	sort.Sort(bk)
+	v := reflect.ValueOf(slice).Elem()
+	cnt := 0
+	key := 0
+	val := 1
+	for key < v.Len() {
+		if len(bk) > key+2 && bk[key] == bk[key+2] {
+			key += 2
+			val += 2
+			continue
+		}
+		v.Index(cnt).Set(v.Index(key))
+		cnt++
+		v.Index(cnt).Set(v.Index(val))
+		cnt++
+		key += 2
+		val += 2
 	}
-
-	*k = iter.labels.keys[iter.cur]
-	*v = iter.labels.vals[iter.cur]
-	iter.cur++
-	return true
+	v.SetLen(cnt)
 }

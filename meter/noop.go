@@ -107,7 +107,7 @@ func (r *noopMeter) String() string {
 }
 
 type noopCounter struct {
-	labels Labels
+	labels []string
 }
 
 func (r *noopCounter) Add(int) {
@@ -131,7 +131,7 @@ func (r *noopCounter) Set(uint64) {
 }
 
 type noopFloatCounter struct {
-	labels Labels
+	labels []string
 }
 
 func (r *noopFloatCounter) Add(float64) {
@@ -151,7 +151,7 @@ func (r *noopFloatCounter) Sub(float64) {
 }
 
 type noopGauge struct {
-	labels Labels
+	labels []string
 }
 
 func (r *noopGauge) Get() float64 {
@@ -159,7 +159,7 @@ func (r *noopGauge) Get() float64 {
 }
 
 type noopSummary struct {
-	labels Labels
+	labels []string
 }
 
 func (r *noopSummary) Update(float64) {
@@ -171,7 +171,7 @@ func (r *noopSummary) UpdateDuration(time.Time) {
 }
 
 type noopHistogram struct {
-	labels Labels
+	labels []string
 }
 
 func (r *noopHistogram) Reset() {
