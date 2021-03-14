@@ -50,19 +50,19 @@ func NewOptions(opts ...Option) Options {
 
 func ServiceName(name string) Option {
 	return func(o *Options) {
-		o.lopts = append(o.lopts, meter.Label("name", name))
+		o.lopts = append(o.lopts, meter.Labels("name", name))
 	}
 }
 
 func ServiceVersion(version string) Option {
 	return func(o *Options) {
-		o.lopts = append(o.lopts, meter.Label("version", version))
+		o.lopts = append(o.lopts, meter.Labels("version", version))
 	}
 }
 
 func ServiceID(id string) Option {
 	return func(o *Options) {
-		o.lopts = append(o.lopts, meter.Label("id", id))
+		o.lopts = append(o.lopts, meter.Labels("id", id))
 	}
 }
 
@@ -106,15 +106,15 @@ func (w *wrapper) CallFunc(ctx context.Context, addr string, req client.Request,
 	te := time.Since(ts)
 
 	lopts := w.opts.lopts
-	lopts = append(lopts, meter.Label(labelEndpoint, endpoint))
+	lopts = append(lopts, meter.Labels(labelEndpoint, endpoint))
 
 	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
 	w.opts.Meter.Histogram(ClientRequestDurationSeconds, lopts...).Update(float64(te.Seconds()))
 
 	if err == nil {
-		lopts = append(lopts, meter.Label(labelStatus, labelSuccess))
+		lopts = append(lopts, meter.Labels(labelStatus, labelSuccess))
 	} else {
-		lopts = append(lopts, meter.Label(labelStatus, labelFailure))
+		lopts = append(lopts, meter.Labels(labelStatus, labelFailure))
 	}
 	w.opts.Meter.Counter(ClientRequestTotal, lopts...).Inc()
 
@@ -129,15 +129,15 @@ func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{},
 	te := time.Since(ts)
 
 	lopts := w.opts.lopts
-	lopts = append(lopts, meter.Label(labelEndpoint, endpoint))
+	lopts = append(lopts, meter.Labels(labelEndpoint, endpoint))
 
 	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
 	w.opts.Meter.Histogram(ClientRequestDurationSeconds, lopts...).Update(float64(te.Seconds()))
 
 	if err == nil {
-		lopts = append(lopts, meter.Label(labelStatus, labelSuccess))
+		lopts = append(lopts, meter.Labels(labelStatus, labelSuccess))
 	} else {
-		lopts = append(lopts, meter.Label(labelStatus, labelFailure))
+		lopts = append(lopts, meter.Labels(labelStatus, labelFailure))
 	}
 	w.opts.Meter.Counter(ClientRequestTotal, lopts...).Inc()
 
@@ -152,15 +152,15 @@ func (w *wrapper) Stream(ctx context.Context, req client.Request, opts ...client
 	te := time.Since(ts)
 
 	lopts := w.opts.lopts
-	lopts = append(lopts, meter.Label(labelEndpoint, endpoint))
+	lopts = append(lopts, meter.Labels(labelEndpoint, endpoint))
 
 	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
 	w.opts.Meter.Histogram(ClientRequestDurationSeconds, lopts...).Update(float64(te.Seconds()))
 
 	if err == nil {
-		lopts = append(lopts, meter.Label(labelStatus, labelSuccess))
+		lopts = append(lopts, meter.Labels(labelStatus, labelSuccess))
 	} else {
-		lopts = append(lopts, meter.Label(labelStatus, labelFailure))
+		lopts = append(lopts, meter.Labels(labelStatus, labelFailure))
 	}
 	w.opts.Meter.Counter(ClientRequestTotal, lopts...).Inc()
 
@@ -175,15 +175,15 @@ func (w *wrapper) Publish(ctx context.Context, p client.Message, opts ...client.
 	te := time.Since(ts)
 
 	lopts := w.opts.lopts
-	lopts = append(lopts, meter.Label(labelEndpoint, endpoint))
+	lopts = append(lopts, meter.Labels(labelEndpoint, endpoint))
 
 	w.opts.Meter.Summary(PublishMessageLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
 	w.opts.Meter.Histogram(PublishMessageDurationSeconds, lopts...).Update(float64(te.Seconds()))
 
 	if err == nil {
-		lopts = append(lopts, meter.Label(labelStatus, labelSuccess))
+		lopts = append(lopts, meter.Labels(labelStatus, labelSuccess))
 	} else {
-		lopts = append(lopts, meter.Label(labelStatus, labelFailure))
+		lopts = append(lopts, meter.Labels(labelStatus, labelFailure))
 	}
 	w.opts.Meter.Counter(PublishMessageTotal, lopts...).Inc()
 
@@ -206,15 +206,15 @@ func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 		te := time.Since(ts)
 
 		lopts := w.opts.lopts
-		lopts = append(lopts, meter.Label(labelEndpoint, endpoint))
+		lopts = append(lopts, meter.Labels(labelEndpoint, endpoint))
 
 		w.opts.Meter.Summary(ServerRequestLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
 		w.opts.Meter.Histogram(ServerRequestDurationSeconds, lopts...).Update(float64(te.Seconds()))
 
 		if err == nil {
-			lopts = append(lopts, meter.Label(labelStatus, labelSuccess))
+			lopts = append(lopts, meter.Labels(labelStatus, labelSuccess))
 		} else {
-			lopts = append(lopts, meter.Label(labelStatus, labelFailure))
+			lopts = append(lopts, meter.Labels(labelStatus, labelFailure))
 		}
 		w.opts.Meter.Counter(ServerRequestTotal, lopts...).Inc()
 
@@ -238,15 +238,15 @@ func (w *wrapper) SubscriberFunc(fn server.SubscriberFunc) server.SubscriberFunc
 		te := time.Since(ts)
 
 		lopts := w.opts.lopts
-		lopts = append(lopts, meter.Label(labelEndpoint, endpoint))
+		lopts = append(lopts, meter.Labels(labelEndpoint, endpoint))
 
 		w.opts.Meter.Summary(SubscribeMessageLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
 		w.opts.Meter.Histogram(SubscribeMessageDurationSeconds, lopts...).Update(float64(te.Seconds()))
 
 		if err == nil {
-			lopts = append(lopts, meter.Label(labelStatus, labelSuccess))
+			lopts = append(lopts, meter.Labels(labelStatus, labelSuccess))
 		} else {
-			lopts = append(lopts, meter.Label(labelStatus, labelFailure))
+			lopts = append(lopts, meter.Labels(labelStatus, labelFailure))
 		}
 		w.opts.Meter.Counter(SubscribeMessageTotal, lopts...).Inc()
 
