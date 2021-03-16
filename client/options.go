@@ -160,6 +160,7 @@ func NewOptions(opts ...Option) Options {
 		ContentType: DefaultContentType,
 		Codecs:      make(map[string]codec.Codec),
 		CallOptions: CallOptions{
+			Context:        context.Background(),
 			Backoff:        DefaultBackoff,
 			Retry:          DefaultRetry,
 			Retries:        DefaultRetries,
