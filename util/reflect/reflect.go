@@ -65,8 +65,25 @@ func IsEmpty(v reflect.Value) bool {
 		return v.IsNil()
 	case reflect.Invalid:
 		return true
+	case reflect.Struct:
+		var ok bool
+		for i := 0; i < v.NumField(); i++ {
+			ok = IsEmpty(v.FieldByIndex([]int{i}))
+			if !ok {
+				return false
+			}
+		}
+	default:
+		fmt.Printf("%#+v\n", v)
+		return false
 	}
-	return false
+	return true
+}
+
+// IsZero returns true if struct is zero (not have any defined values)
+func IsZero(src interface{}) bool {
+	v := reflect.ValueOf(src)
+	return IsEmpty(v)
 }
 
 // Zero creates new zero interface

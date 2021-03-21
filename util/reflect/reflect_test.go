@@ -43,3 +43,50 @@ func TestURLVars(t *testing.T) {
 	}
 	_ = mp
 }
+
+func TestIsZero(t *testing.T) {
+	testStr1 := struct {
+		Name   string
+		Value  string
+		Nested struct {
+			NestedName string
+		}
+	}{
+		Name:  "test_name",
+		Value: "test_value",
+	}
+	testStr1.Nested.NestedName = "nested_name"
+
+	if ok := IsZero(testStr1); ok {
+		t.Fatalf("zero ret on non zero struct: %#+v", testStr1)
+	}
+
+	testStr1.Name = ""
+	testStr1.Value = ""
+	testStr1.Nested.NestedName = ""
+	if ok := IsZero(testStr1); !ok {
+		t.Fatalf("non zero ret on zero struct: %#+v", testStr1)
+	}
+
+	type testStr3 struct {
+		Nested string
+	}
+	type testStr2 struct {
+		Name   string
+		Nested *testStr3
+	}
+	vtest := &testStr2{
+		Name:   "test_name",
+		Nested: &testStr3{Nested: "nested_name"},
+	}
+	if ok := IsZero(vtest); ok {
+		t.Fatalf("zero ret on non zero struct: %#+v", vtest)
+	}
+	vtest.Nested = nil
+	vtest.Name = ""
+	if ok := IsZero(vtest); !ok {
+		t.Fatalf("non zero ret on zero struct: %#+v", vtest)
+	}
+
+	//t.Logf("XX %#+v\n", ok)
+}
