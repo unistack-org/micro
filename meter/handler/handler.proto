@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package meter;
+option go_package = "github.com/unistack-org/micro/v3/meter/handler;pb";
+
+import "api/annotations.proto";
+import "openapiv2/annotations.proto";
+import "codec/frame.proto";
+
+service Meter {
+	rpc Metrics(Empty) returns (micro.codec.Frame) {
+		option (micro.openapiv2.openapiv2_operation) = {
+      operation_id: "Metrics";
+        responses: {
+          key: "default";
+          value: {
+            description: "Error response";
+            schema: {
+              json_schema: {
+                ref: "Empty";
+              }
+            }
+          }
+        }
+    };
+		option (micro.api.http) = { get: "/metrics"; };
+  };
+};
+
+message Empty{};
