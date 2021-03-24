@@ -28,6 +28,9 @@ var (
 	labelFailure  = "failure"
 	labelStatus   = "status"
 	labelEndpoint = "endpoint"
+
+	// DefaultSkipEndpoints contains list of endpoints that not evaluted by wrapper
+	DefaultSkipEndpoints = []string{"Meter.Metrics"}
 )
 
 type Options struct {
@@ -100,7 +103,11 @@ func NewCallWrapper(opts ...Option) client.CallWrapper {
 
 func (w *wrapper) CallFunc(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions) error {
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
-
+	for _, ep := range DefaultSkipEndpoints {
+		if ep == endpoint {
+			return w.callFunc(ctx, addr, req, rsp, opts)
+		}
+	}
 	ts := time.Now()
 	err := w.callFunc(ctx, addr, req, rsp, opts)
 	te := time.Since(ts)
@@ -123,6 +130,11 @@ func (w *wrapper) CallFunc(ctx context.Context, addr string, req client.Request,
 
 func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	for _, ep := range DefaultSkipEndpoints {
+		if ep == endpoint {
+			return w.Client.Call(ctx, req, rsp, opts...)
+		}
+	}
 
 	ts := time.Now()
 	err := w.Client.Call(ctx, req, rsp, opts...)
@@ -146,6 +158,11 @@ func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{},
 
 func (w *wrapper) Stream(ctx context.Context, req client.Request, opts ...client.CallOption) (client.Stream, error) {
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	for _, ep := range DefaultSkipEndpoints {
+		if ep == endpoint {
+			return w.Client.Stream(ctx, req, opts...)
+		}
+	}
 
 	ts := time.Now()
 	stream, err := w.Client.Stream(ctx, req, opts...)
@@ -200,6 +217,11 @@ func NewHandlerWrapper(opts ...Option) server.HandlerWrapper {
 func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
 		endpoint := req.Endpoint()
+		for _, ep := range DefaultSkipEndpoints {
+			if ep == endpoint {
+				return fn(ctx, req, rsp)
+			}
+		}
 
 		ts := time.Now()
 		err := fn(ctx, req, rsp)
