@@ -65,6 +65,7 @@ type Server interface {
 	String() string
 }
 
+/*
 // Router handle serving messages
 type Router interface {
 	// ProcessMessage processes a message
@@ -72,6 +73,7 @@ type Router interface {
 	// ServeRequest processes a request to completion
 	ServeRequest(ctx context.Context, req Request, rsp Response) error
 }
+*/
 
 // Message is an async message interface
 type Message interface {

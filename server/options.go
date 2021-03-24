@@ -39,8 +39,12 @@ type Options struct {
 	Meter meter.Meter
 	// Transport holds the transport
 	Transport transport.Transport
-	// Router for requests
-	Router Router
+
+	/*
+		// Router for requests
+		Router Router
+	*/
+
 	// Listener may be passed if already created
 	Listener net.Listener
 	// Wait group
@@ -262,12 +266,14 @@ func TLSConfig(t *tls.Config) Option {
 	}
 }
 
+/*
 // WithRouter sets the request router
 func WithRouter(r Router) Option {
 	return func(o *Options) {
 		o.Router = r
 	}
 }
+*/
 
 // Wait tells the server to wait for requests to finish before exiting
 // If `wg` is nil, server only wait for completion of rpc handler.
