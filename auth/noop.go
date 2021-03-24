@@ -14,10 +14,11 @@ func (n *noopAuth) String() string {
 }
 
 // Init the auth
-func (n *noopAuth) Init(opts ...Option) {
+func (n *noopAuth) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
+	return nil
 }
 
 // Options set for auth

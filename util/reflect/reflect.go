@@ -74,7 +74,6 @@ func IsEmpty(v reflect.Value) bool {
 			}
 		}
 	default:
-		fmt.Printf("%#+v\n", v)
 		return false
 	}
 	return true
