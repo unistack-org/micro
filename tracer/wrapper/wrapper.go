@@ -101,6 +101,8 @@ var (
 		}
 		sp.SetLabels(labels...)
 	}
+
+	DefaultSkipEndpoints = []string{"Meter.Metrics"}
 )
 
 type tWrapper struct {
@@ -134,6 +136,8 @@ type Options struct {
 	ServerHandlerObservers []ServerHandlerObserver
 	// ServerSubscriberObservers funcs
 	ServerSubscriberObservers []ServerSubscriberObserver
+	// SkipEndpoints
+	SkipEndpoints []string
 }
 
 // Option func signature
@@ -149,6 +153,7 @@ func NewOptions(opts ...Option) Options {
 		ClientCallFuncObservers:   []ClientCallFuncObserver{DefaultClientCallFuncObserver},
 		ServerHandlerObservers:    []ServerHandlerObserver{DefaultServerHandlerObserver},
 		ServerSubscriberObservers: []ServerSubscriberObserver{DefaultServerSubscriberObserver},
+		SkipEndpoints:             DefaultSkipEndpoints,
 	}
 
 	for _, o := range opts {
@@ -162,6 +167,13 @@ func NewOptions(opts ...Option) Options {
 func WithTracer(t tracer.Tracer) Option {
 	return func(o *Options) {
 		o.Tracer = t
+	}
+}
+
+// SkipEndponts
+func SkipEndpoins(eps ...string) Option {
+	return func(o *Options) {
+		o.SkipEndpoints = append(o.SkipEndpoints, eps...)
 	}
 }
 
@@ -208,6 +220,13 @@ func WithServerSubscriberObservers(ob ...ServerSubscriberObserver) Option {
 }
 
 func (ot *tWrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
+	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	for _, ep := range ot.opts.SkipEndpoints {
+		if ep == endpoint {
+			return ot.Client.Call(ctx, req, rsp, opts...)
+		}
+	}
+
 	sp := tracer.SpanFromContext(ctx)
 	defer sp.Finish()
 
@@ -221,6 +240,13 @@ func (ot *tWrapper) Call(ctx context.Context, req client.Request, rsp interface{
 }
 
 func (ot *tWrapper) Stream(ctx context.Context, req client.Request, opts ...client.CallOption) (client.Stream, error) {
+	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	for _, ep := range ot.opts.SkipEndpoints {
+		if ep == endpoint {
+			return ot.Client.Stream(ctx, req, opts...)
+		}
+	}
+
 	sp := tracer.SpanFromContext(ctx)
 	defer sp.Finish()
 
@@ -247,6 +273,13 @@ func (ot *tWrapper) Publish(ctx context.Context, msg client.Message, opts ...cli
 }
 
 func (ot *tWrapper) ServerHandler(ctx context.Context, req server.Request, rsp interface{}) error {
+	endpoint := req.Endpoint()
+	for _, ep := range ot.opts.SkipEndpoints {
+		if ep == endpoint {
+			return ot.serverHandler(ctx, req, rsp)
+		}
+	}
+
 	sp := tracer.SpanFromContext(ctx)
 	defer sp.Finish()
 
@@ -297,6 +330,13 @@ func NewClientCallWrapper(opts ...Option) client.CallWrapper {
 }
 
 func (ot *tWrapper) ClientCallFunc(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions) error {
+	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	for _, ep := range ot.opts.SkipEndpoints {
+		if ep == endpoint {
+			return ot.ClientCallFunc(ctx, addr, req, rsp, opts)
+		}
+	}
+
 	sp := tracer.SpanFromContext(ctx)
 	defer sp.Finish()
 

@@ -3,6 +3,7 @@ package wrapper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/logger"
@@ -57,6 +58,8 @@ var (
 		}
 		return labels
 	}
+
+	DefaultSkipEndpoints = []string{"Meter.Metrics"}
 )
 
 type lWrapper struct {
@@ -94,6 +97,8 @@ type Options struct {
 	ServerHandlerObservers []ServerHandlerObserver
 	// ServerSubscriberObservers funcs
 	ServerSubscriberObservers []ServerSubscriberObserver
+	// SkipEndpoints
+	SkipEndpoints []string
 }
 
 // Option func signature
@@ -110,6 +115,7 @@ func NewOptions(opts ...Option) Options {
 		ClientCallFuncObservers:   []ClientCallFuncObserver{DefaultClientCallFuncObserver},
 		ServerHandlerObservers:    []ServerHandlerObserver{DefaultServerHandlerObserver},
 		ServerSubscriberObservers: []ServerSubscriberObserver{DefaultServerSubscriberObserver},
+		SkipEndpoints:             DefaultSkipEndpoints,
 	}
 
 	for _, o := range opts {
@@ -182,8 +188,22 @@ func WithServerSubscriberObservers(ob ...ServerSubscriberObserver) Option {
 	}
 }
 
+// SkipEndpoins
+func SkipEndpoints(eps ...string) Option {
+	return func(o *Options) {
+		o.SkipEndpoints = append(o.SkipEndpoints, eps...)
+	}
+}
+
 func (l *lWrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
 	err := l.Client.Call(ctx, req, rsp, opts...)
+
+	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	for _, ep := range l.opts.SkipEndpoints {
+		if ep == endpoint {
+			return err
+		}
+	}
 
 	if !l.opts.Enabled {
 		return err
@@ -205,6 +225,13 @@ func (l *lWrapper) Call(ctx context.Context, req client.Request, rsp interface{}
 func (l *lWrapper) Stream(ctx context.Context, req client.Request, opts ...client.CallOption) (client.Stream, error) {
 	stream, err := l.Client.Stream(ctx, req, opts...)
 
+	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	for _, ep := range l.opts.SkipEndpoints {
+		if ep == endpoint {
+			return stream, err
+		}
+	}
+
 	if !l.opts.Enabled {
 		return stream, err
 	}
@@ -224,6 +251,13 @@ func (l *lWrapper) Stream(ctx context.Context, req client.Request, opts ...clien
 
 func (l *lWrapper) Publish(ctx context.Context, msg client.Message, opts ...client.PublishOption) error {
 	err := l.Client.Publish(ctx, msg, opts...)
+
+	endpoint := msg.Topic()
+	for _, ep := range l.opts.SkipEndpoints {
+		if ep == endpoint {
+			return err
+		}
+	}
 
 	if !l.opts.Enabled {
 		return err
@@ -245,6 +279,13 @@ func (l *lWrapper) Publish(ctx context.Context, msg client.Message, opts ...clie
 func (l *lWrapper) ServerHandler(ctx context.Context, req server.Request, rsp interface{}) error {
 	err := l.serverHandler(ctx, req, rsp)
 
+	endpoint := req.Endpoint()
+	for _, ep := range l.opts.SkipEndpoints {
+		if ep == endpoint {
+			return err
+		}
+	}
+
 	if !l.opts.Enabled {
 		return err
 	}
@@ -264,6 +305,13 @@ func (l *lWrapper) ServerHandler(ctx context.Context, req server.Request, rsp in
 
 func (l *lWrapper) ServerSubscriber(ctx context.Context, msg server.Message) error {
 	err := l.serverSubscriber(ctx, msg)
+
+	endpoint := msg.Topic()
+	for _, ep := range l.opts.SkipEndpoints {
+		if ep == endpoint {
+			return err
+		}
+	}
 
 	if !l.opts.Enabled {
 		return err
@@ -308,6 +356,13 @@ func NewClientCallWrapper(opts ...Option) client.CallWrapper {
 
 func (l *lWrapper) ClientCallFunc(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions) error {
 	err := l.clientCallFunc(ctx, addr, req, rsp, opts)
+
+	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	for _, ep := range l.opts.SkipEndpoints {
+		if ep == endpoint {
+			return err
+		}
+	}
 
 	if !l.opts.Enabled {
 		return err

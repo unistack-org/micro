@@ -34,16 +34,18 @@ var (
 )
 
 type Options struct {
-	Meter meter.Meter
-	lopts []meter.Option
+	Meter         meter.Meter
+	lopts         []meter.Option
+	SkipEndpoints []string
 }
 
 type Option func(*Options)
 
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Meter: meter.DefaultMeter,
-		lopts: make([]meter.Option, 0, 5),
+		Meter:         meter.DefaultMeter,
+		lopts:         make([]meter.Option, 0, 5),
+		SkipEndpoints: DefaultSkipEndpoints,
 	}
 	for _, o := range opts {
 		o(&options)
@@ -75,6 +77,12 @@ func Meter(m meter.Meter) Option {
 	}
 }
 
+func SkipEndoints(eps ...string) Option {
+	return func(o *Options) {
+		o.SkipEndpoints = append(o.SkipEndpoints, eps...)
+	}
+}
+
 type wrapper struct {
 	client.Client
 	callFunc client.CallFunc
@@ -103,7 +111,7 @@ func NewCallWrapper(opts ...Option) client.CallWrapper {
 
 func (w *wrapper) CallFunc(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions) error {
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
-	for _, ep := range DefaultSkipEndpoints {
+	for _, ep := range w.opts.SkipEndpoints {
 		if ep == endpoint {
 			return w.callFunc(ctx, addr, req, rsp, opts)
 		}
@@ -130,7 +138,7 @@ func (w *wrapper) CallFunc(ctx context.Context, addr string, req client.Request,
 
 func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
-	for _, ep := range DefaultSkipEndpoints {
+	for _, ep := range w.opts.SkipEndpoints {
 		if ep == endpoint {
 			return w.Client.Call(ctx, req, rsp, opts...)
 		}
@@ -158,7 +166,7 @@ func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{},
 
 func (w *wrapper) Stream(ctx context.Context, req client.Request, opts ...client.CallOption) (client.Stream, error) {
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
-	for _, ep := range DefaultSkipEndpoints {
+	for _, ep := range w.opts.SkipEndpoints {
 		if ep == endpoint {
 			return w.Client.Stream(ctx, req, opts...)
 		}
@@ -217,7 +225,7 @@ func NewHandlerWrapper(opts ...Option) server.HandlerWrapper {
 func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
 		endpoint := req.Endpoint()
-		for _, ep := range DefaultSkipEndpoints {
+		for _, ep := range w.opts.SkipEndpoints {
 			if ep == endpoint {
 				return fn(ctx, req, rsp)
 			}
