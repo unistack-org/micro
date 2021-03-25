@@ -13,13 +13,13 @@ type meterServer struct {
 	MeterServer
 }
 
-func (h *meterServer) Metrics(ctx context.Context, req *Empty, rsp *codec.Frame) error {
+func (h *meterServer) Metrics(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
 	return h.MeterServer.Metrics(ctx, req, rsp)
 }
 
 func RegisterMeterServer(s server.Server, sh MeterServer, opts ...server.HandlerOption) error {
 	type meter interface {
-		Metrics(ctx context.Context, req *Empty, rsp *codec.Frame) error
+		Metrics(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error
 	}
 	type Meter struct {
 		meter

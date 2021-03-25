@@ -20,5 +20,5 @@ func NewMeterEndpoints() []*api.Endpoint {
 }
 
 type MeterServer interface {
-	Metrics(ctx context.Context, req *Empty, rsp *codec.Frame) error
+	Metrics(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error
 }

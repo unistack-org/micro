@@ -24,7 +24,7 @@ func NewHandler(meter meter.Meter, opts ...meter.Option) *handler {
 	return &handler{meter: meter, opts: opts}
 }
 
-func (h *handler) Metrics(ctx context.Context, req *Empty, rsp *codec.Frame) error {
+func (h *handler) Metrics(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
 	buf := bytes.NewBuffer(nil)
 	if err := h.meter.Write(buf, h.opts...); err != nil {
 		return err
