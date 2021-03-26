@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"crypto/tls"
 	"time"
 
 	"github.com/unistack-org/micro/v3/broker"
@@ -52,6 +53,8 @@ type Options struct {
 	PoolSize int
 	// PoolTTL connection pool ttl
 	PoolTTL time.Duration
+	// TLSConfig specifies tls.Config for secure connection
+	TLSConfig *tls.Config
 }
 
 // NewCallOptions creates new call options struct
@@ -309,6 +312,22 @@ func Name(n string) Option {
 func Lookup(l LookupFunc) Option {
 	return func(o *Options) {
 		o.Lookup = l
+	}
+}
+
+// TLSConfig specifies a *tls.Config
+func TLSConfig(t *tls.Config) Option {
+	return func(o *Options) {
+		// set the internal tls
+		o.TLSConfig = t
+
+		// set the default transport if one is not
+		// already set. Required for Init call below.
+
+		// set the transport tls
+		o.Transport.Init(
+			transport.TLSConfig(t),
+		)
 	}
 }
 
