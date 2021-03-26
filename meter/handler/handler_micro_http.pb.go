@@ -25,8 +25,9 @@ func RegisterMeterServer(s server.Server, sh MeterServer, opts ...server.Handler
 		meter
 	}
 	h := &meterServer{sh}
+	var nopts []server.HandlerOption
 	for _, endpoint := range NewMeterEndpoints() {
-		opts = append(opts, api.WithEndpoint(endpoint))
+		nopts = append(nopts, api.WithEndpoint(endpoint))
 	}
-	return s.Handle(s.NewHandler(&Meter{h}, opts...))
+	return s.Handle(s.NewHandler(&Meter{h}, append(nopts, opts...)...))
 }
