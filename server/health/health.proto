@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package health;
+option go_package = "github.com/unistack-org/micro/v3/server/health;pb";
+
+import "api/annotations.proto";
+import "openapiv2/annotations.proto";
+import "codec/frame.proto";
+
+service Health {
+	rpc Live(micro.codec.Frame) returns (micro.codec.Frame) {
+		option (micro.openapiv2.openapiv2_operation) = {
+      operation_id: "Live";
+        responses: {
+          key: "default";
+          value: {
+            description: "Error response";
+            schema: {
+              json_schema: {
+                ref: "micro.codec.Frame";
+              }
+            }
+          }
+        }
+    };
+		option (micro.api.http) = { get: "/live"; };
+  };
+	rpc Ready(micro.codec.Frame) returns (micro.codec.Frame) {
+		option (micro.openapiv2.openapiv2_operation) = {
+      operation_id: "Ready";
+        responses: {
+          key: "default";
+          value: {
+            description: "Error response";
+            schema: {
+              json_schema: {
+                ref: "micro.codec.Frame";
+              }
+            }
+          }
+        }
+    };
+		option (micro.api.http) = { get: "/ready"; };
+  };
+	rpc Version(micro.codec.Frame) returns (micro.codec.Frame) {
+		option (micro.openapiv2.openapiv2_operation) = {
+      operation_id: "Version";
+        responses: {
+          key: "default";
+          value: {
+            description: "Error response";
+            schema: {
+              json_schema: {
+                ref: "micro.codec.Frame";
+              }
+            }
+          }
+        }
+    };
+		option (micro.api.http) = { get: "/version"; };
+  };
+};
