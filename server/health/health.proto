@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-package health;
-option go_package = "github.com/unistack-org/micro/v3/server/health;pb";
+package micro.server.health;
+option go_package = "github.com/unistack-org/micro/v3/server/health;health";
 
 import "api/annotations.proto";
 import "openapiv2/annotations.proto";

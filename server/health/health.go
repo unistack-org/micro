@@ -53,7 +53,7 @@ func Version(version string) Option {
 	}
 }
 
-func NewHealth(opts ...Option) *handler {
+func NewHandler(opts ...Option) *handler {
 	options := Options{}
 	for _, o := range opts {
 		o(&options)

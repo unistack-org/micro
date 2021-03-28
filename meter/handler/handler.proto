@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-package meter;
-option go_package = "github.com/unistack-org/micro/v3/meter/handler;pb";
+package micro.meter.handler;
+option go_package = "github.com/unistack-org/micro/v3/meter/handler;handler";
 
 import "api/annotations.proto";
 import "openapiv2/annotations.proto";
