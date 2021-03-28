@@ -13,8 +13,6 @@ var (
 	_ MeterServer = &handler{}
 )
 
-type Empty struct{}
-
 type handler struct {
 	meter meter.Meter
 	opts  []meter.Option

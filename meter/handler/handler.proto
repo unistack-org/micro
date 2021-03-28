@@ -17,7 +17,7 @@ service Meter {
             description: "Error response";
             schema: {
               json_schema: {
-                ref: "Empty";
+                ref: "micro.codec.Frame";
               }
             }
           }
