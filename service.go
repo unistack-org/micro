@@ -103,48 +103,48 @@ func (s *service) Init(opts ...Option) error {
 			// skip config as the struct not passed
 			continue
 		}
-		if err = cfg.Init(config.Context(s.opts.Context)); err != nil {
+		if err = cfg.Init(config.Context(cfg.Options().Context)); err != nil {
 			return err
 		}
 
-		if err = cfg.Load(s.opts.Context); err != nil {
+		if err = cfg.Load(cfg.Options().Context); err != nil {
 			return err
 		}
 
 	}
 
 	for _, log := range s.opts.Loggers {
-		if err = log.Init(logger.WithContext(s.opts.Context)); err != nil {
+		if err = log.Init(logger.WithContext(log.Options().Context)); err != nil {
 			return err
 		}
 	}
 
 	for _, reg := range s.opts.Registers {
-		if err = reg.Init(register.Context(s.opts.Context)); err != nil {
+		if err = reg.Init(register.Context(reg.Options().Context)); err != nil {
 			return err
 		}
 	}
 
 	for _, brk := range s.opts.Brokers {
-		if err = brk.Init(broker.Context(s.opts.Context)); err != nil {
+		if err = brk.Init(broker.Context(brk.Options().Context)); err != nil {
 			return err
 		}
 	}
 
 	for _, str := range s.opts.Stores {
-		if err = str.Init(store.Context(s.opts.Context)); err != nil {
+		if err = str.Init(store.Context(str.Options().Context)); err != nil {
 			return err
 		}
 	}
 
 	for _, srv := range s.opts.Servers {
-		if err = srv.Init(server.Context(s.opts.Context)); err != nil {
+		if err = srv.Init(server.Context(srv.Options().Context)); err != nil {
 			return err
 		}
 	}
 
 	for _, cli := range s.opts.Clients {
-		if err = cli.Init(client.Context(s.opts.Context)); err != nil {
+		if err = cli.Init(client.Context(cli.Options().Context)); err != nil {
 			return err
 		}
 	}
