@@ -173,6 +173,79 @@ func CopyFrom(a, b interface{}) {
 	}
 }
 
+func StructURLValues(src interface{}, pref string, tags []string) (url.Values, error) {
+	data := url.Values{}
+
+	sv := reflect.ValueOf(src)
+	if sv.Kind() == reflect.Ptr {
+		sv = sv.Elem()
+	}
+	if sv.Kind() != reflect.Struct {
+		return nil, ErrInvalidStruct
+	}
+
+	typ := sv.Type()
+	for idx := 0; idx < typ.NumField(); idx++ {
+		fld := typ.Field(idx)
+		val := sv.Field(idx)
+		if !val.CanSet() || len(fld.PkgPath) != 0 || !val.IsValid() {
+			continue
+		}
+
+		var t *tag
+		for _, tn := range tags {
+			ts, ok := fld.Tag.Lookup(tn)
+			if !ok {
+				continue
+			}
+
+			tp := strings.Split(ts, ",")
+			// special
+			switch tn {
+			case "protobuf": // special
+				t = &tag{key: tn, name: tp[3][5:], opts: append(tp[:3], tp[4:]...)}
+			default:
+				t = &tag{key: tn, name: tp[0], opts: tp[1:]}
+			}
+			if t.name != "" {
+				break
+			}
+		}
+
+		if t.name == "" {
+			// fallback to lowercase
+			t.name = strings.ToLower(fld.Name)
+		}
+		if pref != "" {
+			t.name = pref + "." + t.name
+		}
+
+		switch val.Kind() {
+		case reflect.Struct, reflect.Ptr:
+			if val.IsNil() {
+				continue
+			}
+			ndata, err := StructURLValues(val.Interface(), t.name, tags)
+			if err != nil {
+				return ndata, err
+			}
+			for k, v := range ndata {
+				data[k] = v
+			}
+		default:
+			switch val.Kind() {
+			case reflect.Slice:
+				for i := 0; i < val.Len(); i++ {
+					data.Add(t.name, fmt.Sprintf("%v", val.Index(i)))
+				}
+			default:
+				data.Set(t.name, fmt.Sprintf("%v", val))
+			}
+		}
+	}
+	return data, nil
+}
+
 // URLMap returns map of url query params
 func URLMap(query string) (map[string]interface{}, error) {
 	var (
@@ -623,4 +696,10 @@ func mergeMapIface(a map[string]interface{}, b map[string]interface{}) map[strin
 func mergeSliceIface(a []interface{}, b []interface{}) []interface{} {
 	a = append(a, b...)
 	return a
+}
+
+type tag struct {
+	key  string
+	name string
+	opts []string
 }

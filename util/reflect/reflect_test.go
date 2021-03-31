@@ -5,6 +5,24 @@ import (
 	"testing"
 )
 
+func TestStructURLValues(t *testing.T) {
+	type Str struct {
+		Name string `json:"name"`
+		Args []int  `json:"args"`
+		Str  *Str   `json:"str"`
+	}
+
+	val := &Str{Name: "test_name", Args: []int{1, 2, 3}, Str: &Str{Name: "nested_name"}}
+	data, err := StructURLValues(val, "", []string{"json"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if data.Get("name") != "test_name" {
+		t.Fatalf("invalid data: %v", data)
+	}
+}
+
 func TestURLSliceVars(t *testing.T) {
 	u, err := url.Parse("http://localhost/v1/test/call/my_name?key=arg1&key=arg2&key=arg3")
 	if err != nil {
