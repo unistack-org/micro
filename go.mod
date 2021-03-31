@@ -9,5 +9,5 @@ require (
 	github.com/imdario/mergo v0.3.12
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/silas/dag v0.0.0-20210121180416-41cf55125c34
-	golang.org/x/net v0.0.0-20210330230544-e57232859fb2
+	golang.org/x/net v0.0.0-20210331060903-cb1fcc7394e5
 )
