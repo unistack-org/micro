@@ -220,6 +220,10 @@ func StructURLValues(src interface{}, pref string, tags []string) (url.Values, e
 			t.name = pref + "." + t.name
 		}
 
+		if !val.IsValid() || val.IsZero() {
+			continue
+		}
+
 		switch val.Kind() {
 		case reflect.Struct, reflect.Ptr:
 			if val.IsNil() {
@@ -236,10 +240,35 @@ func StructURLValues(src interface{}, pref string, tags []string) (url.Values, e
 			switch val.Kind() {
 			case reflect.Slice:
 				for i := 0; i < val.Len(); i++ {
-					data.Add(t.name, fmt.Sprintf("%v", val.Index(i)))
+					va := val.Index(i)
+					//if va.Type().Elem().Kind() != reflect.Ptr {
+					if va.Kind() != reflect.Ptr {
+						data.Set(t.name, fmt.Sprintf("%v", va.Interface()))
+						continue
+					}
+					switch va.Type().Elem().String() {
+					case "wrapperspb.BoolValue", "wrapperspb.BytesValue", "wrapperspb.StringValue":
+						if eva := reflect.Indirect(va).FieldByName("Value"); eva.IsValid() {
+							data.Add(t.name, fmt.Sprintf("%v", eva.Interface()))
+						}
+					case "wrapperspb.DoubleValue", "wrapperspb.FloatValue":
+						if eva := reflect.Indirect(va).FieldByName("Value"); eva.IsValid() {
+							data.Add(t.name, fmt.Sprintf("%v", eva.Interface()))
+						}
+					case "wrapperspb.Int32Value", "wrapperspb.Int64Value":
+						if eva := reflect.Indirect(va).FieldByName("Value"); eva.IsValid() {
+							data.Add(t.name, fmt.Sprintf("%v", eva.Interface()))
+						}
+					case "wrapperspb.UInt32Value", "wrapperspb.UInt64Value":
+						if eva := reflect.Indirect(va).FieldByName("Value"); eva.IsValid() {
+							data.Add(t.name, fmt.Sprintf("%v", eva.Interface()))
+						}
+					default:
+						data.Add(t.name, fmt.Sprintf("%v", val.Index(i).Interface()))
+					}
 				}
 			default:
-				data.Set(t.name, fmt.Sprintf("%v", val))
+				data.Set(t.name, fmt.Sprintf("%v", val.Interface()))
 			}
 		}
 	}
@@ -436,7 +465,7 @@ func mergeSlice(va, vb reflect.Value) error {
 			}
 		}
 	default:
-		return fmt.Errorf("cant merge %v %s with %v %s", va, va.Kind(), vb, vb.Kind())
+		return fmt.Errorf("cant merge %v %s with %v %s", va.Type(), va.Kind(), vb.Type(), vb.Kind())
 	}
 	return nil
 }
