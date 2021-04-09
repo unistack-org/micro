@@ -80,6 +80,8 @@ type CallOptions struct {
 	Backoff BackoffFunc
 	// Network name
 	Network string
+	// Content-Type
+	ContentType string
 	// CallWrappers call wrappers
 	CallWrappers []CallWrapper
 	// SelectOptions selector options
@@ -382,6 +384,13 @@ func PublishContext(ctx context.Context) PublishOption {
 	}
 }
 
+// WithContentType specifies call content type
+func WithContentType(ct string) CallOption {
+	return func(o *CallOptions) {
+		o.ContentType = ct
+	}
+}
+
 // WithAddress sets the remote addresses to use rather than using service discovery
 func WithAddress(a ...string) CallOption {
 	return func(o *CallOptions) {
@@ -486,16 +495,16 @@ func WithMessageContentType(ct string) MessageOption {
 	}
 }
 
-// WithContentType specifies request content type
-func WithContentType(ct string) RequestOption {
+// StreamingRequest specifies that request is streaming
+func StreamingRequest(b bool) RequestOption {
 	return func(o *RequestOptions) {
-		o.ContentType = ct
+		o.Stream = b
 	}
 }
 
-// StreamingRequest specifies that request is streaming
-func StreamingRequest() RequestOption {
+// RequestContentType specifies request content type
+func RequestContentType(ct string) RequestOption {
 	return func(o *RequestOptions) {
-		o.Stream = true
+		o.ContentType = ct
 	}
 }
