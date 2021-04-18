@@ -280,6 +280,8 @@ func mergeBool(dval reflect.Value, sval reflect.Value) error {
 		default:
 			return ErrInvalidValue
 		}
+	case reflect.Interface:
+		return mergeBool(dval, reflect.ValueOf(fmt.Sprintf("%v", sval.Interface())))
 	default:
 		return ErrInvalidValue
 	}
@@ -303,6 +305,8 @@ func mergeString(dval reflect.Value, sval reflect.Value) error {
 		}
 	case reflect.String:
 		dval.SetString(sval.String())
+	case reflect.Interface:
+		return mergeString(dval, reflect.ValueOf(fmt.Sprintf("%v", sval.Interface())))
 	default:
 		return ErrInvalidValue
 	}
@@ -330,6 +334,8 @@ func mergeInt(dval reflect.Value, sval reflect.Value) error {
 			return err
 		}
 		dval.SetInt(l)
+	case reflect.Interface:
+		return mergeInt(dval, reflect.ValueOf(fmt.Sprintf("%v", sval.Interface())))
 	default:
 		return ErrInvalidValue
 	}
@@ -357,6 +363,8 @@ func mergeUint(dval reflect.Value, sval reflect.Value) error {
 			return err
 		}
 		dval.SetUint(l)
+	case reflect.Interface:
+		return mergeUint(dval, reflect.ValueOf(fmt.Sprintf("%v", sval.Interface())))
 	default:
 		return ErrInvalidValue
 	}
@@ -384,6 +392,8 @@ func mergeFloat(dval reflect.Value, sval reflect.Value) error {
 			return err
 		}
 		dval.SetFloat(l)
+	case reflect.Interface:
+		return mergeFloat(dval, reflect.ValueOf(fmt.Sprintf("%v", sval.Interface())))
 	default:
 		return ErrInvalidValue
 	}
