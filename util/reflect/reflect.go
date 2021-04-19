@@ -70,7 +70,11 @@ func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 			tpart := strings.Split(tvalue, ",")
 			switch tname {
 			case "protobuf":
-				fname = tpart[3][5:]
+				for _, p := range tpart {
+					if idx := strings.Index(p, "name="); idx > 0 {
+						fname = p[idx:]
+					}
+				}
 			default:
 				fname = tpart[0]
 			}
@@ -231,13 +235,14 @@ func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 		default:
 			err = ErrInvalidValue
 		}
+
+		if err != nil {
+			err = fmt.Errorf("%v key %v invalid val %v", err, fname, sval.Interface())
+		}
+
 	}
 
-	if err != nil {
-		err = fmt.Errorf("%v key %v invalid val %v", err, fname, sval.Interface())
-	}
-
-	return err
+	return nil
 }
 
 func mergeBool(dval reflect.Value, sval reflect.Value) error {
