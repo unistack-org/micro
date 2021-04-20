@@ -160,21 +160,15 @@ func (n *noopServer) Register() error {
 	n.RLock()
 	// Maps are ordered randomly, sort the keys for consistency
 	var handlerList []string
-	for n, e := range n.handlers {
-		// Only advertise non internal handlers
-		if !e.Options().Internal {
-			handlerList = append(handlerList, n)
-		}
+	for n, _ := range n.handlers {
+		handlerList = append(handlerList, n)
 	}
 
 	sort.Strings(handlerList)
 
 	var subscriberList []*subscriber
 	for e := range n.subscribers {
-		// Only advertise non internal subscribers
-		if !e.Options().Internal {
-			subscriberList = append(subscriberList, e)
-		}
+		subscriberList = append(subscriberList, e)
 	}
 	sort.Slice(subscriberList, func(i, j int) bool {
 		return subscriberList[i].topic > subscriberList[j].topic

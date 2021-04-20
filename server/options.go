@@ -325,8 +325,6 @@ type HandlerOptions struct {
 	Context context.Context
 	// Metadata for hondler
 	Metadata map[string]metadata.Metadata
-	// Internal flag limits exporting to other nodes via register
-	Internal bool
 }
 
 // NewHandlerOptions creates new HandlerOptions
@@ -354,8 +352,6 @@ type SubscriberOptions struct {
 	Queue string
 	// AutoAck flag for auto ack messages after processing
 	AutoAck bool
-	// Internal flag limit exporting info via register
-	Internal bool
 	// BodyOnly flag specifies that message without headers
 	BodyOnly bool
 }
@@ -379,23 +375,6 @@ func NewSubscriberOptions(opts ...SubscriberOption) SubscriberOptions {
 func EndpointMetadata(name string, md metadata.Metadata) HandlerOption {
 	return func(o *HandlerOptions) {
 		o.Metadata[name] = metadata.Copy(md)
-	}
-}
-
-// InternalHandler options specifies that a handler is not advertised
-// to the discovery system. In the future this may also limit request
-// to the internal network or authorised user.
-func InternalHandler(b bool) HandlerOption {
-	return func(o *HandlerOptions) {
-		o.Internal = b
-	}
-}
-
-// InternalSubscriber options specifies that a subscriber is not advertised
-// to the discovery system.
-func InternalSubscriber(b bool) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.Internal = b
 	}
 }
 
