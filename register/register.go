@@ -59,17 +59,10 @@ type Node struct {
 
 // Endpoint holds endpoint register info
 type Endpoint struct {
-	Request  *Value            `json:"request"`
-	Response *Value            `json:"response"`
+	Request  string            `json:"request"`
+	Response string            `json:"response"`
 	Metadata metadata.Metadata `json:"metadata"`
 	Name     string            `json:"name"`
-}
-
-// Value holds additional kv stuff
-type Value struct {
-	Name   string   `json:"name"`
-	Type   string   `json:"type"`
-	Values []*Value `json:"values"`
 }
 
 // Option func signature

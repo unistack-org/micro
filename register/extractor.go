@@ -3,7 +3,6 @@ package register
 import (
 	"fmt"
 	"reflect"
-	"strings"
 	"unicode"
 	"unicode/utf8"
 
@@ -11,12 +10,12 @@ import (
 )
 
 // ExtractValue from reflect.Type from specified depth
-func ExtractValue(v reflect.Type, d int) *Value {
+func ExtractValue(v reflect.Type, d int) string {
 	if d == 3 {
-		return nil
+		return ""
 	}
 	if v == nil {
-		return nil
+		return ""
 	}
 
 	if v.Kind() == reflect.Ptr {
@@ -25,7 +24,7 @@ func ExtractValue(v reflect.Type, d int) *Value {
 
 	// slices and maps don't have a defined name
 	if (v.Kind() == reflect.Slice || v.Kind() == reflect.Map) || len(v.Name()) == 0 {
-		return nil
+		return ""
 	}
 
 	// get the rune character
@@ -33,58 +32,10 @@ func ExtractValue(v reflect.Type, d int) *Value {
 
 	// crude check for is unexported field
 	if unicode.IsLower(a) {
-		return nil
+		return ""
 	}
 
-	arg := &Value{
-		Name: v.Name(),
-		Type: v.Name(),
-	}
-
-	switch v.Kind() {
-	case reflect.Struct:
-		for i := 0; i < v.NumField(); i++ {
-			f := v.Field(i)
-			val := ExtractValue(f.Type, d+1)
-			if val == nil {
-				continue
-			}
-
-			// if we can find a json tag use it
-			if tags := f.Tag.Get("json"); len(tags) > 0 {
-				parts := strings.Split(tags, ",")
-				if parts[0] == "-" || parts[0] == "omitempty" {
-					continue
-				}
-				val.Name = parts[0]
-			}
-
-			// if there's no name default it
-			if len(val.Name) == 0 {
-				val.Name = v.Field(i).Name
-			}
-
-			arg.Values = append(arg.Values, val)
-		}
-	case reflect.Slice:
-		p := v.Elem()
-		if p.Kind() == reflect.Ptr {
-			p = p.Elem()
-		}
-		arg.Type = "[]" + p.Name()
-	case reflect.Map:
-		p := v.Elem()
-		if p.Kind() == reflect.Ptr {
-			p = p.Elem()
-		}
-		key := v.Key()
-		if key.Kind() == reflect.Ptr {
-			key = key.Elem()
-		}
-		arg.Type = fmt.Sprintf("map[%s]%s", key.Name(), p.Name())
-	}
-
-	return arg
+	return v.Name()
 }
 
 // ExtractEndpoint extract *Endpoint from reflect.Method
@@ -116,7 +67,7 @@ func ExtractEndpoint(method reflect.Method) *Endpoint {
 
 	request := ExtractValue(reqType, 0)
 	response := ExtractValue(rspType, 0)
-	if request == nil || response == nil {
+	if request == "" || response == "" {
 		return nil
 	}
 
@@ -135,7 +86,7 @@ func ExtractEndpoint(method reflect.Method) *Endpoint {
 }
 
 // ExtractSubValue exctact *Value from reflect.Type
-func ExtractSubValue(typ reflect.Type) *Value {
+func ExtractSubValue(typ reflect.Type) string {
 	var reqType reflect.Type
 	switch typ.NumIn() {
 	case 1:
@@ -145,7 +96,7 @@ func ExtractSubValue(typ reflect.Type) *Value {
 	case 3:
 		reqType = typ.In(2)
 	default:
-		return nil
+		return ""
 	}
 	return ExtractValue(reqType, 0)
 }

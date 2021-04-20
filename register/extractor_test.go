@@ -36,28 +36,21 @@ func TestExtractEndpoint(t *testing.T) {
 		t.Fatalf("Expected handler Test, got %s", endpoints[0].Name)
 	}
 
-	if endpoints[0].Request == nil {
+	if endpoints[0].Request == "" {
 		t.Fatal("Expected non nil Request")
 	}
 
-	if endpoints[0].Response == nil {
+	if endpoints[0].Response == "" {
 		t.Fatal("Expected non nil Request")
 	}
 
-	if endpoints[0].Request.Name != "TestRequest" {
-		t.Fatalf("Expected TestRequest got %s", endpoints[0].Request.Name)
+	if endpoints[0].Request != "TestRequest" {
+		t.Fatalf("Expected TestRequest got %s", endpoints[0].Request)
 	}
 
-	if endpoints[0].Response.Name != "TestResponse" {
-		t.Fatalf("Expected TestResponse got %s", endpoints[0].Response.Name)
+	if endpoints[0].Response != "TestResponse" {
+		t.Fatalf("Expected TestResponse got %s", endpoints[0].Response)
 	}
 
-	if endpoints[0].Request.Type != "TestRequest" {
-		t.Fatalf("Expected TestRequest type got %s", endpoints[0].Request.Type)
-	}
-
-	if endpoints[0].Response.Type != "TestResponse" {
-		t.Fatalf("Expected TestResponse type got %s", endpoints[0].Response.Type)
-	}
-
+	t.Logf("XXX %#+v\n", endpoints[0])
 }

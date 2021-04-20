@@ -490,15 +490,6 @@ func recordToService(r *record, domain string) *Service {
 
 	endpoints := make([]*Endpoint, len(r.Endpoints))
 	for i, e := range r.Endpoints {
-		request := new(Value)
-		if e.Request != nil {
-			*request = *e.Request
-		}
-		response := new(Value)
-		if e.Response != nil {
-			*response = *e.Response
-		}
-
 		metadata := make(map[string]string, len(e.Metadata))
 		for k, v := range e.Metadata {
 			metadata[k] = v
@@ -506,8 +497,8 @@ func recordToService(r *record, domain string) *Service {
 
 		endpoints[i] = &Endpoint{
 			Name:     e.Name,
-			Request:  request,
-			Response: response,
+			Request:  e.Request,
+			Response: e.Response,
 			Metadata: metadata,
 		}
 	}
