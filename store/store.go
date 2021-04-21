@@ -5,8 +5,6 @@ package store
 import (
 	"context"
 	"errors"
-
-	"github.com/unistack-org/micro/v3/metadata"
 )
 
 var (
@@ -41,13 +39,4 @@ type Store interface {
 	Disconnect(ctx context.Context) error
 	// String returns the name of the implementation.
 	String() string
-}
-
-// Value is an item stored or retrieved from a Store
-// may be used in store implementations to provide metadata
-type Value struct {
-	// Data holds underline struct
-	Data interface{} `json:"data"`
-	// Metadata associated with data for indexing
-	Metadata metadata.Metadata `json:"metadata"`
 }
