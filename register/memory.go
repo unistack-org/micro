@@ -30,10 +30,9 @@ type record struct {
 }
 
 type memory struct {
-	opts Options
-	// records is a KV map with domain name as the key and a services map as the value
 	records  map[string]services
 	watchers map[string]*watcher
+	opts     Options
 	sync.RWMutex
 }
 

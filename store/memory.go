@@ -28,8 +28,8 @@ func (m *memoryStore) Disconnect(ctx context.Context) error {
 }
 
 type memoryStore struct {
-	opts  Options
 	store *cache.Cache
+	opts  Options
 }
 
 func (m *memoryStore) key(prefix, key string) string {

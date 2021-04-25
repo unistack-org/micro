@@ -23,10 +23,10 @@ type CheckFunc func(context.Context) error
 type Option func(*Options)
 
 type Options struct {
-	LiveChecks  []CheckFunc
-	ReadyChecks []CheckFunc
 	Version     string
 	Name        string
+	LiveChecks  []CheckFunc
+	ReadyChecks []CheckFunc
 }
 
 func LiveChecks(fns ...CheckFunc) Option {

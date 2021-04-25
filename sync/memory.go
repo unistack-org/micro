@@ -6,8 +6,8 @@ import (
 )
 
 type memorySync struct {
-	options Options
 	locks   map[string]*memoryLock
+	options Options
 	mtx     gosync.RWMutex
 }
 
