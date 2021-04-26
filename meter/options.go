@@ -90,7 +90,7 @@ func Logger(l logger.Logger) Option {
 
 func Labels(ls ...string) Option {
 	return func(o *Options) {
-		o.Labels = ls
+		o.Labels = append(o.Labels, ls...)
 	}
 }
 

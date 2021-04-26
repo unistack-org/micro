@@ -120,18 +120,18 @@ func (w *wrapper) CallFunc(ctx context.Context, addr string, req client.Request,
 	err := w.callFunc(ctx, addr, req, rsp, opts)
 	te := time.Since(ts)
 
-	lopts := w.opts.lopts
-	lopts = append(lopts, meter.Labels(labelEndpoint, endpoint))
+	labels := make([]string, 0, 4)
+	labels = append(labels, labelEndpoint, endpoint)
 
-	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
-	w.opts.Meter.Histogram(ClientRequestDurationSeconds, lopts...).Update(float64(te.Seconds()))
+	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, labels...).Update(float64(te.Seconds()))
+	w.opts.Meter.Histogram(ClientRequestDurationSeconds, labels...).Update(float64(te.Seconds()))
 
 	if err == nil {
-		lopts = append(lopts, meter.Labels(labelStatus, labelSuccess))
+		labels = append(labels, labelStatus, labelSuccess)
 	} else {
-		lopts = append(lopts, meter.Labels(labelStatus, labelFailure))
+		labels = append(labels, labelStatus, labelFailure)
 	}
-	w.opts.Meter.Counter(ClientRequestTotal, lopts...).Inc()
+	w.opts.Meter.Counter(ClientRequestTotal, labels...).Inc()
 
 	return err
 }
@@ -148,18 +148,18 @@ func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{},
 	err := w.Client.Call(ctx, req, rsp, opts...)
 	te := time.Since(ts)
 
-	lopts := w.opts.lopts
-	lopts = append(lopts, meter.Labels(labelEndpoint, endpoint))
+	labels := make([]string, 0, 4)
+	labels = append(labels, labelEndpoint, endpoint)
 
-	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
-	w.opts.Meter.Histogram(ClientRequestDurationSeconds, lopts...).Update(float64(te.Seconds()))
+	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, labels...).Update(float64(te.Seconds()))
+	w.opts.Meter.Histogram(ClientRequestDurationSeconds, labels...).Update(float64(te.Seconds()))
 
 	if err == nil {
-		lopts = append(lopts, meter.Labels(labelStatus, labelSuccess))
+		labels = append(labels, labelStatus, labelSuccess)
 	} else {
-		lopts = append(lopts, meter.Labels(labelStatus, labelFailure))
+		labels = append(labels, labelStatus, labelFailure)
 	}
-	w.opts.Meter.Counter(ClientRequestTotal, lopts...).Inc()
+	w.opts.Meter.Counter(ClientRequestTotal, labels...).Inc()
 
 	return err
 }
@@ -176,18 +176,18 @@ func (w *wrapper) Stream(ctx context.Context, req client.Request, opts ...client
 	stream, err := w.Client.Stream(ctx, req, opts...)
 	te := time.Since(ts)
 
-	lopts := w.opts.lopts
-	lopts = append(lopts, meter.Labels(labelEndpoint, endpoint))
+	labels := make([]string, 0, 4)
+	labels = append(labels, labelEndpoint, endpoint)
 
-	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
-	w.opts.Meter.Histogram(ClientRequestDurationSeconds, lopts...).Update(float64(te.Seconds()))
+	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, labels...).Update(float64(te.Seconds()))
+	w.opts.Meter.Histogram(ClientRequestDurationSeconds, labels...).Update(float64(te.Seconds()))
 
 	if err == nil {
-		lopts = append(lopts, meter.Labels(labelStatus, labelSuccess))
+		labels = append(labels, labelStatus, labelSuccess)
 	} else {
-		lopts = append(lopts, meter.Labels(labelStatus, labelFailure))
+		labels = append(labels, labelStatus, labelFailure)
 	}
-	w.opts.Meter.Counter(ClientRequestTotal, lopts...).Inc()
+	w.opts.Meter.Counter(ClientRequestTotal, labels...).Inc()
 
 	return stream, err
 }
@@ -199,18 +199,18 @@ func (w *wrapper) Publish(ctx context.Context, p client.Message, opts ...client.
 	err := w.Client.Publish(ctx, p, opts...)
 	te := time.Since(ts)
 
-	lopts := w.opts.lopts
-	lopts = append(lopts, meter.Labels(labelEndpoint, endpoint))
+	labels := make([]string, 0, 4)
+	labels = append(labels, labelEndpoint, endpoint)
 
-	w.opts.Meter.Summary(PublishMessageLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
-	w.opts.Meter.Histogram(PublishMessageDurationSeconds, lopts...).Update(float64(te.Seconds()))
+	w.opts.Meter.Summary(PublishMessageLatencyMicroseconds, labels...).Update(float64(te.Seconds()))
+	w.opts.Meter.Histogram(PublishMessageDurationSeconds, labels...).Update(float64(te.Seconds()))
 
 	if err == nil {
-		lopts = append(lopts, meter.Labels(labelStatus, labelSuccess))
+		labels = append(labels, labelStatus, labelSuccess)
 	} else {
-		lopts = append(lopts, meter.Labels(labelStatus, labelFailure))
+		labels = append(labels, labelStatus, labelFailure)
 	}
-	w.opts.Meter.Counter(PublishMessageTotal, lopts...).Inc()
+	w.opts.Meter.Counter(PublishMessageTotal, labels...).Inc()
 
 	return err
 }
@@ -235,18 +235,18 @@ func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 		err := fn(ctx, req, rsp)
 		te := time.Since(ts)
 
-		lopts := w.opts.lopts
-		lopts = append(lopts, meter.Labels(labelEndpoint, endpoint))
+		labels := make([]string, 0, 4)
+		labels = append(labels, labelEndpoint, endpoint)
 
-		w.opts.Meter.Summary(ServerRequestLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
-		w.opts.Meter.Histogram(ServerRequestDurationSeconds, lopts...).Update(float64(te.Seconds()))
+		w.opts.Meter.Summary(ServerRequestLatencyMicroseconds, labels...).Update(float64(te.Seconds()))
+		w.opts.Meter.Histogram(ServerRequestDurationSeconds, labels...).Update(float64(te.Seconds()))
 
 		if err == nil {
-			lopts = append(lopts, meter.Labels(labelStatus, labelSuccess))
+			labels = append(labels, labelStatus, labelSuccess)
 		} else {
-			lopts = append(lopts, meter.Labels(labelStatus, labelFailure))
+			labels = append(labels, labelStatus, labelFailure)
 		}
-		w.opts.Meter.Counter(ServerRequestTotal, lopts...).Inc()
+		w.opts.Meter.Counter(ServerRequestTotal, labels...).Inc()
 
 		return err
 	}
@@ -267,18 +267,18 @@ func (w *wrapper) SubscriberFunc(fn server.SubscriberFunc) server.SubscriberFunc
 		err := fn(ctx, msg)
 		te := time.Since(ts)
 
-		lopts := w.opts.lopts
-		lopts = append(lopts, meter.Labels(labelEndpoint, endpoint))
+		labels := make([]string, 0, 4)
+		labels = append(labels, labelEndpoint, endpoint)
 
-		w.opts.Meter.Summary(SubscribeMessageLatencyMicroseconds, lopts...).Update(float64(te.Seconds()))
-		w.opts.Meter.Histogram(SubscribeMessageDurationSeconds, lopts...).Update(float64(te.Seconds()))
+		w.opts.Meter.Summary(SubscribeMessageLatencyMicroseconds, labels...).Update(float64(te.Seconds()))
+		w.opts.Meter.Histogram(SubscribeMessageDurationSeconds, labels...).Update(float64(te.Seconds()))
 
 		if err == nil {
-			lopts = append(lopts, meter.Labels(labelStatus, labelSuccess))
+			labels = append(labels, labelStatus, labelSuccess)
 		} else {
-			lopts = append(lopts, meter.Labels(labelStatus, labelFailure))
+			labels = append(labels, labelStatus, labelFailure)
 		}
-		w.opts.Meter.Counter(SubscribeMessageTotal, lopts...).Inc()
+		w.opts.Meter.Counter(SubscribeMessageTotal, labels...).Inc()
 
 		return err
 	}

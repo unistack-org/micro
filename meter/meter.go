@@ -29,13 +29,13 @@ var (
 type Meter interface {
 	Name() string
 	Init(opts ...Option) error
-	Counter(name string, opts ...Option) Counter
-	FloatCounter(name string, opts ...Option) FloatCounter
-	Gauge(name string, fn func() float64, opts ...Option) Gauge
+	Counter(name string, labels ...string) Counter
+	FloatCounter(name string, labels ...string) FloatCounter
+	Gauge(name string, fn func() float64, labels ...string) Gauge
 	Set(opts ...Option) Meter
-	Histogram(name string, opts ...Option) Histogram
-	Summary(name string, opts ...Option) Summary
-	SummaryExt(name string, window time.Duration, quantiles []float64, opts ...Option) Summary
+	Histogram(name string, labels ...string) Histogram
+	Summary(name string, labels ...string) Summary
+	SummaryExt(name string, window time.Duration, quantiles []float64, labels ...string) Summary
 	Write(w io.Writer, opts ...Option) error
 	Options() Options
 	String() string

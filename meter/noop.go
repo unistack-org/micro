@@ -28,57 +28,33 @@ func (r *noopMeter) Init(opts ...Option) error {
 }
 
 // Counter implements the Meter interface
-func (r *noopMeter) Counter(name string, opts ...Option) Counter {
-	options := Options{}
-	for _, o := range opts {
-		o(&options)
-	}
-	return &noopCounter{labels: options.Labels}
+func (r *noopMeter) Counter(name string, labels ...string) Counter {
+	return &noopCounter{labels: labels}
 }
 
 // FloatCounter implements the Meter interface
-func (r *noopMeter) FloatCounter(name string, opts ...Option) FloatCounter {
-	options := Options{}
-	for _, o := range opts {
-		o(&options)
-	}
-	return &noopFloatCounter{labels: options.Labels}
+func (r *noopMeter) FloatCounter(name string, labels ...string) FloatCounter {
+	return &noopFloatCounter{labels: labels}
 }
 
 // Gauge implements the Meter interface
-func (r *noopMeter) Gauge(name string, f func() float64, opts ...Option) Gauge {
-	options := Options{}
-	for _, o := range opts {
-		o(&options)
-	}
-	return &noopGauge{labels: options.Labels}
+func (r *noopMeter) Gauge(name string, f func() float64, labels ...string) Gauge {
+	return &noopGauge{labels: labels}
 }
 
 // Summary implements the Meter interface
-func (r *noopMeter) Summary(name string, opts ...Option) Summary {
-	options := Options{}
-	for _, o := range opts {
-		o(&options)
-	}
-	return &noopSummary{labels: options.Labels}
+func (r *noopMeter) Summary(name string, labels ...string) Summary {
+	return &noopSummary{labels: labels}
 }
 
 // SummaryExt implements the Meter interface
-func (r *noopMeter) SummaryExt(name string, window time.Duration, quantiles []float64, opts ...Option) Summary {
-	options := Options{}
-	for _, o := range opts {
-		o(&options)
-	}
-	return &noopSummary{labels: options.Labels}
+func (r *noopMeter) SummaryExt(name string, window time.Duration, quantiles []float64, labels ...string) Summary {
+	return &noopSummary{labels: labels}
 }
 
 // Histogram implements the Meter interface
-func (r *noopMeter) Histogram(name string, opts ...Option) Histogram {
-	options := Options{}
-	for _, o := range opts {
-		o(&options)
-	}
-	return &noopHistogram{labels: options.Labels}
+func (r *noopMeter) Histogram(name string, labels ...string) Histogram {
+	return &noopHistogram{labels: labels}
 }
 
 // Set implements the Meter interface

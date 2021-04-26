@@ -10,7 +10,7 @@ func TestNoopMeter(t *testing.T) {
 		t.Fatalf("invalid options parsing: %v", m.Options())
 	}
 
-	cnt := m.Counter("counter", Labels("server", "noop"))
+	cnt := m.Counter("counter", "server", "noop")
 	cnt.Inc()
 }
 
