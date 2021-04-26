@@ -12,16 +12,16 @@ import (
 )
 
 type tunBroker struct {
-	opts   broker.Options
 	tunnel tunnel.Tunnel
+	opts   broker.Options
 }
 
 type tunSubscriber struct {
-	opts     broker.SubscribeOptions
 	listener tunnel.Listener
 	handler  broker.Handler
 	closed   chan bool
 	topic    string
+	opts     broker.SubscribeOptions
 }
 
 type tunEvent struct {

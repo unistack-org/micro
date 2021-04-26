@@ -10,9 +10,8 @@ import (
 )
 
 type tunTransport struct {
+	tunnel  tunnel.Tunnel
 	options transport.Options
-
-	tunnel tunnel.Tunnel
 }
 
 type tunnelKey struct{}

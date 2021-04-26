@@ -31,18 +31,18 @@ type memoryClient struct {
 }
 
 type memoryListener struct {
-	topts Options
-	ctx   context.Context
 	lopts ListenOptions
+	ctx   context.Context
 	exit  chan bool
 	conn  chan *memorySocket
 	addr  string
+	topts Options
 	sync.RWMutex
 }
 
 type memoryTransport struct {
-	opts      Options
 	listeners map[string]*memoryListener
+	opts      Options
 	sync.RWMutex
 }
 

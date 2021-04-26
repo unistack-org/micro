@@ -22,8 +22,8 @@ type Option func(*Options)
 
 type Options struct {
 	Meter        meter.Meter
-	MeterOptions []meter.Option
 	Name         string
+	MeterOptions []meter.Option
 }
 
 func Meter(m meter.Meter) Option {

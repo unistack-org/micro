@@ -19,8 +19,8 @@ func NewResolver(parent resolver.Resolver, opts ...resolver.Option) resolver.Res
 }
 
 type subdomainResolver struct {
-	opts resolver.Options
 	resolver.Resolver
+	opts resolver.Options
 }
 
 // Resolve resolve endpoint based on subdomain
