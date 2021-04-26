@@ -81,10 +81,10 @@ type ServerSubscriberObserver func(context.Context, server.Message, error) []str
 type Options struct {
 	// Logger that used for log
 	Logger logger.Logger
-	// Level for logger
-	Level logger.Level
-	// Enabled flag
-	Enabled bool
+	// ServerHandlerObservers funcs
+	ServerHandlerObservers []ServerHandlerObserver
+	// ServerSubscriberObservers funcs
+	ServerSubscriberObservers []ServerSubscriberObserver
 	// ClientCallObservers funcs
 	ClientCallObservers []ClientCallObserver
 	// ClientStreamObservers funcs
@@ -93,12 +93,12 @@ type Options struct {
 	ClientPublishObservers []ClientPublishObserver
 	// ClientCallFuncObservers funcs
 	ClientCallFuncObservers []ClientCallFuncObserver
-	// ServerHandlerObservers funcs
-	ServerHandlerObservers []ServerHandlerObserver
-	// ServerSubscriberObservers funcs
-	ServerSubscriberObservers []ServerSubscriberObserver
 	// SkipEndpoints
 	SkipEndpoints []string
+	// Level for logger
+	Level logger.Level
+	// Enabled flag
+	Enabled bool
 }
 
 // Option func signature

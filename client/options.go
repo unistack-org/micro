@@ -19,8 +19,8 @@ import (
 
 // Options holds client options
 type Options struct {
-	// CallOptions contains default CallOptions
-	CallOptions CallOptions
+	// Selector used to select needed address
+	Selector selector.Selector
 	// Logger used to log messages
 	Logger logger.Logger
 	// Tracer used for tracing
@@ -31,30 +31,30 @@ type Options struct {
 	Meter meter.Meter
 	// Router used to get route
 	Router router.Router
-	// Selector used to select needed address
-	Selector selector.Selector
 	// Transport used for transfer messages
 	Transport transport.Transport
 	// Context is used for external options
 	Context context.Context
-	// Codecs map
-	Codecs map[string]codec.Codec
 	// Lookup func used to get destination addr
 	Lookup LookupFunc
+	// Codecs map
+	Codecs map[string]codec.Codec
+	// TLSConfig specifies tls.Config for secure connection
+	TLSConfig *tls.Config
 	// Proxy is used for proxy requests
 	Proxy string
-	// ContentType is Used to select codec
+	// ContentType is used to select codec
 	ContentType string
 	// Name is the client name
 	Name string
 	// Wrappers contains wrappers
 	Wrappers []Wrapper
+	// CallOptions contains default CallOptions
+	CallOptions CallOptions
 	// PoolSize connection pool size
 	PoolSize int
 	// PoolTTL connection pool ttl
 	PoolTTL time.Duration
-	// TLSConfig specifies tls.Config for secure connection
-	TLSConfig *tls.Config
 }
 
 // NewCallOptions creates new call options struct

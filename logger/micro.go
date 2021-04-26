@@ -21,8 +21,8 @@ func init() {
 }
 
 type defaultLogger struct {
-	opts Options
 	enc  *json.Encoder
+	opts Options
 	sync.RWMutex
 }
 
