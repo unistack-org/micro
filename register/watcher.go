@@ -52,8 +52,8 @@ type Event struct {
 	Timestamp time.Time
 	// Service is register service
 	Service *Service
-	// Id is register id
-	Id string
+	// ID is register id
+	ID string
 	// Type defines type of event
 	Type EventType
 }

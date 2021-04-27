@@ -76,7 +76,7 @@ func TestIterator(t *testing.T) {
 	var k, v string
 
 	for iter.Next(&k, &v) {
-		//fmt.Printf("k: %s, v: %s\n", k, v)
+		// fmt.Printf("k: %s, v: %s\n", k, v)
 	}
 }
 
@@ -102,7 +102,6 @@ func TestMedataCanonicalKey(t *testing.T) {
 	} else if v != "12345" {
 		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
 	}
-
 }
 
 func TestMetadataSet(t *testing.T) {
@@ -130,7 +129,6 @@ func TestMetadataDelete(t *testing.T) {
 	if ok {
 		t.Fatal("key Baz not deleted")
 	}
-
 }
 
 func TestNilContext(t *testing.T) {

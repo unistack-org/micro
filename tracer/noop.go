@@ -38,7 +38,6 @@ type noopSpan struct {
 }
 
 func (s *noopSpan) Finish(opts ...SpanOption) {
-
 }
 
 func (s *noopSpan) Context() context.Context {
@@ -50,7 +49,6 @@ func (s *noopSpan) Tracer() Tracer {
 }
 
 func (s *noopSpan) AddEvent(name string, opts ...EventOption) {
-
 }
 
 func (s *noopSpan) SetName(name string) {
@@ -58,7 +56,6 @@ func (s *noopSpan) SetName(name string) {
 }
 
 func (s *noopSpan) SetLabels(labels ...Label) {
-
 }
 
 // NewTracer returns new memory tracer

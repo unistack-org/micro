@@ -7,9 +7,9 @@ import (
 )
 
 type Config struct {
-	Value     string
 	SubConfig *SubConfig
 	Config    *Config
+	Value     string
 }
 
 type SubConfig struct {

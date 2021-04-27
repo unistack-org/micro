@@ -9,12 +9,10 @@ import (
 	"github.com/unistack-org/micro/v3/meter"
 )
 
-var (
-	// guard to fail early
-	_ MeterServer = &handler{}
-)
+// guard to fail early
+var _ MeterServer = &Handler{}
 
-type handler struct {
+type Handler struct {
 	opts Options
 }
 
@@ -52,12 +50,12 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
-func NewHandler(opts ...Option) *handler {
+func NewHandler(opts ...Option) *Handler {
 	options := NewOptions(opts...)
-	return &handler{opts: options}
+	return &Handler{opts: options}
 }
 
-func (h *handler) Metrics(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
+func (h *Handler) Metrics(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
 	buf := bytes.NewBuffer(nil)
 	if err := h.opts.Meter.Write(buf, h.opts.MeterOptions...); err != nil {
 		return errors.InternalServerError(h.opts.Name, "%v", err)

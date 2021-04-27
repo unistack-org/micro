@@ -21,11 +21,9 @@ const (
 	subSig = "func(context.Context, interface{}) error"
 )
 
-var (
-	// Precompute the reflect type for error. Can't use error directly
-	// because Typeof takes an empty interface value. This is annoying.
-	typeOfError = reflect.TypeOf((*error)(nil)).Elem()
-)
+// Precompute the reflect type for error. Can't use error directly
+// because Typeof takes an empty interface value. This is annoying.
+var typeOfError = reflect.TypeOf((*error)(nil)).Elem()
 
 type handler struct {
 	reqType reflect.Type
@@ -64,7 +62,8 @@ func ValidateSubscriber(sub Subscriber) error {
 	typ := reflect.TypeOf(sub.Subscriber())
 	var argType reflect.Type
 
-	if typ.Kind() == reflect.Func {
+	switch typ.Kind() {
+	case reflect.Func:
 		name := "Func"
 		switch typ.NumIn() {
 		case 2:
@@ -82,7 +81,7 @@ func ValidateSubscriber(sub Subscriber) error {
 		if returnType := typ.Out(0); returnType != typeOfError {
 			return fmt.Errorf("subscriber %v returns %v not error", name, returnType.String())
 		}
-	} else {
+	default:
 		hdlr := reflect.ValueOf(sub.Subscriber())
 		name := reflect.Indirect(hdlr).Type().Name()
 
@@ -276,14 +275,14 @@ func (n *noopServer) createSubHandler(sb *subscriber, opts Options) broker.Handl
 				if n.wg != nil {
 					defer n.wg.Done()
 				}
-				err := fn(ctx, &rpcMessage{
+				cerr := fn(ctx, &rpcMessage{
 					topic:       sb.topic,
 					contentType: ct,
 					payload:     req.Interface(),
 					header:      msg.Header,
 					body:        msg.Body,
 				})
-				results <- err
+				results <- cerr
 			}()
 		}
 		var errors []string

@@ -7,9 +7,9 @@ import (
 
 func TestStructURLValues(t *testing.T) {
 	type Str struct {
+		Str  *Str   `json:"str"`
 		Name string `json:"name"`
 		Args []int  `json:"args"`
-		Str  *Str   `json:"str"`
 	}
 
 	val := &Str{Name: "test_name", Args: []int{1, 2, 3}, Str: &Str{Name: "nested_name"}}
@@ -90,8 +90,8 @@ func TestIsZero(t *testing.T) {
 		Nested string
 	}
 	type testStr2 struct {
-		Name   string
 		Nested *testStr3
+		Name   string
 	}
 	vtest := &testStr2{
 		Name:   "test_name",
@@ -106,5 +106,5 @@ func TestIsZero(t *testing.T) {
 		t.Fatalf("non zero ret on zero struct: %#+v", vtest)
 	}
 
-	//t.Logf("XX %#+v\n", ok)
+	// t.Logf("XX %#+v\n", ok)
 }

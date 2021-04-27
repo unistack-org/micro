@@ -13,7 +13,7 @@ type rpcHandler struct {
 	endpoints []*register.Endpoint
 }
 
-func newRpcHandler(handler interface{}, opts ...HandlerOption) Handler {
+func newRPCHandler(handler interface{}, opts ...HandlerOption) Handler {
 	options := NewHandlerOptions(opts...)
 
 	typ := reflect.TypeOf(handler)

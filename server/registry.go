@@ -72,7 +72,7 @@ func NewRegisterService(s Server) (*register.Service, error) {
 	}
 
 	node := &register.Node{
-		Id:      opts.Name + "-" + opts.Id,
+		ID:      opts.Name + "-" + opts.ID,
 		Address: net.JoinHostPort(addr, port),
 	}
 	node.Metadata = metadata.Copy(opts.Metadata)

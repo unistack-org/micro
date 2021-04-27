@@ -7,10 +7,8 @@ import (
 	"github.com/unistack-org/micro/v3/server"
 )
 
-var (
-	// DefaultEndpoint holds default proxy address
-	DefaultEndpoint = "localhost:9090"
-)
+// DefaultEndpoint holds default proxy address
+var DefaultEndpoint = "localhost:9090"
 
 // Proxy can be used as a proxy server for micro services
 type Proxy interface {

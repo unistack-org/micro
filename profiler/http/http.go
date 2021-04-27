@@ -16,10 +16,8 @@ type httpProfile struct {
 	running bool
 }
 
-var (
-	// DefaultAddress for http profiler
-	DefaultAddress = ":6060"
-)
+// DefaultAddress for http profiler
+var DefaultAddress = ":6060"
 
 // Start the profiler
 func (h *httpProfile) Start() error {

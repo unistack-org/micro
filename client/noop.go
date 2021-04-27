@@ -9,16 +9,10 @@ import (
 	"github.com/unistack-org/micro/v3/metadata"
 )
 
-var (
-	// DefaultCodecs will be used to encode/decode data
-	DefaultCodecs = map[string]codec.Codec{
-		//"application/json":         cjson.NewCodec,
-		//"application/json-rpc":     cjsonrpc.NewCodec,
-		//"application/protobuf":     cproto.NewCodec,
-		//"application/proto-rpc":    cprotorpc.NewCodec,
-		"application/octet-stream": codec.NewCodec(),
-	}
-)
+// DefaultCodecs will be used to encode/decode data
+var DefaultCodecs = map[string]codec.Codec{
+	"application/octet-stream": codec.NewCodec(),
+}
 
 type noopClient struct {
 	opts Options

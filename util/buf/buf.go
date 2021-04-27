@@ -4,20 +4,20 @@ import (
 	"bytes"
 )
 
-type buffer struct {
+type Buffer struct {
 	*bytes.Buffer
 }
 
 // Close reset buffer contents
-func (b *buffer) Close() error {
+func (b *Buffer) Close() error {
 	b.Buffer.Reset()
 	return nil
 }
 
 // New creates new buffer that satisfies Closer interface
-func New(b *bytes.Buffer) *buffer {
+func New(b *bytes.Buffer) *Buffer {
 	if b == nil {
 		b = bytes.NewBuffer(nil)
 	}
-	return &buffer{b}
+	return &Buffer{b}
 }

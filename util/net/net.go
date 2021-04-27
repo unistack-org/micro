@@ -27,7 +27,6 @@ func HostPort(addr string, port interface{}) string {
 // Listen takes addr:portmin-portmax and binds to the first available port
 // Example: Listen("localhost:5000-6000", fn)
 func Listen(addr string, fn func(string) (net.Listener, error)) (net.Listener, error) {
-
 	if strings.Count(addr, ":") == 1 && strings.Count(addr, "-") == 0 {
 		return fn(addr)
 	}

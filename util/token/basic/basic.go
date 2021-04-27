@@ -17,10 +17,8 @@ type Basic struct {
 	store store.Store
 }
 
-var (
-	// StorePrefix to isolate tokens
-	StorePrefix = "tokens/"
-)
+// StorePrefix to isolate tokens
+var StorePrefix = "tokens/"
 
 // NewTokenProvider returns an initialized basic provider
 func NewTokenProvider(opts ...token.Option) token.Provider {

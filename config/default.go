@@ -35,7 +35,7 @@ func (c *defaultConfig) Load(ctx context.Context) error {
 	src, err := rutil.Zero(c.opts.Struct)
 	if err == nil {
 		valueOf := reflect.ValueOf(src)
-		if err = c.fillValues(ctx, valueOf); err == nil {
+		if err = c.fillValues(valueOf); err == nil {
 			err = mergo.Merge(c.opts.Struct, src, mergo.WithOverride, mergo.WithTypeCheck, mergo.WithAppendSlice)
 		}
 	}
@@ -54,7 +54,7 @@ func (c *defaultConfig) Load(ctx context.Context) error {
 }
 
 //nolint:gocyclo
-func (c *defaultConfig) fillValue(ctx context.Context, value reflect.Value, val string) error {
+func (c *defaultConfig) fillValue(value reflect.Value, val string) error {
 	if !rutil.IsEmpty(value) {
 		return nil
 	}
@@ -71,10 +71,10 @@ func (c *defaultConfig) fillValue(ctx context.Context, value reflect.Value, val 
 			kv := strings.FieldsFunc(nval, func(c rune) bool { return c == '=' })
 			mkey := reflect.Indirect(reflect.New(kt))
 			mval := reflect.Indirect(reflect.New(et))
-			if err := c.fillValue(ctx, mkey, kv[0]); err != nil {
+			if err := c.fillValue(mkey, kv[0]); err != nil {
 				return err
 			}
-			if err := c.fillValue(ctx, mval, kv[1]); err != nil {
+			if err := c.fillValue(mval, kv[1]); err != nil {
 				return err
 			}
 			value.SetMapIndex(mkey, mval)
@@ -84,7 +84,7 @@ func (c *defaultConfig) fillValue(ctx context.Context, value reflect.Value, val 
 		value.Set(reflect.MakeSlice(reflect.SliceOf(value.Type().Elem()), len(nvals), len(nvals)))
 		for idx, nval := range nvals {
 			nvalue := reflect.Indirect(reflect.New(value.Type().Elem()))
-			if err := c.fillValue(ctx, nvalue, nval); err != nil {
+			if err := c.fillValue(nvalue, nval); err != nil {
 				return err
 			}
 			value.Index(idx).Set(nvalue)
@@ -173,7 +173,7 @@ func (c *defaultConfig) fillValue(ctx context.Context, value reflect.Value, val 
 	return nil
 }
 
-func (c *defaultConfig) fillValues(ctx context.Context, valueOf reflect.Value) error {
+func (c *defaultConfig) fillValues(valueOf reflect.Value) error {
 	var values reflect.Value
 
 	if valueOf.Kind() == reflect.Ptr {
@@ -200,7 +200,7 @@ func (c *defaultConfig) fillValues(ctx context.Context, valueOf reflect.Value) e
 		switch value.Kind() {
 		case reflect.Struct:
 			value.Set(reflect.Indirect(reflect.New(value.Type())))
-			if err := c.fillValues(ctx, value); err != nil {
+			if err := c.fillValues(value); err != nil {
 				return err
 			}
 			continue
@@ -214,7 +214,7 @@ func (c *defaultConfig) fillValues(ctx context.Context, valueOf reflect.Value) e
 				value.Set(reflect.New(value.Type().Elem()))
 			}
 			value = value.Elem()
-			if err := c.fillValues(ctx, value); err != nil {
+			if err := c.fillValues(value); err != nil {
 				return err
 			}
 			continue
@@ -224,7 +224,7 @@ func (c *defaultConfig) fillValues(ctx context.Context, valueOf reflect.Value) e
 			continue
 		}
 
-		if err := c.fillValue(ctx, value, tag); err != nil {
+		if err := c.fillValue(value, tag); err != nil {
 			return err
 		}
 	}

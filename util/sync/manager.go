@@ -40,7 +40,7 @@ func (c *syncStore) processQueue(index int) {
 		}
 		var opts []store.WriteOption
 		if !ir.expiresAt.IsZero() {
-			opts = append(opts, store.WriteTTL(ir.expiresAt.Sub(time.Now())))
+			opts = append(opts, store.WriteTTL(time.Until(ir.expiresAt)))
 		}
 		// Todo = internal queue also has to hold the corresponding store.WriteOptions
 		if err := c.syncOpts.Stores[index+1].Write(c.storeOpts.Context, ir.key, ir.value, opts...); err != nil {

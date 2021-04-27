@@ -2,13 +2,11 @@ package tracer
 
 import "github.com/unistack-org/micro/v3/logger"
 
-type SpanOptions struct {
-}
+type SpanOptions struct{}
 
 type SpanOption func(o *SpanOptions)
 
-type EventOptions struct {
-}
+type EventOptions struct{}
 
 type EventOption func(o *EventOptions)
 

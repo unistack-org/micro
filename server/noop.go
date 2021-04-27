@@ -6,9 +6,6 @@ import (
 	"sync"
 	"time"
 
-	//	cjson "github.com/unistack-org/micro-codec-json"
-	//	cjsonrpc "github.com/unistack-org/micro-codec-jsonrpc"
-	//	cproto "github.com/unistack-org/micro-codec-proto"
 	//	cprotorpc "github.com/unistack-org/micro-codec-protorpc"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
@@ -16,16 +13,10 @@ import (
 	"github.com/unistack-org/micro/v3/register"
 )
 
-var (
-	// DefaultCodecs will be used to encode/decode
-	DefaultCodecs = map[string]codec.Codec{
-		//"application/json":         cjson.NewCodec,
-		//"application/json-rpc":     cjsonrpc.NewCodec,
-		//"application/protobuf":     cproto.NewCodec,
-		//"application/proto-rpc":    cprotorpc.NewCodec,
-		"application/octet-stream": codec.NewCodec(),
-	}
-)
+// DefaultCodecs will be used to encode/decode
+var DefaultCodecs = map[string]codec.Codec{
+	"application/octet-stream": codec.NewCodec(),
+}
 
 const (
 	defaultContentType = "application/json"
@@ -103,7 +94,7 @@ func (n *noopServer) Subscribe(sb Subscriber) error {
 }
 
 func (n *noopServer) NewHandler(h interface{}, opts ...HandlerOption) Handler {
-	return newRpcHandler(h, opts...)
+	return newRPCHandler(h, opts...)
 }
 
 func (n *noopServer) NewSubscriber(topic string, sb interface{}, opts ...SubscriberOption) Subscriber {
@@ -158,15 +149,14 @@ func (n *noopServer) Register() error {
 	}
 
 	n.RLock()
-	// Maps are ordered randomly, sort the keys for consistency
-	var handlerList []string
-	for n, _ := range n.handlers {
+	handlerList := make([]string, 0, len(n.handlers))
+	for n := range n.handlers {
 		handlerList = append(handlerList, n)
 	}
 
 	sort.Strings(handlerList)
 
-	var subscriberList []*subscriber
+	subscriberList := make([]*subscriber, 0, len(n.subscribers))
 	for e := range n.subscribers {
 		subscriberList = append(subscriberList, e)
 	}
@@ -184,7 +174,7 @@ func (n *noopServer) Register() error {
 	n.RUnlock()
 
 	service.Nodes[0].Metadata["protocol"] = "noop"
-	service.Nodes[0].Metadata["transport"] = "noop"
+	service.Nodes[0].Metadata["transport"] = service.Nodes[0].Metadata["protocol"]
 	service.Endpoints = endpoints
 
 	n.RLock()
@@ -193,7 +183,7 @@ func (n *noopServer) Register() error {
 
 	if !registered {
 		if config.Logger.V(logger.InfoLevel) {
-			config.Logger.Infof(n.opts.Context, "register [%s] Registering node: %s", config.Register.String(), service.Nodes[0].Id)
+			config.Logger.Infof(n.opts.Context, "register [%s] Registering node: %s", config.Register.String(), service.Nodes[0].ID)
 		}
 	}
 
@@ -256,7 +246,7 @@ func (n *noopServer) Deregister() error {
 	}
 
 	if config.Logger.V(logger.InfoLevel) {
-		config.Logger.Infof(n.opts.Context, "deregistering node: %s", service.Nodes[0].Id)
+		config.Logger.Infof(n.opts.Context, "deregistering node: %s", service.Nodes[0].ID)
 	}
 
 	if err := DefaultDeregisterFunc(service, config); err != nil {
@@ -338,9 +328,10 @@ func (n *noopServer) Start() error {
 	}
 
 	// use RegisterCheck func before register
+	// nolint: nestif
 	if err := config.RegisterCheck(config.Context); err != nil {
 		if config.Logger.V(logger.ErrorLevel) {
-			config.Logger.Errorf(n.opts.Context, "server %s-%s register check error: %s", config.Name, config.Id, err)
+			config.Logger.Errorf(n.opts.Context, "server %s-%s register check error: %s", config.Name, config.ID, err)
 		}
 	} else {
 		// announce self to the world
@@ -372,25 +363,26 @@ func (n *noopServer) Start() error {
 				registered := n.registered
 				n.RUnlock()
 				rerr := config.RegisterCheck(config.Context)
+				// nolint: nestif
 				if rerr != nil && registered {
 					if config.Logger.V(logger.ErrorLevel) {
-						config.Logger.Errorf(n.opts.Context, "server %s-%s register check error: %s, deregister it", config.Name, config.Id, rerr)
+						config.Logger.Errorf(n.opts.Context, "server %s-%s register check error: %s, deregister it", config.Name, config.ID, rerr)
 					}
 					// deregister self in case of error
 					if err := n.Deregister(); err != nil {
 						if config.Logger.V(logger.ErrorLevel) {
-							config.Logger.Errorf(n.opts.Context, "server %s-%s deregister error: %s", config.Name, config.Id, err)
+							config.Logger.Errorf(n.opts.Context, "server %s-%s deregister error: %s", config.Name, config.ID, err)
 						}
 					}
 				} else if rerr != nil && !registered {
 					if config.Logger.V(logger.ErrorLevel) {
-						config.Logger.Errorf(n.opts.Context, "server %s-%s register check error: %s", config.Name, config.Id, rerr)
+						config.Logger.Errorf(n.opts.Context, "server %s-%s register check error: %s", config.Name, config.ID, rerr)
 					}
 					continue
 				}
 				if err := n.Register(); err != nil {
 					if config.Logger.V(logger.ErrorLevel) {
-						config.Logger.Errorf(n.opts.Context, "server %s-%s register error: %s", config.Name, config.Id, err)
+						config.Logger.Errorf(n.opts.Context, "server %s-%s register error: %s", config.Name, config.ID, err)
 					}
 				}
 			// wait for exit

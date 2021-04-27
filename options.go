@@ -17,8 +17,6 @@ import (
 	"github.com/unistack-org/micro/v3/server"
 	"github.com/unistack-org/micro/v3/store"
 	"github.com/unistack-org/micro/v3/tracer"
-	//	"github.com/unistack-org/micro/v3/profiler"
-	//	"github.com/unistack-org/micro/v3/runtime"
 )
 
 // Options for micro service
@@ -78,8 +76,8 @@ func NewOptions(opts ...Option) Options {
 		Meters:    []meter.Meter{meter.DefaultMeter},
 		Configs:   []config.Config{config.DefaultConfig},
 		Stores:    []store.Store{store.DefaultStore},
-		//Runtime   runtime.Runtime
-		//Profile   profile.Profile
+		// Runtime   runtime.Runtime
+		// Profile   profile.Profile
 	}
 
 	for _, o := range opts {

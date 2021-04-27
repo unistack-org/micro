@@ -76,7 +76,7 @@ func WithContext(ctx context.Context) Option {
 }
 
 // WithName sets the name
-func withName(n string) Option {
+func WithName(n string) Option {
 	return func(o *Options) {
 		o.Name = n
 	}

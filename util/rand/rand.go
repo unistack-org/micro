@@ -11,7 +11,7 @@ type Rand struct {
 }
 
 func (r *Rand) Int31() int32 {
-	rand.Read(r.buf[:4])
+	_, _ = rand.Read(r.buf[:4])
 	return int32(binary.BigEndian.Uint32(r.buf[:4]) & ^uint32(1<<31))
 }
 
@@ -54,7 +54,7 @@ func (r *Rand) Intn(n int) int {
 }
 
 func (r *Rand) Int63() int64 {
-	rand.Read(r.buf[:])
+	_, _ = rand.Read(r.buf[:])
 	return int64(binary.BigEndian.Uint64(r.buf[:]) & ^uint64(1<<63))
 }
 

@@ -8,72 +8,70 @@ import (
 	"time"
 )
 
-var (
-	testData = map[string][]*Service{
-		"foo": {
-			{
-				Name:    "foo",
-				Version: "1.0.0",
-				Nodes: []*Node{
-					{
-						Id:      "foo-1.0.0-123",
-						Address: "localhost:9999",
-					},
-					{
-						Id:      "foo-1.0.0-321",
-						Address: "localhost:9999",
-					},
+var testData = map[string][]*Service{
+	"foo": {
+		{
+			Name:    "foo",
+			Version: "1.0.0",
+			Nodes: []*Node{
+				{
+					ID:      "foo-1.0.0-123",
+					Address: "localhost:9999",
 				},
-			},
-			{
-				Name:    "foo",
-				Version: "1.0.1",
-				Nodes: []*Node{
-					{
-						Id:      "foo-1.0.1-321",
-						Address: "localhost:6666",
-					},
-				},
-			},
-			{
-				Name:    "foo",
-				Version: "1.0.3",
-				Nodes: []*Node{
-					{
-						Id:      "foo-1.0.3-345",
-						Address: "localhost:8888",
-					},
+				{
+					ID:      "foo-1.0.0-321",
+					Address: "localhost:9999",
 				},
 			},
 		},
-		"bar": {
-			{
-				Name:    "bar",
-				Version: "default",
-				Nodes: []*Node{
-					{
-						Id:      "bar-1.0.0-123",
-						Address: "localhost:9999",
-					},
-					{
-						Id:      "bar-1.0.0-321",
-						Address: "localhost:9999",
-					},
-				},
-			},
-			{
-				Name:    "bar",
-				Version: "latest",
-				Nodes: []*Node{
-					{
-						Id:      "bar-1.0.1-321",
-						Address: "localhost:6666",
-					},
+		{
+			Name:    "foo",
+			Version: "1.0.1",
+			Nodes: []*Node{
+				{
+					ID:      "foo-1.0.1-321",
+					Address: "localhost:6666",
 				},
 			},
 		},
-	}
-)
+		{
+			Name:    "foo",
+			Version: "1.0.3",
+			Nodes: []*Node{
+				{
+					ID:      "foo-1.0.3-345",
+					Address: "localhost:8888",
+				},
+			},
+		},
+	},
+	"bar": {
+		{
+			Name:    "bar",
+			Version: "default",
+			Nodes: []*Node{
+				{
+					ID:      "bar-1.0.0-123",
+					Address: "localhost:9999",
+				},
+				{
+					ID:      "bar-1.0.0-321",
+					Address: "localhost:9999",
+				},
+			},
+		},
+		{
+			Name:    "bar",
+			Version: "latest",
+			Nodes: []*Node{
+				{
+					ID:      "bar-1.0.1-321",
+					Address: "localhost:6666",
+				},
+			},
+		},
+	},
+}
 
 //nolint:gocyclo
 func TestMemoryRegistry(t *testing.T) {

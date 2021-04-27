@@ -11,10 +11,8 @@ type Profiler interface {
 	String() string
 }
 
-var (
-	// DefaultProfiler holds the default profiler
-	DefaultProfiler Profiler = NewProfiler()
-)
+// DefaultProfiler holds the default profiler
+var DefaultProfiler Profiler = NewProfiler()
 
 // Options holds the options for profiler
 type Options struct {

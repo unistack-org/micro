@@ -162,7 +162,6 @@ func (s *service) Broker(names ...string) broker.Broker {
 		idx = getNameIndex(names[0], s.opts.Brokers)
 	}
 	return s.opts.Brokers[idx]
-
 }
 
 func (s *service) Tracer(names ...string) tracer.Tracer {

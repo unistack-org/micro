@@ -17,7 +17,6 @@ func TestFromError(t *testing.T) {
 	if merr.Id != "go.micro.test" || merr.Code != 404 {
 		t.Fatalf("invalid conversation %v != %v", err, merr)
 	}
-
 }
 
 func TestEqual(t *testing.T) {
@@ -32,7 +31,6 @@ func TestEqual(t *testing.T) {
 	if Equal(err1, err3) {
 		t.Fatal("errors must be not equal")
 	}
-
 }
 
 func TestErrors(t *testing.T) {

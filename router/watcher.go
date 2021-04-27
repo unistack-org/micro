@@ -5,10 +5,8 @@ import (
 	"time"
 )
 
-var (
-	// ErrWatcherStopped is returned when routing table watcher has been stopped
-	ErrWatcherStopped = errors.New("watcher stopped")
-)
+// ErrWatcherStopped is returned when routing table watcher has been stopped
+var ErrWatcherStopped = errors.New("watcher stopped")
 
 // EventType defines routing table event
 type EventType int

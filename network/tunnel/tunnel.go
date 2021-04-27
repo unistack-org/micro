@@ -9,10 +9,8 @@ import (
 	"github.com/unistack-org/micro/v3/network/transport"
 )
 
-var (
-	// DefaultTunnel contains default tunnel implementation
-	DefaultTunnel Tunnel
-)
+// DefaultTunnel contains default tunnel implementation
+var DefaultTunnel Tunnel
 
 const (
 	// Unicast send over one link

@@ -53,7 +53,7 @@ type Service struct {
 // Node holds node register info
 type Node struct {
 	Metadata metadata.Metadata `json:"metadata"`
-	Id       string            `json:"id"`
+	ID       string            `json:"id"`
 	Address  string            `json:"address"`
 }
 
@@ -69,6 +69,7 @@ type Endpoint struct {
 type Option func(*Options)
 
 // RegisterOption option is used to register service
+// nolint: golint
 type RegisterOption func(*RegisterOptions)
 
 // WatchOption option is used to watch service changes

@@ -50,9 +50,7 @@ func tokenize(path string) (tokens []string, verb string) {
 		field
 		nested
 	)
-	var (
-		st = init
-	)
+	st := init
 	for path != "" {
 		var idx int
 		switch st {

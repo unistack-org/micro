@@ -6,10 +6,8 @@ import (
 	"github.com/unistack-org/micro/v3/logger"
 )
 
-var (
-	// DefaultMaxRecvSize specifies max recv size for handler
-	DefaultMaxRecvSize int64 = 1024 * 1024 * 100 // 10Mb
-)
+// DefaultMaxRecvSize specifies max recv size for handler
+var DefaultMaxRecvSize int64 = 1024 * 1024 * 100 // 10Mb
 
 // Options struct holds handler options
 type Options struct {

@@ -6,10 +6,8 @@ import (
 	"sort"
 )
 
-var (
-	// HeaderPrefix for all headers passed
-	HeaderPrefix = "Micro-"
-)
+// HeaderPrefix for all headers passed
+var HeaderPrefix = "Micro-"
 
 // Metadata is our way of representing request headers internally.
 // They're used at the RPC level and translate back and forth
@@ -20,10 +18,8 @@ type rawMetadata struct {
 	md Metadata
 }
 
-var (
-	// defaultMetadataSize used when need to init new Metadata
-	defaultMetadataSize = 2
-)
+// defaultMetadataSize used when need to init new Metadata
+var defaultMetadataSize = 2
 
 // Iterator used to iterate over metadata with order
 type Iterator struct {

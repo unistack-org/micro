@@ -7,10 +7,8 @@ import (
 	"github.com/unistack-org/micro/v3/api"
 )
 
-var (
-	// DefaultRouter contains default router implementation
-	DefaultRouter Router
-)
+// DefaultRouter contains default router implementation
+var DefaultRouter Router
 
 // Router is used to determine an endpoint for a request
 type Router interface {

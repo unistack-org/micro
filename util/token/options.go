@@ -46,7 +46,7 @@ func NewOptions(opts ...Option) Options {
 	for _, o := range opts {
 		o(&options)
 	}
-	//set default store
+	// set default store
 	if options.Store == nil {
 		options.Store = store.DefaultStore
 	}
@@ -75,7 +75,7 @@ func NewGenerateOptions(opts ...GenerateOption) GenerateOptions {
 	for _, o := range opts {
 		o(&options)
 	}
-	//set default Expiry of token
+	// set default Expiry of token
 	if options.Expiry == 0 {
 		options.Expiry = time.Minute * 15
 	}

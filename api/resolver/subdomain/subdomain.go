@@ -15,7 +15,7 @@ import (
 // NewResolver creates new subdomain api resolver
 func NewResolver(parent resolver.Resolver, opts ...resolver.Option) resolver.Resolver {
 	options := resolver.NewOptions(opts...)
-	return &subdomainResolver{options, parent}
+	return &subdomainResolver{opts: options, Resolver: parent}
 }
 
 type subdomainResolver struct {

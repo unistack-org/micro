@@ -113,12 +113,14 @@ type tWrapper struct {
 	opts             Options
 }
 
-type ClientCallObserver func(context.Context, client.Request, interface{}, []client.CallOption, tracer.Span, error)
-type ClientStreamObserver func(context.Context, client.Request, []client.CallOption, client.Stream, tracer.Span, error)
-type ClientPublishObserver func(context.Context, client.Message, []client.PublishOption, tracer.Span, error)
-type ClientCallFuncObserver func(context.Context, string, client.Request, interface{}, client.CallOptions, tracer.Span, error)
-type ServerHandlerObserver func(context.Context, server.Request, interface{}, tracer.Span, error)
-type ServerSubscriberObserver func(context.Context, server.Message, tracer.Span, error)
+type (
+	ClientCallObserver       func(context.Context, client.Request, interface{}, []client.CallOption, tracer.Span, error)
+	ClientStreamObserver     func(context.Context, client.Request, []client.CallOption, client.Stream, tracer.Span, error)
+	ClientPublishObserver    func(context.Context, client.Message, []client.PublishOption, tracer.Span, error)
+	ClientCallFuncObserver   func(context.Context, string, client.Request, interface{}, client.CallOptions, tracer.Span, error)
+	ServerHandlerObserver    func(context.Context, server.Request, interface{}, tracer.Span, error)
+	ServerSubscriberObserver func(context.Context, server.Message, tracer.Span, error)
+)
 
 // Options struct
 type Options struct {

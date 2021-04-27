@@ -57,8 +57,8 @@ type Options struct {
 	RegisterCheck func(context.Context) error
 	// Codecs map to handle content-type
 	Codecs map[string]codec.Codec
-	// Id holds the id of the server
-	Id string
+	// ID holds the id of the server
+	ID string
 	// Namespace for te server
 	Namespace string
 	// Name holds the server name
@@ -104,7 +104,7 @@ func NewOptions(opts ...Option) Options {
 		Address:          DefaultAddress,
 		Name:             DefaultName,
 		Version:          DefaultVersion,
-		Id:               DefaultId,
+		ID:               DefaultID,
 		Namespace:        DefaultNamespace,
 	}
 
@@ -143,10 +143,10 @@ func Meter(m meter.Meter) Option {
 	}
 }
 
-// Id unique server id
-func Id(id string) Option {
+// ID unique server id
+func ID(id string) Option {
 	return func(o *Options) {
-		o.Id = id
+		o.ID = id
 	}
 }
 

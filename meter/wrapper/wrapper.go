@@ -123,8 +123,8 @@ func (w *wrapper) CallFunc(ctx context.Context, addr string, req client.Request,
 	labels := make([]string, 0, 4)
 	labels = append(labels, labelEndpoint, endpoint)
 
-	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, labels...).Update(float64(te.Seconds()))
-	w.opts.Meter.Histogram(ClientRequestDurationSeconds, labels...).Update(float64(te.Seconds()))
+	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, labels...).Update(te.Seconds())
+	w.opts.Meter.Histogram(ClientRequestDurationSeconds, labels...).Update(te.Seconds())
 
 	if err == nil {
 		labels = append(labels, labelStatus, labelSuccess)
@@ -151,8 +151,8 @@ func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{},
 	labels := make([]string, 0, 4)
 	labels = append(labels, labelEndpoint, endpoint)
 
-	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, labels...).Update(float64(te.Seconds()))
-	w.opts.Meter.Histogram(ClientRequestDurationSeconds, labels...).Update(float64(te.Seconds()))
+	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, labels...).Update(te.Seconds())
+	w.opts.Meter.Histogram(ClientRequestDurationSeconds, labels...).Update(te.Seconds())
 
 	if err == nil {
 		labels = append(labels, labelStatus, labelSuccess)
@@ -179,8 +179,8 @@ func (w *wrapper) Stream(ctx context.Context, req client.Request, opts ...client
 	labels := make([]string, 0, 4)
 	labels = append(labels, labelEndpoint, endpoint)
 
-	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, labels...).Update(float64(te.Seconds()))
-	w.opts.Meter.Histogram(ClientRequestDurationSeconds, labels...).Update(float64(te.Seconds()))
+	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, labels...).Update(te.Seconds())
+	w.opts.Meter.Histogram(ClientRequestDurationSeconds, labels...).Update(te.Seconds())
 
 	if err == nil {
 		labels = append(labels, labelStatus, labelSuccess)
@@ -202,8 +202,8 @@ func (w *wrapper) Publish(ctx context.Context, p client.Message, opts ...client.
 	labels := make([]string, 0, 4)
 	labels = append(labels, labelEndpoint, endpoint)
 
-	w.opts.Meter.Summary(PublishMessageLatencyMicroseconds, labels...).Update(float64(te.Seconds()))
-	w.opts.Meter.Histogram(PublishMessageDurationSeconds, labels...).Update(float64(te.Seconds()))
+	w.opts.Meter.Summary(PublishMessageLatencyMicroseconds, labels...).Update(te.Seconds())
+	w.opts.Meter.Histogram(PublishMessageDurationSeconds, labels...).Update(te.Seconds())
 
 	if err == nil {
 		labels = append(labels, labelStatus, labelSuccess)
@@ -238,8 +238,8 @@ func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 		labels := make([]string, 0, 4)
 		labels = append(labels, labelEndpoint, endpoint)
 
-		w.opts.Meter.Summary(ServerRequestLatencyMicroseconds, labels...).Update(float64(te.Seconds()))
-		w.opts.Meter.Histogram(ServerRequestDurationSeconds, labels...).Update(float64(te.Seconds()))
+		w.opts.Meter.Summary(ServerRequestLatencyMicroseconds, labels...).Update(te.Seconds())
+		w.opts.Meter.Histogram(ServerRequestDurationSeconds, labels...).Update(te.Seconds())
 
 		if err == nil {
 			labels = append(labels, labelStatus, labelSuccess)
@@ -270,8 +270,8 @@ func (w *wrapper) SubscriberFunc(fn server.SubscriberFunc) server.SubscriberFunc
 		labels := make([]string, 0, 4)
 		labels = append(labels, labelEndpoint, endpoint)
 
-		w.opts.Meter.Summary(SubscribeMessageLatencyMicroseconds, labels...).Update(float64(te.Seconds()))
-		w.opts.Meter.Histogram(SubscribeMessageDurationSeconds, labels...).Update(float64(te.Seconds()))
+		w.opts.Meter.Summary(SubscribeMessageLatencyMicroseconds, labels...).Update(te.Seconds())
+		w.opts.Meter.Histogram(SubscribeMessageDurationSeconds, labels...).Update(te.Seconds())
 
 		if err == nil {
 			labels = append(labels, labelStatus, labelSuccess)

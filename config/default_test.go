@@ -10,30 +10,30 @@ import (
 
 type Cfg struct {
 	StringValue string `default:"string_value"`
-	IntValue    int    `default:"99"`
 	IgnoreValue string `json:"-"`
 	StructValue struct {
 		StringValue string `default:"string_value"`
 	}
+	IntValue int `default:"99"`
 }
 
 func TestDefault(t *testing.T) {
 	ctx := context.Background()
 	conf := &Cfg{IntValue: 10}
 	blfn := func(ctx context.Context, cfg config.Config) error {
-		conf, ok := cfg.Options().Struct.(*Cfg)
+		nconf, ok := cfg.Options().Struct.(*Cfg)
 		if !ok {
 			return fmt.Errorf("failed to get Struct from options: %v", cfg.Options())
 		}
-		conf.StringValue = "before_load"
+		nconf.StringValue = "before_load"
 		return nil
 	}
 	alfn := func(ctx context.Context, cfg config.Config) error {
-		conf, ok := cfg.Options().Struct.(*Cfg)
+		nconf, ok := cfg.Options().Struct.(*Cfg)
 		if !ok {
 			return fmt.Errorf("failed to get Struct from options: %v", cfg.Options())
 		}
-		conf.StringValue = "after_load"
+		nconf.StringValue = "after_load"
 		return nil
 	}
 

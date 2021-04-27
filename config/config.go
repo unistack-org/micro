@@ -6,10 +6,8 @@ import (
 	"errors"
 )
 
-var (
-	// DefaultConfig default config
-	DefaultConfig Config = NewConfig()
-)
+// DefaultConfig default config
+var DefaultConfig Config = NewConfig()
 
 var (
 	// ErrCodecMissing is returned when codec needed and not specified
@@ -37,10 +35,10 @@ type Config interface {
 }
 
 // Watcher is the config watcher
-//type Watcher interface {
+// type Watcher interface {
 //	Next() (, error)
 //	Stop() error
-//}
+// }
 
 // Load loads config from config sources
 func Load(ctx context.Context, cs ...Config) error {

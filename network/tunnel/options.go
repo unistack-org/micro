@@ -34,8 +34,8 @@ type Options struct {
 	Token string
 	// Name holds the tunnel name
 	Name string
-	// Id holds the tunnel id
-	Id string
+	// ID holds the tunnel id
+	ID string
 	// Address holds the tunnel address
 	Address string
 	// Nodes holds the tunnel nodes
@@ -68,10 +68,10 @@ type ListenOptions struct {
 	Timeout time.Duration
 }
 
-// Id sets the tunnel id
-func Id(id string) Option {
+// ID sets the tunnel id
+func ID(id string) Option {
 	return func(o *Options) {
-		o.Id = id
+		o.ID = id
 	}
 }
 
@@ -164,7 +164,7 @@ func DialWait(b bool) DialOption {
 // NewOptions returns router default options with filled values
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Id:      uuid.New().String(),
+		ID:      uuid.New().String(),
 		Address: DefaultAddress,
 		Token:   DefaultToken,
 		Logger:  logger.DefaultLogger,

@@ -9,14 +9,10 @@ import (
 	"strings"
 )
 
-var (
-	// ErrInvalidParam specifies invalid url query params
-	ErrInvalidParam = errors.New("invalid url query param provided")
-)
+// ErrInvalidParam specifies invalid url query params
+var ErrInvalidParam = errors.New("invalid url query param provided")
 
-var (
-	bracketSplitter = regexp.MustCompile(`\[|\]`)
-)
+var bracketSplitter = regexp.MustCompile(`\[|\]`)
 
 // StructFields returns slice of struct fields
 func StructFields(src interface{}) ([]reflect.StructField, error) {
@@ -157,7 +153,7 @@ func StructURLValues(src interface{}, pref string, tags []string) (url.Values, e
 			case reflect.Slice:
 				for i := 0; i < val.Len(); i++ {
 					va := val.Index(i)
-					//if va.Type().Elem().Kind() != reflect.Ptr {
+					// if va.Type().Elem().Kind() != reflect.Ptr {
 					if va.Kind() != reflect.Ptr {
 						data.Set(t.name, fmt.Sprintf("%v", va.Interface()))
 						continue
@@ -193,9 +189,7 @@ func StructURLValues(src interface{}, pref string, tags []string) (url.Values, e
 
 // URLMap returns map of url query params
 func URLMap(query string) (map[string]interface{}, error) {
-	var (
-		mp interface{} = make(map[string]interface{})
-	)
+	var mp interface{} = make(map[string]interface{})
 
 	params := strings.Split(query, "&")
 

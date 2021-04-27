@@ -30,8 +30,10 @@ type tunEvent struct {
 }
 
 // used to access tunnel from options context
-type tunnelKey struct{}
-type tunnelAddr struct{}
+type (
+	tunnelKey  struct{}
+	tunnelAddr struct{}
+)
 
 func (t *tunBroker) Init(opts ...broker.Option) error {
 	for _, o := range opts {

@@ -24,11 +24,11 @@ func TestVerify(t *testing.T) {
 	}
 
 	tt := []struct {
-		Name     string
-		Rules    []*Rule
+		Error    error
 		Account  *Account
 		Resource *Resource
-		Error    error
+		Name     string
+		Rules    []*Rule
 	}{
 		{
 			Name:     "NoRules",

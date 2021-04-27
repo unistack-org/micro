@@ -19,9 +19,7 @@ type vpathResolver struct {
 	opts resolver.Options
 }
 
-var (
-	re = regexp.MustCompile("^v[0-9]+$")
-)
+var re = regexp.MustCompile("^v[0-9]+$")
 
 // Resolve endpoint
 func (r *vpathResolver) Resolve(req *http.Request, opts ...resolver.ResolveOption) (*resolver.Endpoint, error) {

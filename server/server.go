@@ -11,10 +11,8 @@ import (
 	"github.com/unistack-org/micro/v3/register"
 )
 
-var (
-	// DefaultServer default server
-	DefaultServer Server = NewServer()
-)
+// DefaultServer default server
+var DefaultServer Server = NewServer()
 
 var (
 	// DefaultAddress will be used if no address passed
@@ -23,8 +21,8 @@ var (
 	DefaultName = "server"
 	// DefaultVersion will be used if no version passed
 	DefaultVersion = "latest"
-	// DefaultId will be used if no id passed
-	DefaultId = uuid.New().String()
+	// DefaultID will be used if no id passed
+	DefaultID = uuid.New().String()
 	// DefaultRegisterCheck holds func that run before register server
 	DefaultRegisterCheck = func(context.Context) error { return nil }
 	// DefaultRegisterInterval holds interval for register

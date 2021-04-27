@@ -5,10 +5,8 @@ import (
 	"errors"
 )
 
-var (
-	// ErrNoneAvailable is returned by select when no routes were provided to select from
-	ErrNoneAvailable = errors.New("none available")
-)
+// ErrNoneAvailable is returned by select when no routes were provided to select from
+var ErrNoneAvailable = errors.New("none available")
 
 // Selector selects a route from a pool
 type Selector interface {

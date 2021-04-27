@@ -5,9 +5,11 @@ import (
 	"context"
 )
 
-type mdIncomingKey struct{}
-type mdOutgoingKey struct{}
-type mdKey struct{}
+type (
+	mdIncomingKey struct{}
+	mdOutgoingKey struct{}
+	mdKey         struct{}
+)
 
 // FromIncomingContext returns metadata from incoming ctx
 // returned metadata shoud not be modified or race condition happens

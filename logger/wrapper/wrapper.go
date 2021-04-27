@@ -70,12 +70,14 @@ type lWrapper struct {
 	opts             Options
 }
 
-type ClientCallObserver func(context.Context, client.Request, interface{}, []client.CallOption, error) []string
-type ClientStreamObserver func(context.Context, client.Request, []client.CallOption, client.Stream, error) []string
-type ClientPublishObserver func(context.Context, client.Message, []client.PublishOption, error) []string
-type ClientCallFuncObserver func(context.Context, string, client.Request, interface{}, client.CallOptions, error) []string
-type ServerHandlerObserver func(context.Context, server.Request, interface{}, error) []string
-type ServerSubscriberObserver func(context.Context, server.Message, error) []string
+type (
+	ClientCallObserver       func(context.Context, client.Request, interface{}, []client.CallOption, error) []string
+	ClientStreamObserver     func(context.Context, client.Request, []client.CallOption, client.Stream, error) []string
+	ClientPublishObserver    func(context.Context, client.Message, []client.PublishOption, error) []string
+	ClientCallFuncObserver   func(context.Context, string, client.Request, interface{}, client.CallOptions, error) []string
+	ServerHandlerObserver    func(context.Context, server.Request, interface{}, error) []string
+	ServerSubscriberObserver func(context.Context, server.Message, error) []string
+)
 
 // Options struct for wrapper
 type Options struct {
@@ -213,7 +215,7 @@ func (l *lWrapper) Call(ctx context.Context, req client.Request, rsp interface{}
 	for _, o := range l.opts.ClientCallObservers {
 		labels = append(labels, o(ctx, req, rsp, opts, err)...)
 	}
-	fields := make(map[string]interface{}, int(len(labels)/2))
+	fields := make(map[string]interface{}, len(labels)/2)
 	for i := 0; i < len(labels); i += 2 {
 		fields[labels[i]] = labels[i+1]
 	}
@@ -240,7 +242,7 @@ func (l *lWrapper) Stream(ctx context.Context, req client.Request, opts ...clien
 	for _, o := range l.opts.ClientStreamObservers {
 		labels = append(labels, o(ctx, req, opts, stream, err)...)
 	}
-	fields := make(map[string]interface{}, int(len(labels)/2))
+	fields := make(map[string]interface{}, len(labels)/2)
 	for i := 0; i < len(labels); i += 2 {
 		fields[labels[i]] = labels[i+1]
 	}
@@ -267,7 +269,7 @@ func (l *lWrapper) Publish(ctx context.Context, msg client.Message, opts ...clie
 	for _, o := range l.opts.ClientPublishObservers {
 		labels = append(labels, o(ctx, msg, opts, err)...)
 	}
-	fields := make(map[string]interface{}, int(len(labels)/2))
+	fields := make(map[string]interface{}, len(labels)/2)
 	for i := 0; i < len(labels); i += 2 {
 		fields[labels[i]] = labels[i+1]
 	}
@@ -294,7 +296,7 @@ func (l *lWrapper) ServerHandler(ctx context.Context, req server.Request, rsp in
 	for _, o := range l.opts.ServerHandlerObservers {
 		labels = append(labels, o(ctx, req, rsp, err)...)
 	}
-	fields := make(map[string]interface{}, int(len(labels)/2))
+	fields := make(map[string]interface{}, len(labels)/2)
 	for i := 0; i < len(labels); i += 2 {
 		fields[labels[i]] = labels[i+1]
 	}
@@ -321,7 +323,7 @@ func (l *lWrapper) ServerSubscriber(ctx context.Context, msg server.Message) err
 	for _, o := range l.opts.ServerSubscriberObservers {
 		labels = append(labels, o(ctx, msg, err)...)
 	}
-	fields := make(map[string]interface{}, int(len(labels)/2))
+	fields := make(map[string]interface{}, len(labels)/2)
 	for i := 0; i < len(labels); i += 2 {
 		fields[labels[i]] = labels[i+1]
 	}
@@ -372,7 +374,7 @@ func (l *lWrapper) ClientCallFunc(ctx context.Context, addr string, req client.R
 	for _, o := range l.opts.ClientCallFuncObservers {
 		labels = append(labels, o(ctx, addr, req, rsp, opts, err)...)
 	}
-	fields := make(map[string]interface{}, int(len(labels)/2))
+	fields := make(map[string]interface{}, len(labels)/2)
 	for i := 0; i < len(labels); i += 2 {
 		fields[labels[i]] = labels[i+1]
 	}

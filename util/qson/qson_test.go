@@ -32,9 +32,10 @@ type unmarshalT struct {
 	A string     `json:"a"`
 	B unmarshalB `json:"b"`
 }
+
 type unmarshalB struct {
-	C int    `json:"c"`
 	D string `json:"D"`
+	C int    `json:"c"`
 }
 
 func TestUnmarshal(t *testing.T) {

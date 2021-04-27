@@ -7,10 +7,8 @@ import (
 	"github.com/unistack-org/micro/v3/metadata"
 )
 
-var (
-	// DefaultBroker default broker
-	DefaultBroker Broker = NewBroker()
-)
+// DefaultBroker default broker
+var DefaultBroker Broker = NewBroker()
 
 // Broker is an interface used for asynchronous messaging.
 type Broker interface {

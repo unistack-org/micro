@@ -83,5 +83,4 @@ func TestInspect(t *testing.T) {
 			t.Fatalf("Inspect returned %v error, expected %v", err, token.ErrInvalidToken)
 		}
 	})
-
 }

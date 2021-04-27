@@ -8,10 +8,8 @@ import (
 	"github.com/unistack-org/micro/v3/metadata"
 )
 
-var (
-	// ErrAlreadyExists error
-	ErrAlreadyExists = errors.New("already exists")
-)
+// ErrAlreadyExists error
+var ErrAlreadyExists = errors.New("already exists")
 
 // Runtime is a service runtime manager
 type Runtime interface {

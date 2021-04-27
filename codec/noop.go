@@ -5,8 +5,7 @@ import (
 	"io"
 )
 
-type noopCodec struct {
-}
+type noopCodec struct{}
 
 func (c *noopCodec) ReadHeader(conn io.Reader, m *Message, t MessageType) error {
 	return nil

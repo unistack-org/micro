@@ -87,11 +87,9 @@ type noopCounter struct {
 }
 
 func (r *noopCounter) Add(int) {
-
 }
 
 func (r *noopCounter) Dec() {
-
 }
 
 func (r *noopCounter) Get() uint64 {
@@ -99,11 +97,9 @@ func (r *noopCounter) Get() uint64 {
 }
 
 func (r *noopCounter) Inc() {
-
 }
 
 func (r *noopCounter) Set(uint64) {
-
 }
 
 type noopFloatCounter struct {
@@ -111,7 +107,6 @@ type noopFloatCounter struct {
 }
 
 func (r *noopFloatCounter) Add(float64) {
-
 }
 
 func (r *noopFloatCounter) Get() float64 {
@@ -119,11 +114,9 @@ func (r *noopFloatCounter) Get() float64 {
 }
 
 func (r *noopFloatCounter) Set(float64) {
-
 }
 
 func (r *noopFloatCounter) Sub(float64) {
-
 }
 
 type noopGauge struct {
@@ -139,11 +132,9 @@ type noopSummary struct {
 }
 
 func (r *noopSummary) Update(float64) {
-
 }
 
 func (r *noopSummary) UpdateDuration(time.Time) {
-
 }
 
 type noopHistogram struct {
@@ -151,15 +142,12 @@ type noopHistogram struct {
 }
 
 func (r *noopHistogram) Reset() {
-
 }
 
 func (r *noopHistogram) Update(float64) {
-
 }
 
 func (r *noopHistogram) UpdateDuration(time.Time) {
-
 }
 
-//func (r *noopHistogram) VisitNonZeroBuckets(f func(vmrange string, count uint64)) {}
+// func (r *noopHistogram) VisitNonZeroBuckets(f func(vmrange string, count uint64)) {}

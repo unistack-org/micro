@@ -14,7 +14,7 @@ func TestRemove(t *testing.T) {
 			Version: "1.0.0",
 			Nodes: []*register.Node{
 				{
-					Id:      "foo-123",
+					ID:      "foo-123",
 					Address: "localhost:9999",
 				},
 			},
@@ -24,7 +24,7 @@ func TestRemove(t *testing.T) {
 			Version: "1.0.0",
 			Nodes: []*register.Node{
 				{
-					Id:      "foo-123",
+					ID:      "foo-123",
 					Address: "localhost:6666",
 				},
 			},
@@ -47,11 +47,11 @@ func TestRemoveNodes(t *testing.T) {
 			Version: "1.0.0",
 			Nodes: []*register.Node{
 				{
-					Id:      "foo-123",
+					ID:      "foo-123",
 					Address: "localhost:9999",
 				},
 				{
-					Id:      "foo-321",
+					ID:      "foo-321",
 					Address: "localhost:6666",
 				},
 			},
@@ -61,7 +61,7 @@ func TestRemoveNodes(t *testing.T) {
 			Version: "1.0.0",
 			Nodes: []*register.Node{
 				{
-					Id:      "foo-123",
+					ID:      "foo-123",
 					Address: "localhost:6666",
 				},
 			},

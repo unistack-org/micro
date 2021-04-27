@@ -44,10 +44,10 @@ func TestDag(t *testing.T) {
 	var steps [][]string
 	fn := func(n dag.Vertex, idx int) error {
 		if idx == 0 {
-			steps = make([][]string, 1, 1)
+			steps = make([][]string, 1)
 			steps[0] = make([]string, 0, 1)
 		} else if idx >= len(steps) {
-			tsteps := make([][]string, idx+1, idx+1)
+			tsteps := make([][]string, idx+1)
 			copy(tsteps, steps)
 			steps = tsteps
 			steps[idx] = make([]string, 0, 1)

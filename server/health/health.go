@@ -5,17 +5,12 @@ import (
 
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/errors"
-	"github.com/unistack-org/micro/v3/server"
 )
 
-var (
-	// guard to fail early
-	_ HealthServer = &handler{}
-)
+var _ HealthServer = &Handler{}
 
-type handler struct {
-	server server.Server
-	opts   Options
+type Handler struct {
+	opts Options
 }
 
 type CheckFunc func(context.Context) error
@@ -53,15 +48,15 @@ func Version(version string) Option {
 	}
 }
 
-func NewHandler(opts ...Option) *handler {
+func NewHandler(opts ...Option) *Handler {
 	options := Options{}
 	for _, o := range opts {
 		o(&options)
 	}
-	return &handler{opts: options}
+	return &Handler{opts: options}
 }
 
-func (h *handler) Live(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
+func (h *Handler) Live(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
 	var err error
 	for _, fn := range h.opts.LiveChecks {
 		if err = fn(ctx); err != nil {
@@ -71,7 +66,7 @@ func (h *handler) Live(ctx context.Context, req *codec.Frame, rsp *codec.Frame) 
 	return nil
 }
 
-func (h *handler) Ready(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
+func (h *Handler) Ready(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
 	var err error
 	for _, fn := range h.opts.ReadyChecks {
 		if err = fn(ctx); err != nil {
@@ -81,7 +76,7 @@ func (h *handler) Ready(ctx context.Context, req *codec.Frame, rsp *codec.Frame)
 	return nil
 }
 
-func (h *handler) Version(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
+func (h *Handler) Version(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
 	rsp.Data = []byte(h.opts.Version)
 	return nil
 }

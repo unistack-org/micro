@@ -5,7 +5,6 @@ import (
 )
 
 func TestPath(t *testing.T) {
-
 	type Nested2 struct {
 		Name string
 	}

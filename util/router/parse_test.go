@@ -209,7 +209,8 @@ func TestParseSegments(t *testing.T) {
 				"a", "/", "b", "/", "*", "/", "c",
 				"}", "/",
 				"**",
-				eof},
+				eof,
+			},
 			want: []segment{
 				literal("v1"),
 				variable{

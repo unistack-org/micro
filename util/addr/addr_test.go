@@ -54,7 +54,6 @@ func TestExtractor(t *testing.T) {
 			t.Errorf("Expected %s got %s", d.expect, addr)
 		}
 	}
-
 }
 
 func TestAppendPrivateBlocks(t *testing.T) {

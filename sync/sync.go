@@ -5,10 +5,8 @@ import (
 	"errors"
 )
 
-var (
-	// ErrLockTimeout error
-	ErrLockTimeout = errors.New("lock timeout")
-)
+// ErrLockTimeout error
+var ErrLockTimeout = errors.New("lock timeout")
 
 // Sync is an interface for distributed synchronization
 type Sync interface {

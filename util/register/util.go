@@ -5,11 +5,11 @@ import (
 )
 
 func addNodes(old, neu []*register.Node) []*register.Node {
-	nodes := make([]*register.Node, len(neu))
+	nodes := make([]*register.Node, 0, len(neu))
 	// add all new nodes
-	for i, n := range neu {
+	for _, n := range neu {
 		node := *n
-		nodes[i] = &node
+		nodes = append(nodes, &node)
 	}
 
 	// look at old nodes
@@ -19,7 +19,7 @@ func addNodes(old, neu []*register.Node) []*register.Node {
 		// check against new nodes
 		for _, n := range nodes {
 			// ids match then skip
-			if o.Id == n.Id {
+			if o.ID == n.ID {
 				exists = true
 				break
 			}
@@ -40,7 +40,7 @@ func delNodes(old, del []*register.Node) []*register.Node {
 	for _, o := range old {
 		var rem bool
 		for _, n := range del {
-			if o.Id == n.Id {
+			if o.ID == n.ID {
 				rem = true
 				break
 			}

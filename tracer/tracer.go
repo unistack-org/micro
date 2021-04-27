@@ -5,10 +5,8 @@ import (
 	"context"
 )
 
-var (
-	// DefaultTracer is the global default tracer
-	DefaultTracer Tracer = NewTracer()
-)
+// DefaultTracer is the global default tracer
+var DefaultTracer Tracer = NewTracer()
 
 // Tracer is an interface for distributed tracing
 type Tracer interface {

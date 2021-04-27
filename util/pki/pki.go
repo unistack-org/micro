@@ -8,9 +8,8 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
-	"fmt"
-
 	"errors"
+	"fmt"
 )
 
 // GenerateKey returns an ed25519 key
@@ -46,14 +45,14 @@ func CA(opts ...CertOption) ([]byte, []byte, error) {
 		return nil, nil, err
 	}
 	cert, key := &bytes.Buffer{}, &bytes.Buffer{}
-	if err := pem.Encode(cert, &pem.Block{Type: "CERTIFICATE", Bytes: x509Cert}); err != nil {
+	if err = pem.Encode(cert, &pem.Block{Type: "CERTIFICATE", Bytes: x509Cert}); err != nil {
 		return nil, nil, err
 	}
 	x509Key, err := x509.MarshalPKCS8PrivateKey(options.Priv)
 	if err != nil {
 		return nil, nil, err
 	}
-	if err := pem.Encode(key, &pem.Block{Type: "PRIVATE KEY", Bytes: x509Key}); err != nil {
+	if err = pem.Encode(key, &pem.Block{Type: "PRIVATE KEY", Bytes: x509Key}); err != nil {
 		return nil, nil, err
 	}
 

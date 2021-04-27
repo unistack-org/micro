@@ -64,7 +64,7 @@ func (m *memory) ttlPrune() {
 					for id, n := range record.Nodes {
 						if n.TTL != 0 && time.Since(n.LastSeen) > n.TTL {
 							if m.opts.Logger.V(logger.DebugLevel) {
-								m.opts.Logger.Debugf(m.opts.Context, "Register TTL expired for node %s of service %s", n.Id, service)
+								m.opts.Logger.Debugf(m.opts.Context, "Register TTL expired for node %s of service %s", n.ID, service)
 							}
 							delete(m.records[domain][service][version].Nodes, id)
 						}
@@ -161,7 +161,7 @@ func (m *memory) Register(ctx context.Context, s *Service, opts ...RegisterOptio
 
 	for _, n := range s.Nodes {
 		// check if already exists
-		if _, ok := srvs[s.Name][s.Version].Nodes[n.Id]; ok {
+		if _, ok := srvs[s.Name][s.Version].Nodes[n.ID]; ok {
 			continue
 		}
 
@@ -176,9 +176,9 @@ func (m *memory) Register(ctx context.Context, s *Service, opts ...RegisterOptio
 		metadata["domain"] = options.Domain
 
 		// add the node
-		srvs[s.Name][s.Version].Nodes[n.Id] = &node{
+		srvs[s.Name][s.Version].Nodes[n.ID] = &node{
 			Node: &Node{
-				Id:       n.Id,
+				ID:       n.ID,
 				Address:  n.Address,
 				Metadata: metadata,
 			},
@@ -200,8 +200,8 @@ func (m *memory) Register(ctx context.Context, s *Service, opts ...RegisterOptio
 			if m.opts.Logger.V(logger.DebugLevel) {
 				m.opts.Logger.Debugf(m.opts.Context, "Updated registration for service: %s, version: %s", s.Name, s.Version)
 			}
-			srvs[s.Name][s.Version].Nodes[n.Id].TTL = options.TTL
-			srvs[s.Name][s.Version].Nodes[n.Id].LastSeen = time.Now()
+			srvs[s.Name][s.Version].Nodes[n.ID].TTL = options.TTL
+			srvs[s.Name][s.Version].Nodes[n.ID].LastSeen = time.Now()
 		}
 	}
 
@@ -241,11 +241,11 @@ func (m *memory) Deregister(ctx context.Context, s *Service, opts ...DeregisterO
 
 	// deregister all of the service nodes from this version
 	for _, n := range s.Nodes {
-		if _, ok := version.Nodes[n.Id]; ok {
+		if _, ok := version.Nodes[n.ID]; ok {
 			if m.opts.Logger.V(logger.DebugLevel) {
 				m.opts.Logger.Debugf(m.opts.Context, "Register removed node from service: %s, version: %s", s.Name, s.Version)
 			}
-			delete(version.Nodes, n.Id)
+			delete(version.Nodes, n.ID)
 		}
 	}
 
@@ -457,7 +457,7 @@ func serviceToRecord(s *Service, ttl time.Duration) *record {
 
 	nodes := make(map[string]*node, len(s.Nodes))
 	for _, n := range s.Nodes {
-		nodes[n.Id] = &node{
+		nodes[n.ID] = &node{
 			Node:     n,
 			TTL:      ttl,
 			LastSeen: time.Now(),
@@ -489,31 +489,31 @@ func recordToService(r *record, domain string) *Service {
 
 	endpoints := make([]*Endpoint, len(r.Endpoints))
 	for i, e := range r.Endpoints {
-		metadata := make(map[string]string, len(e.Metadata))
+		md := make(map[string]string, len(e.Metadata))
 		for k, v := range e.Metadata {
-			metadata[k] = v
+			md[k] = v
 		}
 
 		endpoints[i] = &Endpoint{
 			Name:     e.Name,
 			Request:  e.Request,
 			Response: e.Response,
-			Metadata: metadata,
+			Metadata: md,
 		}
 	}
 
 	nodes := make([]*Node, len(r.Nodes))
 	i := 0
 	for _, n := range r.Nodes {
-		metadata := make(map[string]string, len(n.Metadata))
+		md := make(map[string]string, len(n.Metadata))
 		for k, v := range n.Metadata {
-			metadata[k] = v
+			md[k] = v
 		}
 
 		nodes[i] = &Node{
-			Id:       n.Id,
+			ID:       n.ID,
 			Address:  n.Address,
-			Metadata: metadata,
+			Metadata: md,
 		}
 		i++
 	}

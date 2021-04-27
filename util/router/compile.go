@@ -77,7 +77,7 @@ func (t template) Compile() Template {
 		rawOps = append(rawOps, s.compile()...)
 	}
 
-	//ops := make([]int, 0, len(rawOps))
+	// ops := make([]int, 0, len(rawOps))
 	var (
 		ops    []int
 		pool   []string

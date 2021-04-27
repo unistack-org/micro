@@ -63,9 +63,7 @@ func Unmarshal(dst interface{}, query string) error {
 // possible. Eg the example above would output:
 //   {"bar":{"one":{"two":2,"red":112}}}
 func ToJSON(query string) ([]byte, error) {
-	var (
-		builder interface{} = make(map[string]interface{})
-	)
+	var builder interface{} = make(map[string]interface{})
 	params := strings.Split(query, "&")
 	for _, part := range params {
 		tempMap, err := queryToMap(part)

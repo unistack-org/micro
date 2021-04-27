@@ -27,9 +27,9 @@ func TestMemoryTransport(t *testing.T) {
 				if len(os.Getenv("INTEGRATION_TESTS")) == 0 {
 					t.Logf("Server Received %s", string(m.Body))
 				}
-				if err := sock.Send(&Message{
+				if cerr := sock.Send(&Message{
 					Body: []byte(`pong`),
-				}); err != nil {
+				}); cerr != nil {
 					return
 				}
 			}
@@ -60,7 +60,6 @@ func TestMemoryTransport(t *testing.T) {
 			t.Logf("Client Received %s", string(m.Body))
 		}
 	}
-
 }
 
 func TestListener(t *testing.T) {
