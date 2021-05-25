@@ -30,17 +30,19 @@ func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, e
 		if !val.CanSet() || len(fld.PkgPath) != 0 {
 			continue
 		}
-		switch val.Kind() {
-		default:
-			ts, ok := fld.Tag.Lookup(tkey)
-			if !ok {
-				continue
-			}
+
+		if ts, ok := fld.Tag.Lookup(tkey); ok {
 			for _, p := range strings.Split(ts, ",") {
 				if p == tval {
+					if val.Kind() != reflect.Ptr && val.CanAddr() {
+						val = val.Addr()
+					}
 					return val.Interface(), nil
 				}
 			}
+		}
+
+		switch val.Kind() {
 		case reflect.Ptr:
 			if val = val.Elem(); val.Kind() == reflect.Struct {
 				if iface, err := StructFieldByTag(val.Interface(), tkey, tval); err == nil {
@@ -72,11 +74,14 @@ func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
 		if !val.CanSet() || len(fld.PkgPath) != 0 {
 			continue
 		}
-		switch val.Kind() {
-		default:
-			if fld.Name == tkey {
-				return val.Interface(), nil
+		if fld.Name == tkey {
+			if val.Kind() != reflect.Ptr && val.CanAddr() {
+				val = val.Addr()
 			}
+			return val.Interface(), nil
+		}
+
+		switch val.Kind() {
 		case reflect.Ptr:
 			if val = val.Elem(); val.Kind() == reflect.Struct {
 				if iface, err := StructFieldByName(val.Interface(), tkey); err == nil {
