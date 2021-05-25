@@ -28,6 +28,8 @@ var (
 	DefaultMaxMsgSize int = 1024 * 1024 * 4 // 4Mb
 	// DefaultCodec is the global default codec
 	DefaultCodec Codec = NewCodec()
+	// DefaultTagName specifies struct tag name to control codec Marshal/Unmarshal
+	DefaultTagName = "codec"
 )
 
 // MessageType specifies message type for codec

@@ -14,6 +14,84 @@ var ErrInvalidParam = errors.New("invalid url query param provided")
 
 var bracketSplitter = regexp.MustCompile(`\[|\]`)
 
+func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, error) {
+	sv := reflect.ValueOf(src)
+	if sv.Kind() == reflect.Ptr {
+		sv = sv.Elem()
+	}
+	if sv.Kind() != reflect.Struct {
+		return nil, ErrInvalidStruct
+	}
+
+	typ := sv.Type()
+	for idx := 0; idx < typ.NumField(); idx++ {
+		fld := typ.Field(idx)
+		val := sv.Field(idx)
+		if !val.CanSet() || len(fld.PkgPath) != 0 {
+			continue
+		}
+		switch val.Kind() {
+		default:
+			ts, ok := fld.Tag.Lookup(tkey)
+			if !ok {
+				continue
+			}
+			for _, p := range strings.Split(ts, ",") {
+				if p == tval {
+					return val.Interface(), nil
+				}
+			}
+		case reflect.Ptr:
+			if val = val.Elem(); val.Kind() == reflect.Struct {
+				if iface, err := StructFieldByTag(val.Interface(), tkey, tval); err == nil {
+					return iface, nil
+				}
+			}
+		case reflect.Struct:
+			if iface, err := StructFieldByTag(val.Interface(), tkey, tval); err == nil {
+				return iface, nil
+			}
+		}
+	}
+	return nil, ErrNotFound
+}
+
+func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
+	sv := reflect.ValueOf(src)
+	if sv.Kind() == reflect.Ptr {
+		sv = sv.Elem()
+	}
+	if sv.Kind() != reflect.Struct {
+		return nil, ErrInvalidStruct
+	}
+
+	typ := sv.Type()
+	for idx := 0; idx < typ.NumField(); idx++ {
+		fld := typ.Field(idx)
+		val := sv.Field(idx)
+		if !val.CanSet() || len(fld.PkgPath) != 0 {
+			continue
+		}
+		switch val.Kind() {
+		default:
+			if fld.Name == tkey {
+				return val.Interface(), nil
+			}
+		case reflect.Ptr:
+			if val = val.Elem(); val.Kind() == reflect.Struct {
+				if iface, err := StructFieldByName(val.Interface(), tkey); err == nil {
+					return iface, nil
+				}
+			}
+		case reflect.Struct:
+			if iface, err := StructFieldByName(val.Interface(), tkey); err == nil {
+				return iface, nil
+			}
+		}
+	}
+	return nil, ErrNotFound
+}
+
 // StructFields returns slice of struct fields
 func StructFields(src interface{}) ([]reflect.StructField, error) {
 	var fields []reflect.StructField

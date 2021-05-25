@@ -5,6 +5,44 @@ import (
 	"testing"
 )
 
+func TestStructByTag(t *testing.T) {
+	type Str struct {
+		Name []string `json:"name" codec:"flatten"`
+	}
+
+	val := &Str{Name: []string{"first", "second"}}
+
+	iface, err := StructFieldByTag(val, "codec", "flatten")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if v, ok := iface.([]string); !ok {
+		t.Fatalf("not []string %v", iface)
+	} else if len(v) != 2 {
+		t.Fatalf("invalid number %v", iface)
+	}
+}
+
+func TestStructByName(t *testing.T) {
+	type Str struct {
+		Name []string `json:"name" codec:"flatten"`
+	}
+
+	val := &Str{Name: []string{"first", "second"}}
+
+	iface, err := StructFieldByName(val, "Name")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if v, ok := iface.([]string); !ok {
+		t.Fatalf("not []string %v", iface)
+	} else if len(v) != 2 {
+		t.Fatalf("invalid number %v", iface)
+	}
+}
+
 func TestStructURLValues(t *testing.T) {
 	type Str struct {
 		Str  *Str   `json:"str"`

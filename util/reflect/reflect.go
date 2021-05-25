@@ -12,6 +12,7 @@ import (
 var (
 	ErrInvalidStruct = errors.New("invalid struct specified")
 	ErrInvalidValue  = errors.New("invalid value specified")
+	ErrNotFound      = errors.New("struct field not found")
 )
 
 type Option func(*Options)
