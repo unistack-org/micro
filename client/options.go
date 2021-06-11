@@ -118,6 +118,8 @@ func NewPublishOptions(opts ...PublishOption) PublishOptions {
 
 // PublishOptions holds publish options
 type PublishOptions struct {
+	// BodyOnly will publish only message body
+	BodyOnly bool
 	// Context used for external options
 	Context context.Context
 	// Exchange topic exchange name
@@ -374,6 +376,13 @@ func DialTimeout(d time.Duration) Option {
 func WithExchange(e string) PublishOption {
 	return func(o *PublishOptions) {
 		o.Exchange = e
+	}
+}
+
+// WithBodyOnly publish only message body
+func WithBodyOnly(b bool) PublishOption {
+	return func(o *PublishOptions) {
+		o.BodyOnly = b
 	}
 }
 
