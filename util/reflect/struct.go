@@ -14,6 +14,11 @@ var ErrInvalidParam = errors.New("invalid url query param provided")
 
 var bracketSplitter = regexp.MustCompile(`\[|\]`)
 
+type StructField struct {
+	Field reflect.StructField
+	Value reflect.Value
+}
+
 func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, error) {
 	sv := reflect.ValueOf(src)
 	if sv.Kind() == reflect.Ptr {
@@ -98,8 +103,8 @@ func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
 }
 
 // StructFields returns slice of struct fields
-func StructFields(src interface{}) ([]reflect.StructField, error) {
-	var fields []reflect.StructField
+func StructFields(src interface{}) ([]StructField, error) {
+	var fields []StructField
 
 	sv := reflect.ValueOf(src)
 	if sv.Kind() == reflect.Ptr {
@@ -123,7 +128,7 @@ func StructFields(src interface{}) ([]reflect.StructField, error) {
 			}
 			fields = append(fields, infields...)
 		} else {
-			fields = append(fields, fld)
+			fields = append(fields, StructField{Field: fld, Value: val})
 		}
 	}
 
