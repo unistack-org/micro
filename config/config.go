@@ -20,25 +20,27 @@ var (
 
 // Config is an interface abstraction for dynamic configuration
 type Config interface {
+	// Name returns name of config
 	Name() string
 	// Init the config
 	Init(opts ...Option) error
 	// Options in the config
 	Options() Options
 	// Load config from sources
-	Load(context.Context) error
+	Load(context.Context, ...LoadOption) error
 	// Save config to sources
-	Save(context.Context) error
+	Save(context.Context, ...SaveOption) error
 	// Watch a value for changes
-	//	Watch(interface{}) (Watcher, error)
+	//Watch(context.Context) (Watcher, error)
+	// String returns config type name
 	String() string
 }
 
 // Watcher is the config watcher
-// type Watcher interface {
-//	Next() (, error)
-//	Stop() error
-// }
+type Watcher interface {
+	// Next() (, error)
+	Stop() error
+}
 
 // Load loads config from config sources
 func Load(ctx context.Context, cs ...Config) error {

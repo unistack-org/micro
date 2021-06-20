@@ -57,6 +57,52 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+// LoadOption function signature
+type LoadOption func(o *LoadOptions)
+
+// LoadOptions struct
+type LoadOptions struct {
+	Override bool
+	Append   bool
+}
+
+func NewLoadOptions(opts ...LoadOption) LoadOptions {
+	options := LoadOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
+// LoadOverride override values when load
+func LoadOverride(b bool) LoadOption {
+	return func(o *LoadOptions) {
+		o.Override = b
+	}
+}
+
+// LoadAppend override values when load
+func LoadAppend(b bool) LoadOption {
+	return func(o *LoadOptions) {
+		o.Append = b
+	}
+}
+
+// SaveOption function signature
+type SaveOption func(o *SaveOptions)
+
+// SaveOptions struct
+type SaveOptions struct {
+}
+
+func NewSaveOptions(opts ...SaveOption) SaveOptions {
+	options := SaveOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 // AllowFail allows config source to fail
 func AllowFail(b bool) Option {
 	return func(o *Options) {
