@@ -3,8 +3,11 @@ package flow
 
 import (
 	"context"
+	"errors"
+)
 
-	"github.com/google/uuid"
+var (
+	ErrStepNotExists = errors.New("step not exists")
 )
 
 // Step represents dedicated workflow step
@@ -16,22 +19,13 @@ type Step interface {
 	// Execute step run
 	Execute(ctx context.Context, req interface{}, opts ...ExecuteOption) error
 	// Requires returns dependent steps
-	Requires() []Step
+	Requires() []string
 	// Options returns step options
 	Options() StepOptions
 	// Require add required steps
 	Require(steps ...Step) error
-}
-
-func NewStepOptions(opts ...StepOption) StepOptions {
-	options := StepOptions{}
-	for _, o := range opts {
-		o(&options)
-	}
-	if options.ID == "" {
-		options.ID = uuid.New().String()
-	}
-	return options
+	// String
+	String() string
 }
 
 // Workflow contains all steps to execute

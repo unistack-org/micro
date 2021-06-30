@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/silas/dag"
@@ -18,6 +19,8 @@ type microWorkflow struct {
 	g    *dag.AcyclicGraph
 	init bool
 	sync.RWMutex
+	opts  Options
+	steps map[string]Step
 }
 
 func (w *microWorkflow) ID() string {
@@ -53,27 +56,61 @@ func (w *microWorkflow) Execute(ctx context.Context, req interface{}, opts ...Ex
 		return "", err
 	}
 
-	var steps [][]string
+	options := NewExecuteOptions(opts...)
+	var steps [][]Step
 	fn := func(n dag.Vertex, idx int) error {
 		if idx == 0 {
-			steps = make([][]string, 1)
-			steps[0] = make([]string, 0, 1)
+			steps = make([][]Step, 1)
+			steps[0] = make([]Step, 0, 1)
 		} else if idx >= len(steps) {
-			tsteps := make([][]string, idx+1)
+			tsteps := make([][]Step, idx+1)
 			copy(tsteps, steps)
 			steps = tsteps
-			steps[idx] = make([]string, 0, 1)
+			steps[idx] = make([]Step, 0, 1)
 		}
-		steps[idx] = append(steps[idx], fmt.Sprintf("%s", n))
+		steps[idx] = append(steps[idx], n.(Step))
 		return nil
 	}
 
-	w.RLock()
-	err = w.g.SortedDepthFirstWalk([]dag.Vertex{start}, fn)
-	w.RUnlock()
-
+	var root dag.Vertex
+	if options.Start != "" {
+		var ok bool
+		w.RLock()
+		root, ok = w.steps[options.Start]
+		w.RUnlock()
+		if !ok {
+			return "", ErrStepNotExists
+		}
+	} else {
+		root, err = w.g.Root()
+		if err != nil {
+			return "", err
+		}
+	}
+	err = w.g.SortedDepthFirstWalk([]dag.Vertex{root}, fn)
 	if err != nil {
 		return "", err
+	}
+
+	var wg sync.WaitGroup
+	cherr := make(chan error)
+
+	select {
+	case err = <-cherr:
+		return "", err
+	default:
+		for idx := range steps {
+			wg.Add(len(steps[idx]))
+			for nidx := range steps[idx] {
+				go func(step Step) {
+					if err = step.Execute(ctx, req, opts...); err != nil {
+						cherr <- err
+					}
+					wg.Done()
+				}(steps[idx][nidx])
+			}
+			wg.Wait()
+		}
 	}
 
 	return uid.String(), nil
@@ -115,14 +152,20 @@ func (f *microFlow) WorkflowList(ctx context.Context) ([]Workflow, error) {
 }
 
 func (f *microFlow) WorkflowCreate(ctx context.Context, id string, steps ...Step) (Workflow, error) {
-	w := &microWorkflow{id: id, g: &dag.AcyclicGraph{}}
+	w := &microWorkflow{opts: f.opts, id: id, g: &dag.AcyclicGraph{}, steps: make(map[string]Step, len(steps))}
 
 	for _, s := range steps {
-		w.g.Add(s.Options().ID)
+		w.steps[s.String()] = s
+		w.g.Add(s)
 	}
-	for _, s := range steps {
-		for _, req := range s.Requires() {
-			w.g.Connect(dag.BasicEdge(s, req))
+
+	for _, dst := range steps {
+		for _, req := range dst.Requires() {
+			src, ok := w.steps[req]
+			if !ok {
+				return nil, ErrStepNotExists
+			}
+			w.g.Connect(dag.BasicEdge(src, dst))
 		}
 	}
 
@@ -149,14 +192,13 @@ func (f *microFlow) WorkflowLoad(ctx context.Context, id string) (Workflow, erro
 }
 
 type microCallStep struct {
-	opts     StepOptions
-	service  string
-	method   string
-	requires []Step
+	opts    StepOptions
+	service string
+	method  string
 }
 
 func (s *microCallStep) ID() string {
-	return s.opts.ID
+	return s.String()
 }
 
 func (s *microCallStep) Options() StepOptions {
@@ -167,27 +209,45 @@ func (s *microCallStep) Endpoint() string {
 	return s.method
 }
 
-func (s *microCallStep) Requires() []Step {
-	return s.requires
+func (s *microCallStep) Requires() []string {
+	return s.opts.Requires
 }
 
 func (s *microCallStep) Require(steps ...Step) error {
-	s.requires = append(s.requires, steps...)
+	for _, step := range steps {
+		s.opts.Requires = append(s.opts.Requires, step.String())
+	}
 	return nil
 }
 
+func (s *microCallStep) String() string {
+	if s.opts.ID != "" {
+		return s.opts.ID
+	}
+	return fmt.Sprintf("%s.%s", s.service, s.method)
+}
+
+func (s *microCallStep) Name() string {
+	return s.String()
+}
+
+func (s *microCallStep) Hashcode() interface{} {
+	return s.String()
+}
+
 func (s *microCallStep) Execute(ctx context.Context, req interface{}, opts ...ExecuteOption) error {
+	fmt.Printf("execute %s with %#v\n", s.String(), req)
+	time.Sleep(1 * time.Second)
 	return nil
 }
 
 type microPublishStep struct {
-	opts     StepOptions
-	topic    string
-	requires []Step
+	opts  StepOptions
+	topic string
 }
 
 func (s *microPublishStep) ID() string {
-	return s.opts.ID
+	return s.String()
 }
 
 func (s *microPublishStep) Options() StepOptions {
@@ -198,13 +258,30 @@ func (s *microPublishStep) Endpoint() string {
 	return s.topic
 }
 
-func (s *microPublishStep) Requires() []Step {
-	return s.requires
+func (s *microPublishStep) Requires() []string {
+	return s.opts.Requires
 }
 
 func (s *microPublishStep) Require(steps ...Step) error {
-	s.requires = append(s.requires, steps...)
+	for _, step := range steps {
+		s.opts.Requires = append(s.opts.Requires, step.String())
+	}
 	return nil
+}
+
+func (s *microPublishStep) String() string {
+	if s.opts.ID != "" {
+		return s.opts.ID
+	}
+	return fmt.Sprintf("%s", s.topic)
+}
+
+func (s *microPublishStep) Name() string {
+	return s.String()
+}
+
+func (s *microPublishStep) Hashcode() interface{} {
+	return s.String()
 }
 
 func (s *microPublishStep) Execute(ctx context.Context, req interface{}, opts ...ExecuteOption) error {
