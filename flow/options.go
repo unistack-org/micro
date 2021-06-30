@@ -190,6 +190,7 @@ type StepOptions struct {
 	ID       string
 	Context  context.Context
 	Requires []string
+	Fallback string
 }
 
 type StepOption func(*StepOptions)
@@ -211,5 +212,11 @@ func StepID(id string) StepOption {
 func StepRequires(steps ...string) StepOption {
 	return func(o *StepOptions) {
 		o.Requires = steps
+	}
+}
+
+func StepFallback(step string) StepOption {
+	return func(o *StepOptions) {
+		o.Fallback = step
 	}
 }
