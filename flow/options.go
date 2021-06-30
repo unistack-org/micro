@@ -2,6 +2,7 @@ package flow
 
 import (
 	"context"
+	"time"
 
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/logger"
@@ -116,12 +117,66 @@ type ExecuteOptions struct {
 	// Meter holds the meter
 	Meter meter.Meter
 	// Store used for intermediate results
-	Store   store.Store
+	Store store.Store
+	// Context can be used to abort execution or pass additional opts
 	Context context.Context
-	Start   string
+	// Start step
+	Start string
+	// Reverse execution
+	Reverse bool
+	// Timeout for execution
+	Timeout time.Duration
 }
 
 type ExecuteOption func(*ExecuteOptions)
+
+func ExecuteClient(c client.Client) ExecuteOption {
+	return func(o *ExecuteOptions) {
+		o.Client = c
+	}
+}
+
+func ExecuteTracer(t tracer.Tracer) ExecuteOption {
+	return func(o *ExecuteOptions) {
+		o.Tracer = t
+	}
+}
+
+func ExecuteLogger(l logger.Logger) ExecuteOption {
+	return func(o *ExecuteOptions) {
+		o.Logger = l
+	}
+}
+
+func ExecuteMeter(m meter.Meter) ExecuteOption {
+	return func(o *ExecuteOptions) {
+		o.Meter = m
+	}
+}
+
+func ExecuteStore(s store.Store) ExecuteOption {
+	return func(o *ExecuteOptions) {
+		o.Store = s
+	}
+}
+
+func ExecuteContext(ctx context.Context) ExecuteOption {
+	return func(o *ExecuteOptions) {
+		o.Context = ctx
+	}
+}
+
+func ExecuteReverse(b bool) ExecuteOption {
+	return func(o *ExecuteOptions) {
+		o.Reverse = b
+	}
+}
+
+func ExecuteTimeout(td time.Duration) ExecuteOption {
+	return func(o *ExecuteOptions) {
+		o.Timeout = td
+	}
+}
 
 func NewExecuteOptions(opts ...ExecuteOption) ExecuteOptions {
 	options := ExecuteOptions{}
