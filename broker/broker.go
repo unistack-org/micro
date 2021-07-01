@@ -3,6 +3,7 @@ package broker
 
 import (
 	"context"
+	"errors"
 
 	"github.com/unistack-org/micro/v3/metadata"
 )
@@ -34,10 +35,31 @@ type Event interface {
 	Error() error
 }
 
+// RawMessage is a raw encoded JSON value.
+// It implements Marshaler and Unmarshaler and can be used to delay decoding or precompute a encoding.
+type RawMessage []byte
+
+// MarshalJSON returns m as the JSON encoding of m.
+func (m *RawMessage) MarshalJSON() ([]byte, error) {
+	if m == nil {
+		return nil, nil
+	}
+	return *m, nil
+}
+
+// UnmarshalJSON sets *m to a copy of data.
+func (m *RawMessage) UnmarshalJSON(data []byte) error {
+	if m == nil {
+		return errors.New("RawMessage UnmarshalJSON on nil pointer")
+	}
+	*m = append((*m)[0:0], data...)
+	return nil
+}
+
 // Message is used to transfer data
 type Message struct {
 	Header metadata.Metadata // contains message metadata
-	Body   []byte            // contains message body
+	Body   RawMessage        // contains message body
 }
 
 // Subscriber is a convenience return type for the Subscribe method
