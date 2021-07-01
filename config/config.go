@@ -43,13 +43,13 @@ type Watcher interface {
 }
 
 // Load loads config from config sources
-func Load(ctx context.Context, cs ...Config) error {
+func Load(ctx context.Context, cs []Config, opts ...LoadOption) error {
 	var err error
 	for _, c := range cs {
 		if err = c.Init(); err != nil {
 			return err
 		}
-		if err = c.Load(ctx); err != nil {
+		if err = c.Load(ctx, opts...); err != nil {
 			return err
 		}
 	}

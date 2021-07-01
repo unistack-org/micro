@@ -32,7 +32,7 @@ func TestMemoryBroker(t *testing.T) {
 				"foo": "bar",
 				"id":  fmt.Sprintf("%d", i),
 			},
-			Body: []byte(`hello world`),
+			Body: []byte(`"hello world"`),
 		}
 
 		if err := b.Publish(ctx, topic, message); err != nil {
