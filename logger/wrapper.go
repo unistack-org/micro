@@ -16,10 +16,92 @@ type LogfFunc func(ctx context.Context, level Level, msg string, args ...interfa
 type Wrapper interface {
 	// Log logs message with needed level
 	Log(LogFunc) LogFunc
-	//	Log(ctx context.Context, level Level, args ...interface{})
 	// Logf logs message with needed level
 	Logf(LogfFunc) LogfFunc
-	//Logf(ctx context.Context, level Level, msg string, args ...interface{})
+}
+
+type OmitLogger struct {
+	l Logger
+}
+
+func NewOmitLogger(l Logger) Logger {
+	return &OmitLogger{l: l}
+}
+
+func (w *OmitLogger) Init(opts ...Option) error {
+	return w.l.Init(append(opts, WrapLogger(NewOmitWrapper()))...)
+}
+
+func (w *OmitLogger) V(level Level) bool {
+	return w.l.V(level)
+}
+
+func (w *OmitLogger) Options() Options {
+	return w.l.Options()
+}
+
+func (w *OmitLogger) Fields(fields map[string]interface{}) Logger {
+	return w.l.Fields(fields)
+}
+
+func (w *OmitLogger) Info(ctx context.Context, args ...interface{}) {
+	w.l.Info(ctx, args...)
+}
+
+func (w *OmitLogger) Trace(ctx context.Context, args ...interface{}) {
+	w.l.Trace(ctx, args...)
+}
+
+func (w *OmitLogger) Debug(ctx context.Context, args ...interface{}) {
+	w.l.Debug(ctx, args...)
+}
+
+func (w *OmitLogger) Warn(ctx context.Context, args ...interface{}) {
+	w.l.Warn(ctx, args...)
+}
+
+func (w *OmitLogger) Error(ctx context.Context, args ...interface{}) {
+	w.l.Error(ctx, args...)
+}
+
+func (w *OmitLogger) Fatal(ctx context.Context, args ...interface{}) {
+	w.l.Fatal(ctx, args...)
+}
+
+func (w *OmitLogger) Infof(ctx context.Context, msg string, args ...interface{}) {
+	w.l.Infof(ctx, msg, args...)
+}
+
+func (w *OmitLogger) Tracef(ctx context.Context, msg string, args ...interface{}) {
+	w.l.Tracef(ctx, msg, args...)
+}
+
+func (w *OmitLogger) Debugf(ctx context.Context, msg string, args ...interface{}) {
+	w.l.Debugf(ctx, msg, args...)
+}
+
+func (w *OmitLogger) Warnf(ctx context.Context, msg string, args ...interface{}) {
+	w.l.Warnf(ctx, msg, args...)
+}
+
+func (w *OmitLogger) Errorf(ctx context.Context, msg string, args ...interface{}) {
+	w.l.Errorf(ctx, msg, args...)
+}
+
+func (w *OmitLogger) Fatalf(ctx context.Context, msg string, args ...interface{}) {
+	w.l.Fatalf(ctx, msg, args...)
+}
+
+func (w *OmitLogger) Log(ctx context.Context, level Level, args ...interface{}) {
+	w.l.Log(ctx, level, args...)
+}
+
+func (w *OmitLogger) Logf(ctx context.Context, level Level, msg string, args ...interface{}) {
+	w.l.Logf(ctx, level, msg, args...)
+}
+
+func (w *OmitLogger) String() string {
+	return w.l.String()
 }
 
 type OmitWrapper struct{}
