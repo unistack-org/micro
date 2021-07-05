@@ -24,6 +24,8 @@ type defaultLogger struct {
 	enc  *json.Encoder
 	opts Options
 	sync.RWMutex
+	logFunc  LogFunc
+	logfFunc LogfFunc
 }
 
 // Init(opts...) should only overwrite provided options
@@ -33,6 +35,15 @@ func (l *defaultLogger) Init(opts ...Option) error {
 		o(&l.opts)
 	}
 	l.enc = json.NewEncoder(l.opts.Out)
+
+	l.logFunc = l.Log
+	l.logfFunc = l.Logf
+	// wrap the Log func
+	for i := len(l.opts.Wrappers); i > 0; i-- {
+		l.logFunc = l.opts.Wrappers[i-1].Log(l.logFunc)
+		l.logfFunc = l.opts.Wrappers[i-1].Logf(l.logfFunc)
+	}
+
 	l.Unlock()
 	return nil
 }
@@ -121,27 +132,27 @@ func (l *defaultLogger) Fatal(ctx context.Context, args ...interface{}) {
 }
 
 func (l *defaultLogger) Infof(ctx context.Context, msg string, args ...interface{}) {
-	l.Logf(ctx, InfoLevel, msg, args...)
+	l.logfFunc(ctx, InfoLevel, msg, args...)
 }
 
 func (l *defaultLogger) Errorf(ctx context.Context, msg string, args ...interface{}) {
-	l.Logf(ctx, ErrorLevel, msg, args...)
+	l.logfFunc(ctx, ErrorLevel, msg, args...)
 }
 
 func (l *defaultLogger) Debugf(ctx context.Context, msg string, args ...interface{}) {
-	l.Logf(ctx, DebugLevel, msg, args...)
+	l.logfFunc(ctx, DebugLevel, msg, args...)
 }
 
 func (l *defaultLogger) Warnf(ctx context.Context, msg string, args ...interface{}) {
-	l.Logf(ctx, WarnLevel, msg, args...)
+	l.logfFunc(ctx, WarnLevel, msg, args...)
 }
 
 func (l *defaultLogger) Tracef(ctx context.Context, msg string, args ...interface{}) {
-	l.Logf(ctx, TraceLevel, msg, args...)
+	l.logfFunc(ctx, TraceLevel, msg, args...)
 }
 
 func (l *defaultLogger) Fatalf(ctx context.Context, msg string, args ...interface{}) {
-	l.Logf(ctx, FatalLevel, msg, args...)
+	l.logfFunc(ctx, FatalLevel, msg, args...)
 	os.Exit(1)
 }
 

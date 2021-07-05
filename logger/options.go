@@ -23,6 +23,8 @@ type Options struct {
 	CallerSkipCount int
 	// The logging level the logger should log
 	Level Level
+	// Wrappers logger wrapper that called before actual Log/Logf function
+	Wrappers []Wrapper
 }
 
 // NewOptions creates new options struct
@@ -79,5 +81,12 @@ func WithContext(ctx context.Context) Option {
 func WithName(n string) Option {
 	return func(o *Options) {
 		o.Name = n
+	}
+}
+
+// WrapLogger adds a logger Wrapper to a list of options passed into the logger
+func WrapLogger(w Wrapper) Option {
+	return func(o *Options) {
+		o.Wrappers = append(o.Wrappers, w)
 	}
 }
