@@ -96,8 +96,8 @@ type CallOptions struct {
 	RequestTimeout time.Duration
 	// DialTimeout dial timeout
 	DialTimeout time.Duration
-	// AuthToken flag
-	AuthToken bool
+	// AuthToken string
+	AuthToken string
 }
 
 // Context pass context to client
@@ -463,9 +463,9 @@ func WithDialTimeout(d time.Duration) CallOption {
 
 // WithAuthToken is a CallOption which overrides the
 // authorization header with the services own auth token
-func WithAuthToken() CallOption {
+func WithAuthToken(t string) CallOption {
 	return func(o *CallOptions) {
-		o.AuthToken = true
+		o.AuthToken = t
 	}
 }
 
