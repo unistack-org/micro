@@ -36,16 +36,6 @@ func (m *memoryStore) key(prefix, key string) string {
 	return filepath.Join(prefix, key)
 }
 
-func (m *memoryStore) prefix(database, table string) string {
-	if len(database) == 0 {
-		database = m.opts.Database
-	}
-	if len(table) == 0 {
-		table = m.opts.Table
-	}
-	return filepath.Join(database, table)
-}
-
 func (m *memoryStore) exists(prefix, key string) error {
 	key = m.key(prefix, key)
 
@@ -127,37 +117,45 @@ func (m *memoryStore) Name() string {
 }
 
 func (m *memoryStore) Exists(ctx context.Context, key string, opts ...ExistsOption) error {
-	prefix := m.prefix(m.opts.Database, m.opts.Table)
-	return m.exists(prefix, key)
+	options := NewExistsOptions(opts...)
+	if options.Namespace == "" {
+		options.Namespace = m.opts.Namespace
+	}
+	return m.exists(options.Namespace, key)
 }
 
 func (m *memoryStore) Read(ctx context.Context, key string, val interface{}, opts ...ReadOption) error {
-	readOpts := NewReadOptions(opts...)
-	prefix := m.prefix(readOpts.Database, readOpts.Table)
-	return m.get(prefix, key, val)
+	options := NewReadOptions(opts...)
+	if options.Namespace == "" {
+		options.Namespace = m.opts.Namespace
+	}
+	return m.get(options.Namespace, key, val)
 }
 
 func (m *memoryStore) Write(ctx context.Context, key string, val interface{}, opts ...WriteOption) error {
-	writeOpts := NewWriteOptions(opts...)
+	options := NewWriteOptions(opts...)
+	if options.Namespace == "" {
+		options.Namespace = m.opts.Namespace
+	}
 
-	prefix := m.prefix(writeOpts.Database, writeOpts.Table)
-
-	key = m.key(prefix, key)
+	key = m.key(options.Namespace, key)
 
 	buf, err := m.opts.Codec.Marshal(val)
 	if err != nil {
 		return err
 	}
 
-	m.store.Set(key, buf, writeOpts.TTL)
+	m.store.Set(key, buf, options.TTL)
 	return nil
 }
 
 func (m *memoryStore) Delete(ctx context.Context, key string, opts ...DeleteOption) error {
-	deleteOptions := NewDeleteOptions(opts...)
+	options := NewDeleteOptions(opts...)
+	if options.Namespace == "" {
+		options.Namespace = m.opts.Namespace
+	}
 
-	prefix := m.prefix(deleteOptions.Database, deleteOptions.Table)
-	m.delete(prefix, key)
+	m.delete(options.Namespace, key)
 	return nil
 }
 
@@ -166,25 +164,27 @@ func (m *memoryStore) Options() Options {
 }
 
 func (m *memoryStore) List(ctx context.Context, opts ...ListOption) ([]string, error) {
-	listOptions := NewListOptions(opts...)
+	options := NewListOptions(opts...)
+	if options.Namespace == "" {
+		options.Namespace = m.opts.Namespace
+	}
 
-	prefix := m.prefix(listOptions.Database, listOptions.Table)
-	keys := m.list(prefix, listOptions.Limit, listOptions.Offset)
+	keys := m.list(options.Namespace, options.Limit, options.Offset)
 
-	if len(listOptions.Prefix) > 0 {
+	if len(options.Prefix) > 0 {
 		var prefixKeys []string
 		for _, k := range keys {
-			if strings.HasPrefix(k, listOptions.Prefix) {
+			if strings.HasPrefix(k, options.Prefix) {
 				prefixKeys = append(prefixKeys, k)
 			}
 		}
 		keys = prefixKeys
 	}
 
-	if len(listOptions.Suffix) > 0 {
+	if len(options.Suffix) > 0 {
 		var suffixKeys []string
 		for _, k := range keys {
-			if strings.HasSuffix(k, listOptions.Suffix) {
+			if strings.HasSuffix(k, options.Suffix) {
 				suffixKeys = append(suffixKeys, k)
 			}
 		}

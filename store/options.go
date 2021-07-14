@@ -28,13 +28,12 @@ type Options struct {
 	TLSConfig *tls.Config
 	// Name specifies store name
 	Name string
-	// Database specifies store database
-	Database string
-	// Table specifies store table
-	Table string
-	// Nodes contains store address
-	// TODO: replace with Addrs
-	Nodes []string
+	// Namespace of the records
+	Namespace string
+	// Addrs contains store address
+	Addrs []string
+	//Wrappers store wrapper that called before actual functions
+	//Wrappers []Wrapper
 }
 
 // NewOptions creates options struct
@@ -90,10 +89,17 @@ func Meter(m meter.Meter) Option {
 	}
 }
 
-// Name the name
+// Name the name of the store
 func Name(n string) Option {
 	return func(o *Options) {
 		o.Name = n
+	}
+}
+
+// Namespace sets namespace of the store
+func Namespace(ns string) Option {
+	return func(o *Options) {
+		o.Namespace = ns
 	}
 }
 
@@ -104,27 +110,21 @@ func Tracer(t tracer.Tracer) Option {
 	}
 }
 
-// Nodes contains the addresses or other connection information of the backing storage.
+// Addrs contains the addresses or other connection information of the backing storage.
 // For example, an etcd implementation would contain the nodes of the cluster.
 // A SQL implementation could contain one or more connection strings.
-func Nodes(a ...string) Option {
+func Addrs(addrs ...string) Option {
 	return func(o *Options) {
-		o.Nodes = a
+		o.Addrs = addrs
 	}
 }
 
-// Database allows multiple isolated stores to be kept in one backend, if supported.
-func Database(db string) Option {
-	return func(o *Options) {
-		o.Database = db
-	}
-}
-
-// Table is analag for a table in database backends or a key prefix in KV backends
-func Table(t string) Option {
-	return func(o *Options) {
-		o.Table = t
-	}
+// ReadOptions configures an individual Read operation
+type ReadOptions struct {
+	// Context holds external options
+	Context context.Context
+	// Namespace holds namespace
+	Namespace string
 }
 
 // NewReadOptions fills ReadOptions struct with opts slice
@@ -136,27 +136,33 @@ func NewReadOptions(opts ...ReadOption) ReadOptions {
 	return options
 }
 
-// ReadOptions configures an individual Read operation
-type ReadOptions struct {
-	// Context holds external options
-	Context context.Context
-	// Database holds the database name
-	Database string
-	// Table holds table name
-	Table string
-	// Namespace holds namespace
-	Namespace string
-}
-
 // ReadOption sets values in ReadOptions
 type ReadOption func(r *ReadOptions)
 
-// ReadFrom the database and table
-func ReadFrom(database, table string) ReadOption {
-	return func(r *ReadOptions) {
-		r.Database = database
-		r.Table = table
+// ReadContext pass context.Context to ReadOptions
+func ReadContext(ctx context.Context) ReadOption {
+	return func(o *ReadOptions) {
+		o.Context = ctx
 	}
+}
+
+// ReadNamespace pass namespace to ReadOptions
+func ReadNamespace(ns string) ReadOption {
+	return func(o *ReadOptions) {
+		o.Namespace = ns
+	}
+}
+
+// WriteOptions configures an individual Write operation
+type WriteOptions struct {
+	// Context holds external options
+	Context context.Context
+	// Metadata contains additional metadata
+	Metadata metadata.Metadata
+	// Namespace holds namespace
+	Namespace string
+	// TTL specifies key TTL
+	TTL time.Duration
 }
 
 // NewWriteOptions fills WriteOptions struct with opts slice
@@ -168,45 +174,43 @@ func NewWriteOptions(opts ...WriteOption) WriteOptions {
 	return options
 }
 
-// WriteOptions configures an individual Write operation
-type WriteOptions struct {
-	// Context holds external options
-	Context context.Context
-	// Metadata contains additional metadata
-	Metadata metadata.Metadata
-	// Database holds database name
-	Database string
-	// Table holds table name
-	Table string
-	// Namespace holds namespace
-	Namespace string
-	// TTL specifies key TTL
-	TTL time.Duration
-}
-
 // WriteOption sets values in WriteOptions
 type WriteOption func(w *WriteOptions)
 
-// WriteTo the database and table
-func WriteTo(database, table string) WriteOption {
-	return func(w *WriteOptions) {
-		w.Database = database
-		w.Table = table
-	}
-}
-
-// WriteTTL is the time the record expires
-func WriteTTL(d time.Duration) WriteOption {
-	return func(w *WriteOptions) {
-		w.TTL = d
+// WriteContext pass context.Context to wirte options
+func WriteContext(ctx context.Context) WriteOption {
+	return func(o *WriteOptions) {
+		o.Context = ctx
 	}
 }
 
 // WriteMetadata add metadata.Metadata
 func WriteMetadata(md metadata.Metadata) WriteOption {
-	return func(w *WriteOptions) {
-		w.Metadata = metadata.Copy(md)
+	return func(o *WriteOptions) {
+		o.Metadata = metadata.Copy(md)
 	}
+}
+
+// WriteTTL is the time the record expires
+func WriteTTL(d time.Duration) WriteOption {
+	return func(o *WriteOptions) {
+		o.TTL = d
+	}
+}
+
+// WriteNamespace pass namespace to write options
+func WriteNamespace(ns string) WriteOption {
+	return func(o *WriteOptions) {
+		o.Namespace = ns
+	}
+}
+
+// DeleteOptions configures an individual Delete operation
+type DeleteOptions struct {
+	// Context holds external options
+	Context context.Context
+	// Namespace holds namespace
+	Namespace string
 }
 
 // NewDeleteOptions fills DeleteOptions struct with opts slice
@@ -218,27 +222,31 @@ func NewDeleteOptions(opts ...DeleteOption) DeleteOptions {
 	return options
 }
 
-// DeleteOptions configures an individual Delete operation
-type DeleteOptions struct {
-	// Context holds external options
-	Context context.Context
-	// Database holds database name
-	Database string
-	// Table holds table name
-	Table string
-	// Namespace holds namespace
-	Namespace string
-}
-
 // DeleteOption sets values in DeleteOptions
 type DeleteOption func(d *DeleteOptions)
 
-// DeleteFrom the database and table
-func DeleteFrom(database, table string) DeleteOption {
-	return func(d *DeleteOptions) {
-		d.Database = database
-		d.Table = table
+// DeleteContext pass context.Context to delete options
+func DeleteContext(ctx context.Context) DeleteOption {
+	return func(o *DeleteOptions) {
+		o.Context = ctx
 	}
+}
+
+// DeleteNamespace pass namespace to delete options
+func DeleteNamespace(ns string) DeleteOption {
+	return func(o *DeleteOptions) {
+		o.Namespace = ns
+	}
+}
+
+// ListOptions configures an individual List operation
+type ListOptions struct {
+	Context   context.Context
+	Prefix    string
+	Suffix    string
+	Namespace string
+	Limit     uint
+	Offset    uint
 }
 
 // NewListOptions fills ListOptions struct with opts slice
@@ -250,59 +258,50 @@ func NewListOptions(opts ...ListOption) ListOptions {
 	return options
 }
 
-// ListOptions configures an individual List operation
-type ListOptions struct {
-	Context   context.Context
-	Database  string
-	Prefix    string
-	Suffix    string
-	Namespace string
-	Table     string
-	Limit     uint
-	Offset    uint
-}
-
 // ListOption sets values in ListOptions
 type ListOption func(l *ListOptions)
 
-// ListFrom the database and table
-func ListFrom(database, table string) ListOption {
-	return func(l *ListOptions) {
-		l.Database = database
-		l.Table = table
+// ListContext pass context.Context to list options
+func ListContext(ctx context.Context) ListOption {
+	return func(o *ListOptions) {
+		o.Context = ctx
 	}
 }
 
 // ListPrefix returns all keys that are prefixed with key
-func ListPrefix(p string) ListOption {
-	return func(l *ListOptions) {
-		l.Prefix = p
+func ListPrefix(s string) ListOption {
+	return func(o *ListOptions) {
+		o.Prefix = s
 	}
 }
 
 // ListSuffix returns all keys that end with key
 func ListSuffix(s string) ListOption {
-	return func(l *ListOptions) {
-		l.Suffix = s
+	return func(o *ListOptions) {
+		o.Suffix = s
 	}
 }
 
-// ListLimit limits the number of returned keys to l
-func ListLimit(l uint) ListOption {
-	return func(lo *ListOptions) {
-		lo.Limit = l
+// ListLimit limits the number of returned keys
+func ListLimit(n uint) ListOption {
+	return func(o *ListOptions) {
+		o.Limit = n
 	}
 }
 
-// ListOffset starts returning responses from o. Use in conjunction with Limit for pagination.
-func ListOffset(o uint) ListOption {
-	return func(l *ListOptions) {
-		l.Offset = o
+// ListOffset use with Limit for pagination
+func ListOffset(n uint) ListOption {
+	return func(o *ListOptions) {
+		o.Offset = n
 	}
 }
 
-// ExistsOption specifies Exists call options
-type ExistsOption func(*ExistsOptions)
+// ListNamespace pass namespace to list options
+func ListNamespace(ns string) ListOption {
+	return func(o *ListOptions) {
+		o.Namespace = ns
+	}
+}
 
 // ExistsOptions holds options for Exists method
 type ExistsOptions struct {
@@ -311,6 +310,9 @@ type ExistsOptions struct {
 	// Namespace contains namespace
 	Namespace string
 }
+
+// ExistsOption specifies Exists call options
+type ExistsOption func(*ExistsOptions)
 
 // NewExistsOptions helper for Exists method
 func NewExistsOptions(opts ...ExistsOption) ExistsOptions {
@@ -322,3 +324,24 @@ func NewExistsOptions(opts ...ExistsOption) ExistsOptions {
 	}
 	return options
 }
+
+// ExistsContext pass context.Context to exist options
+func ExistsContext(ctx context.Context) ExistsOption {
+	return func(o *ExistsOptions) {
+		o.Context = ctx
+	}
+}
+
+// ExistsNamespace pass namespace to exist options
+func ExistsNamespace(ns string) ExistsOption {
+	return func(o *ExistsOptions) {
+		o.Namespace = ns
+	}
+}
+
+// WrapStore adds a store Wrapper to a list of options passed into the store
+//func WrapStore(w Wrapper) Option {
+//	return func(o *Options) {
+//		o.Wrappers = append(o.Wrappers, w)
+//	}
+//}

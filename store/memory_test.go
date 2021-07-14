@@ -9,11 +9,11 @@ import (
 )
 
 func TestMemoryReInit(t *testing.T) {
-	s := store.NewStore(store.Table("aaa"))
-	if err := s.Init(store.Table("")); err != nil {
+	s := store.NewStore(store.Namespace("aaa"))
+	if err := s.Init(store.Namespace("")); err != nil {
 		t.Fatal(err)
 	}
-	if len(s.Options().Table) > 0 {
+	if len(s.Options().Namespace) > 0 {
 		t.Error("Init didn't reinitialise the store")
 	}
 }
@@ -28,7 +28,7 @@ func TestMemoryBasic(t *testing.T) {
 
 func TestMemoryPrefix(t *testing.T) {
 	s := store.NewStore()
-	if err := s.Init(store.Table("some-prefix")); err != nil {
+	if err := s.Init(store.Namespace("some-prefix")); err != nil {
 		t.Fatal(err)
 	}
 	basictest(s, t)
@@ -36,7 +36,7 @@ func TestMemoryPrefix(t *testing.T) {
 
 func TestMemoryNamespace(t *testing.T) {
 	s := store.NewStore()
-	if err := s.Init(store.Database("some-namespace")); err != nil {
+	if err := s.Init(store.Namespace("some-namespace")); err != nil {
 		t.Fatal(err)
 	}
 	basictest(s, t)
@@ -44,7 +44,7 @@ func TestMemoryNamespace(t *testing.T) {
 
 func TestMemoryNamespacePrefix(t *testing.T) {
 	s := store.NewStore()
-	if err := s.Init(store.Table("some-prefix"), store.Database("some-namespace")); err != nil {
+	if err := s.Init(store.Namespace("some-namespace")); err != nil {
 		t.Fatal(err)
 	}
 	basictest(s, t)
