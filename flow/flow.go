@@ -33,7 +33,7 @@ type Workflow interface {
 	// ID returns id of the workflow
 	ID() string
 	// Steps returns steps slice where parallel steps returned on the same level
-	Steps() [][]Step
+	Steps() ([][]Step, error)
 	// Execute workflow with args, return execution id and error
 	Execute(ctx context.Context, req interface{}, opts ...ExecuteOption) (string, error)
 	// RemoveSteps remove steps from workflow
