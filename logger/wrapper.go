@@ -20,6 +20,10 @@ type Wrapper interface {
 	Logf(LogfFunc) LogfFunc
 }
 
+var (
+	_ Logger = &OmitLogger{}
+)
+
 type OmitLogger struct {
 	l Logger
 }
