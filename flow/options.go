@@ -124,6 +124,8 @@ type ExecuteOptions struct {
 	Reverse bool
 	// Timeout for execution
 	Timeout time.Duration
+	// Async enables async execution
+	Async bool
 }
 
 type ExecuteOption func(*ExecuteOptions)
@@ -167,6 +169,12 @@ func ExecuteReverse(b bool) ExecuteOption {
 func ExecuteTimeout(td time.Duration) ExecuteOption {
 	return func(o *ExecuteOptions) {
 		o.Timeout = td
+	}
+}
+
+func ExecuteAsync(b bool) ExecuteOption {
+	return func(o *ExecuteOptions) {
+		o.Async = b
 	}
 }
 

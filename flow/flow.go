@@ -4,6 +4,8 @@ package flow
 import (
 	"context"
 	"errors"
+	"sync"
+	"sync/atomic"
 
 	"github.com/unistack-org/micro/v3/metadata"
 )
@@ -67,6 +69,10 @@ type Step interface {
 
 type Status int
 
+func (status Status) String() string {
+	return StatusString[status]
+}
+
 const (
 	StatusPending Status = iota
 	StatusRunning
@@ -74,6 +80,25 @@ const (
 	StatusSuccess
 	StatusAborted
 	StatusSuspend
+)
+
+var (
+	StatusString = map[Status]string{
+		StatusPending: "StatusPending",
+		StatusRunning: "StatusRunning",
+		StatusFailure: "StatusFailure",
+		StatusSuccess: "StatusSuccess",
+		StatusAborted: "StatusAborted",
+		StatusSuspend: "StatusSuspend",
+	}
+	StringStatus = map[string]Status{
+		"StatusPending": StatusPending,
+		"StatusRunning": StatusRunning,
+		"StatusFailure": StatusFailure,
+		"StatusSuccess": StatusSuccess,
+		"StatusAborted": StatusAborted,
+		"StatusSuspend": StatusSuspend,
+	}
 )
 
 // Workflow contains all steps to execute
@@ -90,6 +115,12 @@ type Workflow interface {
 	Status() Status
 	// Steps returns steps slice where parallel steps returned on the same level
 	Steps() ([][]Step, error)
+	// Suspend suspends execution
+	Suspend(ctx context.Context, eid string) error
+	// Resume resumes execution
+	Resume(ctx context.Context, eid string) error
+	// Abort abort execution
+	Abort(ctx context.Context, eid string) error
 }
 
 // Flow the base interface to interact with workflows
@@ -106,4 +137,16 @@ type Flow interface {
 	WorkflowLoad(ctx context.Context, id string) (Workflow, error)
 	// WorkflowList lists all workflows
 	WorkflowList(ctx context.Context) ([]Workflow, error)
+}
+
+var (
+	flowMu      sync.Mutex
+	atomicSteps atomic.Value
+)
+
+func RegisterStep(step Step) {
+	flowMu.Lock()
+	steps, _ := atomicSteps.Load().([]Step)
+	atomicSteps.Store(append(steps, step))
+	flowMu.Unlock()
 }
