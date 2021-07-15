@@ -74,13 +74,17 @@ func (m *memoryStore) list(prefix string, limit, offset uint) []string {
 	i := 0
 
 	for k := range allItems {
-		if !strings.HasPrefix(k, prefix+"/") {
+		if !strings.HasPrefix(k, prefix) {
 			continue
 		}
-		allKeys[i] = strings.TrimPrefix(k, prefix+"/")
+		if prefix == "" {
+			allKeys[i] = strings.TrimPrefix(k, "/")
+		} else {
+			allKeys[i] = strings.TrimPrefix(k, prefix)
+		}
+		allKeys[i] = strings.TrimPrefix(allKeys[i], "/")
 		i++
 	}
-
 	if limit != 0 || offset != 0 {
 		sort.Slice(allKeys, func(i, j int) bool { return allKeys[i] < allKeys[j] })
 		sort.Slice(allKeys, func(i, j int) bool { return allKeys[i] < allKeys[j] })
@@ -136,6 +140,9 @@ func (m *memoryStore) Write(ctx context.Context, key string, val interface{}, op
 	options := NewWriteOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace
+	}
+	if options.TTL == 0 {
+		options.TTL = cache.NoExpiration
 	}
 
 	key = m.key(options.Namespace, key)
