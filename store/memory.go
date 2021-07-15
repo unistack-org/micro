@@ -77,12 +77,10 @@ func (m *memoryStore) list(prefix string, limit, offset uint) []string {
 		if !strings.HasPrefix(k, prefix) {
 			continue
 		}
-		if prefix == "" {
-			allKeys[i] = strings.TrimPrefix(k, "/")
-		} else {
-			allKeys[i] = strings.TrimPrefix(k, prefix)
+		allKeys[i] = strings.TrimPrefix(k, prefix)
+		if allKeys[i][0] == '/' {
+			allKeys[i] = allKeys[i][1:]
 		}
-		allKeys[i] = strings.TrimPrefix(allKeys[i], "/")
 		i++
 	}
 	if limit != 0 || offset != 0 {
