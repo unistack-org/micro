@@ -102,7 +102,7 @@ type parser struct {
 // topLevelSegments is the target of this parser.
 func (p *parser) topLevelSegments() ([]segment, error) {
 	if logger.V(logger.TraceLevel) {
-		logger.Debug(context.TODO(), "Parsing %q", p.tokens)
+		logger.Trace(context.TODO(), "Parsing %q", p.tokens)
 	}
 	segs, err := p.segments()
 	if err != nil {

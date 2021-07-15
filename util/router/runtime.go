@@ -63,16 +63,16 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 	}
 
 	if version != 1 {
-		if logger.V(logger.DebugLevel) {
-			logger.Debug(context.TODO(), "unsupported version: %d", version)
+		if logger.V(logger.TraceLevel) {
+			logger.Trace(context.TODO(), "unsupported version: %d", version)
 		}
 		return Pattern{}, ErrInvalidPattern
 	}
 
 	l := len(ops)
 	if l%2 != 0 {
-		if logger.V(logger.DebugLevel) {
-			logger.Debug(context.TODO(), "odd number of ops codes: %d", l)
+		if logger.V(logger.TraceLevel) {
+			logger.Trace(context.TODO(), "odd number of ops codes: %d", l)
 		}
 		return Pattern{}, ErrInvalidPattern
 	}
@@ -141,13 +141,13 @@ func NewPattern(version int, ops []int, pool []string, verb string, opts ...Patt
 			vars = append(vars, v)
 			stack--
 			if stack < 0 {
-				if logger.V(logger.DebugLevel) {
+				if logger.V(logger.TraceLevel) {
 					logger.Trace(context.TODO(), "stack underflow")
 				}
 				return Pattern{}, ErrInvalidPattern
 			}
 		default:
-			if logger.V(logger.DebugLevel) {
+			if logger.V(logger.TraceLevel) {
 				logger.Trace(context.TODO(), "invalid opcode: %d", op.code)
 			}
 			return Pattern{}, ErrInvalidPattern
