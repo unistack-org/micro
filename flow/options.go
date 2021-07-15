@@ -116,8 +116,6 @@ type ExecuteOptions struct {
 	Logger logger.Logger
 	// Meter holds the meter
 	Meter meter.Meter
-	// Store used for intermediate results
-	Store store.Store
 	// Context can be used to abort execution or pass additional opts
 	Context context.Context
 	// Start step
@@ -154,12 +152,6 @@ func ExecuteMeter(m meter.Meter) ExecuteOption {
 	}
 }
 
-func ExecuteStore(s store.Store) ExecuteOption {
-	return func(o *ExecuteOptions) {
-		o.Store = s
-	}
-}
-
 func ExecuteContext(ctx context.Context) ExecuteOption {
 	return func(o *ExecuteOptions) {
 		o.Context = ctx
@@ -179,7 +171,13 @@ func ExecuteTimeout(td time.Duration) ExecuteOption {
 }
 
 func NewExecuteOptions(opts ...ExecuteOption) ExecuteOptions {
-	options := ExecuteOptions{}
+	options := ExecuteOptions{
+		Client:  client.DefaultClient,
+		Logger:  logger.DefaultLogger,
+		Tracer:  tracer.DefaultTracer,
+		Meter:   meter.DefaultMeter,
+		Context: context.Background(),
+	}
 	for _, o := range opts {
 		o(&options)
 	}
@@ -196,7 +194,9 @@ type StepOptions struct {
 type StepOption func(*StepOptions)
 
 func NewStepOptions(opts ...StepOption) StepOptions {
-	options := StepOptions{Context: context.Background()}
+	options := StepOptions{
+		Context: context.Background(),
+	}
 	for _, o := range opts {
 		o(&options)
 	}
