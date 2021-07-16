@@ -15,8 +15,8 @@ import (
 var DefaultServer Server = NewServer()
 
 var (
-	// DefaultAddress will be used if no address passed
-	DefaultAddress = ":0"
+	// DefaultAddress will be used if no address passed, use secure localhost
+	DefaultAddress = "127.0.0.1:0"
 	// DefaultName will be used if no name passed
 	DefaultName = "server"
 	// DefaultVersion will be used if no version passed
