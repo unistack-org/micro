@@ -105,18 +105,20 @@ func BuildName(name string, labels ...string) string {
 		labels = labels[:len(labels)-1]
 	}
 
-	sort.Sort(byKey(labels))
+	if len(labels) > 2 {
+		sort.Sort(byKey(labels))
 
-	idx := 0
-	for {
-		if labels[idx] == labels[idx+2] {
-			copy(labels[idx:], labels[idx+2:])
-			labels = labels[:len(labels)-2]
-		} else {
-			idx += 2
-		}
-		if idx+2 >= len(labels) {
-			break
+		idx := 0
+		for {
+			if labels[idx] == labels[idx+2] {
+				copy(labels[idx:], labels[idx+2:])
+				labels = labels[:len(labels)-2]
+			} else {
+				idx += 2
+			}
+			if idx+2 >= len(labels) {
+				break
+			}
 		}
 	}
 

@@ -56,6 +56,10 @@ func TestBuildName(t *testing.T) {
 			"my_metric",
 			"broker", "broker1", "broker", "broker2", "server", "http", "server", "tcp", "register", "mdns",
 		},
+		`my_metric{aaa="aaa"}`: []string{
+			"my_metric",
+			"aaa", "aaa",
+		},
 	}
 
 	for e, d := range data {
