@@ -3,8 +3,9 @@ package meter
 
 import (
 	"io"
-	"reflect"
 	"sort"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -77,36 +78,50 @@ type Summary interface {
 	UpdateDuration(time.Time)
 }
 
+// sort labels alphabeticaly by label name
 type byKey []string
 
 func (k byKey) Len() int           { return len(k) / 2 }
 func (k byKey) Less(i, j int) bool { return k[i*2] < k[j*2] }
 func (k byKey) Swap(i, j int) {
-	k[i*2], k[i*2+1], k[j*2], k[j*2+1] = k[j*2], k[j*2+1], k[i*2], k[i*2+1]
+	k[i*2], k[j*2] = k[j*2], k[i*2]
+	k[i*2+1], k[j*2+1] = k[j*2+1], k[i*2+1]
 }
 
-func Sort(slice *[]string) {
-	bk := byKey(*slice)
-	if bk.Len() <= 1 {
-		return
+// BuildName used to combine metric with labels.
+// If labels count is odd, drop last element
+func BuildName(name string, labels ...string) string {
+	if len(labels)%2 == 1 {
+		labels = labels[:len(labels)-1]
 	}
-	sort.Sort(bk)
-	v := reflect.ValueOf(slice).Elem()
-	cnt := 0
-	key := 0
-	val := 1
-	for key < v.Len() {
-		if len(bk) > key+2 && bk[key] == bk[key+2] {
-			key += 2
-			val += 2
-			continue
+
+	sort.Sort(byKey(labels))
+
+	idx := 0
+	for {
+		if labels[idx] == labels[idx+2] {
+			copy(labels[idx:], labels[idx+2:])
+			labels = labels[:len(labels)-2]
+		} else {
+			idx += 2
 		}
-		v.Index(cnt).Set(v.Index(key))
-		cnt++
-		v.Index(cnt).Set(v.Index(val))
-		cnt++
-		key += 2
-		val += 2
+		if idx+2 >= len(labels) {
+			break
+		}
 	}
-	v.SetLen(cnt)
+
+	var b strings.Builder
+	_, _ = b.WriteString(name)
+	_, _ = b.WriteRune('{')
+	for idx := 0; idx < len(labels); idx += 2 {
+		if idx > 0 {
+			_, _ = b.WriteRune(',')
+		}
+		_, _ = b.WriteString(labels[idx])
+		_, _ = b.WriteString(`=`)
+		_, _ = b.WriteString(strconv.Quote(labels[idx+1]))
+	}
+	_, _ = b.WriteRune('}')
+
+	return b.String()
 }

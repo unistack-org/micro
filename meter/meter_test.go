@@ -14,11 +14,21 @@ func TestNoopMeter(t *testing.T) {
 	cnt.Inc()
 }
 
-func TestLabelsSort(t *testing.T) {
-	ls := []string{"server", "http", "register", "mdns", "broker", "broker1", "broker", "broker2", "server", "tcp"}
-	Sort(&ls)
+func TestBuildName(t *testing.T) {
+	data := map[string][]string{
+		//	`my_metric{firstlabel="value2",zerolabel="value3"}`: []string{
+		//	"my_metric",
+		//			"zerolabel", "value3", "firstlabel", "value2",
+		//	},
+		`my_metric{broker="broker2",register="mdns",server="tcp"}`: []string{
+			"my_metric",
+			"broker", "broker1", "broker", "broker2", "server", "http", "server", "tcp", "register", "mdns",
+		},
+	}
 
-	if ls[0] != "broker" || ls[1] != "broker2" {
-		t.Fatalf("sort error: %v", ls)
+	for e, d := range data {
+		if x := BuildName(d[0], d[1:]...); x != e {
+			t.Fatalf("expect: %s, result: %s", e, x)
+		}
 	}
 }
