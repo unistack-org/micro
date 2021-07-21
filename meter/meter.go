@@ -88,6 +88,16 @@ func (k byKey) Swap(i, j int) {
 	k[i*2+1], k[j*2+1] = k[j*2+1], k[i*2+1]
 }
 
+// BuildLables used to sort labels and delete duplicates.
+// Last value wins in case of duplicate label keys.
+func BuildLabels(labels ...string) []string {
+	if len(labels)%2 == 1 {
+		labels = labels[:len(labels)-1]
+	}
+	sort.Sort(byKey(labels))
+	return labels
+}
+
 // BuildName used to combine metric with labels.
 // If labels count is odd, drop last element
 func BuildName(name string, labels ...string) string {
