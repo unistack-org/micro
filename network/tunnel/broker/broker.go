@@ -24,9 +24,18 @@ type tunSubscriber struct {
 	opts     broker.SubscribeOptions
 }
 
+type tunBatchSubscriber struct {
+	listener tunnel.Listener
+	handler  broker.BatchHandler
+	closed   chan bool
+	topic    string
+	opts     broker.SubscribeOptions
+}
+
 type tunEvent struct {
 	message *broker.Message
 	topic   string
+	err     error
 }
 
 // used to access tunnel from options context
@@ -62,6 +71,36 @@ func (t *tunBroker) Disconnect(ctx context.Context) error {
 	return t.tunnel.Close(ctx)
 }
 
+func (t *tunBroker) BatchPublish(ctx context.Context, msgs []*broker.Message, opts ...broker.PublishOption) error {
+	// TODO: this is probably inefficient, we might want to just maintain an open connection
+	// it may be easier to add broadcast to the tunnel
+	topicMap := make(map[string]tunnel.Session)
+
+	var err error
+	for _, msg := range msgs {
+		topic, _ := msg.Header.Get("Micro-Topic")
+		c, ok := topicMap[topic]
+		if !ok {
+			c, err := t.tunnel.Dial(ctx, topic, tunnel.DialMode(tunnel.Multicast))
+			if err != nil {
+				return err
+			}
+			defer c.Close()
+			topicMap[topic] = c
+		}
+
+		if err = c.Send(&transport.Message{
+			Header: msg.Header,
+			Body:   msg.Body,
+		}); err != nil {
+			//	msg.SetError(err)
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (t *tunBroker) Publish(ctx context.Context, topic string, m *broker.Message, opts ...broker.PublishOption) error {
 	// TODO: this is probably inefficient, we might want to just maintain an open connection
 	// it may be easier to add broadcast to the tunnel
@@ -75,6 +114,26 @@ func (t *tunBroker) Publish(ctx context.Context, topic string, m *broker.Message
 		Header: m.Header,
 		Body:   m.Body,
 	})
+}
+
+func (t *tunBroker) BatchSubscribe(ctx context.Context, topic string, h broker.BatchHandler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
+	l, err := t.tunnel.Listen(ctx, topic, tunnel.ListenMode(tunnel.Multicast))
+	if err != nil {
+		return nil, err
+	}
+
+	tunSub := &tunBatchSubscriber{
+		topic:    topic,
+		handler:  h,
+		opts:     broker.NewSubscribeOptions(opts...),
+		closed:   make(chan bool),
+		listener: l,
+	}
+
+	// start processing
+	go tunSub.run()
+
+	return tunSub, nil
 }
 
 func (t *tunBroker) Subscribe(ctx context.Context, topic string, h broker.Handler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
@@ -99,6 +158,49 @@ func (t *tunBroker) Subscribe(ctx context.Context, topic string, h broker.Handle
 
 func (t *tunBroker) String() string {
 	return "tunnel"
+}
+
+func (t *tunBatchSubscriber) run() {
+	for {
+		// accept a new connection
+		c, err := t.listener.Accept()
+		if err != nil {
+			select {
+			case <-t.closed:
+				return
+			default:
+				continue
+			}
+		}
+
+		// receive message
+		m := new(transport.Message)
+		if err := c.Recv(m); err != nil {
+			if logger.V(logger.ErrorLevel) {
+				logger.Error(t.opts.Context, err.Error())
+			}
+			if err = c.Close(); err != nil {
+				if logger.V(logger.ErrorLevel) {
+					logger.Error(t.opts.Context, err.Error())
+				}
+			}
+			continue
+		}
+
+		// close the connection
+		c.Close()
+
+		evts := broker.Events{&tunEvent{
+			topic: t.topic,
+			message: &broker.Message{
+				Header: m.Header,
+				Body:   m.Body,
+			},
+		}}
+		// handle the message
+		go t.handler(evts)
+
+	}
 }
 
 func (t *tunSubscriber) run() {
@@ -142,6 +244,24 @@ func (t *tunSubscriber) run() {
 	}
 }
 
+func (t *tunBatchSubscriber) Options() broker.SubscribeOptions {
+	return t.opts
+}
+
+func (t *tunBatchSubscriber) Topic() string {
+	return t.topic
+}
+
+func (t *tunBatchSubscriber) Unsubscribe(ctx context.Context) error {
+	select {
+	case <-t.closed:
+		return nil
+	default:
+		close(t.closed)
+		return t.listener.Close()
+	}
+}
+
 func (t *tunSubscriber) Options() broker.SubscribeOptions {
 	return t.opts
 }
@@ -173,7 +293,11 @@ func (t *tunEvent) Ack() error {
 }
 
 func (t *tunEvent) Error() error {
-	return nil
+	return t.err
+}
+
+func (t *tunEvent) SetError(err error) {
+	t.err = err
 }
 
 // NewBroker returns new tunnel broker

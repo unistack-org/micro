@@ -29,6 +29,8 @@ type Options struct {
 	TLSConfig *tls.Config
 	// ErrorHandler used when broker can't unmarshal incoming message
 	ErrorHandler Handler
+	// BatchErrorHandler used when broker can't unmashal incoming messages
+	BatchErrorHandler BatchHandler
 	// Name holds the broker name
 	Name string
 	// Addrs holds the broker address
@@ -85,6 +87,8 @@ type SubscribeOptions struct {
 	Context context.Context
 	// ErrorHandler used when broker can't unmarshal incoming message
 	ErrorHandler Handler
+	// BatchErrorHandler used when broker can't unmashal incoming messages
+	BatchErrorHandler BatchHandler
 	// Group holds consumer group
 	Group string
 	// AutoAck flag specifies auto ack of incoming message when no error happens
@@ -175,11 +179,27 @@ func ErrorHandler(h Handler) Option {
 	}
 }
 
+// BatchErrorHandler will catch all broker errors that cant be handled
+// in normal way, for example Codec errors
+func BatchErrorHandler(h BatchHandler) Option {
+	return func(o *Options) {
+		o.BatchErrorHandler = h
+	}
+}
+
 // SubscribeErrorHandler will catch all broker errors that cant be handled
 // in normal way, for example Codec errors
 func SubscribeErrorHandler(h Handler) SubscribeOption {
 	return func(o *SubscribeOptions) {
 		o.ErrorHandler = h
+	}
+}
+
+// SubscribeBatchErrorHandler will catch all broker errors that cant be handled
+// in normal way, for example Codec errors
+func SubscribeBatchErrorHandler(h BatchHandler) SubscribeOption {
+	return func(o *SubscribeOptions) {
+		o.BatchErrorHandler = h
 	}
 }
 

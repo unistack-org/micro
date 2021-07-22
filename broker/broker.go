@@ -8,31 +8,79 @@ import (
 	"github.com/unistack-org/micro/v3/metadata"
 )
 
-// DefaultBroker default broker
+// DefaultBroker default memory broker
 var DefaultBroker Broker = NewBroker()
+
+var (
+	// ErrNotConnected returns when broker used but not connected yet
+	ErrNotConnected = errors.New("broker not connected")
+	// ErrDisconnected returns when broker disconnected
+	ErrDisconnected = errors.New("broker disconnected")
+)
 
 // Broker is an interface used for asynchronous messaging.
 type Broker interface {
+	// Name returns broker instance name
 	Name() string
-	Init(...Option) error
+	// Init initilize broker
+	Init(opts ...Option) error
+	// Options returns broker options
 	Options() Options
+	// Address return configured address
 	Address() string
-	Connect(context.Context) error
-	Disconnect(context.Context) error
-	Publish(context.Context, string, *Message, ...PublishOption) error
-	Subscribe(context.Context, string, Handler, ...SubscribeOption) (Subscriber, error)
+	// Connect connects to broker
+	Connect(ctx context.Context) error
+	// Disconnect disconnect from broker
+	Disconnect(ctx context.Context) error
+	// Publish message to broker topic
+	Publish(ctx context.Context, topic string, msg *Message, opts ...PublishOption) error
+	// BatchPublish messages to broker with multiple topics
+	BatchPublish(ctx context.Context, msgs []*Message, opts ...PublishOption) error
+	// Subscribe subscribes to topic message via handler
+	Subscribe(ctx context.Context, topic string, h Handler, opts ...SubscribeOption) (Subscriber, error)
+	// BatchSubscribe subscribes to topic messages via handler
+	BatchSubscribe(ctx context.Context, topic string, h BatchHandler, opts ...SubscribeOption) (Subscriber, error)
+	// String type of broker
 	String() string
 }
 
 // Handler is used to process messages via a subscription of a topic.
 type Handler func(Event) error
 
+// Events contains multiple events
+type Events []Event
+
+func (evs Events) Ack() error {
+	var err error
+	for _, ev := range evs {
+		if err = ev.Ack(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (evs Events) SetError(err error) {
+	for _, ev := range evs {
+		ev.SetError(err)
+	}
+}
+
+// BatchHandler is used to process messages in batches via a subscription of a topic.
+type BatchHandler func(Events) error
+
 // Event is given to a subscription handler for processing
 type Event interface {
+	// Topic returns event topic
 	Topic() string
+	// Message returns broker message
 	Message() *Message
+	// Ack acknowledge message
 	Ack() error
+	// Error returns message error (like decoding errors or some other)
 	Error() error
+	// SetError set event processing error
+	SetError(err error)
 }
 
 // RawMessage is a raw encoded JSON value.
@@ -58,13 +106,18 @@ func (m *RawMessage) UnmarshalJSON(data []byte) error {
 
 // Message is used to transfer data
 type Message struct {
-	Header metadata.Metadata // contains message metadata
-	Body   RawMessage        // contains message body
+	// Header contains message metadata
+	Header metadata.Metadata
+	// Body contains message body
+	Body RawMessage
 }
 
 // Subscriber is a convenience return type for the Subscribe method
 type Subscriber interface {
+	// Options returns subscriber options
 	Options() SubscribeOptions
+	// Topic returns topic for subscription
 	Topic() string
-	Unsubscribe(context.Context) error
+	// Unsubscribe from topic
+	Unsubscribe(ctx context.Context) error
 }
