@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
-	"time"
 )
 
 // ErrInvalidParam specifies invalid url query params
@@ -15,11 +14,12 @@ var ErrInvalidParam = errors.New("invalid url query param provided")
 
 var bracketSplitter = regexp.MustCompile(`\[|\]`)
 
-var timeKind = reflect.TypeOf(time.Time{}).Kind()
+//var timeKind = reflect.ValueOf(time.Time{}).Kind()
 
 type StructField struct {
 	Field reflect.StructField
 	Value reflect.Value
+	Path  string
 }
 
 func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, error) {
@@ -35,7 +35,7 @@ func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, e
 	for idx := 0; idx < typ.NumField(); idx++ {
 		fld := typ.Field(idx)
 		val := sv.Field(idx)
-		if !val.CanSet() || len(fld.PkgPath) != 0 {
+		if len(fld.PkgPath) != 0 {
 			continue
 		}
 
@@ -66,6 +66,17 @@ func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, e
 	return nil, ErrNotFound
 }
 
+func StructFieldByPath(src interface{}, path string) (interface{}, error) {
+	var err error
+	for _, p := range strings.Split(path, ".") {
+		src, err = StructFieldByName(src, p)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return src, err
+}
+
 func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
 	sv := reflect.ValueOf(src)
 	if sv.Kind() == reflect.Ptr {
@@ -79,7 +90,7 @@ func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
 	for idx := 0; idx < typ.NumField(); idx++ {
 		fld := typ.Field(idx)
 		val := sv.Field(idx)
-		if !val.CanSet() || len(fld.PkgPath) != 0 {
+		if len(fld.PkgPath) != 0 {
 			continue
 		}
 		if fld.Name == tkey {
@@ -105,6 +116,19 @@ func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
 	return nil, ErrNotFound
 }
 
+// StructFieldsMap returns map[string]interface{} or error
+func StructFieldsMap(src interface{}) (map[string]interface{}, error) {
+	fields, err := StructFields(src)
+	if err != nil {
+		return nil, err
+	}
+	mp := make(map[string]interface{}, len(fields))
+	for _, field := range fields {
+		mp[field.Path] = field.Value.Interface()
+	}
+	return mp, nil
+}
+
 // StructFields returns slice of struct fields
 func StructFields(src interface{}) ([]StructField, error) {
 	var fields []StructField
@@ -116,25 +140,29 @@ func StructFields(src interface{}) ([]StructField, error) {
 	if sv.Kind() != reflect.Struct {
 		return nil, ErrInvalidStruct
 	}
-
 	typ := sv.Type()
 	for idx := 0; idx < typ.NumField(); idx++ {
 		fld := typ.Field(idx)
 		val := sv.Field(idx)
-		if !val.CanSet() || len(fld.PkgPath) != 0 {
+		if !val.IsValid() || len(fld.PkgPath) != 0 {
 			continue
 		}
+
 		switch val.Kind() {
-		case timeKind:
-			fields = append(fields, StructField{Field: fld, Value: val})
+		//case timeKind:
+		//fmt.Printf("GGG\n")
+		//fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
 		case reflect.Struct:
 			infields, err := StructFields(val.Interface())
 			if err != nil {
 				return nil, err
 			}
-			fields = append(fields, infields...)
+			for _, infield := range infields {
+				infield.Path = fmt.Sprintf("%s.%s", fld.Name, infield.Path)
+				fields = append(fields, infield)
+			}
 		default:
-			fields = append(fields, StructField{Field: fld, Value: val})
+			fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
 		}
 	}
 
@@ -194,7 +222,7 @@ func StructURLValues(src interface{}, pref string, tags []string) (url.Values, e
 	for idx := 0; idx < typ.NumField(); idx++ {
 		fld := typ.Field(idx)
 		val := sv.Field(idx)
-		if !val.CanSet() || len(fld.PkgPath) != 0 || !val.IsValid() {
+		if len(fld.PkgPath) != 0 || !val.IsValid() {
 			continue
 		}
 

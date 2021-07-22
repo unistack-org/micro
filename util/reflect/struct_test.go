@@ -2,8 +2,79 @@ package reflect
 
 import (
 	"net/url"
+	"reflect"
+	rfl "reflect"
 	"testing"
 )
+
+func TestStructFieldsMap(t *testing.T) {
+	type NestedStr struct {
+		BBB string
+		CCC int
+	}
+	type Str struct {
+		Name   []string `json:"name" codec:"flatten"`
+		XXX    string   `json:"xxx"`
+		Nested NestedStr
+	}
+
+	val := &Str{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
+	fields, err := StructFieldsMap(val)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v, ok := fields["Nested.BBB"]; !ok || v != "ddd" {
+		t.Fatalf("invalid field from %v", fields)
+	}
+}
+
+func TestStructFields(t *testing.T) {
+	type NestedStr struct {
+		BBB string
+		CCC int
+	}
+	type Str struct {
+		Name   []string `json:"name" codec:"flatten"`
+		XXX    string   `json:"xxx"`
+		Nested NestedStr
+	}
+
+	val := &Str{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
+	fields, err := StructFields(val)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ok bool
+	for _, field := range fields {
+		if field.Path == "Nested.CCC" {
+			ok = true
+		}
+	}
+	if !ok {
+		t.Fatalf("struct fields returns invalid path: %v", fields)
+	}
+}
+
+func TestStructByPath(t *testing.T) {
+	type NestedStr struct {
+		BBB string
+		CCC int
+	}
+	type Str struct {
+		Name   []string `json:"name" codec:"flatten"`
+		XXX    string   `json:"xxx"`
+		Nested NestedStr
+	}
+
+	val := &Str{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
+	field, err := StructFieldByPath(val, "Nested.CCC")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rfl.Indirect(reflect.ValueOf(field)).Int() != 9 {
+		t.Fatalf("invalid elem returned: %v", field)
+	}
+}
 
 func TestStructByTag(t *testing.T) {
 	type Str struct {
