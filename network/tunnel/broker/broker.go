@@ -78,7 +78,7 @@ func (t *tunBroker) BatchPublish(ctx context.Context, msgs []*broker.Message, op
 
 	var err error
 	for _, msg := range msgs {
-		topic, _ := msg.Header.Get("Micro-Topic")
+		topic, _ := msg.Header.Get(metadata.HeaderTopic)
 		c, ok := topicMap[topic]
 		if !ok {
 			c, err := t.tunnel.Dial(ctx, topic, tunnel.DialMode(tunnel.Multicast))

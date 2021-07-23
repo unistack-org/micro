@@ -6,8 +6,18 @@ import (
 	"sort"
 )
 
-// HeaderPrefix for all headers passed
-var HeaderPrefix = "Micro-"
+var (
+	// HeaderTopic is the header name that contains topic name
+	HeaderTopic = "Micro-Topic"
+	// HeaderContentType specifies content type of message
+	HeaderContentType = "Content-Type"
+	// HeaderEndpoint specifies endpoint in service
+	HeaderEndpoint = "Micro-Endpoint"
+	// HeaderService specifies service
+	HeaderService = "Micro-Service"
+	// HeaderTimeout specifies timeout of operation
+	HeaderTimeout = "Micro-Timeout"
+)
 
 // Metadata is our way of representing request headers internally.
 // They're used at the RPC level and translate back and forth

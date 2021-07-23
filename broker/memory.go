@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/metadata"
 	maddr "github.com/unistack-org/micro/v3/util/addr"
 	mnet "github.com/unistack-org/micro/v3/util/net"
 	"github.com/unistack-org/micro/v3/util/rand"
@@ -113,14 +114,14 @@ func (m *memoryBroker) BatchPublish(ctx context.Context, msgs []*Message, opts .
 	if m.opts.Codec == nil {
 		m.RLock()
 		for _, msg := range msgs {
-			topic, _ := msg.Header.Get("Micro-Topic")
+			topic, _ := msg.Header.Get(metadata.HeaderTopic)
 			vs = append(vs, msgWrapper{topic: topic, body: m})
 		}
 		m.RUnlock()
 	} else {
 		m.RLock()
 		for _, msg := range msgs {
-			topic, _ := msg.Header.Get("Micro-Topic")
+			topic, _ := msg.Header.Get(metadata.HeaderTopic)
 			buf, err := m.opts.Codec.Marshal(msg)
 			if err != nil {
 				m.RUnlock()

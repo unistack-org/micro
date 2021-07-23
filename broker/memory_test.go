@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"testing"
+
+	"github.com/unistack-org/micro/v3/metadata"
 )
 
 func TestMemoryBatchBroker(t *testing.T) {
@@ -30,9 +32,9 @@ func TestMemoryBatchBroker(t *testing.T) {
 	for i := 0; i < count; i++ {
 		message := &Message{
 			Header: map[string]string{
-				"Micro-Topic": topic,
-				"foo":         "bar",
-				"id":          fmt.Sprintf("%d", i),
+				metadata.HeaderTopic: topic,
+				"foo":                "bar",
+				"id":                 fmt.Sprintf("%d", i),
 			},
 			Body: []byte(`"hello world"`),
 		}
@@ -75,9 +77,9 @@ func TestMemoryBroker(t *testing.T) {
 	for i := 0; i < count; i++ {
 		message := &Message{
 			Header: map[string]string{
-				"Micro-Topic": topic,
-				"foo":         "bar",
-				"id":          fmt.Sprintf("%d", i),
+				metadata.HeaderTopic: topic,
+				"foo":                "bar",
+				"id":                 fmt.Sprintf("%d", i),
 			},
 			Body: []byte(`"hello world"`),
 		}

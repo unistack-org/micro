@@ -190,8 +190,8 @@ func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOpti
 	if !ok {
 		md = metadata.New(0)
 	}
-	md["Content-Type"] = p.ContentType()
-	md["Micro-Topic"] = p.Topic()
+	md[metadata.HeaderContentType] = p.ContentType()
+	md[metadata.HeaderTopic] = p.Topic()
 
 	// passed in raw data
 	if d, ok := p.Payload().(*codec.Frame); ok {

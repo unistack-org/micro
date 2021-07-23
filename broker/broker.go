@@ -112,6 +112,13 @@ type Message struct {
 	Body RawMessage
 }
 
+// NewMessage create broker message with topic filled
+func NewMessage(topic string) *Message {
+	m := &Message{Header: metadata.New(2)}
+	m.Header.Set(metadata.HeaderTopic, topic)
+	return m
+}
+
 // Subscriber is a convenience return type for the Subscribe method
 type Subscriber interface {
 	// Options returns subscriber options
