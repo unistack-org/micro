@@ -17,6 +17,8 @@ var (
 	HeaderService = "Micro-Service"
 	// HeaderTimeout specifies timeout of operation
 	HeaderTimeout = "Micro-Timeout"
+	// HeaderAuthorization specifies Authorization header
+	HeaderAuthorization = "Authorization"
 )
 
 // Metadata is our way of representing request headers internally.
