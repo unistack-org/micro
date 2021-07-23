@@ -303,8 +303,6 @@ func (m *memoryBroker) BatchSubscribe(ctx context.Context, topic string, handler
 	}()
 
 	return sub, nil
-
-	return nil, nil
 }
 
 func (m *memoryBroker) Subscribe(ctx context.Context, topic string, handler Handler, opts ...SubscribeOption) (Subscriber, error) {
@@ -421,7 +419,7 @@ func (m *memorySubscriber) Unsubscribe(ctx context.Context) error {
 }
 
 // NewBroker return new memory broker
-func NewBroker(opts ...Option) Broker {
+func NewBroker(opts ...Option) BatchBroker {
 	return &memoryBroker{
 		opts:             NewOptions(opts...),
 		subscribers:      make(map[string][]*memorySubscriber),
