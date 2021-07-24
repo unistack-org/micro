@@ -3,6 +3,7 @@ package broker
 import (
 	"context"
 	"crypto/tls"
+	"time"
 
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
@@ -73,11 +74,9 @@ func NewPublishOptions(opts ...PublishOption) PublishOptions {
 	options := PublishOptions{
 		Context: context.Background(),
 	}
-
 	for _, o := range opts {
 		o(&options)
 	}
-
 	return options
 }
 
@@ -95,6 +94,10 @@ type SubscribeOptions struct {
 	AutoAck bool
 	// BodyOnly flag specifies that message contains only body bytes without header
 	BodyOnly bool
+	// BatchSize flag specifies max batch size
+	BatchSize int
+	// BatchWait flag specifies max wait time for batch filling
+	BatchWait time.Duration
 }
 
 // Option func
@@ -117,23 +120,6 @@ func PublishContext(ctx context.Context) PublishOption {
 	}
 }
 
-// SubscribeOption func
-type SubscribeOption func(*SubscribeOptions)
-
-// NewSubscribeOptions creates new SubscribeOptions
-func NewSubscribeOptions(opts ...SubscribeOption) SubscribeOptions {
-	options := SubscribeOptions{
-		AutoAck: true,
-		Context: context.Background(),
-	}
-
-	for _, o := range opts {
-		o(&options)
-	}
-
-	return options
-}
-
 // Addrs sets the host addresses to be used by the broker
 func Addrs(addrs ...string) Option {
 	return func(o *Options) {
@@ -146,28 +132,6 @@ func Addrs(addrs ...string) Option {
 func Codec(c codec.Codec) Option {
 	return func(o *Options) {
 		o.Codec = c
-	}
-}
-
-// DisableAutoAck disables auto ack
-func DisableAutoAck() SubscribeOption {
-	return func(o *SubscribeOptions) {
-		o.AutoAck = false
-	}
-}
-
-// SubscribeAutoAck will disable auto acking of messages
-// after they have been handled.
-func SubscribeAutoAck(b bool) SubscribeOption {
-	return func(o *SubscribeOptions) {
-		o.AutoAck = b
-	}
-}
-
-// SubscribeBodyOnly consumes only body of the message
-func SubscribeBodyOnly(b bool) SubscribeOption {
-	return func(o *SubscribeOptions) {
-		o.BodyOnly = b
 	}
 }
 
@@ -265,4 +229,56 @@ func SubscribeContext(ctx context.Context) SubscribeOption {
 	return func(o *SubscribeOptions) {
 		o.Context = ctx
 	}
+}
+
+// DisableAutoAck disables auto ack
+// DEPRECATED
+func DisableAutoAck() SubscribeOption {
+	return func(o *SubscribeOptions) {
+		o.AutoAck = false
+	}
+}
+
+// SubscribeAutoAck contol auto acking of messages
+// after they have been handled.
+func SubscribeAutoAck(b bool) SubscribeOption {
+	return func(o *SubscribeOptions) {
+		o.AutoAck = b
+	}
+}
+
+// SubscribeBodyOnly consumes only body of the message
+func SubscribeBodyOnly(b bool) SubscribeOption {
+	return func(o *SubscribeOptions) {
+		o.BodyOnly = b
+	}
+}
+
+// SubscribeBatchSize specifies max batch size
+func SubscribeBatchSize(n int) SubscribeOption {
+	return func(o *SubscribeOptions) {
+		o.BatchSize = n
+	}
+}
+
+// SubscribeBatchWait specifies max batch wait time
+func SubscribeBatchWait(td time.Duration) SubscribeOption {
+	return func(o *SubscribeOptions) {
+		o.BatchWait = td
+	}
+}
+
+// SubscribeOption func
+type SubscribeOption func(*SubscribeOptions)
+
+// NewSubscribeOptions creates new SubscribeOptions
+func NewSubscribeOptions(opts ...SubscribeOption) SubscribeOptions {
+	options := SubscribeOptions{
+		AutoAck: true,
+		Context: context.Background(),
+	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
 }

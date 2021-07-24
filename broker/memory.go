@@ -96,8 +96,9 @@ func (m *memoryBroker) Publish(ctx context.Context, topic string, msg *Message, 
 	}
 	m.RUnlock()
 
+	options := NewPublishOptions(opts...)
 	vs := make([]msgWrapper, 0, 1)
-	if m.opts.Codec == nil {
+	if m.opts.Codec == nil || options.BodyOnly {
 		topic, _ := msg.Header.Get(metadata.HeaderTopic)
 		vs = append(vs, msgWrapper{topic: topic, body: msg})
 	} else {
@@ -125,8 +126,9 @@ func (m *memoryBroker) BatchPublish(ctx context.Context, msgs []*Message, opts .
 	}
 	m.RUnlock()
 
+	options := NewPublishOptions(opts...)
 	vs := make([]msgWrapper, 0, len(msgs))
-	if m.opts.Codec == nil {
+	if m.opts.Codec == nil || options.BodyOnly {
 		for _, msg := range msgs {
 			topic, _ := msg.Header.Get(metadata.HeaderTopic)
 			vs = append(vs, msgWrapper{topic: topic, body: msg})
@@ -360,7 +362,7 @@ func (m *memorySubscriber) Unsubscribe(ctx context.Context) error {
 }
 
 // NewBroker return new memory broker
-func NewBroker(opts ...Option) BatchBroker {
+func NewBroker(opts ...Option) Broker {
 	return &memoryBroker{
 		opts:        NewOptions(opts...),
 		subscribers: make(map[string][]*memorySubscriber),

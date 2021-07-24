@@ -18,14 +18,6 @@ var (
 	ErrDisconnected = errors.New("broker disconnected")
 )
 
-type BatchBroker interface {
-	Broker
-	// BatchPublish messages to broker with multiple topics
-	BatchPublish(ctx context.Context, msgs []*Message, opts ...PublishOption) error
-	// BatchSubscribe subscribes to topic messages via handler
-	BatchSubscribe(ctx context.Context, topic string, h BatchHandler, opts ...SubscribeOption) (Subscriber, error)
-}
-
 // Broker is an interface used for asynchronous messaging.
 type Broker interface {
 	// Name returns broker instance name
@@ -44,6 +36,10 @@ type Broker interface {
 	Publish(ctx context.Context, topic string, msg *Message, opts ...PublishOption) error
 	// Subscribe subscribes to topic message via handler
 	Subscribe(ctx context.Context, topic string, h Handler, opts ...SubscribeOption) (Subscriber, error)
+	// BatchPublish messages to broker with multiple topics
+	BatchPublish(ctx context.Context, msgs []*Message, opts ...PublishOption) error
+	// BatchSubscribe subscribes to topic messages via handler
+	BatchSubscribe(ctx context.Context, topic string, h BatchHandler, opts ...SubscribeOption) (Subscriber, error)
 	// String type of broker
 	String() string
 }
