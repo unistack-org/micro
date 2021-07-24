@@ -373,14 +373,30 @@ func DialTimeout(d time.Duration) Option {
 }
 
 // WithExchange sets the exchange to route a message through
+// DEPRECATED
 func WithExchange(e string) PublishOption {
 	return func(o *PublishOptions) {
 		o.Exchange = e
 	}
 }
 
+// PublishExchange sets the exchange to route a message through
+func PublishExchange(e string) PublishOption {
+	return func(o *PublishOptions) {
+		o.Exchange = e
+	}
+}
+
 // WithBodyOnly publish only message body
+// DERECATED
 func WithBodyOnly(b bool) PublishOption {
+	return func(o *PublishOptions) {
+		o.BodyOnly = b
+	}
+}
+
+// PublishBodyOnly publish only message body
+func PublishBodyOnly(b bool) PublishOption {
 	return func(o *PublishOptions) {
 		o.BodyOnly = b
 	}
@@ -498,7 +514,15 @@ func WithSelectOptions(sops ...selector.SelectOption) CallOption {
 }
 
 // WithMessageContentType sets the message content type
+// DEPRECATED
 func WithMessageContentType(ct string) MessageOption {
+	return func(o *MessageOptions) {
+		o.ContentType = ct
+	}
+}
+
+// MessageContentType sets the message content type
+func MessageContentType(ct string) MessageOption {
 	return func(o *MessageOptions) {
 		o.ContentType = ct
 	}

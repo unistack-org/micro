@@ -181,47 +181,59 @@ func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption
 	return &noopStream{}, nil
 }
 
-func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOption) error {
-	var body []byte
+func (n *noopClient) BatchPublish(ctx context.Context, ps []Message, opts ...PublishOption) error {
+	return n.publish(ctx, ps, opts...)
+}
 
+func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOption) error {
+	return n.publish(ctx, []Message{p}, opts...)
+}
+
+func (n *noopClient) publish(ctx context.Context, ps []Message, opts ...PublishOption) error {
 	options := NewPublishOptions(opts...)
 
-	md, ok := metadata.FromOutgoingContext(ctx)
-	if !ok {
-		md = metadata.New(0)
-	}
-	md[metadata.HeaderContentType] = p.ContentType()
-	md[metadata.HeaderTopic] = p.Topic()
+	msgs := make([]*broker.Message, 0, len(ps))
 
-	// passed in raw data
-	if d, ok := p.Payload().(*codec.Frame); ok {
-		body = d.Data
-	} else {
-		// use codec for payload
-		cf, err := n.newCodec(p.ContentType())
-		if err != nil {
-			return errors.InternalServerError("go.micro.client", err.Error())
+	for _, p := range ps {
+		md, ok := metadata.FromOutgoingContext(ctx)
+		if !ok {
+			md = metadata.New(0)
+		}
+		md[metadata.HeaderContentType] = p.ContentType()
+
+		topic := p.Topic()
+
+		// get the exchange
+		if len(options.Exchange) > 0 {
+			topic = options.Exchange
 		}
 
-		// set the body
-		b, err := cf.Marshal(p.Payload())
-		if err != nil {
-			return errors.InternalServerError("go.micro.client", err.Error())
+		md[metadata.HeaderTopic] = topic
+
+		var body []byte
+
+		// passed in raw data
+		if d, ok := p.Payload().(*codec.Frame); ok {
+			body = d.Data
+		} else {
+			// use codec for payload
+			cf, err := n.newCodec(p.ContentType())
+			if err != nil {
+				return errors.InternalServerError("go.micro.client", err.Error())
+			}
+
+			// set the body
+			b, err := cf.Marshal(p.Payload())
+			if err != nil {
+				return errors.InternalServerError("go.micro.client", err.Error())
+			}
+			body = b
 		}
-		body = b
+
+		msgs = append(msgs, &broker.Message{Header: md, Body: body})
 	}
 
-	topic := p.Topic()
-
-	// get the exchange
-	if len(options.Exchange) > 0 {
-		topic = options.Exchange
-	}
-
-	return n.opts.Broker.Publish(ctx, topic, &broker.Message{
-		Header: md,
-		Body:   body,
-	},
+	return n.opts.Broker.BatchPublish(ctx, msgs,
 		broker.PublishContext(options.Context),
 		broker.PublishBodyOnly(options.BodyOnly),
 	)
