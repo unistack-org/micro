@@ -35,9 +35,6 @@ func (l *defaultLogger) Init(opts ...Option) error {
 		o(&l.opts)
 	}
 	l.enc = json.NewEncoder(l.opts.Out)
-
-	l.logFunc = l.Log
-	l.logfFunc = l.Logf
 	// wrap the Log func
 	for i := len(l.opts.Wrappers); i > 0; i-- {
 		l.logFunc = l.opts.Wrappers[i-1].Log(l.logFunc)
@@ -218,7 +215,11 @@ func (l *defaultLogger) Options() Options {
 
 // NewLogger builds a new logger based on options
 func NewLogger(opts ...Option) Logger {
-	l := &defaultLogger{opts: NewOptions(opts...)}
+	l := &defaultLogger{
+		opts: NewOptions(opts...),
+	}
+	l.logFunc = l.Log
+	l.logfFunc = l.Logf
 	l.enc = json.NewEncoder(l.opts.Out)
 	return l
 }
