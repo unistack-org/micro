@@ -8,6 +8,8 @@ var (
 	DefaultLogger Logger = NewLogger()
 	// DefaultLevel used by logger
 	DefaultLevel Level = InfoLevel
+	// DefaultCallerSkipCount used by logger
+	DefaultCallerSkipCount = 2
 )
 
 // Logger is a generic logging interface

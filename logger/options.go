@@ -33,7 +33,7 @@ func NewOptions(opts ...Option) Options {
 		Level:           DefaultLevel,
 		Fields:          make(map[string]interface{}),
 		Out:             os.Stderr,
-		CallerSkipCount: 0,
+		CallerSkipCount: DefaultCallerSkipCount,
 		Context:         context.Background(),
 	}
 	for _, o := range opts {
