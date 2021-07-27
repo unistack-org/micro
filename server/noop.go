@@ -6,11 +6,13 @@ import (
 	"sync"
 	"time"
 
-	//	cprotorpc "github.com/unistack-org/micro-codec-protorpc"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/register"
+	maddr "github.com/unistack-org/micro/v3/util/addr"
+	mnet "github.com/unistack-org/micro/v3/util/net"
+	"github.com/unistack-org/micro/v3/util/rand"
 )
 
 // DefaultCodecs will be used to encode/decode
@@ -73,8 +75,7 @@ func (n *noopServer) Subscribe(sb Subscriber) error {
 	sub, ok := sb.(*subscriber)
 	if !ok {
 		return fmt.Errorf("invalid subscriber: expected *subscriber")
-	}
-	if len(sub.handlers) == 0 {
+	} else if len(sub.handlers) == 0 {
 		return fmt.Errorf("invalid subscriber: no handler functions")
 	}
 
@@ -107,11 +108,12 @@ func (n *noopServer) Init(opts ...Option) error {
 	}
 
 	if n.handlers == nil {
-		n.handlers = make(map[string]Handler)
+		n.handlers = make(map[string]Handler, 1)
 	}
 	if n.subscribers == nil {
-		n.subscribers = make(map[*subscriber][]broker.Subscriber)
+		n.subscribers = make(map[*subscriber][]broker.Subscriber, 1)
 	}
+
 	if n.exit == nil {
 		n.exit = make(chan chan error)
 	}
@@ -202,26 +204,34 @@ func (n *noopServer) Register() error {
 
 	cx := config.Context
 
-	for sb := range n.subscribers {
-		handler := n.createSubHandler(sb, config)
-		var opts []broker.SubscribeOption
-		if queue := sb.Options().Queue; len(queue) > 0 {
-			opts = append(opts, broker.SubscribeGroup(queue))
-		}
+	var sub broker.Subscriber
 
+	for sb := range n.subscribers {
 		if sb.Options().Context != nil {
 			cx = sb.Options().Context
 		}
 
-		opts = append(opts, broker.SubscribeContext(cx), broker.SubscribeAutoAck(sb.Options().AutoAck))
+		opts := []broker.SubscribeOption{broker.SubscribeContext(cx), broker.SubscribeAutoAck(sb.Options().AutoAck)}
+		if queue := sb.Options().Queue; len(queue) > 0 {
+			opts = append(opts, broker.SubscribeGroup(queue))
+		}
+
+		if sb.Options().Batch {
+			// batch processing handler
+			sub, err = config.Broker.BatchSubscribe(cx, sb.Topic(), n.newBatchSubHandler(sb, config), opts...)
+		} else {
+			// single processing handler
+			sub, err = config.Broker.Subscribe(cx, sb.Topic(), n.newSubHandler(sb, config), opts...)
+		}
+
+		if err != nil {
+			return err
+		}
 
 		if config.Logger.V(logger.InfoLevel) {
 			config.Logger.Infof(n.opts.Context, "subscribing to topic: %s", sb.Topic())
 		}
-		sub, err := config.Broker.Subscribe(cx, sb.Topic(), handler, opts...)
-		if err != nil {
-			return err
-		}
+
 		n.subscribers[sb] = []broker.Subscriber{sub}
 	}
 
@@ -303,9 +313,22 @@ func (n *noopServer) Start() error {
 	config := n.Options()
 	n.RUnlock()
 
+	// use 127.0.0.1 to avoid scan of all network interfaces
+	addr, err := maddr.Extract("127.0.0.1")
+	if err != nil {
+		return err
+	}
+	var rng rand.Rand
+	i := rng.Intn(20000)
+	// set addr with port
+	addr = mnet.HostPort(addr, 10000+i)
+
+	config.Address = addr
+
 	if config.Logger.V(logger.InfoLevel) {
 		config.Logger.Infof(n.opts.Context, "server [noop] Listening on %s", config.Address)
 	}
+
 	n.Lock()
 	if len(config.Advertise) == 0 {
 		config.Advertise = config.Address

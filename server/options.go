@@ -71,6 +71,8 @@ type Options struct {
 	Version string
 	// SubWrappers holds the server subscribe wrappers
 	SubWrappers []SubscriberWrapper
+	// BatchSubWrappers holds the server batch subscribe wrappers
+	BatchSubWrappers []BatchSubscriberWrapper
 	// HdlrWrappers holds the handler wrappers
 	HdlrWrappers []HandlerWrapper
 	// RegisterAttempts holds the number of register attempts before error
@@ -302,6 +304,13 @@ func WrapSubscriber(w SubscriberWrapper) Option {
 	}
 }
 
+// WrapBatchSubscriber adds a batch subscriber Wrapper to a list of options passed into the server
+func WrapBatchSubscriber(w BatchSubscriberWrapper) Option {
+	return func(o *Options) {
+		o.BatchSubWrappers = append(o.BatchSubWrappers, w)
+	}
+}
+
 // MaxConn specifies maximum number of max simultaneous connections to server
 func MaxConn(n int) Option {
 	return func(o *Options) {
@@ -354,6 +363,12 @@ type SubscriberOptions struct {
 	AutoAck bool
 	// BodyOnly flag specifies that message without headers
 	BodyOnly bool
+	// Batch flag specifies that message processed in batches
+	Batch bool
+	// BatchSize flag specifies max size of batch
+	BatchSize int
+	// BatchWait flag specifies max wait time for batch filling
+	BatchWait time.Duration
 }
 
 // NewSubscriberOptions create new SubscriberOptions
@@ -411,5 +426,34 @@ func SubscriberBodyOnly(b bool) SubscriberOption {
 func SubscriberContext(ctx context.Context) SubscriberOption {
 	return func(o *SubscriberOptions) {
 		o.Context = ctx
+	}
+}
+
+// SubscriberAck control auto ack processing for handler
+func SubscriberAck(b bool) SubscriberOption {
+	return func(o *SubscriberOptions) {
+		o.AutoAck = b
+	}
+}
+
+// SubscriberBatch control batch processing for handler
+func SubscriberBatch(b bool) SubscriberOption {
+	return func(o *SubscriberOptions) {
+		o.Batch = b
+	}
+}
+
+// SubscriberBatchSize control batch filling size for handler
+// Batch filling max waiting time controlled by SubscriberBatchWait
+func SubscriberBatchSize(n int) SubscriberOption {
+	return func(o *SubscriberOptions) {
+		o.BatchSize = n
+	}
+}
+
+// SubscriberBatchWait control batch filling wait time for handler
+func SubscriberBatchWait(td time.Duration) SubscriberOption {
+	return func(o *SubscriberOptions) {
+		o.BatchWait = td
 	}
 }

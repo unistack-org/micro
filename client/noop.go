@@ -173,7 +173,7 @@ func (n *noopClient) NewRequest(service, endpoint string, req interface{}, opts 
 }
 
 func (n *noopClient) NewMessage(topic string, msg interface{}, opts ...MessageOption) Message {
-	options := NewMessageOptions(opts...)
+	options := NewMessageOptions(append([]MessageOption{MessageContentType(n.opts.ContentType)}, opts...)...)
 	return &noopMessage{topic: topic, payload: msg, opts: options}
 }
 

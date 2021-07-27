@@ -232,7 +232,7 @@ func SubscribeContext(ctx context.Context) SubscribeOption {
 }
 
 // DisableAutoAck disables auto ack
-// DEPRECATED
+// Deprecated
 func DisableAutoAck() SubscribeOption {
 	return func(o *SubscribeOptions) {
 		o.AutoAck = false

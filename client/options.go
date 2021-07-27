@@ -373,7 +373,7 @@ func DialTimeout(d time.Duration) Option {
 }
 
 // WithExchange sets the exchange to route a message through
-// DEPRECATED
+// Deprecated
 func WithExchange(e string) PublishOption {
 	return func(o *PublishOptions) {
 		o.Exchange = e
@@ -514,7 +514,7 @@ func WithSelectOptions(sops ...selector.SelectOption) CallOption {
 }
 
 // WithMessageContentType sets the message content type
-// DEPRECATED
+// Deprecated
 func WithMessageContentType(ct string) MessageOption {
 	return func(o *MessageOptions) {
 		o.ContentType = ct
