@@ -30,7 +30,7 @@ type Compiler interface {
 
 type op struct {
 	// code is the opcode of the operation
-	code utilities.OpCode
+	code OpCode
 
 	// str is a string operand of the code.
 	// num is ignored if str is not empty.
@@ -67,7 +67,7 @@ func (v variable) compile() []op {
 		ops = append(ops, s.compile()...)
 	}
 	ops = append(ops, op{
-		code: utilities.OpConcatN,
+		code: OpConcatN,
 		num:  len(v.segments),
 	}, op{
 		code: OpCapture,
