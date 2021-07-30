@@ -67,8 +67,8 @@ func (v variable) compile() []op {
 		ops = append(ops, s.compile()...)
 	}
 	ops = append(ops, op{
-		code:    OpConcatN,
-		operand: len(v.segments),
+		code: utilities.OpConcatN,
+		num:  len(v.segments),
 	}, op{
 		code: OpCapture,
 		str:  v.path,
