@@ -110,9 +110,6 @@ func TestTokenize(t *testing.T) {
 		if got, want := tokens, spec.tokens; !reflect.DeepEqual(got, want) {
 			t.Errorf("tokenize(%q) = %q, _; want %q, _", spec.src, got, want)
 		}
-		if got, want := verb, ""; got != want {
-			t.Errorf("tokenize(%q) = _, %q; want _, %q", spec.src, got, want)
-		}
 
 		switch {
 		case spec.verb != "":
