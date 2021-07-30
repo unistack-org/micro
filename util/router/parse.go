@@ -83,8 +83,30 @@ func tokenize(path string) (tokens []string, verb string) {
 	}
 
 	l := len(tokens)
+	// See
+	// https://github.com/grpc-ecosystem/grpc-gateway/pull/1947#issuecomment-774523693 ;
+	// although normal and backwards-compat logic here is to use the last index
+	// of a colon, if the final segment is a variable followed by a colon, the
+	// part following the colon must be a verb. Hence if the previous token is
+	// an end var marker, we switch the index we're looking for to Index instead
+	// of LastIndex, so that we correctly grab the remaining part of the path as
+	// the verb.
+	var penultimateTokenIsEndVar bool
+	switch l {
+	case 0, 1:
+		// Not enough to be variable so skip this logic and don't result in an
+		// invalid index
+	default:
+		penultimateTokenIsEndVar = tokens[l-2] == "}"
+	}
 	t := tokens[l-1]
-	if idx := strings.LastIndex(t, ":"); idx == 0 {
+	var idx int
+	if penultimateTokenIsEndVar {
+		idx = strings.Index(t, ":")
+	} else {
+		idx = strings.LastIndex(t, ":")
+	}
+	if idx == 0 {
 		tokens, verb = tokens[:l-1], t[1:]
 	} else if idx > 0 {
 		tokens[l-1], verb = t[:idx], t[idx+1:]
@@ -101,21 +123,16 @@ type parser struct {
 
 // topLevelSegments is the target of this parser.
 func (p *parser) topLevelSegments() ([]segment, error) {
-	if logger.V(logger.TraceLevel) {
-		logger.Trace(context.TODO(), "Parsing %q", p.tokens)
+	if _, err := p.accept(typeEOF); err == nil {
+		p.tokens = p.tokens[:0]
+		return []segment{literal(eof)}, nil
 	}
 	segs, err := p.segments()
 	if err != nil {
 		return nil, err
 	}
-	if logger.V(logger.TraceLevel) {
-		logger.Trace(context.TODO(), "accept segments: %q; %q", p.accepted, p.tokens)
-	}
 	if _, err := p.accept(typeEOF); err != nil {
 		return nil, fmt.Errorf("unexpected token %q after segments %q", p.tokens[0], strings.Join(p.accepted, ""))
-	}
-	if logger.V(logger.TraceLevel) {
-		logger.Trace(context.TODO(), "accept eof: %q; %q", p.accepted, p.tokens)
 	}
 	return segs, nil
 }
@@ -126,9 +143,6 @@ func (p *parser) segments() ([]segment, error) {
 		return nil, err
 	}
 
-	if logger.V(logger.TraceLevel) {
-		logger.Trace(context.TODO(), "accept segment: %q; %q", p.accepted, p.tokens)
-	}
 	segs := []segment{s}
 	for {
 		if _, err := p.accept("/"); err != nil {
@@ -139,9 +153,6 @@ func (p *parser) segments() ([]segment, error) {
 			return segs, err
 		}
 		segs = append(segs, s)
-		if logger.V(logger.TraceLevel) {
-			logger.Trace(context.TODO(), "accept segment: %q; %q", p.accepted, p.tokens)
-		}
 	}
 }
 

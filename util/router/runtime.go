@@ -23,9 +23,9 @@ type rop struct {
 	operand int
 }
 
-// Pattern is a template pattern of http request paths defined in github.com/googleapis/googleapis/google/api/http.proto.
+// Pattern is a template pattern of http request paths defined in
+// https://github.com/googleapis/googleapis/blob/master/google/api/http.proto
 type Pattern struct {
-	verb string
 	// ops is a list of operations
 	ops []rop
 	// pool is a constant pool indexed by the operands or vars
@@ -36,32 +36,16 @@ type Pattern struct {
 	stacksize int
 	// tailLen is the length of the fixed-size segments after a deep wildcard
 	tailLen int
-	// assumeColonVerb indicates whether a path suffix after a final
-	// colon may only be interpreted as a verb.
-	assumeColonVerb bool
+	// verb is the VERB part of the path pattern. It is empty if the pattern does not have VERB part.
+	verb string
 }
-
-type patternOptions struct {
-	assumeColonVerb bool
-}
-
-// PatternOpt is an option for creating Patterns.
-type PatternOpt func(*patternOptions)
 
 // NewPattern returns a new Pattern from the given definition values.
 // "ops" is a sequence of op codes. "pool" is a constant pool.
 // "verb" is the verb part of the pattern. It is empty if the pattern does not have the part.
 // "version" must be 1 for now.
 // It returns an error if the given definition is invalid.
-//nolint:gocyclo
-func NewPattern(version int, ops []int, pool []string, verb string, opts ...PatternOpt) (Pattern, error) {
-	options := patternOptions{
-		assumeColonVerb: true,
-	}
-	for _, o := range opts {
-		o(&options)
-	}
-
+func NewPattern(version int, ops []int, pool []string, verb string) (Pattern, error) {
 	if version != 1 {
 		if logger.V(logger.TraceLevel) {
 			logger.Trace(context.TODO(), "unsupported version: %d", version)
@@ -185,7 +169,7 @@ func MustPattern(p Pattern, err error) Pattern {
 //nolint:gocyclo
 func (p Pattern) Match(components []string, verb string) (map[string]string, error) {
 	if p.verb != verb {
-		if p.assumeColonVerb || p.verb != "" {
+		if p.verb != "" {
 			return nil, ErrNotMatch
 		}
 		if len(components) == 0 {
@@ -273,12 +257,4 @@ func (p Pattern) String() string {
 		return fmt.Sprintf("/%s:%s", segs, p.verb)
 	}
 	return "/" + segs
-}
-
-// AssumeColonVerbOpt indicates whether a path suffix after a final
-// colon may only be interpreted as a verb.
-func AssumeColonVerbOpt(val bool) PatternOpt {
-	return PatternOpt(func(o *patternOptions) {
-		o.assumeColonVerb = val
-	})
 }

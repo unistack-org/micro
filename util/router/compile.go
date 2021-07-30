@@ -8,18 +8,18 @@ const (
 
 // Template is a compiled representation of path templates.
 type Template struct {
-	// Verb is a VERB part in the template
-	Verb string
-	// Original template (example: /v1/a_bit_of_everything)
-	Template string
-	// OpCodes is a sequence of operations
+	// Version is the version number of the format.
+	Version int
+	// OpCodes is a sequence of operations.
 	OpCodes []int
 	// Pool is a constant pool
 	Pool []string
-	// Fields is a list of field paths bound in this template
+	// Verb is a VERB part in the template.
+	Verb string
+	// Fields is a list of field paths bound in this template.
 	Fields []string
-	// Version is the version number of the format
-	Version int
+	// Original template (example: /v1/a_bit_of_everything)
+	Template string
 }
 
 // Compiler compiles utilities representation of path templates into marshallable operations.
@@ -29,9 +29,15 @@ type Compiler interface {
 }
 
 type op struct {
-	str     string
-	code    OpCode
-	operand int
+	// code is the opcode of the operation
+	code utilities.OpCode
+
+	// str is a string operand of the code.
+	// num is ignored if str is not empty.
+	str string
+
+	// num is a numeric operand of the code.
+	num int
 }
 
 func (w wildcard) compile() []op {
@@ -77,7 +83,6 @@ func (t template) Compile() Template {
 		rawOps = append(rawOps, s.compile()...)
 	}
 
-	// ops := make([]int, 0, len(rawOps))
 	var (
 		ops    []int
 		pool   []string
@@ -87,8 +92,12 @@ func (t template) Compile() Template {
 	for _, op := range rawOps {
 		ops = append(ops, int(op.code))
 		if op.str == "" {
-			ops = append(ops, op.operand)
+			ops = append(ops, op.num)
 		} else {
+			// eof segment literal represents the "/" path pattern
+			if op.str == eof {
+				op.str = ""
+			}
 			if _, ok := consts[op.str]; !ok {
 				consts[op.str] = len(pool)
 				pool = append(pool, op.str)
