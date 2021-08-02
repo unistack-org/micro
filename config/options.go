@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"time"
 
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
@@ -62,6 +63,7 @@ type LoadOption func(o *LoadOptions)
 
 // LoadOptions struct
 type LoadOptions struct {
+	Struct   interface{}
 	Override bool
 	Append   bool
 }
@@ -88,13 +90,29 @@ func LoadAppend(b bool) LoadOption {
 	}
 }
 
+// LoadStruct override struct for loading
+func LoadStruct(src interface{}) LoadOption {
+	return func(o *LoadOptions) {
+		o.Struct = src
+	}
+}
+
 // SaveOption function signature
 type SaveOption func(o *SaveOptions)
 
 // SaveOptions struct
 type SaveOptions struct {
+	Struct interface{}
 }
 
+// SaveStruct override struct for save to config
+func SaveStruct(src interface{}) SaveOption {
+	return func(o *SaveOptions) {
+		o.Struct = src
+	}
+}
+
+// NewSaveOptions fill SaveOptions struct
 func NewSaveOptions(opts ...SaveOption) SaveOptions {
 	options := SaveOptions{}
 	for _, o := range opts {
@@ -184,5 +202,58 @@ func StructTag(name string) Option {
 func Name(n string) Option {
 	return func(o *Options) {
 		o.Name = n
+	}
+}
+
+// WatchOptions struuct
+type WatchOptions struct {
+	// Context used by non default options
+	Context context.Context
+	// Coalesce multiple events to one
+	Coalesce bool
+	// Interval to periodically pull changes if config source not supports async notify
+	Interval time.Duration
+	// Struct for filling
+	Struct interface{}
+}
+
+type WatchOption func(*WatchOptions)
+
+func NewWatchOptions(opts ...WatchOption) WatchOptions {
+	options := WatchOptions{
+		Context:  context.Background(),
+		Interval: DefaultWatcherInterval,
+	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
+// WatchContext pass context
+func WatchContext(ctx context.Context) WatchOption {
+	return func(o *WatchOptions) {
+		o.Context = ctx
+	}
+}
+
+// WatchCoalesce controls watch event combining
+func WatchCoalesce(b bool) WatchOption {
+	return func(o *WatchOptions) {
+		o.Coalesce = b
+	}
+}
+
+// WatchInterval specifies time.Duration for pulling changes
+func WatchInterval(td time.Duration) WatchOption {
+	return func(o *WatchOptions) {
+		o.Interval = td
+	}
+}
+
+// WatchStruct overrides struct for fill
+func WatchStruct(src interface{}) WatchOption {
+	return func(o *WatchOptions) {
+		o.Struct = src
 	}
 }

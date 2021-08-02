@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/imdario/mergo"
 	rutil "github.com/unistack-org/micro/v3/util/reflect"
@@ -41,11 +42,15 @@ func (c *defaultConfig) Load(ctx context.Context, opts ...LoadOption) error {
 		mopts = append(mopts, mergo.WithAppendSlice)
 	}
 
-	src, err := rutil.Zero(c.opts.Struct)
+	dst := c.opts.Struct
+	if options.Struct != nil {
+		dst = options.Struct
+	}
+
+	src, err := rutil.Zero(dst)
 	if err == nil {
-		valueOf := reflect.ValueOf(src)
-		if err = c.fillValues(valueOf); err == nil {
-			err = mergo.Merge(c.opts.Struct, src, mopts...)
+		if err = fillValues(reflect.ValueOf(src), c.opts.StructTag); err == nil {
+			err = mergo.Merge(dst, src, mopts...)
 		}
 	}
 
@@ -63,7 +68,7 @@ func (c *defaultConfig) Load(ctx context.Context, opts ...LoadOption) error {
 }
 
 //nolint:gocyclo
-func (c *defaultConfig) fillValue(value reflect.Value, val string) error {
+func fillValue(value reflect.Value, val string) error {
 	if !rutil.IsEmpty(value) {
 		return nil
 	}
@@ -80,10 +85,10 @@ func (c *defaultConfig) fillValue(value reflect.Value, val string) error {
 			kv := strings.FieldsFunc(nval, func(c rune) bool { return c == '=' })
 			mkey := reflect.Indirect(reflect.New(kt))
 			mval := reflect.Indirect(reflect.New(et))
-			if err := c.fillValue(mkey, kv[0]); err != nil {
+			if err := fillValue(mkey, kv[0]); err != nil {
 				return err
 			}
-			if err := c.fillValue(mval, kv[1]); err != nil {
+			if err := fillValue(mval, kv[1]); err != nil {
 				return err
 			}
 			value.SetMapIndex(mkey, mval)
@@ -93,7 +98,7 @@ func (c *defaultConfig) fillValue(value reflect.Value, val string) error {
 		value.Set(reflect.MakeSlice(reflect.SliceOf(value.Type().Elem()), len(nvals), len(nvals)))
 		for idx, nval := range nvals {
 			nvalue := reflect.Indirect(reflect.New(value.Type().Elem()))
-			if err := c.fillValue(nvalue, nval); err != nil {
+			if err := fillValue(nvalue, nval); err != nil {
 				return err
 			}
 			value.Index(idx).Set(nvalue)
@@ -182,7 +187,7 @@ func (c *defaultConfig) fillValue(value reflect.Value, val string) error {
 	return nil
 }
 
-func (c *defaultConfig) fillValues(valueOf reflect.Value) error {
+func fillValues(valueOf reflect.Value, tname string) error {
 	var values reflect.Value
 
 	if valueOf.Kind() == reflect.Ptr {
@@ -209,7 +214,7 @@ func (c *defaultConfig) fillValues(valueOf reflect.Value) error {
 		switch value.Kind() {
 		case reflect.Struct:
 			value.Set(reflect.Indirect(reflect.New(value.Type())))
-			if err := c.fillValues(value); err != nil {
+			if err := fillValues(value, tname); err != nil {
 				return err
 			}
 			continue
@@ -223,17 +228,17 @@ func (c *defaultConfig) fillValues(valueOf reflect.Value) error {
 				value.Set(reflect.New(value.Type().Elem()))
 			}
 			value = value.Elem()
-			if err := c.fillValues(value); err != nil {
+			if err := fillValues(value, tname); err != nil {
 				return err
 			}
 			continue
 		}
-		tag, ok := field.Tag.Lookup(c.opts.StructTag)
+		tag, ok := field.Tag.Lookup(tname)
 		if !ok {
 			continue
 		}
 
-		if err := c.fillValue(value, tag); err != nil {
+		if err := fillValue(value, tag); err != nil {
 			return err
 		}
 	}
@@ -265,6 +270,20 @@ func (c *defaultConfig) Name() string {
 	return c.opts.Name
 }
 
+func (c *defaultConfig) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
+	w := &defaultWatcher{
+		opts:  c.opts,
+		wopts: NewWatchOptions(opts...),
+		done:  make(chan bool),
+		vchan: make(chan map[string]interface{}),
+		echan: make(chan error),
+	}
+
+	go w.run()
+
+	return w, nil
+}
+
 // NewConfig returns new default config source
 func NewConfig(opts ...Option) Config {
 	options := NewOptions(opts...)
@@ -272,4 +291,74 @@ func NewConfig(opts ...Option) Config {
 		options.StructTag = "default"
 	}
 	return &defaultConfig{opts: options}
+}
+
+type defaultWatcher struct {
+	opts   Options
+	wopts  WatchOptions
+	done   chan bool
+	ticker *time.Ticker
+	vchan  chan map[string]interface{}
+	echan  chan error
+}
+
+func (w *defaultWatcher) run() {
+	ticker := time.NewTicker(w.wopts.Interval)
+	defer ticker.Stop()
+
+	src := w.opts.Struct
+	if w.wopts.Struct != nil {
+		src = w.wopts.Struct
+	}
+
+	for {
+		select {
+		case <-w.done:
+			return
+		case <-ticker.C:
+			dst, err := rutil.Zero(src)
+			if err == nil {
+				err = fillValues(reflect.ValueOf(dst), w.opts.StructTag)
+			}
+			if err != nil {
+				w.echan <- err
+				return
+			}
+			srcmp, err := rutil.StructFieldsMap(src)
+			if err != nil {
+				w.echan <- err
+				return
+			}
+			dstmp, err := rutil.StructFieldsMap(dst)
+			if err != nil {
+				w.echan <- err
+				return
+			}
+			for sk, sv := range srcmp {
+				if reflect.DeepEqual(dstmp[sk], sv) {
+					delete(dstmp, sk)
+				}
+			}
+			w.vchan <- dstmp
+			src = dst
+		}
+	}
+}
+
+func (w *defaultWatcher) Next() (map[string]interface{}, error) {
+	select {
+	case <-w.done:
+		break
+	case v, ok := <-w.vchan:
+		if !ok {
+			break
+		}
+		return v, nil
+	}
+	return nil, ErrWatcherStopped
+}
+
+func (w *defaultWatcher) Stop() error {
+	close(w.done)
+	return nil
 }
