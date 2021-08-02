@@ -4,10 +4,14 @@ package config
 import (
 	"context"
 	"errors"
+	"time"
 )
 
 // DefaultConfig default config
 var DefaultConfig Config = NewConfig()
+
+// DefaultWatcherInterval default interval for poll changes
+var DefaultWatcherInterval = 5 * time.Second
 
 var (
 	// ErrCodecMissing is returned when codec needed and not specified
@@ -30,15 +34,17 @@ type Config interface {
 	Load(context.Context, ...LoadOption) error
 	// Save config to sources
 	Save(context.Context, ...SaveOption) error
-	// Watch a value for changes
-	//Watch(context.Context) (Watcher, error)
+	// Watch a config for changes
+	Watch(context.Context, ...WatchOption) (Watcher, error)
 	// String returns config type name
 	String() string
 }
 
 // Watcher is the config watcher
 type Watcher interface {
-	// Next() (, error)
+	// Next blocks until update happens or error returned
+	Next() (map[string]interface{}, error)
+	// Stop stops watcher
 	Stop() error
 }
 
