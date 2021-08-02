@@ -3,11 +3,8 @@ package router
 // download from https://raw.githubusercontent.com/grpc-ecosystem/grpc-gateway/master/protoc-gen-grpc-gateway/httprule/parse.go
 
 import (
-	"context"
 	"fmt"
 	"strings"
-
-	"github.com/unistack-org/micro/v3/logger"
 )
 
 // InvalidTemplateError indicates that the path template is not valid.

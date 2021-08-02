@@ -143,13 +143,12 @@ func NewPattern(version int, ops []int, pool []string, verb string) (Pattern, er
 		typedOps = append(typedOps, op)
 	}
 	return Pattern{
-		ops:             typedOps,
-		pool:            pool,
-		vars:            vars,
-		stacksize:       maxstack,
-		tailLen:         tailLen,
-		verb:            verb,
-		assumeColonVerb: options.assumeColonVerb,
+		ops:       typedOps,
+		pool:      pool,
+		vars:      vars,
+		stacksize: maxstack,
+		tailLen:   tailLen,
+		verb:      verb,
 	}, nil
 }
 
