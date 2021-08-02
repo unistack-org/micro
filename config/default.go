@@ -274,7 +274,7 @@ func (c *defaultConfig) Watch(ctx context.Context, opts ...WatchOption) (Watcher
 	w := &defaultWatcher{
 		opts:  c.opts,
 		wopts: NewWatchOptions(opts...),
-		done:  make(chan bool),
+		done:  make(chan struct{}),
 		vchan: make(chan map[string]interface{}),
 		echan: make(chan error),
 	}
@@ -294,12 +294,11 @@ func NewConfig(opts ...Option) Config {
 }
 
 type defaultWatcher struct {
-	opts   Options
-	wopts  WatchOptions
-	done   chan bool
-	ticker *time.Ticker
-	vchan  chan map[string]interface{}
-	echan  chan error
+	opts  Options
+	wopts WatchOptions
+	done  chan struct{}
+	vchan chan map[string]interface{}
+	echan chan error
 }
 
 func (w *defaultWatcher) run() {
