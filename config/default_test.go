@@ -31,7 +31,7 @@ func TestWatch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	w, err := cfg.Watch(ctx, config.WatchInterval(500*time.Millisecond))
+	w, err := cfg.Watch(ctx, config.WatchInterval(200*time.Millisecond, 500*time.Millisecond))
 	if err != nil {
 		t.Fatal(err)
 	}

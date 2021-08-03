@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/imdario/mergo"
+	"github.com/unistack-org/micro/v3/util/jitter"
 	rutil "github.com/unistack-org/micro/v3/util/reflect"
 )
 
@@ -302,7 +302,7 @@ type defaultWatcher struct {
 }
 
 func (w *defaultWatcher) run() {
-	ticker := time.NewTicker(w.wopts.Interval)
+	ticker := jitter.NewTicker(w.wopts.MinInterval, w.wopts.MaxInterval)
 	defer ticker.Stop()
 
 	src := w.opts.Struct

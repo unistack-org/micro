@@ -211,8 +211,10 @@ type WatchOptions struct {
 	Context context.Context
 	// Coalesce multiple events to one
 	Coalesce bool
-	// Interval to periodically pull changes if config source not supports async notify
-	Interval time.Duration
+	// MinInterval specifies the min time.Duration interval for poll changes
+	MinInterval time.Duration
+	// MaxInterval specifies the max time.Duration interval for poll changes
+	MaxInterval time.Duration
 	// Struct for filling
 	Struct interface{}
 }
@@ -221,8 +223,9 @@ type WatchOption func(*WatchOptions)
 
 func NewWatchOptions(opts ...WatchOption) WatchOptions {
 	options := WatchOptions{
-		Context:  context.Background(),
-		Interval: DefaultWatcherInterval,
+		Context:     context.Background(),
+		MinInterval: DefaultWatcherMinInterval,
+		MaxInterval: DefaultWatcherMaxInterval,
 	}
 	for _, o := range opts {
 		o(&options)
@@ -244,10 +247,11 @@ func WatchCoalesce(b bool) WatchOption {
 	}
 }
 
-// WatchInterval specifies time.Duration for pulling changes
-func WatchInterval(td time.Duration) WatchOption {
+// WatchInterval specifies min and max time.Duration for pulling changes
+func WatchInterval(min, max time.Duration) WatchOption {
 	return func(o *WatchOptions) {
-		o.Interval = td
+		o.MinInterval = min
+		o.MaxInterval = max
 	}
 }
 

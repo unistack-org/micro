@@ -10,8 +10,11 @@ import (
 // DefaultConfig default config
 var DefaultConfig Config = NewConfig()
 
-// DefaultWatcherInterval default interval for poll changes
-var DefaultWatcherInterval = 5 * time.Second
+// DefaultWatcherMinInterval default min interval for poll changes
+var DefaultWatcherMinInterval = 5 * time.Second
+
+// DefaultWatcherMinInterval default max interval for poll changes
+var DefaultWatcherMaxInterval = 9 * time.Second
 
 var (
 	// ErrCodecMissing is returned when codec needed and not specified
