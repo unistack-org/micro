@@ -348,6 +348,8 @@ func (w *defaultWatcher) Next() (map[string]interface{}, error) {
 	select {
 	case <-w.done:
 		break
+	case err := <-w.echan:
+		return nil, err
 	case v, ok := <-w.vchan:
 		if !ok {
 			break
