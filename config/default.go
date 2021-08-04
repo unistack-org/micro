@@ -338,8 +338,10 @@ func (w *defaultWatcher) run() {
 					delete(dstmp, sk)
 				}
 			}
-			w.vchan <- dstmp
-			src = dst
+			if len(dstmp) > 0 {
+				w.vchan <- dstmp
+				src = dst
+			}
 		}
 	}
 }
