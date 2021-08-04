@@ -45,10 +45,8 @@ func TestWatch(t *testing.T) {
 	go func() {
 		for {
 			mp, err := w.Next()
-			if err != nil && err != config.ErrWatcherStopped {
+			if err != nil {
 				t.Fatal(err)
-			} else if err == config.ErrWatcherStopped {
-				return
 			}
 			if len(mp) != 1 {
 				t.Fatal(fmt.Errorf("default watcher err: %v", mp))
