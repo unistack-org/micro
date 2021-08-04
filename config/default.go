@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -270,17 +271,7 @@ func (c *defaultConfig) Name() string {
 }
 
 func (c *defaultConfig) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
-	w := &defaultWatcher{
-		opts:  c.opts,
-		wopts: NewWatchOptions(opts...),
-		done:  make(chan struct{}),
-		vchan: make(chan map[string]interface{}),
-		echan: make(chan error),
-	}
-
-	go w.run()
-
-	return w, nil
+	return nil, fmt.Errorf("not implemented")
 }
 
 // NewConfig returns new default config source
