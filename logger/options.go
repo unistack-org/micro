@@ -16,7 +16,7 @@ type Options struct {
 	// Context holds exernal options
 	Context context.Context
 	// Fields holds additional metadata
-	Fields map[string]interface{}
+	Fields []interface{}
 	// Name holds the logger name
 	Name string
 	// CallerSkipCount number of frmaes to skip
@@ -31,7 +31,7 @@ type Options struct {
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Level:           DefaultLevel,
-		Fields:          make(map[string]interface{}),
+		Fields:          make([]interface{}, 0, 6),
 		Out:             os.Stderr,
 		CallerSkipCount: DefaultCallerSkipCount,
 		Context:         context.Background(),
@@ -43,7 +43,7 @@ func NewOptions(opts ...Option) Options {
 }
 
 // WithFields set default fields for the logger
-func WithFields(fields map[string]interface{}) Option {
+func WithFields(fields ...interface{}) Option {
 	return func(o *Options) {
 		o.Fields = fields
 	}

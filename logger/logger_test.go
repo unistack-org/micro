@@ -15,7 +15,7 @@ func TestLogger(t *testing.T) {
 	}
 	l.Trace(ctx, "trace_msg1")
 	l.Warn(ctx, "warn_msg1")
-	l.Fields(map[string]interface{}{"error": "test"}).Info(ctx, "error message")
+	l.Fields("error", "test").Info(ctx, "error message")
 	l.Warn(ctx, "first", " ", "second")
 	if !bytes.Contains(buf.Bytes(), []byte(`"level":"trace","msg":"trace_msg1"`)) {
 		t.Fatalf("logger error, buf %s", buf.Bytes())

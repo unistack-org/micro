@@ -20,8 +20,8 @@ type Logger interface {
 	V(level Level) bool
 	// The Logger options
 	Options() Options
-	// Fields set fields to always be logged
-	Fields(fields map[string]interface{}) Logger
+	// Fields set fields to always be logged with keyval pairs
+	Fields(fields ...interface{}) Logger
 	// Info level message
 	Info(ctx context.Context, args ...interface{})
 	// Trace level message
@@ -53,6 +53,9 @@ type Logger interface {
 	// String returns the name of logger
 	String() string
 }
+
+// Field contains keyval pair
+type Field interface{}
 
 // Info writes msg to default logger on info level
 func Info(ctx context.Context, args ...interface{}) {
@@ -125,6 +128,6 @@ func Init(opts ...Option) error {
 }
 
 // Fields create logger with specific fields
-func Fields(fields map[string]interface{}) Logger {
-	return DefaultLogger.Fields(fields)
+func Fields(fields ...interface{}) Logger {
+	return DefaultLogger.Fields(fields...)
 }

@@ -44,8 +44,8 @@ func (w *OmitLogger) Options() Options {
 	return w.l.Options()
 }
 
-func (w *OmitLogger) Fields(fields map[string]interface{}) Logger {
-	return w.l.Fields(fields)
+func (w *OmitLogger) Fields(fields ...interface{}) Logger {
+	return w.l.Fields(fields...)
 }
 
 func (w *OmitLogger) Info(ctx context.Context, args ...interface{}) {

@@ -40,7 +40,6 @@ func (l *defaultLogger) Init(opts ...Option) error {
 		l.logFunc = l.opts.Wrappers[i-1].Log(l.logFunc)
 		l.logfFunc = l.opts.Wrappers[i-1].Logf(l.logfFunc)
 	}
-
 	l.Unlock()
 	return nil
 }
@@ -56,26 +55,20 @@ func (l *defaultLogger) V(level Level) bool {
 	return ok
 }
 
-func (l *defaultLogger) Fields(fields map[string]interface{}) Logger {
+func (l *defaultLogger) Fields(fields ...interface{}) Logger {
 	nl := &defaultLogger{opts: l.opts, enc: l.enc}
-	nl.opts.Fields = make(map[string]interface{}, len(l.opts.Fields)+len(fields))
-	l.RLock()
-	for k, v := range l.opts.Fields {
-		nl.opts.Fields[k] = v
+	if len(fields) == 0 {
+		return nl
+	} else if len(fields)%2 != 0 {
+		fields = fields[:len(fields)-1]
 	}
-	l.RUnlock()
-
-	for k, v := range fields {
-		nl.opts.Fields[k] = v
-	}
+	nl.opts.Fields = append(l.opts.Fields, fields...)
 	return nl
 }
 
-func copyFields(src map[string]interface{}) map[string]interface{} {
-	dst := make(map[string]interface{}, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+func copyFields(src []interface{}) []interface{} {
+	dst := make([]interface{}, len(src))
+	copy(dst, src)
 	return dst
 }
 
@@ -162,19 +155,23 @@ func (l *defaultLogger) Log(ctx context.Context, level Level, args ...interface{
 	fields := copyFields(l.opts.Fields)
 	l.RUnlock()
 
-	fields["level"] = level.String()
+	fields = append(fields, "level", level.String())
 
 	if _, file, line, ok := runtime.Caller(l.opts.CallerSkipCount); ok {
-		fields["caller"] = fmt.Sprintf("%s:%d", logCallerfilePath(file), line)
+		fields = append(fields, "caller", fmt.Sprintf("%s:%d", logCallerfilePath(file), line))
 	}
+	fields = append(fields, "timestamp", time.Now().Format("2006-01-02 15:04:05"))
 
-	fields["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
 	if len(args) > 0 {
-		fields["msg"] = fmt.Sprint(args...)
+		fields = append(fields, "msg", fmt.Sprint(args...))
 	}
 
+	out := make(map[string]interface{}, len(fields)/2)
+	for i := 0; i < len(fields); i += 2 {
+		out[fields[i].(string)] = fields[i+1]
+	}
 	l.RLock()
-	_ = l.enc.Encode(fields)
+	_ = l.enc.Encode(out)
 	l.RUnlock()
 }
 
@@ -187,30 +184,30 @@ func (l *defaultLogger) Logf(ctx context.Context, level Level, msg string, args 
 	fields := copyFields(l.opts.Fields)
 	l.RUnlock()
 
-	fields["level"] = level.String()
+	fields = append(fields, "level", level.String())
 
 	if _, file, line, ok := runtime.Caller(l.opts.CallerSkipCount); ok {
-		fields["caller"] = fmt.Sprintf("%s:%d", logCallerfilePath(file), line)
+		fields = append(fields, "caller", fmt.Sprintf("%s:%d", logCallerfilePath(file), line))
 	}
 
-	fields["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
+	fields = append(fields, "timestamp", time.Now().Format("2006-01-02 15:04:05"))
 	if len(args) > 0 {
-		fields["msg"] = fmt.Sprintf(msg, args...)
+		fields = append(fields, "msg", fmt.Sprintf(msg, args...))
 	} else if msg != "" {
-		fields["msg"] = msg
+		fields = append(fields, "msg", msg)
+	}
+
+	out := make(map[string]interface{}, len(fields)/2)
+	for i := 0; i < len(fields); i += 2 {
+		out[fields[i].(string)] = fields[i+1]
 	}
 	l.RLock()
-	_ = l.enc.Encode(fields)
+	_ = l.enc.Encode(out)
 	l.RUnlock()
 }
 
 func (l *defaultLogger) Options() Options {
-	// not guard against options Context values
-	l.RLock()
-	opts := l.opts
-	opts.Fields = copyFields(l.opts.Fields)
-	l.RUnlock()
-	return opts
+	return l.opts
 }
 
 // NewLogger builds a new logger based on options
