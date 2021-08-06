@@ -3,8 +3,36 @@ package logger
 import (
 	"bytes"
 	"context"
+	"log"
 	"testing"
 )
+
+func TestRedirectStdLogger(t *testing.T) {
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
+	if err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+	fn := RedirectStdLogger(l, ErrorLevel)
+	defer fn()
+	log.Print("test")
+	if !bytes.Contains(buf.Bytes(), []byte(`"level":"error","msg":"test","timestamp"`)) {
+		t.Fatalf("logger error, buf %s", buf.Bytes())
+	}
+}
+
+func TestStdLogger(t *testing.T) {
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
+	if err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+	lg := NewStdLogger(l, ErrorLevel)
+	lg.Print("test")
+	if !bytes.Contains(buf.Bytes(), []byte(`"level":"error","msg":"test","timestamp"`)) {
+		t.Fatalf("logger error, buf %s", buf.Bytes())
+	}
+}
 
 func TestLogger(t *testing.T) {
 	ctx := context.TODO()
