@@ -11,51 +11,51 @@ service Health {
 	rpc Live(micro.codec.Frame) returns (micro.codec.Frame) {
 		option (micro.openapiv2.openapiv2_operation) = {
       operation_id: "Live";
-        responses: {
-          key: "default";
+      responses: {
+        response_code: {
+          name: "default";
           value: {
-            description: "Error response";
-            schema: {
-              json_schema: {
-                ref: "micro.codec.Frame";
-              }
-            }
-          }
-        }
+            json_reference: {
+              description: "Error response";
+              _ref: "micro.codec.Frame";
+            };
+          };
+        };
+      };
     };
 		option (micro.api.http) = { get: "/live"; };
   };
 	rpc Ready(micro.codec.Frame) returns (micro.codec.Frame) {
 		option (micro.openapiv2.openapiv2_operation) = {
       operation_id: "Ready";
-        responses: {
-          key: "default";
+      responses: {
+        response_code: {
+          name: "default";
           value: {
-            description: "Error response";
-            schema: {
-              json_schema: {
-                ref: "micro.codec.Frame";
-              }
-            }
-          }
-        }
+            json_reference: {
+              description: "Error response";
+              _ref: "micro.codec.Frame";
+            };
+          };
+        };
+      };
     };
 		option (micro.api.http) = { get: "/ready"; };
   };
 	rpc Version(micro.codec.Frame) returns (micro.codec.Frame) {
 		option (micro.openapiv2.openapiv2_operation) = {
       operation_id: "Version";
-        responses: {
-          key: "default";
+      responses: {
+        response_code: {
+          name: "default";
           value: {
-            description: "Error response";
-            schema: {
-              json_schema: {
-                ref: "micro.codec.Frame";
-              }
-            }
-          }
-        }
+            json_reference: {
+              description: "Error response";
+              _ref: "micro.codec.Frame";
+            };
+          };
+        };
+      };
     };
 		option (micro.api.http) = { get: "/version"; };
   };

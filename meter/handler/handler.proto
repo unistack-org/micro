@@ -11,17 +11,17 @@ service Meter {
 	rpc Metrics(micro.codec.Frame) returns (micro.codec.Frame) {
 		option (micro.openapiv2.openapiv2_operation) = {
       operation_id: "Metrics";
-        responses: {
-          key: "default";
+      responses: {
+        response_code: {
+          name: "default";
           value: {
-            description: "Error response";
-            schema: {
-              json_schema: {
-                ref: "micro.codec.Frame";
-              }
-            }
-          }
-        }
+            json_reference: {
+              description: "Error response";
+              _ref: "micro.codec.Frame";
+            };
+          };
+        };
+      };
     };
 		option (micro.api.http) = { get: "/metrics"; };
   };
