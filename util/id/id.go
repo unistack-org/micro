@@ -1,9 +1,12 @@
 package id
 
 import (
+	"context"
 	"crypto/rand"
 	"errors"
 	"math"
+
+	"github.com/unistack-org/micro/v3/logger"
 )
 
 // DefaultAlphabet is the alphabet used for ID characters by default
@@ -64,11 +67,11 @@ func New(opts ...Option) (string, error) {
 	}
 }
 
-// Must is the same as New but panics on error
+// Must is the same as New but fatals on error
 func Must(opts ...Option) string {
 	id, err := New(opts...)
 	if err != nil {
-		panic(err)
+		logger.Fatal(context.TODO(), err)
 	}
 	return id
 }

@@ -14,19 +14,19 @@ var (
 	HealthName = "Health"
 
 	HealthEndpoints = []api.Endpoint{
-		api.Endpoint{
+		{
 			Name:    "Health.Live",
 			Path:    []string{"/live"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		api.Endpoint{
+		{
 			Name:    "Health.Ready",
 			Path:    []string{"/ready"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		api.Endpoint{
+		{
 			Name:    "Health.Version",
 			Path:    []string{"/version"},
 			Method:  []string{"GET"},

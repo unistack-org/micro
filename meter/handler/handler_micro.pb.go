@@ -14,7 +14,7 @@ var (
 	MeterName = "Meter"
 
 	MeterEndpoints = []api.Endpoint{
-		api.Endpoint{
+		{
 			Name:    "Meter.Metrics",
 			Path:    []string{"/metrics"},
 			Method:  []string{"GET"},
