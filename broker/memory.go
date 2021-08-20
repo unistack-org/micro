@@ -4,10 +4,10 @@ import (
 	"context"
 	"sync"
 
-	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/metadata"
 	maddr "github.com/unistack-org/micro/v3/util/addr"
+	"github.com/unistack-org/micro/v3/util/id"
 	mnet "github.com/unistack-org/micro/v3/util/net"
 	"github.com/unistack-org/micro/v3/util/rand"
 )
@@ -224,7 +224,7 @@ func (m *memoryBroker) BatchSubscribe(ctx context.Context, topic string, handler
 	}
 	m.RUnlock()
 
-	id, err := uuid.NewRandom()
+	sid, err := id.New()
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +233,7 @@ func (m *memoryBroker) BatchSubscribe(ctx context.Context, topic string, handler
 
 	sub := &memorySubscriber{
 		exit:         make(chan bool, 1),
-		id:           id.String(),
+		id:           sid,
 		topic:        topic,
 		batchhandler: handler,
 		opts:         options,
@@ -269,7 +269,7 @@ func (m *memoryBroker) Subscribe(ctx context.Context, topic string, handler Hand
 	}
 	m.RUnlock()
 
-	id, err := uuid.NewRandom()
+	sid, err := id.New()
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +278,7 @@ func (m *memoryBroker) Subscribe(ctx context.Context, topic string, handler Hand
 
 	sub := &memorySubscriber{
 		exit:    make(chan bool, 1),
-		id:      id.String(),
+		id:      sid,
 		topic:   topic,
 		handler: handler,
 		opts:    options,

@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/google/uuid"
+	"github.com/unistack-org/micro/v3/util/id"
 )
 
 type noopAuth struct {
@@ -61,11 +61,11 @@ func (n *noopAuth) Verify(acc *Account, res *Resource, opts ...VerifyOption) err
 
 // Inspect a token
 func (n *noopAuth) Inspect(token string) (*Account, error) {
-	uid, err := uuid.NewRandom()
+	id, err := id.New()
 	if err != nil {
 		return nil, err
 	}
-	return &Account{ID: uid.String(), Issuer: n.Options().Issuer}, nil
+	return &Account{ID: id, Issuer: n.Options().Issuer}, nil
 }
 
 // Token generation using an account id and secret

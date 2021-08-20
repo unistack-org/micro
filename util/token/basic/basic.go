@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/auth"
 	"github.com/unistack-org/micro/v3/store"
+	"github.com/unistack-org/micro/v3/util/id"
 	"github.com/unistack-org/micro/v3/util/token"
 )
 
@@ -44,7 +44,11 @@ func (b *Basic) Generate(acc *auth.Account, opts ...token.GenerateOption) (*toke
 	}
 
 	// write to the store
-	key := uuid.New().String()
+	key, err := id.New()
+	if err !=nil {
+		return nil, err
+	}
+	
 	err = b.store.Write(context.Background(), fmt.Sprintf("%v%v", StorePrefix, key), bytes, store.WriteTTL(options.Expiry))
 	if err != nil {
 		return nil, err

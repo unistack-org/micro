@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/unistack-org/micro/v3/util/id"
 )
 
 // Buffer is ring buffer
@@ -112,7 +112,7 @@ func (b *Buffer) Stream() (<-chan *Entry, chan bool) {
 	defer b.Unlock()
 
 	entries := make(chan *Entry, 128)
-	id := uuid.New().String()
+	id := id.Must()
 	stop := make(chan bool)
 
 	b.streams[id] = &Stream{

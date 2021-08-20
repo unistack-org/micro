@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/util/id"
 )
 
 var (
@@ -378,13 +378,16 @@ func (m *memory) ListServices(ctx context.Context, opts ...ListOption) ([]*Servi
 }
 
 func (m *memory) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
+	id, err := id.New()
+	if err != nil {
+		return nil, err
+	}
 	wo := NewWatchOptions(opts...)
-
 	// construct the watcher
 	w := &watcher{
 		exit: make(chan bool),
 		res:  make(chan *Result),
-		id:   uuid.New().String(),
+		id:   id,
 		wo:   wo,
 	}
 

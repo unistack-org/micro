@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/auth"
 	"github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/util/id"
 )
 
 // Verify the auth credentials and refresh the auth token periodically
@@ -22,7 +22,11 @@ func Verify(a auth.Auth) error {
 			auth.WithScopes("service"),
 		}
 
-		acc, err := a.Generate(uuid.New().String(), opts...)
+		id, err := id.New()
+		if err != nil {
+			return err
+		}
+		acc, err := a.Generate(id, opts...)
 		if err != nil {
 			return err
 		}

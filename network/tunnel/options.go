@@ -3,11 +3,11 @@ package tunnel
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/meter"
 	"github.com/unistack-org/micro/v3/network/transport"
 	"github.com/unistack-org/micro/v3/tracer"
+	"github.com/unistack-org/micro/v3/util/id"
 )
 
 var (
@@ -164,7 +164,7 @@ func DialWait(b bool) DialOption {
 // NewOptions returns router default options with filled values
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		ID:      uuid.New().String(),
+		ID:      id.Must(),
 		Address: DefaultAddress,
 		Token:   DefaultToken,
 		Logger:  logger.DefaultLogger,

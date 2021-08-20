@@ -5,10 +5,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/register"
+	"github.com/unistack-org/micro/v3/util/id"
 )
 
 // DefaultServer default server
@@ -22,7 +22,7 @@ var (
 	// DefaultVersion will be used if no version passed
 	DefaultVersion = "latest"
 	// DefaultID will be used if no id passed
-	DefaultID = uuid.New().String()
+	DefaultID = id.Must()
 	// DefaultRegisterCheck holds func that run before register server
 	DefaultRegisterCheck = func(context.Context) error { return nil }
 	// DefaultRegisterInterval holds interval for register

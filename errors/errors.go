@@ -37,7 +37,7 @@ var (
 
 // Error type
 type Error struct {
-	// Id holds error id or service, usually someting like my_service or uuid
+	// Id holds error id or service, usually someting like my_service or id
 	Id string
 	// Detail holds some useful details about error
 	Detail string

@@ -6,13 +6,13 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/google/uuid"
 	"github.com/silas/dag"
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/store"
+	"github.com/unistack-org/micro/v3/util/id"
 )
 
 type microFlow struct {
@@ -149,18 +149,18 @@ func (w *microWorkflow) getSteps(start string, reverse bool) ([][]Step, error) {
 	return steps, nil
 }
 
-func (w *microWorkflow) Abort(ctx context.Context, eid string) error {
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", eid))
+func (w *microWorkflow) Abort(ctx context.Context, id string) error {
+	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", id))
 	return workflowStore.Write(ctx, "status", &codec.Frame{Data: []byte(StatusAborted.String())})
 }
 
-func (w *microWorkflow) Suspend(ctx context.Context, eid string) error {
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", eid))
+func (w *microWorkflow) Suspend(ctx context.Context, id string) error {
+	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", id))
 	return workflowStore.Write(ctx, "status", &codec.Frame{Data: []byte(StatusSuspend.String())})
 }
 
-func (w *microWorkflow) Resume(ctx context.Context, eid string) error {
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", eid))
+func (w *microWorkflow) Resume(ctx context.Context, id string) error {
+	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", id))
 	return workflowStore.Write(ctx, "status", &codec.Frame{Data: []byte(StatusRunning.String())})
 }
 
@@ -176,14 +176,13 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 	}
 	w.Unlock()
 
-	uid, err := uuid.NewRandom()
+	id, err := id.New()
 	if err != nil {
 		return "", err
 	}
-	eid := uid.String()
 
-	stepStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("steps", eid))
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", eid))
+	stepStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("steps", id))
+	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", id))
 
 	options := NewExecuteOptions(opts...)
 
@@ -215,13 +214,13 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 
 	if werr := workflowStore.Write(w.opts.Context, "status", &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
 		w.opts.Logger.Errorf(w.opts.Context, "store error: %v", werr)
-		return eid, werr
+		return id, werr
 	}
 	for idx := range steps {
 		for nidx := range steps[idx] {
 			cstep := steps[idx][nidx]
 			if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "status"), &codec.Frame{Data: []byte(StatusPending.String())}); werr != nil {
-				return eid, werr
+				return id, werr
 			}
 		}
 	}
@@ -317,7 +316,7 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 	}()
 
 	if options.Async {
-		return eid, nil
+		return id, nil
 	}
 
 	logger.Tracef(ctx, "wait for finish or error")

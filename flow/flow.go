@@ -116,11 +116,11 @@ type Workflow interface {
 	// Steps returns steps slice where parallel steps returned on the same level
 	Steps() ([][]Step, error)
 	// Suspend suspends execution
-	Suspend(ctx context.Context, eid string) error
+	Suspend(ctx context.Context, id string) error
 	// Resume resumes execution
-	Resume(ctx context.Context, eid string) error
+	Resume(ctx context.Context, id string) error
 	// Abort abort execution
-	Abort(ctx context.Context, eid string) error
+	Abort(ctx context.Context, id string) error
 }
 
 // Flow the base interface to interact with workflows

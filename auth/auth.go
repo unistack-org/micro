@@ -55,7 +55,7 @@ type Auth interface {
 type Account struct {
 	// Metadata any other associated metadata
 	Metadata metadata.Metadata `json:"metadata"`
-	// ID of the account e.g. email or uuid
+	// ID of the account e.g. email or id
 	ID string `json:"id"`
 	// Type of the account, e.g. service
 	Type string `json:"type"`

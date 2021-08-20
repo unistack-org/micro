@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/network/transport"
+	"github.com/unistack-org/micro/v3/util/id"
 )
 
 type pool struct {
@@ -87,9 +87,13 @@ func (p *pool) Get(ctx context.Context, addr string, opts ...transport.DialOptio
 	if err != nil {
 		return nil, err
 	}
+	id, err := id.New()
+	if err != nil {
+		return nil, err
+	}
 	return &poolConn{
 		Client:  c,
-		id:      uuid.New().String(),
+		id:      id,
 		created: time.Now(),
 	}, nil
 }

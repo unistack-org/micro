@@ -3,9 +3,9 @@ package router
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/register"
+	"github.com/unistack-org/micro/v3/util/id"
 )
 
 // Options are router options
@@ -80,7 +80,7 @@ func Name(n string) Option {
 // NewOptions returns router default options
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Id:       uuid.New().String(),
+		Id:       id.Must(),
 		Network:  DefaultNetwork,
 		Register: register.DefaultRegister,
 		Logger:   logger.DefaultLogger,
