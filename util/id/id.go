@@ -10,6 +10,7 @@ import (
 var DefaultAlphabet = []rune("6789BCDFGHJKLMNPQRTWbcdfghjkmnpqrtwz")
 
 // DefaultSize is the size used for ID by default
+// To get uuid like collision specify 21
 var DefaultSize = 16
 
 // getMask generates bit mask used to obtain bits from the random bytes that are used to get index of random character
