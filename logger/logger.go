@@ -1,11 +1,14 @@
 // Package logger provides a log interface
 package logger
 
-import "context"
+import (
+	"context"
+	"os"
+)
 
 var (
 	// DefaultLogger variable
-	DefaultLogger Logger = NewLogger()
+	DefaultLogger Logger = NewLogger(WithLevel(ParseLevel(os.Getenv("MICRO_LOG_LEVEL"))))
 	// DefaultLevel used by logger
 	DefaultLevel Level = InfoLevel
 	// DefaultCallerSkipCount used by logger
