@@ -7,6 +7,27 @@ import (
 	"testing"
 )
 
+func TestClone(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
+	if err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+	nl := l.Clone(WithLevel(ErrorLevel))
+	if err := nl.Init(); err != nil {
+		t.Fatal(err)
+	}
+	nl.Info(ctx, "info message")
+	if len(buf.Bytes()) != 0 {
+		t.Fatal("message must not be logged")
+	}
+	l.Info(ctx, "info message")
+	if len(buf.Bytes()) == 0 {
+		t.Fatal("message must be logged")
+	}
+}
+
 func TestRedirectStdLogger(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))

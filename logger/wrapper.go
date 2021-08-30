@@ -20,9 +20,7 @@ type Wrapper interface {
 	Logf(LogfFunc) LogfFunc
 }
 
-var (
-	_ Logger = &OmitLogger{}
-)
+var _ Logger = &OmitLogger{}
 
 type OmitLogger struct {
 	l Logger
@@ -38,6 +36,14 @@ func (w *OmitLogger) Init(opts ...Option) error {
 
 func (w *OmitLogger) V(level Level) bool {
 	return w.l.V(level)
+}
+
+func (w *OmitLogger) Level(level Level) {
+	w.l.Level(level)
+}
+
+func (w *OmitLogger) Clone(opts ...Option) Logger {
+	return w.l.Clone(opts...)
 }
 
 func (w *OmitLogger) Options() Options {

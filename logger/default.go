@@ -39,11 +39,39 @@ func (l *defaultLogger) String() string {
 	return "micro"
 }
 
+func (l *defaultLogger) Clone(opts ...Option) Logger {
+	newopts := NewOptions(opts...)
+	oldopts := l.opts
+	for _, o := range opts {
+		o(&newopts)
+		o(&oldopts)
+	}
+
+	oldopts.Wrappers = newopts.Wrappers
+	l.Lock()
+	cl := &defaultLogger{opts: oldopts, logFunc: l.logFunc, logfFunc: l.logfFunc}
+	l.Unlock()
+
+	// wrap the Log func
+	for i := len(newopts.Wrappers); i > 0; i-- {
+		cl.logFunc = newopts.Wrappers[i-1].Log(cl.logFunc)
+		cl.logfFunc = newopts.Wrappers[i-1].Logf(cl.logfFunc)
+	}
+
+	return cl
+}
+
 func (l *defaultLogger) V(level Level) bool {
 	l.RLock()
 	ok := l.opts.Level.Enabled(level)
 	l.RUnlock()
 	return ok
+}
+
+func (l *defaultLogger) Level(level Level) {
+	l.Lock()
+	l.opts.Level = level
+	l.Unlock()
 }
 
 func (l *defaultLogger) Fields(fields ...interface{}) Logger {

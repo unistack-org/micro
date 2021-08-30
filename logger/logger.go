@@ -19,8 +19,12 @@ var (
 type Logger interface {
 	// Init initialises options
 	Init(opts ...Option) error
+	// Clone create logger copy with new options
+	Clone(opts ...Option) Logger
 	// V compare provided verbosity level with current log level
 	V(level Level) bool
+	// Level sets the log level for logger
+	Level(level Level)
 	// The Logger options
 	Options() Options
 	// Fields set fields to always be logged with keyval pairs
