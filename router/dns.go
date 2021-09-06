@@ -53,7 +53,7 @@ func (d *dns) Lookup(opts ...QueryOption) ([]Route, error) {
 		for i, ip := range ips {
 			result[i] = Route{
 				Service: options.Service,
-				Address: fmt.Sprintf("%s:%d", ip, uint16(p)),
+				Address: fmt.Sprintf("%s:%d", ip, p),
 			}
 		}
 		return result, nil
