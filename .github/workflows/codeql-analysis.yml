@@ -12,10 +12,6 @@
 name: "CodeQL"
 
 on:
-  workflow_run:
-    workflows: ["prbuild"]
-    types:
-      - completed
   push:
     branches: [ master ]
   pull_request:

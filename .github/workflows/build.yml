@@ -1,6 +1,6 @@
 name: build
 on:
- push:
+  push:
     branches:
     - master
 jobs:
@@ -12,20 +12,36 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: 1.16
-    - name: checkout
-      uses: actions/checkout@v2
     - name: cache
       uses: actions/cache@v2
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: ${{ runner.os }}-go-
-    - name: deps
+    - name: sdk checkout
+      uses: actions/checkout@v2
+    - name: sdk deps
       run: go get -v -t -d ./...
-    - name: test
+    - name: sdk test
       env:
         INTEGRATION_TESTS: yes
       run: go test -mod readonly -v ./...
+    - name: tests checkout
+      uses: actions/checkout@v2
+      with:
+        repository: unistack-org/micro-tests
+        ref: refs/heads/master
+        path: micro-tests
+        fetch-depth: 1
+    - name: tests deps
+      run: |
+        cd micro-tests
+        go mod edit -replace="github.com/unistack-org/micro/v3=../"
+        go get -v -t -d ./...
+    - name: tests test
+      env:
+        INTEGRATION_TESTS: yes
+      run: cd micro-tests && go test -mod readonly -v ./...
   lint:
     name: lint
     runs-on: ubuntu-latest
@@ -37,7 +53,7 @@ jobs:
         continue-on-error: true
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-          version: v1.30
+          version: v1.39
           # Optional: working directory, useful for monorepos
           # working-directory: somedir
           # Optional: golangci-lint command line arguments.
