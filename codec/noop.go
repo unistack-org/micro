@@ -5,7 +5,9 @@ import (
 	"io"
 )
 
-type noopCodec struct{}
+type noopCodec struct {
+	opts Options
+}
 
 func (c *noopCodec) ReadHeader(conn io.Reader, m *Message, t MessageType) error {
 	return nil
@@ -69,11 +71,11 @@ func (c *noopCodec) String() string {
 }
 
 // NewCodec returns new noop codec
-func NewCodec() Codec {
-	return &noopCodec{}
+func NewCodec(opts ...Option) Codec {
+	return &noopCodec{opts: NewOptions(opts...)}
 }
 
-func (c *noopCodec) Marshal(v interface{}) ([]byte, error) {
+func (c *noopCodec) Marshal(v interface{}, opts ...Option) ([]byte, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -96,7 +98,7 @@ func (c *noopCodec) Marshal(v interface{}) ([]byte, error) {
 	return json.Marshal(v)
 }
 
-func (c *noopCodec) Unmarshal(d []byte, v interface{}) error {
+func (c *noopCodec) Unmarshal(d []byte, v interface{}, opts ...Option) error {
 	if v == nil {
 		return nil
 	}

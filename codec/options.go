@@ -1,6 +1,8 @@
 package codec
 
 import (
+	"context"
+
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/meter"
 	"github.com/unistack-org/micro/v3/tracer"
@@ -19,12 +21,23 @@ type Options struct {
 	Tracer tracer.Tracer
 	// MaxMsgSize specifies max messages size that reads by codec
 	MaxMsgSize int
+	// TagName specifies tag name in struct to control codec
+	TagName string
+	// Context stores additional codec options
+	Context context.Context
 }
 
 // MaxMsgSize sets the max message size
 func MaxMsgSize(n int) Option {
 	return func(o *Options) {
 		o.MaxMsgSize = n
+	}
+}
+
+// TagName sets the codec tag name in struct
+func TagName(n string) Option {
+	return func(o *Options) {
+		o.TagName = n
 	}
 }
 
@@ -52,10 +65,12 @@ func Meter(m meter.Meter) Option {
 // NewOptions returns new options
 func NewOptions(opts ...Option) Options {
 	options := Options{
+		Context:    context.Background(),
 		Logger:     logger.DefaultLogger,
 		Meter:      meter.DefaultMeter,
 		Tracer:     tracer.DefaultTracer,
 		MaxMsgSize: DefaultMaxMsgSize,
+		TagName:    DefaultTagName,
 	}
 
 	for _, o := range opts {
