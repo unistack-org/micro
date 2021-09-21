@@ -1,8 +1,8 @@
-name: "Pull Request Auto Merge"
+name: "prautomerge"
 
 on:
   workflow_run:
-    workflows: ["prbuild", "CodeQL"]
+    workflows: ["prbuild"]
     types:
       - completed
 
@@ -24,8 +24,6 @@ jobs:
       && (github.event.workflow_run.event == 'pull_request'
           || (github.event.workflow_run.event == 'push' && github.event.workflow_run.pull_requests[0].base.ref == github.event.repository.default_branch ))
     steps:
-      - name: Wait workflows success
-        uses: ahmadnassri/action-workflow-run-wait@v1
       - name: Approve Changes and Merge changes if label 'dependencies' is set
         uses: actions/github-script@v4
         with:
