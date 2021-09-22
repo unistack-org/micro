@@ -19,12 +19,12 @@ type Options struct {
 	Logger logger.Logger
 	// Tracer used for tracing
 	Tracer tracer.Tracer
-	// MaxMsgSize specifies max messages size that reads by codec
-	MaxMsgSize int
-	// TagName specifies tag name in struct to control codec
-	TagName string
 	// Context stores additional codec options
 	Context context.Context
+	// TagName specifies tag name in struct to control codec
+	TagName string
+	// MaxMsgSize specifies max messages size that reads by codec
+	MaxMsgSize int
 }
 
 // MaxMsgSize sets the max message size
