@@ -12,9 +12,8 @@ import (
 // ErrInvalidParam specifies invalid url query params
 var ErrInvalidParam = errors.New("invalid url query param provided")
 
+// var timeKind = reflect.ValueOf(time.Time{}).Kind()
 var bracketSplitter = regexp.MustCompile(`\[|\]`)
-
-//var timeKind = reflect.ValueOf(time.Time{}).Kind()
 
 type StructField struct {
 	Field reflect.StructField
@@ -149,9 +148,9 @@ func StructFields(src interface{}) ([]StructField, error) {
 		}
 
 		switch val.Kind() {
-		//case timeKind:
-		//fmt.Printf("GGG\n")
-		//fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
+		// case timeKind:
+		// fmt.Printf("GGG\n")
+		// fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
 		case reflect.Struct:
 			infields, err := StructFields(val.Interface())
 			if err != nil {

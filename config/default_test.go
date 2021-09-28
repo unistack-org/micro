@@ -48,5 +48,5 @@ func TestDefault(t *testing.T) {
 		t.Fatal("AfterLoad option not working")
 	}
 	_ = conf
-	//t.Logf("%#+v\n", conf)
+	// t.Logf("%#+v\n", conf)
 }

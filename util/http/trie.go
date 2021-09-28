@@ -8,9 +8,9 @@ import (
 
 // Tree is a trie tree.
 type Trie struct {
-	rmu    sync.RWMutex
 	node   *node
 	rcache map[string]*regexp.Regexp
+	rmu    sync.RWMutex
 }
 
 // node is a node of tree

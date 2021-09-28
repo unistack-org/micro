@@ -13,7 +13,7 @@ import (
 // authClaims to be encoded in the JWT
 type authClaims struct {
 	Metadata metadata.Metadata `json:"metadata"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 	Type   string   `json:"type"`
 	Scopes []string `json:"scopes"`
 }
@@ -50,10 +50,10 @@ func (j *JWT) Generate(acc *auth.Account, opts ...token.GenerateOption) (*token.
 	// generate the JWT
 	expiry := time.Now().Add(options.Expiry)
 	t := jwt.NewWithClaims(jwt.SigningMethodRS256, authClaims{
-		Type: acc.Type, Scopes: acc.Scopes, Metadata: acc.Metadata, StandardClaims: jwt.StandardClaims{
+		Type: acc.Type, Scopes: acc.Scopes, Metadata: acc.Metadata, RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   acc.ID,
 			Issuer:    acc.Issuer,
-			ExpiresAt: expiry.Unix(),
+			ExpiresAt: jwt.NewNumericDate(expiry),
 		},
 	})
 	tok, err := t.SignedString(key)

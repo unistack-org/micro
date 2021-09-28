@@ -3,6 +3,7 @@
 package http
 
 import (
+	"io"
 	"net"
 	"net/http"
 	"testing"
@@ -80,5 +81,4 @@ func TestRoundTripper(t *testing.T) {
 	if string(b) != "hello world" {
 		t.Fatal("response is", string(b))
 	}
-
 }

@@ -5,6 +5,26 @@ import (
 	"testing"
 )
 
+func TestTrieContentType(t *testing.T) {
+	type handler struct {
+		name string
+	}
+	tr := NewTrie()
+	tr.Insert([]string{"application/json"}, "/v1/create/{id}", &handler{name: "test"})
+
+	h, _, ok := tr.Search("application/json", "/v1/create/12")
+	if !ok {
+		t.Fatalf("must be found error")
+	}
+	if h.(*handler).name != "test" {
+		t.Fatalf("invalid handler %v", h)
+	}
+	_, _, ok = tr.Search("text/xml", "/v1/create/12")
+	if ok {
+		t.Fatalf("must be not found error")
+	}
+}
+
 func TestTrieNoMatchMethod(t *testing.T) {
 	tr := NewTrie()
 	tr.Insert([]string{http.MethodPut}, "/v1/create/{id}", nil)

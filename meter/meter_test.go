@@ -33,7 +33,7 @@ func TestBuildLabels(t *testing.T) {
 	}
 
 	data := []testData{
-		testData{
+		{
 			src: []string{"zerolabel", "value3", "firstlabel", "value2"},
 			dst: []string{"firstlabel", "value2", "zerolabel", "value3"},
 		},
@@ -48,15 +48,15 @@ func TestBuildLabels(t *testing.T) {
 
 func TestBuildName(t *testing.T) {
 	data := map[string][]string{
-		`my_metric{firstlabel="value2",zerolabel="value3"}`: []string{
+		`my_metric{firstlabel="value2",zerolabel="value3"}`: {
 			"my_metric",
 			"zerolabel", "value3", "firstlabel", "value2",
 		},
-		`my_metric{broker="broker2",register="mdns",server="tcp"}`: []string{
+		`my_metric{broker="broker2",register="mdns",server="tcp"}`: {
 			"my_metric",
 			"broker", "broker1", "broker", "broker2", "server", "http", "server", "tcp", "register", "mdns",
 		},
-		`my_metric{aaa="aaa"}`: []string{
+		`my_metric{aaa="aaa"}`: {
 			"my_metric",
 			"aaa", "aaa",
 		},

@@ -190,7 +190,7 @@ func (n *noopServer) Register() error {
 	}
 
 	// register the service
-	if err := DefaultRegisterFunc(service, config); err != nil {
+	if err = DefaultRegisterFunc(service, config); err != nil {
 		return err
 	}
 

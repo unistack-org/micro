@@ -264,17 +264,16 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 							}
 							cherr <- serr
 							return
-						} else {
-							if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "rsp"), rsp); werr != nil {
-								w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
-								cherr <- werr
-								return
-							}
-							if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
-								w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
-								cherr <- werr
-								return
-							}
+						}
+						if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "rsp"), rsp); werr != nil {
+							w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
+							cherr <- werr
+							return
+						}
+						if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
+							w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
+							cherr <- werr
+							return
 						}
 					}(cstep)
 					wg.Wait()
@@ -298,16 +297,15 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 						}
 						cherr <- serr
 						return
-					} else {
-						if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "rsp"), rsp); werr != nil {
-							w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
-							cherr <- werr
-							return
-						}
-						if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
-							cherr <- werr
-							return
-						}
+					}
+					if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "rsp"), rsp); werr != nil {
+						w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
+						cherr <- werr
+						return
+					}
+					if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
+						cherr <- werr
+						return
 					}
 				}
 			}
@@ -337,17 +335,14 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 		if werr := workflowStore.Write(w.opts.Context, "status", &codec.Frame{Data: []byte(StatusAborted.String())}); werr != nil {
 			w.opts.Logger.Errorf(w.opts.Context, "store error: %v", werr)
 		}
-		break
 	case err == nil:
 		if werr := workflowStore.Write(w.opts.Context, "status", &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
 			w.opts.Logger.Errorf(w.opts.Context, "store error: %v", werr)
 		}
-		break
 	case err != nil:
 		if werr := workflowStore.Write(w.opts.Context, "status", &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil {
 			w.opts.Logger.Errorf(w.opts.Context, "store error: %v", werr)
 		}
-		break
 	}
 
 	return eid, err
@@ -499,10 +494,12 @@ func (s *microCallStep) Execute(ctx context.Context, req *Message, opts ...Execu
 	rsp := &codec.Frame{}
 	copts := []client.CallOption{client.WithRetries(0)}
 	if options.Timeout > 0 {
-		copts = append(copts, client.WithRequestTimeout(options.Timeout), client.WithDialTimeout(options.Timeout))
+		copts = append(copts,
+			client.WithRequestTimeout(options.Timeout),
+			client.WithDialTimeout(options.Timeout))
 	}
 	nctx := metadata.NewOutgoingContext(ctx, req.Header)
-	err := options.Client.Call(nctx, options.Client.NewRequest(s.service, s.method, &codec.Frame{Data: req.Body}), rsp)
+	err := options.Client.Call(nctx, options.Client.NewRequest(s.service, s.method, &codec.Frame{Data: req.Body}), rsp, copts...)
 	if err != nil {
 		return nil, err
 	}
@@ -553,7 +550,7 @@ func (s *microPublishStep) String() string {
 	if s.opts.ID != "" {
 		return s.opts.ID
 	}
-	return fmt.Sprintf("%s", s.topic)
+	return s.topic
 }
 
 func (s *microPublishStep) Name() string {

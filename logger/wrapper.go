@@ -125,23 +125,29 @@ func getArgs(args []interface{}) []interface{} {
 	var err error
 	for _, arg := range args {
 		val := reflect.ValueOf(arg)
-		switch val.Kind() {
-		case reflect.Ptr:
+		if val.Kind() == reflect.Ptr {
 			val = val.Elem()
 		}
 		narg := arg
-		if val.Kind() == reflect.Struct {
-			if narg, err = rutil.Zero(arg); err == nil {
-				rutil.CopyDefaults(narg, arg)
-				if flds, ferr := rutil.StructFields(narg); ferr == nil {
-					for _, fld := range flds {
-						if tv, ok := fld.Field.Tag.Lookup("logger"); ok && tv == "omit" {
-							fld.Value.Set(reflect.Zero(fld.Value.Type()))
-						}
-					}
+		if val.Kind() != reflect.Struct {
+			nargs = append(nargs, narg)
+			continue
+		}
+
+		if narg, err = rutil.Zero(arg); err != nil {
+			nargs = append(nargs, narg)
+			continue
+		}
+
+		rutil.CopyDefaults(narg, arg)
+		if flds, ferr := rutil.StructFields(narg); ferr == nil {
+			for _, fld := range flds {
+				if tv, ok := fld.Field.Tag.Lookup("logger"); ok && tv == "omit" {
+					fld.Value.Set(reflect.Zero(fld.Value.Type()))
 				}
 			}
 		}
+
 		nargs = append(nargs, narg)
 	}
 	return nargs

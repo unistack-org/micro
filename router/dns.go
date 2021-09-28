@@ -40,8 +40,9 @@ func (d *dns) Lookup(opts ...QueryOption) ([]Route, error) {
 	// check to see if we have the port provided in the service, e.g. go-micro-srv-foo:8000
 	host, port, err := net.SplitHostPort(options.Service)
 	if err == nil {
+		var ips []string
 		// lookup the service using A records
-		ips, err := net.LookupHost(host)
+		ips, err = net.LookupHost(host)
 		if err != nil {
 			return nil, err
 		}

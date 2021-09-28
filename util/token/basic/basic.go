@@ -45,10 +45,10 @@ func (b *Basic) Generate(acc *auth.Account, opts ...token.GenerateOption) (*toke
 
 	// write to the store
 	key, err := id.New()
-	if err !=nil {
+	if err != nil {
 		return nil, err
 	}
-	
+
 	err = b.store.Write(context.Background(), fmt.Sprintf("%v%v", StorePrefix, key), bytes, store.WriteTTL(options.Expiry))
 	if err != nil {
 		return nil, err

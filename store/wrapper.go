@@ -5,21 +5,19 @@ import (
 )
 
 // LogfFunc function used for Logf method
-//type LogfFunc func(ctx context.Context, level Level, msg string, args ...interface{})
+// type LogfFunc func(ctx context.Context, level Level, msg string, args ...interface{})
+// type Wrapper interface {
+//   Logf logs message with needed level
+//   Logf(LogfFunc) LogfFunc
+// }
 
-//type Wrapper interface {
-// Logf logs message with needed level
-//Logf(LogfFunc) LogfFunc
-//}
-
+// NamespaceStore wrap store with namespace
 type NamespaceStore struct {
 	s  Store
 	ns string
 }
 
-var (
-	_ Store = &NamespaceStore{}
-)
+var _ Store = &NamespaceStore{}
 
 func NewNamespaceStore(s Store, ns string) Store {
 	return &NamespaceStore{s: s, ns: ns}
@@ -69,7 +67,7 @@ func (w *NamespaceStore) String() string {
 	return w.s.String()
 }
 
-//type NamespaceWrapper struct{}
+// type NamespaceWrapper struct{}
 
 //func NewNamespaceWrapper() Wrapper {
 //	return &NamespaceWrapper{}

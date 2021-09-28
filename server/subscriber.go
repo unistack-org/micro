@@ -11,6 +11,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/unistack-org/micro/v3/broker"
+	"github.com/unistack-org/micro/v3/codec"
 	"github.com/unistack-org/micro/v3/errors"
 	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/metadata"
@@ -72,7 +73,7 @@ func ValidateSubscriber(sub Subscriber) error {
 				if argType.Kind() != reflect.Slice {
 					return fmt.Errorf("subscriber %v dont have required signature %s", name, batchSubSig)
 				}
-				if strings.Compare(fmt.Sprintf("%s", argType), "[]interface{}") == 0 {
+				if strings.Compare(fmt.Sprintf("%v", argType), "[]interface{}") == 0 {
 					return fmt.Errorf("subscriber %v dont have required signaure %s", name, batchSubSig)
 				}
 			}
@@ -244,9 +245,9 @@ func (n *noopServer) newBatchSubHandler(sb *subscriber, opts Options) broker.Bat
 			}
 
 			reqType := handler.reqType
-
+			var cf codec.Codec
 			for _, msg := range msgs {
-				cf, err := n.newCodec(msg.ContentType())
+				cf, err = n.newCodec(msg.ContentType())
 				if err != nil {
 					return err
 				}

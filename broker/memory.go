@@ -114,8 +114,8 @@ func (m *memoryBroker) Publish(ctx context.Context, topic string, msg *Message, 
 }
 
 type msgWrapper struct {
-	topic string
 	body  interface{}
+	topic string
 }
 
 func (m *memoryBroker) BatchPublish(ctx context.Context, msgs []*Message, opts ...PublishOption) error {
@@ -180,7 +180,7 @@ func (m *memoryBroker) publish(ctx context.Context, vs []msgWrapper, opts ...Pub
 						beh = sub.opts.BatchErrorHandler
 					}
 					if beh != nil {
-						beh(ms)
+						_ = beh(ms)
 					} else if m.opts.Logger.V(logger.ErrorLevel) {
 						m.opts.Logger.Error(m.opts.Context, err.Error())
 					}
@@ -199,7 +199,7 @@ func (m *memoryBroker) publish(ctx context.Context, vs []msgWrapper, opts ...Pub
 							eh = sub.opts.ErrorHandler
 						}
 						if eh != nil {
-							eh(p)
+							_ = eh(p)
 						} else if m.opts.Logger.V(logger.ErrorLevel) {
 							m.opts.Logger.Error(m.opts.Context, err.Error())
 						}

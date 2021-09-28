@@ -81,7 +81,7 @@ func (l *defaultLogger) Fields(fields ...interface{}) Logger {
 	} else if len(fields)%2 != 0 {
 		fields = fields[:len(fields)-1]
 	}
-	nl.opts.Fields = append(l.opts.Fields, fields...)
+	nl.opts.Fields = append(nl.opts.Fields, fields...)
 	return nl
 }
 

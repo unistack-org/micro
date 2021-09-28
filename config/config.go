@@ -13,7 +13,7 @@ var DefaultConfig Config = NewConfig()
 // DefaultWatcherMinInterval default min interval for poll changes
 var DefaultWatcherMinInterval = 5 * time.Second
 
-// DefaultWatcherMinInterval default max interval for poll changes
+// DefaultWatcherMaxInterval default max interval for poll changes
 var DefaultWatcherMaxInterval = 9 * time.Second
 
 var (

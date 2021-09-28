@@ -20,12 +20,8 @@ type TestMessage struct {
 	Name string
 }
 
-var (
-	numMsg int = 8
-)
-
 func (h *TestHandler) SingleSubHandler(ctx context.Context, msg *codec.Frame) error {
-	//fmt.Printf("msg %s\n", msg.Data)
+	// fmt.Printf("msg %s\n", msg.Data)
 	return nil
 }
 

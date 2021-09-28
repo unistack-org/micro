@@ -2,7 +2,7 @@ package reflect
 
 import (
 	"net/url"
-	"reflect"
+	rfl "reflect"
 	rfl "reflect"
 	"testing"
 )

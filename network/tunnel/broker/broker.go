@@ -82,7 +82,7 @@ func (t *tunBroker) BatchPublish(ctx context.Context, msgs []*broker.Message, op
 		topic, _ := msg.Header.Get(metadata.HeaderTopic)
 		c, ok := topicMap[topic]
 		if !ok {
-			c, err := t.tunnel.Dial(ctx, topic, tunnel.DialMode(tunnel.Multicast))
+			c, err = t.tunnel.Dial(ctx, topic, tunnel.DialMode(tunnel.Multicast))
 			if err != nil {
 				return err
 			}

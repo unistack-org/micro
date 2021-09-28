@@ -31,7 +31,7 @@ func (p *profiler) writeHeap(f *os.File) {
 		select {
 		case <-t.C:
 			runtime.GC()
-			pprof.WriteHeapProfile(f)
+			_ = pprof.WriteHeapProfile(f)
 		case <-p.exit:
 			return
 		}

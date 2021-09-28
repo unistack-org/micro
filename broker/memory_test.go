@@ -53,6 +53,7 @@ func TestMemoryBatchBroker(t *testing.T) {
 		t.Fatalf("Unexpected connect error %v", err)
 	}
 }
+
 func TestMemoryBroker(t *testing.T) {
 	b := NewBroker()
 	ctx := context.Background()

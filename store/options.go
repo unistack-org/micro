@@ -32,8 +32,8 @@ type Options struct {
 	Namespace string
 	// Addrs contains store address
 	Addrs []string
-	//Wrappers store wrapper that called before actual functions
-	//Wrappers []Wrapper
+	// Wrappers store wrapper that called before actual functions
+	// Wrappers []Wrapper
 }
 
 // NewOptions creates options struct
