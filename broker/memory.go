@@ -172,13 +172,18 @@ func (m *memoryBroker) publish(ctx context.Context, vs []msgWrapper, opts ...Pub
 		}
 
 		for _, sub := range subs {
+			if sub.opts.BatchErrorHandler != nil {
+				beh = sub.opts.BatchErrorHandler
+			}
+			if sub.opts.ErrorHandler != nil {
+				eh = sub.opts.ErrorHandler
+			}
+
+			switch {
 			// batch processing
-			if sub.batchhandler != nil {
+			case sub.batchhandler != nil:
 				if err = sub.batchhandler(ms); err != nil {
 					ms.SetError(err)
-					if sub.opts.BatchErrorHandler != nil {
-						beh = sub.opts.BatchErrorHandler
-					}
 					if beh != nil {
 						_ = beh(ms)
 					} else if m.opts.Logger.V(logger.ErrorLevel) {
@@ -189,15 +194,11 @@ func (m *memoryBroker) publish(ctx context.Context, vs []msgWrapper, opts ...Pub
 						m.opts.Logger.Errorf(m.opts.Context, "ack failed: %v", err)
 					}
 				}
-			}
-			// single processing
-			if sub.handler != nil {
+				// single processing
+			case sub.handler != nil:
 				for _, p := range ms {
 					if err = sub.handler(p); err != nil {
 						p.SetError(err)
-						if sub.opts.ErrorHandler != nil {
-							eh = sub.opts.ErrorHandler
-						}
 						if eh != nil {
 							_ = eh(p)
 						} else if m.opts.Logger.V(logger.ErrorLevel) {
