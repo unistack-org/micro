@@ -20,13 +20,13 @@ type microFlow struct {
 }
 
 type microWorkflow struct {
-	id   string
-	g    *dag.AcyclicGraph
-	init bool
-	sync.RWMutex
 	opts   Options
+	g      *dag.AcyclicGraph
 	steps  map[string]Step
+	id     string
 	status Status
+	sync.RWMutex
+	init bool
 }
 
 func (w *microWorkflow) ID() string {
@@ -424,11 +424,11 @@ func (f *microFlow) WorkflowLoad(ctx context.Context, id string) (Workflow, erro
 }
 
 type microCallStep struct {
+	rsp     *Message
+	req     *Message
 	opts    StepOptions
 	service string
 	method  string
-	rsp     *Message
-	req     *Message
 	status  Status
 }
 
@@ -508,10 +508,10 @@ func (s *microCallStep) Execute(ctx context.Context, req *Message, opts ...Execu
 }
 
 type microPublishStep struct {
-	opts   StepOptions
-	topic  string
 	req    *Message
 	rsp    *Message
+	opts   StepOptions
+	topic  string
 	status Status
 }
 

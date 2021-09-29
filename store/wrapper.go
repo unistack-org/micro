@@ -69,9 +69,9 @@ func (w *NamespaceStore) String() string {
 
 // type NamespaceWrapper struct{}
 
-//func NewNamespaceWrapper() Wrapper {
+// func NewNamespaceWrapper() Wrapper {
 //	return &NamespaceWrapper{}
-//}
+// }
 
 /*
 func (w *OmitWrapper) Logf(fn LogfFunc) LogfFunc {

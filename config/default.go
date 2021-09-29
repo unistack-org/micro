@@ -27,10 +27,8 @@ func (c *defaultConfig) Init(opts ...Option) error {
 }
 
 func (c *defaultConfig) Load(ctx context.Context, opts ...LoadOption) error {
-	for _, fn := range c.opts.BeforeLoad {
-		if err := fn(ctx, c); err != nil && !c.opts.AllowFail {
-			return err
-		}
+	if err := DefaultBeforeLoad(ctx, c); err != nil {
+		return err
 	}
 
 	options := NewLoadOptions(opts...)
@@ -48,20 +46,26 @@ func (c *defaultConfig) Load(ctx context.Context, opts ...LoadOption) error {
 	}
 
 	src, err := rutil.Zero(dst)
-	if err == nil {
-		if err = fillValues(reflect.ValueOf(src), c.opts.StructTag); err == nil {
-			err = mergo.Merge(dst, src, mopts...)
-		}
-	}
-
-	if err != nil && !c.opts.AllowFail {
-		return err
-	}
-
-	for _, fn := range c.opts.AfterLoad {
-		if err := fn(ctx, c); err != nil && !c.opts.AllowFail {
+	if err != nil {
+		if !c.opts.AllowFail {
 			return err
 		}
+		return DefaultAfterLoad(ctx, c)
+	}
+
+	if err = fillValues(reflect.ValueOf(src), c.opts.StructTag); err == nil {
+		err = mergo.Merge(dst, src, mopts...)
+	}
+
+	if err != nil {
+		c.opts.Logger.Errorf(ctx, "default load error: %v", err)
+		if !c.opts.AllowFail {
+			return err
+		}
+	}
+
+	if err := DefaultAfterLoad(ctx, c); err != nil {
+		return err
 	}
 
 	return nil
@@ -247,16 +251,12 @@ func fillValues(valueOf reflect.Value, tname string) error {
 }
 
 func (c *defaultConfig) Save(ctx context.Context, opts ...SaveOption) error {
-	for _, fn := range c.opts.BeforeSave {
-		if err := fn(ctx, c); err != nil && !c.opts.AllowFail {
-			return err
-		}
+	if err := DefaultBeforeSave(ctx, c); err != nil {
+		return err
 	}
 
-	for _, fn := range c.opts.AfterSave {
-		if err := fn(ctx, c); err != nil && !c.opts.AllowFail {
-			return err
-		}
+	if err := DefaultAfterSave(ctx, c); err != nil {
+		return err
 	}
 
 	return nil

@@ -120,10 +120,10 @@ type ExecuteOptions struct {
 	Context context.Context
 	// Start step
 	Start string
-	// Reverse execution
-	Reverse bool
 	// Timeout for execution
 	Timeout time.Duration
+	// Reverse execution
+	Reverse bool
 	// Async enables async execution
 	Async bool
 }

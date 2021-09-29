@@ -64,3 +64,53 @@ func Load(ctx context.Context, cs []Config, opts ...LoadOption) error {
 	}
 	return nil
 }
+
+var (
+	DefaultAfterLoad = func(ctx context.Context, c Config) error {
+		for _, fn := range c.Options().AfterLoad {
+			if err := fn(ctx, c); err != nil {
+				c.Options().Logger.Errorf(ctx, "%s AfterLoad err: %v", c.String(), err)
+				if !c.Options().AllowFail {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	DefaultAfterSave = func(ctx context.Context, c Config) error {
+		for _, fn := range c.Options().AfterSave {
+			if err := fn(ctx, c); err != nil {
+				c.Options().Logger.Errorf(ctx, "%s AfterSave err: %v", c.String(), err)
+				if !c.Options().AllowFail {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	DefaultBeforeLoad = func(ctx context.Context, c Config) error {
+		for _, fn := range c.Options().BeforeLoad {
+			if err := fn(ctx, c); err != nil {
+				c.Options().Logger.Errorf(ctx, "%s BeforeLoad err: %v", c.String(), err)
+				if !c.Options().AllowFail {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	DefaultBeforeSave = func(ctx context.Context, c Config) error {
+		for _, fn := range c.Options().BeforeSave {
+			if err := fn(ctx, c); err != nil {
+				c.Options().Logger.Errorf(ctx, "%s BeforeSavec err: %v", c.String(), err)
+				if !c.Options().AllowFail {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+)
