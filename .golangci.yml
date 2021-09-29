@@ -30,7 +30,7 @@ linters:
     - gofmt
     - gofumpt
     - goimports
-    - golint
+    - revive
     - gosec
     - makezero
     - misspell

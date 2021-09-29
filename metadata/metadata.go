@@ -107,13 +107,16 @@ func New(size int) Metadata {
 
 // Merge merges metadata to existing metadata, overwriting if specified
 func Merge(omd Metadata, mmd Metadata, overwrite bool) Metadata {
+	var ok bool
 	nmd := Copy(omd)
 	for key, val := range mmd {
-		if _, ok := nmd[key]; ok && !overwrite {
-			// skip
-		} else if val != "" {
+		_, ok = nmd[key]
+		switch {
+		case ok && !overwrite:
+			continue
+		case val != "":
 			nmd.Set(key, val)
-		} else {
+		case ok && val == "":
 			nmd.Del(key)
 		}
 	}

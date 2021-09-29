@@ -41,11 +41,12 @@ func TestTrieMatchRegexp(t *testing.T) {
 	tr.Insert([]string{http.MethodPut}, "/v1/create/{category}/{id:[0-9]+}", &handler{})
 
 	_, params, ok := tr.Search(http.MethodPut, "/v1/create/test_cat/12345")
-	if !ok {
+	switch {
+	case !ok:
 		t.Fatalf("route not found")
-	} else if len(params) != 2 {
+	case len(params) != 2:
 		t.Fatalf("param matching error %v", params)
-	} else if params["category"] != "test_cat" {
+	case params["category"] != "test_cat":
 		t.Fatalf("param matching error %v", params)
 	}
 }
