@@ -1,10 +1,11 @@
-package reflect
+package reflect_test
 
 import (
 	"net/url"
-	rfl "reflect"
-	rfl "reflect"
+	"reflect"
 	"testing"
+
+	rutil "github.com/unistack-org/micro/v3/util/reflect"
 )
 
 func TestStructFieldsMap(t *testing.T) {
@@ -19,7 +20,7 @@ func TestStructFieldsMap(t *testing.T) {
 	}
 
 	val := &Str{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
-	fields, err := StructFieldsMap(val)
+	fields, err := rutil.StructFieldsMap(val)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +41,7 @@ func TestStructFields(t *testing.T) {
 	}
 
 	val := &Str{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
-	fields, err := StructFields(val)
+	fields, err := rutil.StructFields(val)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,11 +68,11 @@ func TestStructByPath(t *testing.T) {
 	}
 
 	val := &Str{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
-	field, err := StructFieldByPath(val, "Nested.CCC")
+	field, err := rutil.StructFieldByPath(val, "Nested.CCC")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if rfl.Indirect(reflect.ValueOf(field)).Int() != 9 {
+	if reflect.Indirect(reflect.ValueOf(field)).Int() != 9 {
 		t.Fatalf("invalid elem returned: %v", field)
 	}
 }
@@ -83,7 +84,7 @@ func TestStructByTag(t *testing.T) {
 
 	val := &Str{Name: []string{"first", "second"}}
 
-	iface, err := StructFieldByTag(val, "codec", "flatten")
+	iface, err := rutil.StructFieldByTag(val, "codec", "flatten")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +103,7 @@ func TestStructByName(t *testing.T) {
 
 	val := &Str{Name: []string{"first", "second"}}
 
-	iface, err := StructFieldByName(val, "Name")
+	iface, err := rutil.StructFieldByName(val, "Name")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +123,7 @@ func TestStructURLValues(t *testing.T) {
 	}
 
 	val := &Str{Name: "test_name", Args: []int{1, 2, 3}, Str: &Str{Name: "nested_name"}}
-	data, err := StructURLValues(val, "", []string{"json"})
+	data, err := rutil.StructURLValues(val, "", []string{"json"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +139,7 @@ func TestURLSliceVars(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	mp, err := URLMap(u.RawQuery)
+	mp, err := rutil.URLMap(u.RawQuery)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +165,7 @@ func TestURLVars(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	mp, err := URLMap(u.RawQuery)
+	mp, err := rutil.URLMap(u.RawQuery)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -184,14 +185,14 @@ func TestIsZero(t *testing.T) {
 	}
 	testStr1.Nested.NestedName = "nested_name"
 
-	if ok := IsZero(testStr1); ok {
+	if ok := rutil.IsZero(testStr1); ok {
 		t.Fatalf("zero ret on non zero struct: %#+v", testStr1)
 	}
 
 	testStr1.Name = ""
 	testStr1.Value = ""
 	testStr1.Nested.NestedName = ""
-	if ok := IsZero(testStr1); !ok {
+	if ok := rutil.IsZero(testStr1); !ok {
 		t.Fatalf("non zero ret on zero struct: %#+v", testStr1)
 	}
 
@@ -206,12 +207,12 @@ func TestIsZero(t *testing.T) {
 		Name:   "test_name",
 		Nested: &testStr3{Nested: "nested_name"},
 	}
-	if ok := IsZero(vtest); ok {
+	if ok := rutil.IsZero(vtest); ok {
 		t.Fatalf("zero ret on non zero struct: %#+v", vtest)
 	}
 	vtest.Nested = nil
 	vtest.Name = ""
-	if ok := IsZero(vtest); !ok {
+	if ok := rutil.IsZero(vtest); !ok {
 		t.Fatalf("non zero ret on zero struct: %#+v", vtest)
 	}
 

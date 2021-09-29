@@ -13,14 +13,18 @@ import (
 var ErrInvalidParam = errors.New("invalid url query param provided")
 
 // var timeKind = reflect.ValueOf(time.Time{}).Kind()
+
+// bracketSplitter
 var bracketSplitter = regexp.MustCompile(`\[|\]`)
 
+// StructField contains struct field path its value and field
 type StructField struct {
-	Field reflect.StructField
-	Value reflect.Value
 	Path  string
+	Value reflect.Value
+	Field reflect.StructField
 }
 
+// StructFieldByTag get struct field by tag key and its value
 func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, error) {
 	sv := reflect.ValueOf(src)
 	if sv.Kind() == reflect.Ptr {
@@ -65,6 +69,7 @@ func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, e
 	return nil, ErrNotFound
 }
 
+// StructFieldByPath get struct field by its path
 func StructFieldByPath(src interface{}, path string) (interface{}, error) {
 	var err error
 	for _, p := range strings.Split(path, ".") {
@@ -76,6 +81,7 @@ func StructFieldByPath(src interface{}, path string) (interface{}, error) {
 	return src, err
 }
 
+// StructFieldByName get struct field by its name
 func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
 	sv := reflect.ValueOf(src)
 	if sv.Kind() == reflect.Ptr {
@@ -115,7 +121,7 @@ func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
 	return nil, ErrNotFound
 }
 
-// StructFieldsMap returns map[string]interface{} or error
+// StructFieldsMap returns struct map[string]interface{} or error
 func StructFieldsMap(src interface{}) (map[string]interface{}, error) {
 	fields, err := StructFields(src)
 	if err != nil {
@@ -206,6 +212,7 @@ func CopyFrom(a, b interface{}) {
 	}
 }
 
+// StructURLValues get struct fields via url.Values
 func StructURLValues(src interface{}, pref string, tags []string) (url.Values, error) {
 	data := url.Values{}
 
