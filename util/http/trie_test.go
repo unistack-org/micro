@@ -5,6 +5,19 @@ import (
 	"testing"
 )
 
+func TestTrieIgnoreCase(t *testing.T) {
+	type handler struct {
+		name string
+	}
+	tr := NewTrie()
+	tr.Insert([]string{http.MethodPut}, "/v1/create/{id}", &handler{name: "test"})
+
+	_, _, ok := tr.Search(http.MethodPut, "/v1/CREATE/12", IgnoreCase(true))
+	if !ok {
+		t.Fatalf("unexpected error")
+	}
+}
+
 func TestTrieContentType(t *testing.T) {
 	type handler struct {
 		name string

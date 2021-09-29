@@ -6,6 +6,21 @@ import (
 	"sync"
 )
 
+// TrieOptions contains search options
+type TrieOptions struct {
+	IgnoreCase bool
+}
+
+// TrieOption func signature
+type TrieOption func(*TrieOptions)
+
+// IgnoreCase says that search must be case insensitive
+func IgnoreCase(b bool) TrieOption {
+	return func(o *TrieOptions) {
+		o.IgnoreCase = b
+	}
+}
+
 // Tree is a trie tree.
 type Trie struct {
 	node   *node
@@ -79,19 +94,35 @@ func (t *Trie) Insert(methods []string, path string, handler interface{}) {
 }
 
 // Search searches a path from a tree.
-func (t *Trie) Search(method string, path string) (interface{}, map[string]string, bool) {
+func (t *Trie) Search(method string, path string, opts ...TrieOption) (interface{}, map[string]string, bool) {
 	params := make(map[string]string)
 
+	options := TrieOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+
 	curNode := t.node
+
+nodeLoop:
 	for _, p := range splitPath(path) {
 		nextNode, ok := curNode.children[p]
 		if ok {
 			curNode = nextNode
-			continue
+			continue nodeLoop
+		}
+		if options.IgnoreCase {
+			// additional loop for case insensitive matching
+			for k, v := range curNode.children {
+				if literalEqual(k, p, true) {
+					curNode = v
+					continue nodeLoop
+				}
+			}
 		}
 		if len(curNode.children) == 0 {
-			if curNode.label != p {
-				// no matching path was found.
+			if !literalEqual(curNode.label, p, options.IgnoreCase) {
+				// no matching path was found
 				return nil, nil, false
 			}
 			break
@@ -198,4 +229,11 @@ func splitPath(path string) []string {
 		}
 	}
 	return r
+}
+
+func literalEqual(component, literal string, ignoreCase bool) bool {
+	if ignoreCase {
+		return strings.EqualFold(component, literal)
+	}
+	return component == literal
 }
