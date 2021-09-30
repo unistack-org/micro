@@ -209,14 +209,14 @@ func Name(n string) Option {
 type WatchOptions struct {
 	// Context used by non default options
 	Context context.Context
-	// Coalesce multiple events to one
-	Coalesce bool
+	// Struct for filling
+	Struct interface{}
 	// MinInterval specifies the min time.Duration interval for poll changes
 	MinInterval time.Duration
 	// MaxInterval specifies the max time.Duration interval for poll changes
 	MaxInterval time.Duration
-	// Struct for filling
-	Struct interface{}
+	// Coalesce multiple events to one
+	Coalesce bool
 }
 
 type WatchOption func(*WatchOptions)

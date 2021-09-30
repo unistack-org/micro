@@ -68,8 +68,8 @@ type Endpoint struct {
 // Option func signature
 type Option func(*Options)
 
+// nolint: golint,revive
 // RegisterOption option is used to register service
-// nolint: golint
 type RegisterOption func(*RegisterOptions)
 
 // WatchOption option is used to watch service changes

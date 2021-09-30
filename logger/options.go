@@ -19,12 +19,12 @@ type Options struct {
 	Fields []interface{}
 	// Name holds the logger name
 	Name string
-	// CallerSkipCount number of frmaes to skip
-	CallerSkipCount int
-	// The logging level the logger should log
-	Level Level
 	// Wrappers logger wrapper that called before actual Log/Logf function
 	Wrappers []Wrapper
+	// The logging level the logger should log
+	Level Level
+	// CallerSkipCount number of frmaes to skip
+	CallerSkipCount int
 }
 
 // NewOptions creates new options struct

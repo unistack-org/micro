@@ -339,9 +339,11 @@ func ExistsNamespace(ns string) ExistsOption {
 	}
 }
 
+/*
 // WrapStore adds a store Wrapper to a list of options passed into the store
-//func WrapStore(w Wrapper) Option {
-//	return func(o *Options) {
-//		o.Wrappers = append(o.Wrappers, w)
-//	}
-//}
+func WrapStore(w Wrapper) Option {
+	return func(o *Options) {
+		o.Wrappers = append(o.Wrappers, w)
+	}
+}
+*/

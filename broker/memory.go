@@ -89,36 +89,15 @@ func (m *memoryBroker) Init(opts ...Option) error {
 }
 
 func (m *memoryBroker) Publish(ctx context.Context, topic string, msg *Message, opts ...PublishOption) error {
-	m.RLock()
-	if !m.connected {
-		m.RUnlock()
-		return ErrNotConnected
-	}
-	m.RUnlock()
-
-	options := NewPublishOptions(opts...)
-	vs := make([]msgWrapper, 0, 1)
-	if m.opts.Codec == nil || options.BodyOnly {
-		topic, _ := msg.Header.Get(metadata.HeaderTopic)
-		vs = append(vs, msgWrapper{topic: topic, body: msg})
-	} else {
-		topic, _ := msg.Header.Get(metadata.HeaderTopic)
-		buf, err := m.opts.Codec.Marshal(msg)
-		if err != nil {
-			return err
-		}
-		vs = append(vs, msgWrapper{topic: topic, body: buf})
-	}
-
-	return m.publish(ctx, vs, opts...)
-}
-
-type msgWrapper struct {
-	body  interface{}
-	topic string
+	msg.Header.Set(metadata.HeaderTopic, topic)
+	return m.publish(ctx, []*Message{msg}, opts...)
 }
 
 func (m *memoryBroker) BatchPublish(ctx context.Context, msgs []*Message, opts ...PublishOption) error {
+	return m.publish(ctx, msgs, opts...)
+}
+
+func (m *memoryBroker) publish(ctx context.Context, msgs []*Message, opts ...PublishOption) error {
 	m.RLock()
 	if !m.connected {
 		m.RUnlock()
@@ -126,87 +105,80 @@ func (m *memoryBroker) BatchPublish(ctx context.Context, msgs []*Message, opts .
 	}
 	m.RUnlock()
 
-	options := NewPublishOptions(opts...)
-	vs := make([]msgWrapper, 0, len(msgs))
-	if m.opts.Codec == nil || options.BodyOnly {
-		for _, msg := range msgs {
-			topic, _ := msg.Header.Get(metadata.HeaderTopic)
-			vs = append(vs, msgWrapper{topic: topic, body: msg})
-		}
-	} else {
-		for _, msg := range msgs {
-			topic, _ := msg.Header.Get(metadata.HeaderTopic)
-			buf, err := m.opts.Codec.Marshal(msg)
-			if err != nil {
-				return err
-			}
-			vs = append(vs, msgWrapper{topic: topic, body: buf})
-		}
-	}
-
-	return m.publish(ctx, vs, opts...)
-}
-
-func (m *memoryBroker) publish(ctx context.Context, vs []msgWrapper, opts ...PublishOption) error {
 	var err error
 
-	msgTopicMap := make(map[string]Events)
-	for _, v := range vs {
-		p := &memoryEvent{
-			topic:   v.topic,
-			message: v.body,
-			opts:    m.opts,
-		}
-		msgTopicMap[p.topic] = append(msgTopicMap[p.topic], p)
-	}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		options := NewPublishOptions(opts...)
 
-	beh := m.opts.BatchErrorHandler
-	eh := m.opts.ErrorHandler
+		msgTopicMap := make(map[string]Events)
+		for _, v := range msgs {
+			p := &memoryEvent{opts: m.opts}
 
-	for t, ms := range msgTopicMap {
-		m.RLock()
-		subs, ok := m.subscribers[t]
-		m.RUnlock()
-		if !ok {
-			continue
-		}
-
-		for _, sub := range subs {
-			if sub.opts.BatchErrorHandler != nil {
-				beh = sub.opts.BatchErrorHandler
-			}
-			if sub.opts.ErrorHandler != nil {
-				eh = sub.opts.ErrorHandler
-			}
-
-			switch {
-			// batch processing
-			case sub.batchhandler != nil:
-				if err = sub.batchhandler(ms); err != nil {
-					ms.SetError(err)
-					if beh != nil {
-						_ = beh(ms)
-					} else if m.opts.Logger.V(logger.ErrorLevel) {
-						m.opts.Logger.Error(m.opts.Context, err.Error())
-					}
-				} else if sub.opts.AutoAck {
-					if err = ms.Ack(); err != nil {
-						m.opts.Logger.Errorf(m.opts.Context, "ack failed: %v", err)
-					}
+			if m.opts.Codec == nil || options.BodyOnly {
+				p.topic, _ = v.Header.Get(metadata.HeaderTopic)
+				p.message = v.Body
+			} else {
+				p.topic, _ = v.Header.Get(metadata.HeaderTopic)
+				buf, err := m.opts.Codec.Marshal(v)
+				if err != nil {
+					return err
 				}
-				// single processing
-			case sub.handler != nil:
-				for _, p := range ms {
-					if err = sub.handler(p); err != nil {
-						p.SetError(err)
-						if eh != nil {
-							_ = eh(p)
+				p.message = buf
+			}
+			msgTopicMap[p.topic] = append(msgTopicMap[p.topic], p)
+		}
+
+		beh := m.opts.BatchErrorHandler
+		eh := m.opts.ErrorHandler
+
+		for t, ms := range msgTopicMap {
+			m.RLock()
+			subs, ok := m.subscribers[t]
+			m.RUnlock()
+			if !ok {
+				continue
+			}
+
+			for _, sub := range subs {
+				if sub.opts.BatchErrorHandler != nil {
+					beh = sub.opts.BatchErrorHandler
+				}
+				if sub.opts.ErrorHandler != nil {
+					eh = sub.opts.ErrorHandler
+				}
+
+				switch {
+				// batch processing
+				case sub.batchhandler != nil:
+					if err = sub.batchhandler(ms); err != nil {
+						ms.SetError(err)
+						if beh != nil {
+							_ = beh(ms)
 						} else if m.opts.Logger.V(logger.ErrorLevel) {
 							m.opts.Logger.Error(m.opts.Context, err.Error())
 						}
 					} else if sub.opts.AutoAck {
-						if err = p.Ack(); err != nil {
+						if err = ms.Ack(); err != nil {
 							m.opts.Logger.Errorf(m.opts.Context, "ack failed: %v", err)
+						}
+					}
+					// single processing
+				case sub.handler != nil:
+					for _, p := range ms {
+						if err = sub.handler(p); err != nil {
+							p.SetError(err)
+							if eh != nil {
+								_ = eh(p)
+							} else if m.opts.Logger.V(logger.ErrorLevel) {
+								m.opts.Logger.Error(m.opts.Context, err.Error())
+							}
+						} else if sub.opts.AutoAck {
+							if err = p.Ack(); err != nil {
+								m.opts.Logger.Errorf(m.opts.Context, "ack failed: %v", err)
+							}
 						}
 					}
 				}

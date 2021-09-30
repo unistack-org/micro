@@ -12,11 +12,11 @@ import (
 )
 
 type defaultLogger struct {
-	enc  *json.Encoder
-	opts Options
-	sync.RWMutex
+	enc      *json.Encoder
 	logFunc  LogFunc
 	logfFunc LogfFunc
+	opts     Options
+	sync.RWMutex
 }
 
 // Init(opts...) should only overwrite provided options
