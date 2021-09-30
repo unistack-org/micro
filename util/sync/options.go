@@ -29,6 +29,7 @@ func Stores(stores ...store.Store) Option {
 	}
 }
 
+// nolint: golint,revive
 // SyncInterval sets the duration between syncs from L0 to L1
 func SyncInterval(d time.Duration) Option {
 	return func(o *Options) {
@@ -36,6 +37,7 @@ func SyncInterval(d time.Duration) Option {
 	}
 }
 
+// nolint: golint,revive
 // SyncMultiplier sets the multiplication factor for time to wait each sync layer
 func SyncMultiplier(i int64) Option {
 	return func(o *Options) {

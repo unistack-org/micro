@@ -51,7 +51,7 @@ func (m *memorySync) Leader(id string, opts ...LeaderOption) (Leader, error) {
 		id:   id,
 		resign: func(id string) error {
 			once.Do(func() {
-				m.Unlock(id)
+				_ = m.Unlock(id)
 			})
 			return nil
 		},

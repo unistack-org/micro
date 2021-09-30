@@ -37,8 +37,8 @@ var (
 
 // Error type
 type Error struct {
-	// Id holds error id or service, usually someting like my_service or id
-	Id string
+	// ID holds error id or service, usually someting like my_service or id
+	ID string
 	// Detail holds some useful details about error
 	Detail string
 	// Status usually holds text of http status
@@ -56,7 +56,7 @@ func (e *Error) Error() string {
 // New generates a custom error
 func New(id, detail string, code int32) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   code,
 		Detail: detail,
 		Status: http.StatusText(int(code)),
@@ -77,7 +77,7 @@ func Parse(err string) *Error {
 // BadRequest generates a 400 error.
 func BadRequest(id, format string, a ...interface{}) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   400,
 		Detail: fmt.Sprintf(format, a...),
 		Status: http.StatusText(400),
@@ -87,7 +87,7 @@ func BadRequest(id, format string, a ...interface{}) error {
 // Unauthorized generates a 401 error.
 func Unauthorized(id, format string, a ...interface{}) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   401,
 		Detail: fmt.Sprintf(format, a...),
 		Status: http.StatusText(401),
@@ -97,7 +97,7 @@ func Unauthorized(id, format string, a ...interface{}) error {
 // Forbidden generates a 403 error.
 func Forbidden(id, format string, a ...interface{}) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   403,
 		Detail: fmt.Sprintf(format, a...),
 		Status: http.StatusText(403),
@@ -107,7 +107,7 @@ func Forbidden(id, format string, a ...interface{}) error {
 // NotFound generates a 404 error.
 func NotFound(id, format string, a ...interface{}) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   404,
 		Detail: fmt.Sprintf(format, a...),
 		Status: http.StatusText(404),
@@ -117,7 +117,7 @@ func NotFound(id, format string, a ...interface{}) error {
 // MethodNotAllowed generates a 405 error.
 func MethodNotAllowed(id, format string, a ...interface{}) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   405,
 		Detail: fmt.Sprintf(format, a...),
 		Status: http.StatusText(405),
@@ -127,7 +127,7 @@ func MethodNotAllowed(id, format string, a ...interface{}) error {
 // Timeout generates a 408 error.
 func Timeout(id, format string, a ...interface{}) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   408,
 		Detail: fmt.Sprintf(format, a...),
 		Status: http.StatusText(408),
@@ -137,7 +137,7 @@ func Timeout(id, format string, a ...interface{}) error {
 // Conflict generates a 409 error.
 func Conflict(id, format string, a ...interface{}) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   409,
 		Detail: fmt.Sprintf(format, a...),
 		Status: http.StatusText(409),
@@ -147,7 +147,7 @@ func Conflict(id, format string, a ...interface{}) error {
 // InternalServerError generates a 500 error.
 func InternalServerError(id, format string, a ...interface{}) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   500,
 		Detail: fmt.Sprintf(format, a...),
 		Status: http.StatusText(500),
@@ -157,7 +157,7 @@ func InternalServerError(id, format string, a ...interface{}) error {
 // NotImplemented generates a 501 error
 func NotImplemented(id, format string, a ...interface{}) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   501,
 		Detail: fmt.Sprintf(format, a...),
 		Status: http.StatusText(501),
@@ -167,7 +167,7 @@ func NotImplemented(id, format string, a ...interface{}) error {
 // BadGateway generates a 502 error
 func BadGateway(id, format string, a ...interface{}) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   502,
 		Detail: fmt.Sprintf(format, a...),
 		Status: http.StatusText(502),
@@ -177,7 +177,7 @@ func BadGateway(id, format string, a ...interface{}) error {
 // ServiceUnavailable generates a 503 error
 func ServiceUnavailable(id, format string, a ...interface{}) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   503,
 		Detail: fmt.Sprintf(format, a...),
 		Status: http.StatusText(503),
@@ -187,7 +187,7 @@ func ServiceUnavailable(id, format string, a ...interface{}) error {
 // GatewayTimeout generates a 504 error
 func GatewayTimeout(id, format string, a ...interface{}) error {
 	return &Error{
-		Id:     id,
+		ID:     id,
 		Code:   504,
 		Detail: fmt.Sprintf(format, a...),
 		Status: http.StatusText(504),

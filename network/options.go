@@ -27,8 +27,8 @@ type Options struct {
 	Tracer tracer.Tracer
 	// Tunnel used for transfer data
 	Tunnel tunnel.Tunnel
-	// Id of the node
-	Id string
+	// ID of the node
+	ID string
 	// Name of the network
 	Name string
 	// Address to bind to
@@ -39,10 +39,10 @@ type Options struct {
 	Nodes []string
 }
 
-// Id sets the id of the network node
-func Id(id string) Option {
+// ID sets the id of the network node
+func ID(id string) Option {
 	return func(o *Options) {
-		o.Id = id
+		o.ID = id
 	}
 }
 
@@ -119,7 +119,7 @@ func Tracer(t tracer.Tracer) Option {
 // NewOptions returns network default options
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Id:      id.Must(),
+		ID:      id.Must(),
 		Name:    "go.micro",
 		Address: ":0",
 		Logger:  logger.DefaultLogger,

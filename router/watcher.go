@@ -38,8 +38,8 @@ func (t EventType) String() string {
 type Event struct {
 	// Timestamp is event timestamp
 	Timestamp time.Time
-	// Id of the event
-	Id string
+	// ID of the event
+	ID string
 	// Route is table route
 	Route Route
 	// Type defines type of event

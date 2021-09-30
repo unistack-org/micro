@@ -19,8 +19,8 @@ import (
 
 // Options holds client options
 type Options struct {
-	// Router used to get route
-	Router router.Router
+	// Transport used for transfer messages
+	Transport transport.Transport
 	// Selector used to select needed address
 	Selector selector.Selector
 	// Logger used to log messages
@@ -31,18 +31,16 @@ type Options struct {
 	Broker broker.Broker
 	// Meter used for metrics
 	Meter meter.Meter
-	// Transport used for transfer messages
-	Transport transport.Transport
 	// Context is used for external options
 	Context context.Context
+	// Router used to get route
+	Router router.Router
+	// TLSConfig specifies tls.Config for secure connection
+	TLSConfig *tls.Config
 	// Codecs map
 	Codecs map[string]codec.Codec
 	// Lookup func used to get destination addr
 	Lookup LookupFunc
-	// TLSConfig specifies tls.Config for secure connection
-	TLSConfig *tls.Config
-	// CallOptions contains default CallOptions
-	CallOptions CallOptions
 	// Proxy is used for proxy requests
 	Proxy string
 	// ContentType is used to select codec
@@ -51,6 +49,8 @@ type Options struct {
 	Name string
 	// Wrappers contains wrappers
 	Wrappers []Wrapper
+	// CallOptions contains default CallOptions
+	CallOptions CallOptions
 	// PoolSize connection pool size
 	PoolSize int
 	// PoolTTL connection pool ttl
@@ -68,12 +68,12 @@ func NewCallOptions(opts ...CallOption) CallOptions {
 
 // CallOptions holds client call options
 type CallOptions struct {
-	// Router used for route
-	Router router.Router
 	// Selector selects addr
 	Selector selector.Selector
 	// Context used for deadline
 	Context context.Context
+	// Router used for route
+	Router router.Router
 	// Retry func used for retries
 	Retry RetryFunc
 	// Backoff func used for backoff when retry
@@ -82,22 +82,22 @@ type CallOptions struct {
 	Network string
 	// Content-Type
 	ContentType string
-	// CallWrappers call wrappers
-	CallWrappers []CallWrapper
-	// SelectOptions selector options
-	SelectOptions []selector.SelectOption
+	// AuthToken string
+	AuthToken string
 	// Address specifies static addr list
 	Address []string
-	// Retries specifies retries num
-	Retries int
+	// SelectOptions selector options
+	SelectOptions []selector.SelectOption
+	// CallWrappers call wrappers
+	CallWrappers []CallWrapper
 	// StreamTimeout stream timeout
 	StreamTimeout time.Duration
 	// RequestTimeout request timeout
 	RequestTimeout time.Duration
 	// DialTimeout dial timeout
 	DialTimeout time.Duration
-	// AuthToken string
-	AuthToken string
+	// Retries specifies retries num
+	Retries int
 }
 
 // Context pass context to client
@@ -118,12 +118,12 @@ func NewPublishOptions(opts ...PublishOption) PublishOptions {
 
 // PublishOptions holds publish options
 type PublishOptions struct {
-	// BodyOnly will publish only message body
-	BodyOnly bool
 	// Context used for external options
 	Context context.Context
 	// Exchange topic exchange name
 	Exchange string
+	// BodyOnly will publish only message body
+	BodyOnly bool
 }
 
 // NewMessageOptions creates message options struct

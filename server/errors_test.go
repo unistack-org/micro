@@ -13,7 +13,7 @@ func TestError(t *testing.T) {
 	if !ok {
 		t.Fatal("error not *errors.Error")
 	}
-	if merr.Id != "svc1" {
+	if merr.ID != "svc1" {
 		t.Fatal("id != svc1")
 	}
 }

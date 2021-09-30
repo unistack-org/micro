@@ -16,7 +16,7 @@ import (
 var (
 	// ErrInvalidParam is returned when invalid data is provided to the ToJSON or Unmarshal function.
 	// Specifically, this will be returned when there is no equals sign present in the URL query parameter.
-	ErrInvalidParam error = errors.New("qson: invalid url query param provided")
+	ErrInvalidParam = errors.New("qson: invalid url query param provided")
 
 	bracketSplitter *regexp.Regexp
 )

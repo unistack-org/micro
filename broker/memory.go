@@ -122,11 +122,10 @@ func (m *memoryBroker) publish(ctx context.Context, msgs []*Message, opts ...Pub
 				p.message = v.Body
 			} else {
 				p.topic, _ = v.Header.Get(metadata.HeaderTopic)
-				buf, err := m.opts.Codec.Marshal(v)
+				p.message, err = m.opts.Codec.Marshal(v)
 				if err != nil {
 					return err
 				}
-				p.message = buf
 			}
 			msgTopicMap[p.topic] = append(msgTopicMap[p.topic], p)
 		}

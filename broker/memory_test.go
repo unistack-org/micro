@@ -28,7 +28,7 @@ func TestMemoryBatchBroker(t *testing.T) {
 		t.Fatalf("Unexpected error subscribing %v", err)
 	}
 
-	msgs := make([]*Message, 0, 0)
+	msgs := make([]*Message, 0, count)
 	for i := 0; i < count; i++ {
 		message := &Message{
 			Header: map[string]string{
@@ -74,7 +74,7 @@ func TestMemoryBroker(t *testing.T) {
 		t.Fatalf("Unexpected error subscribing %v", err)
 	}
 
-	msgs := make([]*Message, 0, 0)
+	msgs := make([]*Message, 0, count)
 	for i := 0; i < count; i++ {
 		message := &Message{
 			Header: map[string]string{

@@ -426,9 +426,9 @@ func (f *microFlow) WorkflowLoad(ctx context.Context, id string) (Workflow, erro
 type microCallStep struct {
 	rsp     *Message
 	req     *Message
-	opts    StepOptions
 	service string
 	method  string
+	opts    StepOptions
 	status  Status
 }
 
@@ -510,8 +510,8 @@ func (s *microCallStep) Execute(ctx context.Context, req *Message, opts ...Execu
 type microPublishStep struct {
 	req    *Message
 	rsp    *Message
-	opts   StepOptions
 	topic  string
+	opts   StepOptions
 	status Status
 }
 

@@ -96,8 +96,8 @@ type WorkflowOption func(*WorkflowOptions)
 
 // WorkflowOptions holds workflow options
 type WorkflowOptions struct {
-	ID      string
 	Context context.Context
+	ID      string
 }
 
 // WorkflowID set workflow id
@@ -193,10 +193,10 @@ func NewExecuteOptions(opts ...ExecuteOption) ExecuteOptions {
 }
 
 type StepOptions struct {
-	ID       string
 	Context  context.Context
-	Requires []string
 	Fallback string
+	ID       string
+	Requires []string
 }
 
 type StepOption func(*StepOptions)

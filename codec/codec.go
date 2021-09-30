@@ -58,7 +58,7 @@ type Message struct {
 	Method   string
 	Endpoint string
 	Error    string
-	Id       string
+	ID       string
 	Body     []byte
 	Type     MessageType
 }
