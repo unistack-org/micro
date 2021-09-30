@@ -48,7 +48,7 @@ func Verify(a auth.Auth) error {
 	}
 
 	// set the credentials and token in auth options
-	a.Init(
+	_ = a.Init(
 		auth.ClientToken(token),
 		auth.Credentials(accID, accSecret),
 	)
@@ -79,7 +79,7 @@ func Verify(a auth.Auth) error {
 			}
 
 			// set the token
-			a.Init(auth.ClientToken(tok))
+			_ = a.Init(auth.ClientToken(tok))
 		}
 	}()
 

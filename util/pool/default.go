@@ -49,7 +49,7 @@ func (p *poolConn) Close() error {
 	return nil
 }
 
-func (p *poolConn) Id() string {
+func (p *poolConn) ID() string {
 	return p.id
 }
 

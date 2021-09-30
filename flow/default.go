@@ -241,6 +241,7 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 					w.opts.Logger.Tracef(nctx, "will be executed %v", steps[idx][nidx])
 				}
 				cstep := steps[idx][nidx]
+				// nolint: nestif
 				if len(cstep.Requires()) == 0 {
 					wg.Add(1)
 					go func(step Step) {

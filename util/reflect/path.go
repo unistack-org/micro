@@ -82,9 +82,9 @@ func getValueByName(v reflect.Value, key string) (reflect.Value, error) {
 	case reflect.Struct:
 		value = v.FieldByName(key)
 	case reflect.Map:
-		kValue := reflect.Indirect(reflect.New(v.Type().Key()))
-		kValue.SetString(key)
-		value = v.MapIndex(kValue)
+		kvalue := reflect.Indirect(reflect.New(v.Type().Key()))
+		kvalue.SetString(key)
+		value = v.MapIndex(kvalue)
 	}
 
 	if !value.IsValid() {

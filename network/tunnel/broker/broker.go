@@ -34,9 +34,9 @@ type tunBatchSubscriber struct {
 }
 
 type tunEvent struct {
+	err     error
 	message *broker.Message
 	topic   string
-	err     error
 }
 
 // used to access tunnel from options context
@@ -199,7 +199,9 @@ func (t *tunBatchSubscriber) run() {
 			},
 		}}
 		// handle the message
-		go t.handler(evts)
+		go func() {
+			_ = t.handler(evts)
+		}()
 
 	}
 }
@@ -235,13 +237,15 @@ func (t *tunSubscriber) run() {
 		c.Close()
 
 		// handle the message
-		go t.handler(&tunEvent{
-			topic: t.topic,
-			message: &broker.Message{
-				Header: m.Header,
-				Body:   m.Body,
-			},
-		})
+		go func() {
+			_ = t.handler(&tunEvent{
+				topic: t.topic,
+				message: &broker.Message{
+					Header: m.Header,
+					Body:   m.Body,
+				},
+			})
+		}()
 	}
 }
 

@@ -16,12 +16,14 @@ func TestMemoryTransport(t *testing.T) {
 	}
 	defer l.Close()
 
+	cherr := make(chan error, 1)
 	// accept
 	go func() {
-		if err := l.Accept(func(sock Socket) {
+		if nerr := l.Accept(func(sock Socket) {
 			for {
 				var m Message
-				if err := sock.Recv(&m); err != nil {
+				if rerr := sock.Recv(&m); rerr != nil {
+					cherr <- rerr
 					return
 				}
 				if len(os.Getenv("INTEGRATION_TESTS")) == 0 {
@@ -30,11 +32,12 @@ func TestMemoryTransport(t *testing.T) {
 				if cerr := sock.Send(&Message{
 					Body: []byte(`pong`),
 				}); cerr != nil {
+					cherr <- cerr
 					return
 				}
 			}
-		}); err != nil {
-			t.Fatalf("Unexpected error accepting %v", err)
+		}); nerr != nil {
+			cherr <- err
 		}
 	}()
 
@@ -45,19 +48,24 @@ func TestMemoryTransport(t *testing.T) {
 	}
 	defer c.Close()
 
-	// send <=> receive
-	for i := 0; i < 3; i++ {
-		if err := c.Send(&Message{
-			Body: []byte(`ping`),
-		}); err != nil {
-			return
-		}
-		var m Message
-		if err := c.Recv(&m); err != nil {
-			return
-		}
-		if len(os.Getenv("INTEGRATION_TESTS")) == 0 {
-			t.Logf("Client Received %s", string(m.Body))
+	select {
+	case err := <-cherr:
+		t.Fatal(err)
+	default:
+		// send <=> receive
+		for i := 0; i < 3; i++ {
+			if err := c.Send(&Message{
+				Body: []byte(`ping`),
+			}); err != nil {
+				return
+			}
+			var m Message
+			if err := c.Recv(&m); err != nil {
+				return
+			}
+			if len(os.Getenv("INTEGRATION_TESTS")) == 0 {
+				t.Logf("Client Received %s", string(m.Body))
+			}
 		}
 	}
 }

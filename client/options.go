@@ -267,7 +267,7 @@ func Transport(t transport.Transport) Option {
 func Register(r register.Register) Option {
 	return func(o *Options) {
 		if o.Router != nil {
-			o.Router.Init(router.Register(r))
+			_ = o.Router.Init(router.Register(r))
 		}
 	}
 }
@@ -331,7 +331,7 @@ func TLSConfig(t *tls.Config) Option {
 		// already set. Required for Init call below.
 
 		// set the transport tls
-		o.Transport.Init(
+		_ = o.Transport.Init(
 			transport.TLSConfig(t),
 		)
 	}

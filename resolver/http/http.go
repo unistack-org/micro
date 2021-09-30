@@ -11,6 +11,7 @@ import (
 	"github.com/unistack-org/micro/v3/resolver"
 )
 
+// nolint: golint,revive
 // HTTPResolver is a HTTP network resolver
 type HTTPResolver struct {
 	// Proto if not set, defaults to http
@@ -53,6 +54,7 @@ func (r *HTTPResolver) Resolve(name string) ([]*resolver.Record, error) {
 	q.Set("name", name)
 	uri.RawQuery = q.Encode()
 
+	// nolint: noctx
 	rsp, err := http.Get(uri.String())
 	if err != nil {
 		return nil, err

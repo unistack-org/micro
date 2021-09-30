@@ -28,8 +28,8 @@ type Stream struct {
 	Entries chan *Entry
 	// Stop channel
 	Stop chan bool
-	// Id of the stream
-	Id string
+	// ID of the stream
+	ID string
 }
 
 // Put adds a new value to ring buffer
@@ -53,7 +53,7 @@ func (b *Buffer) Put(v interface{}) {
 	for _, stream := range b.streams {
 		select {
 		case <-stream.Stop:
-			delete(b.streams, stream.Id)
+			delete(b.streams, stream.ID)
 			close(stream.Entries)
 		case stream.Entries <- entry:
 		}
@@ -116,7 +116,7 @@ func (b *Buffer) Stream() (<-chan *Entry, chan bool) {
 	stop := make(chan bool)
 
 	b.streams[id] = &Stream{
-		Id:      id,
+		ID:      id,
 		Entries: entries,
 		Stop:    stop,
 	}

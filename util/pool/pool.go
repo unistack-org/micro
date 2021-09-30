@@ -21,7 +21,7 @@ type Pool interface {
 // Conn conn pool interface
 type Conn interface {
 	// unique id of connection
-	Id() string
+	ID() string
 	// time it was created
 	Created() time.Time
 	// embedded connection

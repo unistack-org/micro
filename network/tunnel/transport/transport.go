@@ -37,7 +37,7 @@ func (t *tunTransport) Init(opts ...transport.Option) error {
 	// get the transport
 	tr, ok := t.options.Context.Value(transportKey{}).(transport.Transport)
 	if ok {
-		tun.Init(tunnel.Transport(tr))
+		_ = tun.Init(tunnel.Transport(tr))
 	}
 
 	// set the tunnel

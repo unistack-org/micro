@@ -16,15 +16,15 @@ type Options struct {
 	Name     string
 	Gateway  string
 	Network  string
-	Id       string
+	ID       string
 	Address  string
 	Precache bool
 }
 
-// Id sets Router Id
-func Id(id string) Option {
+// ID sets Router Id
+func ID(id string) Option {
 	return func(o *Options) {
-		o.Id = id
+		o.ID = id
 	}
 }
 
@@ -80,7 +80,7 @@ func Name(n string) Option {
 // NewOptions returns router default options
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Id:       id.Must(),
+		ID:       id.Must(),
 		Network:  DefaultNetwork,
 		Register: register.DefaultRegister,
 		Logger:   logger.DefaultLogger,

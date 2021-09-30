@@ -10,6 +10,7 @@ import (
 	"github.com/unistack-org/micro/v3/server"
 )
 
+// nolint: revive
 // Api interface
 type Api interface {
 	// Initialise options

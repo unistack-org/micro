@@ -262,7 +262,7 @@ func TLSConfig(t *tls.Config) Option {
 		// already set. Required for Init call below.
 
 		// set the transport tls
-		o.Transport.Init(
+		_ = o.Transport.Init(
 			transport.TLSConfig(t),
 		)
 	}
