@@ -67,3 +67,20 @@ type Message struct {
 func NewMessage(t MessageType) *Message {
 	return &Message{Type: t, Header: metadata.New(0)}
 }
+
+// MarshalAppend calls codec.Marshal(v) and returns the data appended to buf.
+// If codec implements MarshalAppend, that is called instead.
+func MarshalAppend(buf []byte, c Codec, v interface{}, opts ...Option) ([]byte, error) {
+	if nc, ok := c.(interface {
+		MarshalAppend([]byte, interface{}, ...Option) ([]byte, error)
+	}); ok {
+		return nc.MarshalAppend(buf, v, opts...)
+	}
+
+	mbuf, err := c.Marshal(v, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(buf, mbuf...), nil
+}
