@@ -5,6 +5,22 @@ import (
 	"testing"
 )
 
+func TestTrieFixedPattern(t *testing.T) {
+	type handler struct {
+		name string
+	}
+	tr := NewTrie()
+	tr.Insert([]string{http.MethodPut}, "/v1/create/{id}", &handler{name: "pattern"})
+	tr.Insert([]string{http.MethodPut}, "/v1/create/12", &handler{name: "fixed"})
+	h, _, ok := tr.Search(http.MethodPut, "/v1/create/12", IgnoreCase(false))
+	if !ok {
+		t.Fatalf("unexpected error")
+	}
+	if h.(*handler).name != "fixed" {
+		t.Fatalf("invalid handler %v", h)
+	}
+}
+
 func TestTrieIgnoreCase(t *testing.T) {
 	type handler struct {
 		name string
