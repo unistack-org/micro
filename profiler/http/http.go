@@ -1,5 +1,5 @@
 // Package http enables the http profiler
-package http
+package http // import "go.unistack.org/micro/v3/profiler/http"
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"net/http/pprof"
 	"sync"
 
-	profile "github.com/unistack-org/micro/v3/profiler"
+	profile "go.unistack.org/micro/v3/profiler"
 )
 
 type httpProfile struct {

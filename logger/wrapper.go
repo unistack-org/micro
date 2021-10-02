@@ -1,10 +1,10 @@
-package logger
+package logger // import "go.unistack.org/micro/v3/logger/wrapper"
 
 import (
 	"context"
 	"reflect"
 
-	rutil "github.com/unistack-org/micro/v3/util/reflect"
+	rutil "go.unistack.org/micro/v3/util/reflect"
 )
 
 // LogFunc function used for Log method

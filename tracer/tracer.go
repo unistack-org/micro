@@ -1,5 +1,5 @@
 // Package tracer provides an interface for distributed tracing
-package tracer
+package tracer // import "go.unistack.org/micro/v3/tracer"
 
 import (
 	"context"

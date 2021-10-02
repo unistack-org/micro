@@ -1,13 +1,13 @@
-package api
+package api // import "go.unistack.org/micro/v3/api"
 
 import (
 	"errors"
 	"regexp"
 	"strings"
 
-	"github.com/unistack-org/micro/v3/metadata"
-	"github.com/unistack-org/micro/v3/register"
-	"github.com/unistack-org/micro/v3/server"
+	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/register"
+	"go.unistack.org/micro/v3/server"
 )
 
 // nolint: revive

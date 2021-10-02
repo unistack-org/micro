@@ -1,6 +1,6 @@
 package tracer
 
-import "github.com/unistack-org/micro/v3/logger"
+import "go.unistack.org/micro/v3/logger"
 
 type SpanOptions struct{}
 

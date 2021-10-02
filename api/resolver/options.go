@@ -3,7 +3,7 @@ package resolver
 import (
 	"context"
 
-	"github.com/unistack-org/micro/v3/register"
+	"go.unistack.org/micro/v3/register"
 )
 
 // Options struct

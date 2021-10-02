@@ -5,9 +5,9 @@ package basic
 import (
 	"testing"
 
-	"github.com/unistack-org/micro/v3/auth"
-	"github.com/unistack-org/micro/v3/store/memory"
-	"github.com/unistack-org/micro/v3/util/token"
+	"go.unistack.org/micro/v3/auth"
+	"go.unistack.org/micro/v3/store/memory"
+	"go.unistack.org/micro/v3/util/token"
 )
 
 func TestGenerate(t *testing.T) {

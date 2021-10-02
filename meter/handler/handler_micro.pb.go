@@ -7,8 +7,8 @@ package handler
 import (
 	context "context"
 
-	api "github.com/unistack-org/micro/v3/api"
-	codec "github.com/unistack-org/micro/v3/codec"
+	api "go.unistack.org/micro/v3/api"
+	codec "go.unistack.org/micro/v3/codec"
 )
 
 var (

@@ -1,4 +1,4 @@
-package basic
+package basic // import "go.unistack.org/micro/v3/util/token/basic"
 
 import (
 	"context"
@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/unistack-org/micro/v3/auth"
-	"github.com/unistack-org/micro/v3/store"
-	"github.com/unistack-org/micro/v3/util/id"
-	"github.com/unistack-org/micro/v3/util/token"
+	"go.unistack.org/micro/v3/auth"
+	"go.unistack.org/micro/v3/store"
+	"go.unistack.org/micro/v3/util/id"
+	"go.unistack.org/micro/v3/util/token"
 )
 
 // Basic implementation of token provider, backed by the store

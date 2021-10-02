@@ -3,7 +3,7 @@ package token
 import (
 	"time"
 
-	"github.com/unistack-org/micro/v3/store"
+	"go.unistack.org/micro/v3/store"
 )
 
 // Options holds the options for token

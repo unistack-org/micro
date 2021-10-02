@@ -1,15 +1,15 @@
 // Package broker is a tunnel broker
-package broker
+package broker // import "go.unistack.org/micro/v3/network/tunnel/broker"
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/unistack-org/micro/v3/broker"
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/metadata"
-	"github.com/unistack-org/micro/v3/network/transport"
-	"github.com/unistack-org/micro/v3/network/tunnel"
+	"go.unistack.org/micro/v3/broker"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/network/transport"
+	"go.unistack.org/micro/v3/network/tunnel"
 )
 
 type tunBroker struct {

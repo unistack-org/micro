@@ -1,5 +1,5 @@
 // Package vpath resolves using http path and recognised versioned urls
-package vpath
+package vpath // import "go.unistack.org/micro/v3/api/resolver/vpath"
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/unistack-org/micro/v3/api/resolver"
+	"go.unistack.org/micro/v3/api/resolver"
 )
 
 // NewResolver creates new vpath api resolver

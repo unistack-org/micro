@@ -1,4 +1,4 @@
-module github.com/unistack-org/micro/v3
+module go.unistack.org/micro/v3
 
 go 1.16
 

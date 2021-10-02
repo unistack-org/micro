@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/imdario/mergo"
-	rutil "github.com/unistack-org/micro/v3/util/reflect"
+	rutil "go.unistack.org/micro/v3/util/reflect"
 )
 
 type defaultConfig struct {

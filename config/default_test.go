@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/unistack-org/micro/v3/config"
+	"go.unistack.org/micro/v3/config"
 )
 
 type Cfg struct {

@@ -1,5 +1,5 @@
 // Package logger provides a log interface
-package logger
+package logger // import "go.unistack.org/micro/v3/logger"
 
 import (
 	"context"

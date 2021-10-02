@@ -1,5 +1,5 @@
 // Package meter is for instrumentation
-package meter
+package meter // import "go.unistack.org/micro/v3/meter"
 
 import (
 	"io"

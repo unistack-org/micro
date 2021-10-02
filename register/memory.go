@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/util/id"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/util/id"
 )
 
 var (

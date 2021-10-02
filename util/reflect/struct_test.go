@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	rutil "github.com/unistack-org/micro/v3/util/reflect"
+	rutil "go.unistack.org/micro/v3/util/reflect"
 )
 
 func TestStructFieldsMap(t *testing.T) {

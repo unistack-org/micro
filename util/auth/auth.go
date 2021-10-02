@@ -1,12 +1,12 @@
-package auth
+package auth // import "go.unistack.org/micro/v3/util/auth"
 
 import (
 	"context"
 	"time"
 
-	"github.com/unistack-org/micro/v3/auth"
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/util/id"
+	"go.unistack.org/micro/v3/auth"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/util/id"
 )
 
 // Verify the auth credentials and refresh the auth token periodically

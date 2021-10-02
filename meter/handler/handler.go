@@ -1,12 +1,12 @@
-package handler
+package handler // import "go.unistack.org/micro/v3/meter/handler"
 
 import (
 	"bytes"
 	"context"
 
-	"github.com/unistack-org/micro/v3/codec"
-	"github.com/unistack-org/micro/v3/errors"
-	"github.com/unistack-org/micro/v3/meter"
+	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v3/errors"
+	"go.unistack.org/micro/v3/meter"
 )
 
 // guard to fail early

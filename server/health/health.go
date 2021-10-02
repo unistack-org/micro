@@ -1,10 +1,10 @@
-package health
+package health // import "go.unistack.org/micro/v3/server/health"
 
 import (
 	"context"
 
-	"github.com/unistack-org/micro/v3/codec"
-	"github.com/unistack-org/micro/v3/errors"
+	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v3/errors"
 )
 
 var _ HealthServer = &Handler{}

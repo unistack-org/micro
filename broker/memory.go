@@ -4,12 +4,12 @@ import (
 	"context"
 	"sync"
 
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/metadata"
-	maddr "github.com/unistack-org/micro/v3/util/addr"
-	"github.com/unistack-org/micro/v3/util/id"
-	mnet "github.com/unistack-org/micro/v3/util/net"
-	"github.com/unistack-org/micro/v3/util/rand"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/metadata"
+	maddr "go.unistack.org/micro/v3/util/addr"
+	"go.unistack.org/micro/v3/util/id"
+	mnet "go.unistack.org/micro/v3/util/net"
+	"go.unistack.org/micro/v3/util/rand"
 )
 
 type memoryBroker struct {

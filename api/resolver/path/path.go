@@ -1,11 +1,11 @@
 // Package path resolves using http path
-package path
+package path // import "go.unistack.org/micro/v3/api/resolver/path"
 
 import (
 	"net/http"
 	"strings"
 
-	"github.com/unistack-org/micro/v3/api/resolver"
+	"go.unistack.org/micro/v3/api/resolver"
 )
 
 // Resolver the path resolver

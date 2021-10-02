@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/unistack-org/micro/v3/store"
+	"go.unistack.org/micro/v3/store"
 )
 
 func (c *syncStore) syncManager() {

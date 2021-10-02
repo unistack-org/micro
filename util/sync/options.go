@@ -3,7 +3,7 @@ package sync
 import (
 	"time"
 
-	"github.com/unistack-org/micro/v3/store"
+	"go.unistack.org/micro/v3/store"
 )
 
 // Options represents Sync options

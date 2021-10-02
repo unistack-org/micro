@@ -1,11 +1,11 @@
 // Package dnssrv resolves names to dns srv records
-package dnssrv
+package dnssrv // import "go.unistack.org/micro/v3/resolver/dnssrv"
 
 import (
 	"fmt"
 	"net"
 
-	"github.com/unistack-org/micro/v3/resolver"
+	"go.unistack.org/micro/v3/resolver"
 )
 
 // Resolver is a DNS network resolve

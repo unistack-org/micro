@@ -3,7 +3,7 @@ package server
 import (
 	"reflect"
 
-	"github.com/unistack-org/micro/v3/register"
+	"go.unistack.org/micro/v3/register"
 )
 
 type rpcHandler struct {

@@ -1,13 +1,13 @@
 package network
 
 import (
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/meter"
-	"github.com/unistack-org/micro/v3/network/tunnel"
-	"github.com/unistack-org/micro/v3/proxy"
-	"github.com/unistack-org/micro/v3/router"
-	"github.com/unistack-org/micro/v3/tracer"
-	"github.com/unistack-org/micro/v3/util/id"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/network/tunnel"
+	"go.unistack.org/micro/v3/proxy"
+	"go.unistack.org/micro/v3/router"
+	"go.unistack.org/micro/v3/tracer"
+	"go.unistack.org/micro/v3/util/id"
 )
 
 // Option func

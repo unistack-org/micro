@@ -6,7 +6,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/unistack-org/micro/v3/server"
+	"go.unistack.org/micro/v3/server"
 )
 
 // Function is a one time executing Service

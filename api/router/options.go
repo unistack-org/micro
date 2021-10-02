@@ -3,10 +3,10 @@ package router
 import (
 	"context"
 
-	"github.com/unistack-org/micro/v3/api/resolver"
-	"github.com/unistack-org/micro/v3/api/resolver/vpath"
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/register"
+	"go.unistack.org/micro/v3/api/resolver"
+	"go.unistack.org/micro/v3/api/resolver/vpath"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/register"
 )
 
 // Options holds the options for api router

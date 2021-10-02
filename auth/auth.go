@@ -1,12 +1,12 @@
 // Package auth provides authentication and authorization capability
-package auth
+package auth // import "go.unistack.org/micro/v3/auth"
 
 import (
 	"context"
 	"errors"
 	"time"
 
-	"github.com/unistack-org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/metadata"
 )
 
 const (

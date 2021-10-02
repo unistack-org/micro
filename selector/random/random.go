@@ -1,8 +1,8 @@
-package random
+package random // import "go.unistack.org/micro/v3/selector/random"
 
 import (
-	"github.com/unistack-org/micro/v3/selector"
-	"github.com/unistack-org/micro/v3/util/rand"
+	"go.unistack.org/micro/v3/selector"
+	"go.unistack.org/micro/v3/util/rand"
 )
 
 type random struct{}

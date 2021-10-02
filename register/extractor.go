@@ -6,7 +6,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/unistack-org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/metadata"
 )
 
 // ExtractValue from reflect.Type from specified depth

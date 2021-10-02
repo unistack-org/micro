@@ -1,12 +1,12 @@
 // Package client is an interface for an RPC client
-package client
+package client // import "go.unistack.org/micro/v3/client"
 
 import (
 	"context"
 	"time"
 
-	"github.com/unistack-org/micro/v3/codec"
-	"github.com/unistack-org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v3/metadata"
 )
 
 var (

@@ -3,7 +3,7 @@ package micro
 import (
 	"context"
 
-	"github.com/unistack-org/micro/v3/client"
+	"go.unistack.org/micro/v3/client"
 )
 
 // Event is used to publish messages to a topic

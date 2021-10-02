@@ -3,7 +3,7 @@
 //
 // See https://golang.org/pkg/encoding/json/ for more
 // details on JSON struct tags.
-package qson
+package qson // import "go.unistack.org/micro/v3/util/qson"
 
 import (
 	"encoding/json"

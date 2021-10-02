@@ -1,9 +1,9 @@
 // Package network is for creating internetworks
-package network
+package network // import "go.unistack.org/micro/v3/network"
 
 import (
-	"github.com/unistack-org/micro/v3/client"
-	"github.com/unistack-org/micro/v3/server"
+	"go.unistack.org/micro/v3/client"
+	"go.unistack.org/micro/v3/server"
 )
 
 // Error is network node errors

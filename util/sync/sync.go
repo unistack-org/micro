@@ -1,5 +1,5 @@
 // Package sync will sync multiple stores
-package sync
+package sync // import "go.unistack.org/micro/v3/util/sync"
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/ef-ds/deque"
-	"github.com/unistack-org/micro/v3/store"
+	"go.unistack.org/micro/v3/store"
 )
 
 // Sync implements a sync in for stores
