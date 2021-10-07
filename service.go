@@ -392,8 +392,12 @@ type nameIface interface {
 	Name() string
 }
 
-func getNameIndex(n string, ifaces ...interface{}) int {
-	for idx, iface := range ifaces {
+func getNameIndex(n string, ifaces interface{}) int {
+	values, ok := ifaces.([]interface{})
+	if !ok {
+		return 0
+	}
+	for idx, iface := range values {
 		if ifc, ok := iface.(nameIface); ok && ifc.Name() == n {
 			return idx
 		}
