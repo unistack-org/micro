@@ -38,26 +38,26 @@ type Label struct {
 	key string
 }
 
-func Any(k string, v interface{}) Label {
+func LabelAny(k string, v interface{}) Label {
 	return Label{key: k, val: v}
 }
 
-func String(k string, v string) Label {
+func LabelString(k string, v string) Label {
 	return Label{key: k, val: v}
 }
 
-func Int(k string, v int) Label {
+func LabelInt(k string, v int) Label {
 	return Label{key: k, val: v}
 }
 
-func Int64(k string, v int64) Label {
+func LabelInt64(k string, v int64) Label {
 	return Label{key: k, val: v}
 }
 
-func Float64(k string, v float64) Label {
+func LabelFloat64(k string, v float64) Label {
 	return Label{key: k, val: v}
 }
 
-func Bool(k string, v bool) Label {
+func LabelBool(k string, v bool) Label {
 	return Label{key: k, val: v}
 }
