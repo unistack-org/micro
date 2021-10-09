@@ -51,6 +51,20 @@ func NewOptions(opt ...Option) Options {
 	return opts
 }
 
+// LabelPrefix sets the labels prefix
+func LabelPrefix(pref string) Option {
+	return func(o *Options) {
+		o.LabelPrefix = pref
+	}
+}
+
+// MetricPrefix sets the metric prefix
+func MetricPrefix(pref string) Option {
+	return func(o *Options) {
+		o.MetricPrefix = pref
+	}
+}
+
 // Context sets the metrics context
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
