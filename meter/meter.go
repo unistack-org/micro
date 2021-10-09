@@ -28,17 +28,31 @@ var (
 
 // Meter is an interface for collecting and instrumenting metrics
 type Meter interface {
+	// Name returns meter name
 	Name() string
+	// Init initialize meter
 	Init(opts ...Option) error
+	// Clone create meter copy with new options
+	Clone(opts ...Option) Meter
+	// Counter get or create counter
 	Counter(name string, labels ...string) Counter
+	// FloatCounter get or create float counter
 	FloatCounter(name string, labels ...string) FloatCounter
+	// Gauge get or create gauge
 	Gauge(name string, fn func() float64, labels ...string) Gauge
+	// Set create new meter metrics set
 	Set(opts ...Option) Meter
+	// Histogram get or create histogram
 	Histogram(name string, labels ...string) Histogram
+	// Summary get or create summary
 	Summary(name string, labels ...string) Summary
+	// SummaryExt get or create summary with spcified quantiles and window time
 	SummaryExt(name string, window time.Duration, quantiles []float64, labels ...string) Summary
+	// Write writes metrics to io.Writer
 	Write(w io.Writer, opts ...Option) error
+	// Options returns meter options
 	Options() Options
+	// String return meter type
 	String() string
 }
 

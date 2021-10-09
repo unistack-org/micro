@@ -15,6 +15,15 @@ func NewMeter(opts ...Option) Meter {
 	return &noopMeter{opts: NewOptions(opts...)}
 }
 
+// Clone return old meter with new options
+func (r *noopMeter) Clone(opts ...Option) Meter {
+	options := r.opts
+	for _, o := range opts {
+		o(&options)
+	}
+	return &noopMeter{opts: options}
+}
+
 func (r *noopMeter) Name() string {
 	return r.opts.Name
 }
