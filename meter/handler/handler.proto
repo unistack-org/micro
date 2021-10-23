@@ -1,24 +1,20 @@
 syntax = "proto3";
 
 package micro.meter.handler;
-option go_package = "github.com/unistack-org/micro/v3/meter/handler;handler";
+option go_package = "go.unistack.org/micro/v3/meter/handler;handler";
 
 import "api/annotations.proto";
-import "openapiv2/annotations.proto";
+import "openapiv3/annotations.proto";
 import "codec/frame.proto";
 
 service Meter {
 	rpc Metrics(micro.codec.Frame) returns (micro.codec.Frame) {
-		option (micro.openapiv2.openapiv2_operation) = {
+		option (micro.openapiv3.openapiv3_operation) = {
       operation_id: "Metrics";
       responses: {
-        response_code: {
-          name: "default";
-          value: {
-            json_reference: {
-              description: "Error response";
-              _ref: "micro.codec.Frame";
-            };
+        default: {
+          reference: {
+            _ref: "micro.codec.Frame";
           };
         };
       };
