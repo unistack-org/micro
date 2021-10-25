@@ -69,6 +69,67 @@ func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, e
 	return nil, ErrNotFound
 }
 
+// ZeroFieldByPath clean struct field by its path
+func ZeroFieldByPath(src interface{}, path string) error {
+	var err error
+	var val reflect.Value
+	for _, p := range strings.Split(path, ".") {
+		val, err = structValueByName(reflect.ValueOf(src), p)
+		if err != nil {
+			return err
+		}
+	}
+
+	if IsEmpty(val) {
+		return nil
+	}
+
+	if !val.CanSet() {
+		return ErrInvalidStruct
+	}
+
+	val.Set(reflect.Zero(val.Type()))
+
+	return nil
+}
+
+// structValueByName get struct field by its name
+func structValueByName(sv reflect.Value, tkey string) (reflect.Value, error) {
+	if sv.Kind() == reflect.Ptr {
+		sv = sv.Elem()
+	}
+	if sv.Kind() != reflect.Struct {
+		return reflect.Zero(reflect.TypeOf(sv)), ErrInvalidStruct
+	}
+
+	typ := sv.Type()
+	for idx := 0; idx < typ.NumField(); idx++ {
+		fld := typ.Field(idx)
+		val := sv.Field(idx)
+		if len(fld.PkgPath) != 0 {
+			continue
+		}
+
+		if fld.Name == tkey || strings.EqualFold(strings.ToLower(fld.Name), strings.ToLower(tkey)) {
+			return val, nil
+		}
+
+		switch val.Kind() {
+		case reflect.Ptr:
+			if val = val.Elem(); val.Kind() == reflect.Struct {
+				if iface, err := structValueByName(val, tkey); err == nil {
+					return iface, nil
+				}
+			}
+		case reflect.Struct:
+			if iface, err := structValueByName(val, tkey); err == nil {
+				return iface, nil
+			}
+		}
+	}
+	return reflect.Zero(reflect.TypeOf(sv)), ErrNotFound
+}
+
 // StructFieldByPath get struct field by its path
 func StructFieldByPath(src interface{}, path string) (interface{}, error) {
 	var err error
@@ -98,7 +159,7 @@ func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
 		if len(fld.PkgPath) != 0 {
 			continue
 		}
-		if fld.Name == tkey {
+		if fld.Name == tkey || strings.EqualFold(strings.ToLower(fld.Name), strings.ToLower(tkey)) {
 			if val.Kind() != reflect.Ptr && val.CanAddr() {
 				val = val.Addr()
 			}

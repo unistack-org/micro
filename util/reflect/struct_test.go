@@ -8,6 +8,46 @@ import (
 	rutil "go.unistack.org/micro/v3/util/reflect"
 )
 
+func TestZeroFieldByPath(t *testing.T) {
+	type NestedStr struct {
+		BBB string
+		CCC int
+	}
+	type Str1 struct {
+		Name   []string `json:"name" codec:"flatten"`
+		XXX    string   `json:"xxx"`
+		Nested NestedStr
+	}
+	type Str2 struct {
+		XXX    string `json:"xxx"`
+		Nested *NestedStr
+		Name   []string `json:"name" codec:"flatten"`
+	}
+	var err error
+	val1 := &Str1{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
+
+	err = rutil.ZeroFieldByPath(val1, "name.nested.bbb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = rutil.ZeroFieldByPath(val1, "name.nested")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val1.Nested.BBB == "ddd" {
+		t.Fatalf("zero field not works: %v", val1)
+	}
+
+	val2 := &Str2{Name: []string{"first", "second"}, XXX: "ttt", Nested: &NestedStr{BBB: "ddd", CCC: 9}}
+	err = rutil.ZeroFieldByPath(val2, "name.nested")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val2.Nested != nil {
+		t.Fatalf("zero field not works: %v", val2)
+	}
+}
+
 func TestStructFieldsMap(t *testing.T) {
 	type NestedStr struct {
 		BBB string
