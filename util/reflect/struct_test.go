@@ -8,6 +8,40 @@ import (
 	rutil "go.unistack.org/micro/v3/util/reflect"
 )
 
+func TestSetFieldByPath(t *testing.T) {
+	type NestedStr struct {
+		BBB string
+		CCC int
+	}
+	type Str1 struct {
+		Name   []string `json:"name" codec:"flatten"`
+		XXX    string   `json:"xxx"`
+		Nested NestedStr
+	}
+	type Str2 struct {
+		XXX    string `json:"xxx"`
+		Nested *NestedStr
+		Name   []string `json:"name" codec:"flatten"`
+	}
+	var err error
+	val1 := &Str1{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
+	val2 := &Str2{Name: []string{"first", "second"}, XXX: "ttt", Nested: &NestedStr{BBB: "ddd", CCC: 9}}
+	err = rutil.SetFieldByPath(val1, "xxx", "Nested.BBB")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val1.Nested.BBB != "xxx" {
+		t.Fatalf("SetFieldByPath not works: %#+v", val1)
+	}
+	err = rutil.SetFieldByPath(val2, "xxx", "Nested.BBB")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val2.Nested.BBB != "xxx" {
+		t.Fatalf("SetFieldByPath not works: %#+v", val1)
+	}
+}
+
 func TestZeroFieldByPath(t *testing.T) {
 	type NestedStr struct {
 		BBB string

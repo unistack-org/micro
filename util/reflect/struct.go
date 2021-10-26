@@ -72,9 +72,10 @@ func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, e
 // ZeroFieldByPath clean struct field by its path
 func ZeroFieldByPath(src interface{}, path string) error {
 	var err error
-	var val reflect.Value
+	val := reflect.ValueOf(src)
+
 	for _, p := range strings.Split(path, ".") {
-		val, err = structValueByName(reflect.ValueOf(src), p)
+		val, err = structValueByName(reflect.ValueOf(val), p)
 		if err != nil {
 			return err
 		}
@@ -89,6 +90,27 @@ func ZeroFieldByPath(src interface{}, path string) error {
 	}
 
 	val.Set(reflect.Zero(val.Type()))
+
+	return nil
+}
+
+// SetFieldByPath set struct field by its path
+func SetFieldByPath(src interface{}, dst interface{}, path string) error {
+	var err error
+	val := reflect.ValueOf(src)
+
+	for _, p := range strings.Split(path, ".") {
+		val, err = structValueByName(val, p)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !val.CanSet() {
+		return ErrInvalidStruct
+	}
+
+	val.Set(reflect.ValueOf(dst))
 
 	return nil
 }
