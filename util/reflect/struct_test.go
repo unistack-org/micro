@@ -10,17 +10,17 @@ import (
 
 func TestSetFieldByPath(t *testing.T) {
 	type NestedStr struct {
-		BBB string
-		CCC int
+		BBB string `json:"bbb"`
+		CCC int `json:"ccc"`
 	}
 	type Str1 struct {
 		Name   []string `json:"name" codec:"flatten"`
 		XXX    string   `json:"xxx"`
-		Nested NestedStr
+		Nested NestedStr `json:"nested"`
 	}
 	type Str2 struct {
 		XXX    string `json:"xxx"`
-		Nested *NestedStr
+		Nested *NestedStr `json:"nested"`
 		Name   []string `json:"name" codec:"flatten"`
 	}
 	var err error
@@ -44,27 +44,27 @@ func TestSetFieldByPath(t *testing.T) {
 
 func TestZeroFieldByPath(t *testing.T) {
 	type NestedStr struct {
-		BBB string
-		CCC int
+		BBB string `json:"bbb"`
+		CCC int `json:"ccc"`
 	}
 	type Str1 struct {
 		Name   []string `json:"name" codec:"flatten"`
 		XXX    string   `json:"xxx"`
-		Nested NestedStr
+		Nested NestedStr `json:"nested"`
 	}
 	type Str2 struct {
 		XXX    string `json:"xxx"`
-		Nested *NestedStr
+		Nested *NestedStr `json:"nested"`
 		Name   []string `json:"name" codec:"flatten"`
 	}
 	var err error
 	val1 := &Str1{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
 
-	err = rutil.ZeroFieldByPath(val1, "name.nested.bbb")
+	err = rutil.ZeroFieldByPath(val1, "Nested.BBB")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = rutil.ZeroFieldByPath(val1, "name.nested")
+	err = rutil.ZeroFieldByPath(val1, "Nested")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +73,7 @@ func TestZeroFieldByPath(t *testing.T) {
 	}
 
 	val2 := &Str2{Name: []string{"first", "second"}, XXX: "ttt", Nested: &NestedStr{BBB: "ddd", CCC: 9}}
-	err = rutil.ZeroFieldByPath(val2, "name.nested")
+	err = rutil.ZeroFieldByPath(val2, "Nested")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -182,9 +182,9 @@ func TestStructByName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if v, ok := iface.(*[]string); !ok {
-		t.Fatalf("not *[]string %v", iface)
-	} else if len(*v) != 2 {
+	if v, ok := iface.([]string); !ok {
+		t.Fatalf("not []string %v", iface)
+	} else if len(v) != 2 {
 		t.Fatalf("invalid number %v", iface)
 	}
 }

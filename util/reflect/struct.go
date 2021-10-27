@@ -75,7 +75,7 @@ func ZeroFieldByPath(src interface{}, path string) error {
 	val := reflect.ValueOf(src)
 
 	for _, p := range strings.Split(path, ".") {
-		val, err = structValueByName(reflect.ValueOf(val), p)
+		val, err = structValueByName(val, p)
 		if err != nil {
 			return err
 		}
@@ -182,9 +182,6 @@ func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
 			continue
 		}
 		if fld.Name == tkey || strings.EqualFold(strings.ToLower(fld.Name), strings.ToLower(tkey)) {
-			if val.Kind() != reflect.Ptr && val.CanAddr() {
-				val = val.Addr()
-			}
 			return val.Interface(), nil
 		}
 
