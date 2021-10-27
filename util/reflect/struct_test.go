@@ -4,24 +4,45 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
+	"time"
 
 	rutil "go.unistack.org/micro/v3/util/reflect"
 )
 
+func TestStructfields(t *testing.T) {
+	type Config struct {
+		Wait     time.Duration
+		Time     time.Time
+		Metadata map[string]int
+		Broker   string
+		Addr     []string
+		Verbose  bool
+		Nested   *Config
+	}
+	cfg := &Config{Nested: &Config{}}
+	fields, err := rutil.StructFields(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fields) != 13 {
+		t.Fatalf("invalid fields number: %v", fields)
+	}
+}
+
 func TestSetFieldByPath(t *testing.T) {
 	type NestedStr struct {
 		BBB string `json:"bbb"`
-		CCC int `json:"ccc"`
+		CCC int    `json:"ccc"`
 	}
 	type Str1 struct {
-		Name   []string `json:"name" codec:"flatten"`
-		XXX    string   `json:"xxx"`
+		Name   []string  `json:"name" codec:"flatten"`
+		XXX    string    `json:"xxx"`
 		Nested NestedStr `json:"nested"`
 	}
 	type Str2 struct {
-		XXX    string `json:"xxx"`
+		XXX    string     `json:"xxx"`
 		Nested *NestedStr `json:"nested"`
-		Name   []string `json:"name" codec:"flatten"`
+		Name   []string   `json:"name" codec:"flatten"`
 	}
 	var err error
 	val1 := &Str1{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
@@ -45,17 +66,17 @@ func TestSetFieldByPath(t *testing.T) {
 func TestZeroFieldByPath(t *testing.T) {
 	type NestedStr struct {
 		BBB string `json:"bbb"`
-		CCC int `json:"ccc"`
+		CCC int    `json:"ccc"`
 	}
 	type Str1 struct {
-		Name   []string `json:"name" codec:"flatten"`
-		XXX    string   `json:"xxx"`
+		Name   []string  `json:"name" codec:"flatten"`
+		XXX    string    `json:"xxx"`
 		Nested NestedStr `json:"nested"`
 	}
 	type Str2 struct {
-		XXX    string `json:"xxx"`
+		XXX    string     `json:"xxx"`
 		Nested *NestedStr `json:"nested"`
-		Name   []string `json:"name" codec:"flatten"`
+		Name   []string   `json:"name" codec:"flatten"`
 	}
 	var err error
 	val1 := &Str1{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}

@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // ErrInvalidParam specifies invalid url query params
@@ -233,10 +234,30 @@ func StructFields(src interface{}) ([]StructField, error) {
 			continue
 		}
 
+		switch val.Interface().(type) {
+		case time.Time, *time.Time:
+			fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
+			continue
+		case time.Duration, *time.Duration:
+			fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
+			continue
+		}
+
 		switch val.Kind() {
-		// case timeKind:
-		// fmt.Printf("GGG\n")
-		// fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
+		case reflect.Ptr:
+			//	if !val.IsValid()
+			if reflect.Indirect(val).Kind() == reflect.Struct {
+				infields, err := StructFields(val.Interface())
+				if err != nil {
+					return nil, err
+				}
+				for _, infield := range infields {
+					infield.Path = fmt.Sprintf("%s.%s", fld.Name, infield.Path)
+					fields = append(fields, infield)
+				}
+			} else {
+				fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
+			}
 		case reflect.Struct:
 			infields, err := StructFields(val.Interface())
 			if err != nil {
