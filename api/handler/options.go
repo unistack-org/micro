@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/unistack-org/micro/v3/api/router"
-	"github.com/unistack-org/micro/v3/client"
-	"github.com/unistack-org/micro/v3/logger"
+	"go.unistack.org/micro/v3/api/router"
+	"go.unistack.org/micro/v3/client"
+	"go.unistack.org/micro/v3/logger"
 )
 
 // DefaultMaxRecvSize specifies max recv size for handler

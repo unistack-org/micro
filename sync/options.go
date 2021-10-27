@@ -3,9 +3,9 @@ package sync
 import (
 	"time"
 
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/meter"
-	"github.com/unistack-org/micro/v3/tracer"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/tracer"
 )
 
 // Options holds the sync options

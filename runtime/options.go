@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	"github.com/unistack-org/micro/v3/client"
-	"github.com/unistack-org/micro/v3/logger"
+	"go.unistack.org/micro/v3/client"
+	"go.unistack.org/micro/v3/logger"
 )
 
 // Options configure runtime

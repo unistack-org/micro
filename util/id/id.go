@@ -1,4 +1,4 @@
-package id
+package id // import "go.unistack.org/micro/v3/util/id"
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"errors"
 	"math"
 
-	"github.com/unistack-org/micro/v3/logger"
+	"go.unistack.org/micro/v3/logger"
 )
 
 // DefaultAlphabet is the alphabet used for ID characters by default

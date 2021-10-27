@@ -1,10 +1,10 @@
 // Package io is for io management
-package io
+package io // import "go.unistack.org/micro/v3/util/io"
 
 import (
 	"io"
 
-	"github.com/unistack-org/micro/v3/network/transport"
+	"go.unistack.org/micro/v3/network/transport"
 )
 
 type rwc struct {

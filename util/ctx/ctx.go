@@ -1,11 +1,11 @@
-package ctx
+package ctx // import "go.unistack.org/micro/v3/util/ctx"
 
 import (
 	"context"
 	"net/http"
 	"strings"
 
-	"github.com/unistack-org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/metadata"
 )
 
 // FromRequest creates context with metadata from http.Request

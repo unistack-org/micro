@@ -3,11 +3,11 @@ package tunnel
 import (
 	"time"
 
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/meter"
-	"github.com/unistack-org/micro/v3/network/transport"
-	"github.com/unistack-org/micro/v3/tracer"
-	"github.com/unistack-org/micro/v3/util/id"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/network/transport"
+	"go.unistack.org/micro/v3/tracer"
+	"go.unistack.org/micro/v3/util/id"
 )
 
 var (

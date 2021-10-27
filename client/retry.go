@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 
-	"github.com/unistack-org/micro/v3/errors"
+	"go.unistack.org/micro/v3/errors"
 )
 
 // RetryFunc that returning either false or a non-nil error will result in the call not being retried

@@ -35,6 +35,7 @@ type noopSpan struct {
 	ctx    context.Context
 	tracer Tracer
 	name   string
+	labels []Label
 }
 
 func (s *noopSpan) Finish(opts ...SpanOption) {
@@ -56,6 +57,7 @@ func (s *noopSpan) SetName(name string) {
 }
 
 func (s *noopSpan) SetLabels(labels ...Label) {
+	s.labels = labels
 }
 
 // NewTracer returns new memory tracer

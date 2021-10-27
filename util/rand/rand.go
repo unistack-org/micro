@@ -1,4 +1,4 @@
-package rand
+package rand // import "go.unistack.org/micro/v3/util/rand"
 
 import (
 	crand "crypto/rand"

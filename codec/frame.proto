@@ -17,7 +17,7 @@ syntax = "proto3";
 package micro.codec;
 
 option cc_enable_arenas = true;
-option go_package = "github.com/unistack-org/micro/v3/codec;codec";
+option go_package = "go.unistack.org/micro/v3/codec;codec";
 option java_multiple_files = true;
 option java_outer_classname = "MicroCodec";
 option java_package = "micro.codec";

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unistack-org/micro/v3/store"
+	"go.unistack.org/micro/v3/store"
 )
 
 func TestMemoryReInit(t *testing.T) {

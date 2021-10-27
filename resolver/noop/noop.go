@@ -1,8 +1,8 @@
 // Package noop is a noop resolver
-package noop
+package noop // import "go.unistack.org/micro/v3/resolver/noop"
 
 import (
-	"github.com/unistack-org/micro/v3/resolver"
+	"go.unistack.org/micro/v3/resolver"
 )
 
 // Resolver contains noop resolver

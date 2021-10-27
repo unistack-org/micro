@@ -1,10 +1,10 @@
 // Package host resolves using http host
-package host
+package host // import "go.unistack.org/micro/v3/api/resolver/host"
 
 import (
 	"net/http"
 
-	"github.com/unistack-org/micro/v3/api/resolver"
+	"go.unistack.org/micro/v3/api/resolver"
 )
 
 type hostResolver struct {

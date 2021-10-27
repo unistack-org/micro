@@ -4,9 +4,104 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
+	"time"
 
-	rutil "github.com/unistack-org/micro/v3/util/reflect"
+	rutil "go.unistack.org/micro/v3/util/reflect"
 )
+
+func TestStructfields(t *testing.T) {
+	type Config struct {
+		Wait     time.Duration
+		Time     time.Time
+		Metadata map[string]int
+		Broker   string
+		Addr     []string
+		Verbose  bool
+		Nested   *Config
+	}
+	cfg := &Config{Nested: &Config{}}
+	fields, err := rutil.StructFields(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fields) != 13 {
+		t.Fatalf("invalid fields number: %v", fields)
+	}
+}
+
+func TestSetFieldByPath(t *testing.T) {
+	type NestedStr struct {
+		BBB string `json:"bbb"`
+		CCC int    `json:"ccc"`
+	}
+	type Str1 struct {
+		Name   []string  `json:"name" codec:"flatten"`
+		XXX    string    `json:"xxx"`
+		Nested NestedStr `json:"nested"`
+	}
+	type Str2 struct {
+		XXX    string     `json:"xxx"`
+		Nested *NestedStr `json:"nested"`
+		Name   []string   `json:"name" codec:"flatten"`
+	}
+	var err error
+	val1 := &Str1{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
+	val2 := &Str2{Name: []string{"first", "second"}, XXX: "ttt", Nested: &NestedStr{BBB: "ddd", CCC: 9}}
+	err = rutil.SetFieldByPath(val1, "xxx", "Nested.BBB")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val1.Nested.BBB != "xxx" {
+		t.Fatalf("SetFieldByPath not works: %#+v", val1)
+	}
+	err = rutil.SetFieldByPath(val2, "xxx", "Nested.BBB")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val2.Nested.BBB != "xxx" {
+		t.Fatalf("SetFieldByPath not works: %#+v", val1)
+	}
+}
+
+func TestZeroFieldByPath(t *testing.T) {
+	type NestedStr struct {
+		BBB string `json:"bbb"`
+		CCC int    `json:"ccc"`
+	}
+	type Str1 struct {
+		Name   []string  `json:"name" codec:"flatten"`
+		XXX    string    `json:"xxx"`
+		Nested NestedStr `json:"nested"`
+	}
+	type Str2 struct {
+		XXX    string     `json:"xxx"`
+		Nested *NestedStr `json:"nested"`
+		Name   []string   `json:"name" codec:"flatten"`
+	}
+	var err error
+	val1 := &Str1{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
+
+	err = rutil.ZeroFieldByPath(val1, "Nested.BBB")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = rutil.ZeroFieldByPath(val1, "Nested")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val1.Nested.BBB == "ddd" {
+		t.Fatalf("zero field not works: %v", val1)
+	}
+
+	val2 := &Str2{Name: []string{"first", "second"}, XXX: "ttt", Nested: &NestedStr{BBB: "ddd", CCC: 9}}
+	err = rutil.ZeroFieldByPath(val2, "Nested")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val2.Nested != nil {
+		t.Fatalf("zero field not works: %v", val2)
+	}
+}
 
 func TestStructFieldsMap(t *testing.T) {
 	type NestedStr struct {
@@ -108,9 +203,9 @@ func TestStructByName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if v, ok := iface.(*[]string); !ok {
-		t.Fatalf("not *[]string %v", iface)
-	} else if len(*v) != 2 {
+	if v, ok := iface.([]string); !ok {
+		t.Fatalf("not []string %v", iface)
+	} else if len(v) != 2 {
 		t.Fatalf("invalid number %v", iface)
 	}
 }

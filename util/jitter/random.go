@@ -1,10 +1,10 @@
 // Package jitter provides a random jitter
-package jitter
+package jitter // import "go.unistack.org/micro/v3/util/jitter"
 
 import (
 	"time"
 
-	"github.com/unistack-org/micro/v3/util/rand"
+	"go.unistack.org/micro/v3/util/rand"
 )
 
 // Random returns a random time to jitter with max cap specified

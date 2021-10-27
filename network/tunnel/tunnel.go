@@ -1,12 +1,12 @@
 // Package tunnel provides gre network tunnelling
-package tunnel
+package tunnel // import "go.unistack.org/micro/v3/network/transport/tunnel"
 
 import (
 	"context"
 	"errors"
 	"time"
 
-	"github.com/unistack-org/micro/v3/network/transport"
+	"go.unistack.org/micro/v3/network/transport"
 )
 
 // DefaultTunnel contains default tunnel implementation

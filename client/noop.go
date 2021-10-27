@@ -3,10 +3,10 @@ package client
 import (
 	"context"
 
-	"github.com/unistack-org/micro/v3/broker"
-	"github.com/unistack-org/micro/v3/codec"
-	"github.com/unistack-org/micro/v3/errors"
-	"github.com/unistack-org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/broker"
+	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v3/errors"
+	"go.unistack.org/micro/v3/metadata"
 )
 
 // DefaultCodecs will be used to encode/decode data

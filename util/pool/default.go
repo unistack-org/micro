@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unistack-org/micro/v3/network/transport"
-	"github.com/unistack-org/micro/v3/util/id"
+	"go.unistack.org/micro/v3/network/transport"
+	"go.unistack.org/micro/v3/util/id"
 )
 
 type pool struct {

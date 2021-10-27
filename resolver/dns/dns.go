@@ -1,5 +1,5 @@
 // Package dns resolves names to dns records
-package dns
+package dns // import "go.unistack.org/micro/v3/resolver/dns"
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unistack-org/micro/v3/resolver"
+	"go.unistack.org/micro/v3/resolver"
 )
 
 // Resolver is a DNS network resolve

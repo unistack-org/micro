@@ -1,6 +1,6 @@
 package http
 
-import "github.com/unistack-org/micro/v3/router"
+import "go.unistack.org/micro/v3/router"
 
 // Options struct
 type Options struct {

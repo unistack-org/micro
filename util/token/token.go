@@ -1,10 +1,10 @@
-package token
+package token // import "go.unistack.org/micro/v3/util/token"
 
 import (
 	"errors"
 	"time"
 
-	"github.com/unistack-org/micro/v3/auth"
+	"go.unistack.org/micro/v3/auth"
 )
 
 var (

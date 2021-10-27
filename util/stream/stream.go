@@ -1,14 +1,14 @@
 // Package stream encapsulates streams within streams
-package stream
+package stream // import "go.unistack.org/micro/v3/util/stream"
 
 import (
 	"context"
 	"sync"
 
-	"github.com/unistack-org/micro/v3/client"
-	"github.com/unistack-org/micro/v3/codec"
-	"github.com/unistack-org/micro/v3/metadata"
-	"github.com/unistack-org/micro/v3/server"
+	"go.unistack.org/micro/v3/client"
+	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/server"
 )
 
 // Stream interface

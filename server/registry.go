@@ -4,10 +4,10 @@ import (
 	"net"
 	"time"
 
-	"github.com/unistack-org/micro/v3/metadata"
-	"github.com/unistack-org/micro/v3/register"
-	"github.com/unistack-org/micro/v3/util/addr"
-	"github.com/unistack-org/micro/v3/util/backoff"
+	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/register"
+	"go.unistack.org/micro/v3/util/addr"
+	"go.unistack.org/micro/v3/util/backoff"
 )
 
 var (

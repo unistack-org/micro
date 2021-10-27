@@ -1,5 +1,5 @@
 // Package pprof provides a pprof profiler which writes output to /tmp/[name].{cpu,mem}.pprof
-package pprof
+package pprof // import "go.unistack.org/micro/v3/profiler/pprof"
 
 import (
 	"os"
@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	profile "github.com/unistack-org/micro/v3/profiler"
+	profile "go.unistack.org/micro/v3/profiler"
 )
 
 type profiler struct {

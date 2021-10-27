@@ -3,7 +3,7 @@ package jitter
 import (
 	"time"
 
-	"github.com/unistack-org/micro/v3/util/rand"
+	"go.unistack.org/micro/v3/util/rand"
 )
 
 // Ticker is similar to time.Ticker but ticks at random intervals between

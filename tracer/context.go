@@ -8,14 +8,14 @@ import (
 type tracerKey struct{}
 
 // FromContext returns a tracer from context
-func FromContext(ctx context.Context) Tracer {
+func FromContext(ctx context.Context) (Tracer, bool) {
 	if ctx == nil {
-		return DefaultTracer
+		return nil, false
 	}
 	if tracer, ok := ctx.Value(tracerKey{}).(Tracer); ok {
-		return tracer
+		return tracer, true
 	}
-	return DefaultTracer
+	return nil, false
 }
 
 // NewContext saves the tracer in the context
@@ -29,14 +29,14 @@ func NewContext(ctx context.Context, tracer Tracer) context.Context {
 type spanKey struct{}
 
 // SpanFromContext returns a span from context
-func SpanFromContext(ctx context.Context) Span {
+func SpanFromContext(ctx context.Context) (Span, bool) {
 	if ctx == nil {
-		return &noopSpan{}
+		return nil, false
 	}
 	if span, ok := ctx.Value(spanKey{}).(Span); ok {
-		return span
+		return span, true
 	}
-	return &noopSpan{}
+	return nil, false
 }
 
 // NewSpanContext saves the span in the context

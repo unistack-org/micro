@@ -1,5 +1,5 @@
 // Package config is an interface for dynamic configuration.
-package config
+package config // import "go.unistack.org/micro/v3/config"
 
 import (
 	"context"

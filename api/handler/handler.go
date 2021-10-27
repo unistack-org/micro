@@ -1,5 +1,5 @@
 // Package handler provides http handlers
-package handler
+package handler // import "go.unistack.org/micro/v3/api/handler"
 
 import (
 	"net/http"

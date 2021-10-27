@@ -5,16 +5,16 @@ import (
 	"crypto/tls"
 	"time"
 
-	"github.com/unistack-org/micro/v3/broker"
-	"github.com/unistack-org/micro/v3/codec"
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/meter"
-	"github.com/unistack-org/micro/v3/network/transport"
-	"github.com/unistack-org/micro/v3/register"
-	"github.com/unistack-org/micro/v3/router"
-	"github.com/unistack-org/micro/v3/selector"
-	"github.com/unistack-org/micro/v3/selector/random"
-	"github.com/unistack-org/micro/v3/tracer"
+	"go.unistack.org/micro/v3/broker"
+	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/network/transport"
+	"go.unistack.org/micro/v3/register"
+	"go.unistack.org/micro/v3/router"
+	"go.unistack.org/micro/v3/selector"
+	"go.unistack.org/micro/v3/selector/random"
+	"go.unistack.org/micro/v3/tracer"
 )
 
 // Options holds client options

@@ -1,5 +1,5 @@
 // Package selector is for node selection and load balancing
-package selector
+package selector // import "go.unistack.org/micro/v3/selector"
 
 import (
 	"errors"

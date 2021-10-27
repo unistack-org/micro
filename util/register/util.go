@@ -1,7 +1,7 @@
-package register
+package register // import "go.unistack.org/micro/v3/util/register"
 
 import (
-	"github.com/unistack-org/micro/v3/register"
+	"go.unistack.org/micro/v3/register"
 )
 
 func addNodes(old, neu []*register.Node) []*register.Node {

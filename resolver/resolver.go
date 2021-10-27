@@ -1,5 +1,5 @@
 // Package resolver resolves network names to addresses
-package resolver
+package resolver // import "go.unistack.org/micro/v3/resolver"
 
 // Resolver is network resolver. It's used to find network nodes
 // via the name to connect to. This is done based on Network.Name().

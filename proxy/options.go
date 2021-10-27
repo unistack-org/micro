@@ -2,11 +2,11 @@
 package proxy
 
 import (
-	"github.com/unistack-org/micro/v3/client"
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/meter"
-	"github.com/unistack-org/micro/v3/router"
-	"github.com/unistack-org/micro/v3/tracer"
+	"go.unistack.org/micro/v3/client"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/router"
+	"go.unistack.org/micro/v3/tracer"
 )
 
 // Options for proxy

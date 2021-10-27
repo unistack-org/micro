@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/unistack-org/micro/v3/util/id"
+	"go.unistack.org/micro/v3/util/id"
 )
 
 type noopAuth struct {

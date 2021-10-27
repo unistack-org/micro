@@ -1,11 +1,11 @@
 // Package codec is an interface for encoding messages
-package codec
+package codec // import "go.unistack.org/micro/v3/codec"
 
 import (
 	"errors"
 	"io"
 
-	"github.com/unistack-org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/metadata"
 )
 
 // Message types

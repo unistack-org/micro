@@ -3,9 +3,9 @@ package router
 import (
 	"context"
 
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/register"
-	"github.com/unistack-org/micro/v3/util/id"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/register"
+	"go.unistack.org/micro/v3/util/id"
 )
 
 // Options are router options

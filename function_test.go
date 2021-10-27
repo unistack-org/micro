@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/unistack-org/micro/v3/register"
+	"go.unistack.org/micro/v3/register"
 )
 
 func TestFunction(t *testing.T) {

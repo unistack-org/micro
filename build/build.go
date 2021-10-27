@@ -1,5 +1,5 @@
 // Package build is for building source into a package
-package build
+package build // import "go.unistack.org/micro/v3/build"
 
 // Build is an interface for building packages
 type Build interface {

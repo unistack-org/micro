@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/unistack-org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/metadata"
 )
 
 func TestMemoryBatchBroker(t *testing.T) {

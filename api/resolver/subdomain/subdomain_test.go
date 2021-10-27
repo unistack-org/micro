@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/unistack-org/micro/v3/api/resolver/vpath"
+	"go.unistack.org/micro/v3/api/resolver/vpath"
 )
 
 func TestResolve(t *testing.T) {

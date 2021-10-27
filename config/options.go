@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/unistack-org/micro/v3/codec"
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/meter"
-	"github.com/unistack-org/micro/v3/tracer"
+	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/tracer"
 )
 
 // Options hold the config options

@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/unistack-org/micro/v3/auth"
-	"github.com/unistack-org/micro/v3/broker"
-	"github.com/unistack-org/micro/v3/client"
-	"github.com/unistack-org/micro/v3/config"
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/meter"
-	"github.com/unistack-org/micro/v3/register"
-	"github.com/unistack-org/micro/v3/router"
-	"github.com/unistack-org/micro/v3/server"
-	"github.com/unistack-org/micro/v3/store"
-	"github.com/unistack-org/micro/v3/tracer"
+	"go.unistack.org/micro/v3/auth"
+	"go.unistack.org/micro/v3/broker"
+	"go.unistack.org/micro/v3/client"
+	"go.unistack.org/micro/v3/config"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/register"
+	"go.unistack.org/micro/v3/router"
+	"go.unistack.org/micro/v3/server"
+	"go.unistack.org/micro/v3/store"
+	"go.unistack.org/micro/v3/tracer"
 )
 
 // Service is an interface that wraps the lower level components.
@@ -392,8 +392,12 @@ type nameIface interface {
 	Name() string
 }
 
-func getNameIndex(n string, ifaces ...interface{}) int {
-	for idx, iface := range ifaces {
+func getNameIndex(n string, ifaces interface{}) int {
+	values, ok := ifaces.([]interface{})
+	if !ok {
+		return 0
+	}
+	for idx, iface := range values {
 		if ifc, ok := iface.(nameIface); ok && ifc.Name() == n {
 			return idx
 		}

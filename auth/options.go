@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/metadata"
-	"github.com/unistack-org/micro/v3/meter"
-	"github.com/unistack-org/micro/v3/store"
-	"github.com/unistack-org/micro/v3/tracer"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/store"
+	"go.unistack.org/micro/v3/tracer"
 )
 
 // NewOptions creates Options struct from slice of options

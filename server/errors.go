@@ -1,6 +1,6 @@
 package server
 
-import "github.com/unistack-org/micro/v3/errors"
+import "go.unistack.org/micro/v3/errors"
 
 type Error struct {
 	id string

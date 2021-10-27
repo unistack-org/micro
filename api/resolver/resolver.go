@@ -1,5 +1,5 @@
 // Package resolver resolves a http request to an endpoint
-package resolver
+package resolver // import "go.unistack.org/micro/v3/api/resolver"
 
 import (
 	"errors"

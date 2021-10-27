@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // ErrInvalidParam specifies invalid url query params
@@ -69,6 +70,89 @@ func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, e
 	return nil, ErrNotFound
 }
 
+// ZeroFieldByPath clean struct field by its path
+func ZeroFieldByPath(src interface{}, path string) error {
+	var err error
+	val := reflect.ValueOf(src)
+
+	for _, p := range strings.Split(path, ".") {
+		val, err = structValueByName(val, p)
+		if err != nil {
+			return err
+		}
+	}
+
+	if IsEmpty(val) {
+		return nil
+	}
+
+	if !val.CanSet() {
+		return ErrInvalidStruct
+	}
+
+	val.Set(reflect.Zero(val.Type()))
+
+	return nil
+}
+
+// SetFieldByPath set struct field by its path
+func SetFieldByPath(src interface{}, dst interface{}, path string) error {
+	var err error
+	val := reflect.ValueOf(src)
+
+	for _, p := range strings.Split(path, ".") {
+		val, err = structValueByName(val, p)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !val.CanSet() {
+		return ErrInvalidStruct
+	}
+
+	val.Set(reflect.ValueOf(dst))
+
+	return nil
+}
+
+// structValueByName get struct field by its name
+func structValueByName(sv reflect.Value, tkey string) (reflect.Value, error) {
+	if sv.Kind() == reflect.Ptr {
+		sv = sv.Elem()
+	}
+	if sv.Kind() != reflect.Struct {
+		return reflect.Zero(reflect.TypeOf(sv)), ErrInvalidStruct
+	}
+
+	typ := sv.Type()
+	for idx := 0; idx < typ.NumField(); idx++ {
+		fld := typ.Field(idx)
+		val := sv.Field(idx)
+		if len(fld.PkgPath) != 0 {
+			continue
+		}
+
+		if fld.Name == tkey || strings.EqualFold(strings.ToLower(fld.Name), strings.ToLower(tkey)) {
+			return val, nil
+		}
+
+		switch val.Kind() {
+		case reflect.Ptr:
+			if val = val.Elem(); val.Kind() == reflect.Struct {
+				if iface, err := structValueByName(val, tkey); err == nil {
+					return iface, nil
+				}
+			}
+		case reflect.Struct:
+			if iface, err := structValueByName(val, tkey); err == nil {
+				return iface, nil
+			}
+		}
+	}
+	return reflect.Zero(reflect.TypeOf(sv)), ErrNotFound
+}
+
 // StructFieldByPath get struct field by its path
 func StructFieldByPath(src interface{}, path string) (interface{}, error) {
 	var err error
@@ -98,10 +182,7 @@ func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
 		if len(fld.PkgPath) != 0 {
 			continue
 		}
-		if fld.Name == tkey {
-			if val.Kind() != reflect.Ptr && val.CanAddr() {
-				val = val.Addr()
-			}
+		if fld.Name == tkey || strings.EqualFold(strings.ToLower(fld.Name), strings.ToLower(tkey)) {
 			return val.Interface(), nil
 		}
 
@@ -153,10 +234,30 @@ func StructFields(src interface{}) ([]StructField, error) {
 			continue
 		}
 
+		switch val.Interface().(type) {
+		case time.Time, *time.Time:
+			fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
+			continue
+		case time.Duration, *time.Duration:
+			fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
+			continue
+		}
+
 		switch val.Kind() {
-		// case timeKind:
-		// fmt.Printf("GGG\n")
-		// fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
+		case reflect.Ptr:
+			//	if !val.IsValid()
+			if reflect.Indirect(val).Kind() == reflect.Struct {
+				infields, err := StructFields(val.Interface())
+				if err != nil {
+					return nil, err
+				}
+				for _, infield := range infields {
+					infield.Path = fmt.Sprintf("%s.%s", fld.Name, infield.Path)
+					fields = append(fields, infield)
+				}
+			} else {
+				fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
+			}
 		case reflect.Struct:
 			infields, err := StructFields(val.Interface())
 			if err != nil {

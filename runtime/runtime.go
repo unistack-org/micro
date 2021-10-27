@@ -1,11 +1,11 @@
 // Package runtime is a service runtime manager
-package runtime
+package runtime // import "go.unistack.org/micro/v3/runtime"
 
 import (
 	"errors"
 	"time"
 
-	"github.com/unistack-org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/metadata"
 )
 
 // ErrAlreadyExists error

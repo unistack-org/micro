@@ -1,12 +1,12 @@
 // Package transport provides a tunnel transport
-package transport
+package transport // import "go.unistack.org/micro/v3/network/tunnel/transport"
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/unistack-org/micro/v3/network/transport"
-	"github.com/unistack-org/micro/v3/network/tunnel"
+	"go.unistack.org/micro/v3/network/transport"
+	"go.unistack.org/micro/v3/network/tunnel"
 )
 
 type tunTransport struct {

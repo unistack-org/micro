@@ -7,15 +7,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unistack-org/micro/v3/auth"
-	"github.com/unistack-org/micro/v3/broker"
-	"github.com/unistack-org/micro/v3/codec"
-	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/metadata"
-	"github.com/unistack-org/micro/v3/meter"
-	"github.com/unistack-org/micro/v3/network/transport"
-	"github.com/unistack-org/micro/v3/register"
-	"github.com/unistack-org/micro/v3/tracer"
+	"go.unistack.org/micro/v3/auth"
+	"go.unistack.org/micro/v3/broker"
+	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/network/transport"
+	"go.unistack.org/micro/v3/register"
+	"go.unistack.org/micro/v3/tracer"
 )
 
 // Option func

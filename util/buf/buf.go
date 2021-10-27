@@ -1,4 +1,4 @@
-package buf
+package buf // import "go.unistack.org/micro/v3/util/buf"
 
 import (
 	"bytes"

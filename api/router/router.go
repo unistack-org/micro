@@ -1,10 +1,10 @@
 // Package router provides api service routing
-package router
+package router // import "go.unistack.org/micro/v3/api/router"
 
 import (
 	"net/http"
 
-	"github.com/unistack-org/micro/v3/api"
+	"go.unistack.org/micro/v3/api"
 )
 
 // DefaultRouter contains default router implementation

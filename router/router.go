@@ -1,5 +1,5 @@
 // Package router provides a network routing control plane
-package router
+package router // import "go.unistack.org/micro/v3/router"
 
 import (
 	"errors"

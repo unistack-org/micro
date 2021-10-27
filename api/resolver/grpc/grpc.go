@@ -1,12 +1,12 @@
 // Package grpc resolves a grpc service like /greeter.Say/Hello to greeter service
-package grpc
+package grpc // import "go.unistack.org/micro/v3/api/resolver/grpc"
 
 import (
 	"errors"
 	"net/http"
 	"strings"
 
-	"github.com/unistack-org/micro/v3/api/resolver"
+	"go.unistack.org/micro/v3/api/resolver"
 )
 
 // Resolver struct

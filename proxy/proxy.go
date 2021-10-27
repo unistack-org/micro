@@ -1,10 +1,10 @@
 // Package proxy is a transparent proxy built on the micro/server
-package proxy
+package proxy // import "go.unistack.org/micro/v3/proxy"
 
 import (
 	"context"
 
-	"github.com/unistack-org/micro/v3/server"
+	"go.unistack.org/micro/v3/server"
 )
 
 // DefaultEndpoint holds default proxy address

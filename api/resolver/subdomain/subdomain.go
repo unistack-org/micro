@@ -1,14 +1,14 @@
 // Package subdomain is a resolver which uses the subdomain to determine the domain to route to. It
 // offloads the endpoint resolution to a child resolver which is provided in New.
-package subdomain
+package subdomain // import "go.unistack.org/micro/v3/api/resolver/subdomain"
 
 import (
 	"net"
 	"net/http"
 	"strings"
 
-	"github.com/unistack-org/micro/v3/api/resolver"
-	"github.com/unistack-org/micro/v3/logger"
+	"go.unistack.org/micro/v3/api/resolver"
+	"go.unistack.org/micro/v3/logger"
 	"golang.org/x/net/publicsuffix"
 )
 
