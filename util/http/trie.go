@@ -4,6 +4,7 @@ package http
 // Armon Dadgar in https://github.com/armon/go-radix/blob/master/radix.go
 // (MIT licensed). It's been heavily modified for use as a HTTP routing tree.
 // Copied from chi mux tree.go https://raw.githubusercontent.com/go-chi/chi/master/tree.go
+// Modified by Unistack LLC to support interface{} type handler and parameters in map[string]string
 
 import (
 	"fmt"
@@ -75,7 +76,7 @@ const (
 )
 
 func NewTrie() *Node {
-	return &Node{typ: ntStatic}
+	return &Node{}
 }
 
 type Node struct {
@@ -107,12 +108,12 @@ type Node struct {
 type endpoints map[methodTyp]*endpoint
 
 type endpoint struct {
-	// parameters keys recorded on handler nodes
-	paramKeys []string
 	// endpoint handler
 	handler interface{}
 	// pattern is the routing pattern for handler nodes
 	pattern string
+	// parameters keys recorded on handler nodes
+	paramKeys []string
 }
 
 func (s endpoints) Value(method methodTyp) *endpoint {
@@ -273,7 +274,8 @@ func (n *Node) addChild(child *Node, prefix string) (*Node, error) {
 			child.rex = rex
 		}
 
-		if segStartIdx == 0 {
+		switch {
+		case segStartIdx == 0:
 			// Route starts with a param
 			child.typ = segTyp
 
@@ -306,7 +308,7 @@ func (n *Node) addChild(child *Node, prefix string) (*Node, error) {
 				}
 			}
 
-		} else if segStartIdx > 0 {
+		case segStartIdx > 0:
 			// Route has some param
 
 			// starts with a static segment
