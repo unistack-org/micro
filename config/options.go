@@ -66,6 +66,7 @@ type LoadOptions struct {
 	Struct   interface{}
 	Override bool
 	Append   bool
+	Context  context.Context
 }
 
 func NewLoadOptions(opts ...LoadOption) LoadOptions {
@@ -102,7 +103,8 @@ type SaveOption func(o *SaveOptions)
 
 // SaveOptions struct
 type SaveOptions struct {
-	Struct interface{}
+	Struct  interface{}
+	Context context.Context
 }
 
 // SaveStruct override struct for save to config
