@@ -52,3 +52,13 @@ func SetLoadOption(k, v interface{}) LoadOption {
 		o.Context = context.WithValue(o.Context, k, v)
 	}
 }
+
+// SetWatchOption returns a function to setup a context with given value
+func SetWatchOption(k, v interface{}) WatchOption {
+	return func(o *WatchOptions) {
+		if o.Context == nil {
+			o.Context = context.Background()
+		}
+		o.Context = context.WithValue(o.Context, k, v)
+	}
+}
