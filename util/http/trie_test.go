@@ -5,14 +5,66 @@ import (
 	"testing"
 )
 
+func TestTrieWildcardPathPrefix(t *testing.T) {
+	var err error
+	type handler struct {
+		name string
+	}
+	tr := NewTrie()
+	if err = tr.Insert([]string{http.MethodPost}, "/v1/update", &handler{name: "post_update"}); err != nil {
+		t.Fatal(err)
+	}
+	if err = tr.Insert([]string{http.MethodPost}, "/v1/*", &handler{name: "post_create"}); err != nil {
+		t.Fatal(err)
+	}
+	h, _, ok := tr.Search(http.MethodPost, "/v1/test/one")
+	if !ok {
+		t.Fatalf("unexpected error handler not found")
+	}
+	if h.(*handler).name != "post_create" {
+		t.Fatalf("invalid handler %v", h)
+	}
+	h, _, ok = tr.Search(http.MethodPost, "/v1/update")
+	if !ok {
+		t.Fatalf("unexpected error")
+	}
+	if h.(*handler).name != "post_update" {
+		t.Fatalf("invalid handler %v", h)
+	}
+	h, _, ok = tr.Search(http.MethodPost, "/v1/update/some/{x}")
+	if !ok {
+		t.Fatalf("unexpected error")
+	}
+	if h.(*handler).name != "post_create" {
+		t.Fatalf("invalid handler %v", h)
+	}
+}
+
+func TestTriePathPrefix(t *testing.T) {
+	type handler struct {
+		name string
+	}
+	tr := NewTrie()
+	_ = tr.Insert([]string{http.MethodPost}, "/v1/create/{id}", &handler{name: "post_create"})
+	_ = tr.Insert([]string{http.MethodPost}, "/v1/update/{id}", &handler{name: "post_update"})
+	_ = tr.Insert([]string{http.MethodPost}, "/", &handler{name: "post_wildcard"})
+	h, _, ok := tr.Search(http.MethodPost, "/")
+	if !ok {
+		t.Fatalf("unexpected error")
+	}
+	if h.(*handler).name != "post_wildcard" {
+		t.Fatalf("invalid handler %v", h)
+	}
+}
+
 func TestTrieFixedPattern(t *testing.T) {
 	type handler struct {
 		name string
 	}
 	tr := NewTrie()
-	tr.Insert([]string{http.MethodPut}, "/v1/create/{id}", &handler{name: "pattern"})
-	tr.Insert([]string{http.MethodPut}, "/v1/create/12", &handler{name: "fixed"})
-	h, _, ok := tr.Search(http.MethodPut, "/v1/create/12", IgnoreCase(false))
+	_ = tr.Insert([]string{http.MethodPut}, "/v1/create/{id}", &handler{name: "pattern"})
+	_ = tr.Insert([]string{http.MethodPut}, "/v1/create/12", &handler{name: "fixed"})
+	h, _, ok := tr.Search(http.MethodPut, "/v1/create/12")
 	if !ok {
 		t.Fatalf("unexpected error")
 	}
@@ -21,43 +73,9 @@ func TestTrieFixedPattern(t *testing.T) {
 	}
 }
 
-func TestTrieIgnoreCase(t *testing.T) {
-	type handler struct {
-		name string
-	}
-	tr := NewTrie()
-	tr.Insert([]string{http.MethodPut}, "/v1/create/{id}", &handler{name: "test"})
-
-	_, _, ok := tr.Search(http.MethodPut, "/v1/CREATE/12", IgnoreCase(true))
-	if !ok {
-		t.Fatalf("unexpected error")
-	}
-}
-
-func TestTrieContentType(t *testing.T) {
-	type handler struct {
-		name string
-	}
-	tr := NewTrie()
-	tr.Insert([]string{"application/json"}, "/v1/create/{id}", &handler{name: "test"})
-
-	h, _, ok := tr.Search("application/json", "/v1/create/12")
-	if !ok {
-		t.Fatalf("must be found error")
-	}
-	if h.(*handler).name != "test" {
-		t.Fatalf("invalid handler %v", h)
-	}
-	_, _, ok = tr.Search("text/xml", "/v1/create/12")
-	if ok {
-		t.Fatalf("must be not found error")
-	}
-}
-
 func TestTrieNoMatchMethod(t *testing.T) {
 	tr := NewTrie()
-	tr.Insert([]string{http.MethodPut}, "/v1/create/{id}", nil)
-
+	_ = tr.Insert([]string{http.MethodPut}, "/v1/create/{id}", nil)
 	_, _, ok := tr.Search(http.MethodPost, "/v1/create")
 	if ok {
 		t.Fatalf("must be not found error")
@@ -67,8 +85,7 @@ func TestTrieNoMatchMethod(t *testing.T) {
 func TestTrieMatchRegexp(t *testing.T) {
 	type handler struct{}
 	tr := NewTrie()
-	tr.Insert([]string{http.MethodPut}, "/v1/create/{category}/{id:[0-9]+}", &handler{})
-
+	_ = tr.Insert([]string{http.MethodPut}, "/v1/create/{category}/{id:[0-9]+}", &handler{})
 	_, params, ok := tr.Search(http.MethodPut, "/v1/create/test_cat/12345")
 	switch {
 	case !ok:
@@ -83,8 +100,7 @@ func TestTrieMatchRegexp(t *testing.T) {
 func TestTrieMatchRegexpFail(t *testing.T) {
 	type handler struct{}
 	tr := NewTrie()
-	tr.Insert([]string{http.MethodPut}, "/v1/create/{id:[a-z]+}", &handler{})
-
+	_ = tr.Insert([]string{http.MethodPut}, "/v1/create/{id:[a-z]+}", &handler{})
 	_, _, ok := tr.Search(http.MethodPut, "/v1/create/12345")
 	if ok {
 		t.Fatalf("route must not be not found")
@@ -96,8 +112,8 @@ func TestTrieMatchLongest(t *testing.T) {
 		name string
 	}
 	tr := NewTrie()
-	tr.Insert([]string{http.MethodPut}, "/v1/create", &handler{name: "first"})
-	tr.Insert([]string{http.MethodPut}, "/v1/create/{id:[0-9]+}", &handler{name: "second"})
+	_ = tr.Insert([]string{http.MethodPut}, "/v1/create", &handler{name: "first"})
+	_ = tr.Insert([]string{http.MethodPut}, "/v1/create/{id:[0-9]+}", &handler{name: "second"})
 	if h, _, ok := tr.Search(http.MethodPut, "/v1/create/12345"); !ok {
 		t.Fatalf("route must be found")
 	} else if h.(*handler).name != "second" {
