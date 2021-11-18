@@ -32,3 +32,23 @@ func SetOption(k, v interface{}) Option {
 		o.Context = context.WithValue(o.Context, k, v)
 	}
 }
+
+// SetSaveOption returns a function to setup a context with given value
+func SetSaveOption(k, v interface{}) SaveOption {
+	return func(o *SaveOptions) {
+		if o.Context == nil {
+			o.Context = context.Background()
+		}
+		o.Context = context.WithValue(o.Context, k, v)
+	}
+}
+
+// SetLoadOption returns a function to setup a context with given value
+func SetLoadOption(k, v interface{}) LoadOption {
+	return func(o *LoadOptions) {
+		if o.Context == nil {
+			o.Context = context.Background()
+		}
+		o.Context = context.WithValue(o.Context, k, v)
+	}
+}
