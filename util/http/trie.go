@@ -79,6 +79,8 @@ func NewTrie() *Node {
 	return &Node{}
 }
 
+type Trie = Node
+
 type Node struct {
 	// regexp matcher for regexp nodes
 	rex *regexp.Regexp
