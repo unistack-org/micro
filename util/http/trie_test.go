@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+func TestTrieBackwards(t *testing.T) {
+	_ = &Trie{}
+}
+
 func TestTrieWildcardPathPrefix(t *testing.T) {
 	var err error
 	type handler struct {
