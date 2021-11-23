@@ -91,7 +91,10 @@ func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 
 		val, ok := mp[fname]
 		if !ok {
-			continue
+			val, ok = mp[dfld.Name]
+			if !ok {
+				continue
+			}
 		}
 
 		sval = reflect.ValueOf(val)
