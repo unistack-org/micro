@@ -8,7 +8,6 @@ import (
 	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/metadata"
 	"go.unistack.org/micro/v3/register"
-	"go.unistack.org/micro/v3/util/id"
 )
 
 // DefaultServer default server
@@ -21,8 +20,6 @@ var (
 	DefaultName = "server"
 	// DefaultVersion will be used if no version passed
 	DefaultVersion = "latest"
-	// DefaultID will be used if no id passed
-	DefaultID = id.Must()
 	// DefaultRegisterCheck holds func that run before register server
 	DefaultRegisterCheck = func(context.Context) error { return nil }
 	// DefaultRegisterInterval holds interval for register

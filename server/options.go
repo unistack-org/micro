@@ -16,6 +16,7 @@ import (
 	"go.unistack.org/micro/v3/network/transport"
 	"go.unistack.org/micro/v3/register"
 	"go.unistack.org/micro/v3/tracer"
+	"go.unistack.org/micro/v3/util/id"
 )
 
 // Option func
@@ -106,7 +107,7 @@ func NewOptions(opts ...Option) Options {
 		Address:          DefaultAddress,
 		Name:             DefaultName,
 		Version:          DefaultVersion,
-		ID:               DefaultID,
+		ID:               id.Must(),
 		Namespace:        DefaultNamespace,
 	}
 
