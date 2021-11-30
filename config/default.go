@@ -2,7 +2,6 @@ package config
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -271,7 +270,7 @@ func (c *defaultConfig) Name() string {
 }
 
 func (c *defaultConfig) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
-	return nil, fmt.Errorf("not implemented")
+	return nil, ErrWatcherNotImplemented
 }
 
 // NewConfig returns new default config source
