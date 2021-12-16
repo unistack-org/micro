@@ -20,7 +20,7 @@ func RetryNever(ctx context.Context, req Request, retryCount int, err error) (bo
 }
 
 // RetryOnError retries a request on a 500 or timeout error
-func RetryOnError(ctx context.Context, req Request, retryCount int, err error) (bool, error) {
+func RetryOnError(_ context.Context, _ Request, _ int, err error) (bool, error) {
 	if err == nil {
 		return false, nil
 	}

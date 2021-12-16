@@ -23,6 +23,8 @@ var (
 	ErrInvalidStruct = errors.New("invalid struct specified")
 	// ErrWatcherStopped is returned when source watcher has been stopped
 	ErrWatcherStopped = errors.New("watcher stopped")
+	// ErrWatcherNotImplemented returned when config does not implement watch
+	ErrWatcherNotImplemented = errors.New("watcher not implemented")
 )
 
 // Config is an interface abstraction for dynamic configuration

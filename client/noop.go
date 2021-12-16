@@ -139,6 +139,10 @@ func (n *noopMessage) ContentType() string {
 	return n.opts.ContentType
 }
 
+func (n *noopMessage) Metadata() metadata.Metadata {
+	return n.opts.Metadata
+}
+
 func (n *noopClient) newCodec(contentType string) (codec.Codec, error) {
 	if cf, ok := n.opts.Codecs[contentType]; ok {
 		return cf, nil

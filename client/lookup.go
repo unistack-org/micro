@@ -12,7 +12,7 @@ import (
 type LookupFunc func(context.Context, Request, CallOptions) ([]string, error)
 
 // LookupRoute for a request using the router and then choose one using the selector
-func LookupRoute(ctx context.Context, req Request, opts CallOptions) ([]string, error) {
+func LookupRoute(_ context.Context, req Request, opts CallOptions) ([]string, error) {
 	// check to see if an address was provided as a call option
 	if len(opts.Address) > 0 {
 		return opts.Address, nil
