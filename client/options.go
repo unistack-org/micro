@@ -8,6 +8,7 @@ import (
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/metadata"
 	"go.unistack.org/micro/v3/meter"
 	"go.unistack.org/micro/v3/network/transport"
 	"go.unistack.org/micro/v3/register"
@@ -128,7 +129,7 @@ type PublishOptions struct {
 
 // NewMessageOptions creates message options struct
 func NewMessageOptions(opts ...MessageOption) MessageOptions {
-	options := MessageOptions{}
+	options := MessageOptions{Metadata: metadata.New(1)}
 	for _, o := range opts {
 		o(&options)
 	}
@@ -137,7 +138,10 @@ func NewMessageOptions(opts ...MessageOption) MessageOptions {
 
 // MessageOptions holds client message options
 type MessageOptions struct {
+	// Metadata additional metadata
+	Metadata metadata.Metadata
 	// ContentType specify content-type of message
+	// deprecated
 	ContentType string
 }
 
@@ -517,6 +521,7 @@ func WithSelectOptions(sops ...selector.SelectOption) CallOption {
 // Deprecated
 func WithMessageContentType(ct string) MessageOption {
 	return func(o *MessageOptions) {
+		o.Metadata.Set(metadata.HeaderContentType, ct)
 		o.ContentType = ct
 	}
 }
@@ -524,7 +529,15 @@ func WithMessageContentType(ct string) MessageOption {
 // MessageContentType sets the message content type
 func MessageContentType(ct string) MessageOption {
 	return func(o *MessageOptions) {
+		o.Metadata.Set(metadata.HeaderContentType, ct)
 		o.ContentType = ct
+	}
+}
+
+// MessageMetadata sets the message metadata
+func MessageMetadata(k, v string) MessageOption {
+	return func(o *MessageOptions) {
+		o.Metadata.Set(k, v)
 	}
 }
 

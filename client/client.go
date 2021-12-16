@@ -49,6 +49,7 @@ type Message interface {
 	Topic() string
 	Payload() interface{}
 	ContentType() string
+	Metadata() metadata.Metadata
 }
 
 // Request is the interface for a synchronous request used by Call or Stream
