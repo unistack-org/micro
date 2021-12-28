@@ -18,11 +18,11 @@ var (
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
 			labels = make([]tracer.Label, 0, len(md))
 			for k, v := range md {
-				labels = append(labels, tracer.String(k, v))
+				labels = append(labels, tracer.LabelString(k, v))
 			}
 		}
 		if err != nil {
-			labels = append(labels, tracer.Bool("error", true))
+			labels = append(labels, tracer.LabelBool("error", true))
 		}
 		sp.SetLabels(labels...)
 	}
@@ -33,11 +33,11 @@ var (
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
 			labels = make([]tracer.Label, 0, len(md))
 			for k, v := range md {
-				labels = append(labels, tracer.String(k, v))
+				labels = append(labels, tracer.LabelString(k, v))
 			}
 		}
 		if err != nil {
-			labels = append(labels, tracer.Bool("error", true))
+			labels = append(labels, tracer.LabelBool("error", true))
 		}
 		sp.SetLabels(labels...)
 	}
@@ -48,11 +48,11 @@ var (
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
 			labels = make([]tracer.Label, 0, len(md))
 			for k, v := range md {
-				labels = append(labels, tracer.String(k, v))
+				labels = append(labels, tracer.LabelString(k, v))
 			}
 		}
 		if err != nil {
-			labels = append(labels, tracer.Bool("error", true))
+			labels = append(labels, tracer.LabelBool("error", true))
 		}
 		sp.SetLabels(labels...)
 	}
@@ -63,11 +63,11 @@ var (
 		if md, ok := metadata.FromIncomingContext(ctx); ok {
 			labels = make([]tracer.Label, 0, len(md))
 			for k, v := range md {
-				labels = append(labels, tracer.String(k, v))
+				labels = append(labels, tracer.LabelString(k, v))
 			}
 		}
 		if err != nil {
-			labels = append(labels, tracer.Bool("error", true))
+			labels = append(labels, tracer.LabelBool("error", true))
 		}
 		sp.SetLabels(labels...)
 	}
@@ -78,11 +78,11 @@ var (
 		if md, ok := metadata.FromIncomingContext(ctx); ok {
 			labels = make([]tracer.Label, 0, len(md))
 			for k, v := range md {
-				labels = append(labels, tracer.String(k, v))
+				labels = append(labels, tracer.LabelString(k, v))
 			}
 		}
 		if err != nil {
-			labels = append(labels, tracer.Bool("error", true))
+			labels = append(labels, tracer.LabelBool("error", true))
 		}
 		sp.SetLabels(labels...)
 	}
@@ -93,11 +93,11 @@ var (
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
 			labels = make([]tracer.Label, 0, len(md))
 			for k, v := range md {
-				labels = append(labels, tracer.String(k, v))
+				labels = append(labels, tracer.LabelString(k, v))
 			}
 		}
 		if err != nil {
-			labels = append(labels, tracer.Bool("error", true))
+			labels = append(labels, tracer.LabelBool("error", true))
 		}
 		sp.SetLabels(labels...)
 	}
@@ -229,7 +229,10 @@ func (ot *tWrapper) Call(ctx context.Context, req client.Request, rsp interface{
 		}
 	}
 
-	sp := tracer.SpanFromContext(ctx)
+	sp, ok := tracer.SpanFromContext(ctx)
+	if !ok {
+		ctx, sp = ot.opts.Tracer.Start(ctx, endpoint)
+	}
 	defer sp.Finish()
 
 	err := ot.Client.Call(ctx, req, rsp, opts...)
@@ -249,7 +252,10 @@ func (ot *tWrapper) Stream(ctx context.Context, req client.Request, opts ...clie
 		}
 	}
 
-	sp := tracer.SpanFromContext(ctx)
+	sp, ok := tracer.SpanFromContext(ctx)
+	if !ok {
+		ctx, sp = ot.opts.Tracer.Start(ctx, endpoint)
+	}
 	defer sp.Finish()
 
 	stream, err := ot.Client.Stream(ctx, req, opts...)
@@ -262,7 +268,10 @@ func (ot *tWrapper) Stream(ctx context.Context, req client.Request, opts ...clie
 }
 
 func (ot *tWrapper) Publish(ctx context.Context, msg client.Message, opts ...client.PublishOption) error {
-	sp := tracer.SpanFromContext(ctx)
+	sp, ok := tracer.SpanFromContext(ctx)
+	if !ok {
+		ctx, sp = ot.opts.Tracer.Start(ctx, msg.Topic())
+	}
 	defer sp.Finish()
 
 	err := ot.Client.Publish(ctx, msg, opts...)
@@ -282,7 +291,10 @@ func (ot *tWrapper) ServerHandler(ctx context.Context, req server.Request, rsp i
 		}
 	}
 
-	sp := tracer.SpanFromContext(ctx)
+	sp, ok := tracer.SpanFromContext(ctx)
+	if !ok {
+		ctx, sp = ot.opts.Tracer.Start(ctx, fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
+	}
 	defer sp.Finish()
 
 	err := ot.serverHandler(ctx, req, rsp)
@@ -295,7 +307,10 @@ func (ot *tWrapper) ServerHandler(ctx context.Context, req server.Request, rsp i
 }
 
 func (ot *tWrapper) ServerSubscriber(ctx context.Context, msg server.Message) error {
-	sp := tracer.SpanFromContext(ctx)
+	sp, ok := tracer.SpanFromContext(ctx)
+	if !ok {
+		ctx, sp = ot.opts.Tracer.Start(ctx, msg.Topic())
+	}
 	defer sp.Finish()
 
 	err := ot.serverSubscriber(ctx, msg)
@@ -339,7 +354,10 @@ func (ot *tWrapper) ClientCallFunc(ctx context.Context, addr string, req client.
 		}
 	}
 
-	sp := tracer.SpanFromContext(ctx)
+	sp, ok := tracer.SpanFromContext(ctx)
+	if !ok {
+		ctx, sp = ot.opts.Tracer.Start(ctx, endpoint)
+	}
 	defer sp.Finish()
 
 	err := ot.clientCallFunc(ctx, addr, req, rsp, opts)
