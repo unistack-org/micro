@@ -51,6 +51,4 @@ func TestExtractEndpoint(t *testing.T) {
 	if endpoints[0].Response != "TestResponse" {
 		t.Fatalf("Expected TestResponse got %s", endpoints[0].Response)
 	}
-
-	t.Logf("XXX %#+v\n", endpoints[0])
 }
