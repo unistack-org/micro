@@ -123,11 +123,21 @@ type Response interface {
 // The last error will be left in Error().
 // EOF indicates end of the stream.
 type Stream interface {
+	// Context for the stream
 	Context() context.Context
+	// Request returns request
 	Request() Request
+	// Send will encode and send a request
 	Send(msg interface{}) error
+	// Recv will decode and read a response
 	Recv(msg interface{}) error
+	// SendMsg will encode and send a request
+	SendMsg(msg interface{}) error
+	// RecvMsg will decode and read a response
+	RecvMsg(msg interface{}) error
+	// Error returns stream error
 	Error() error
+	// Close closes the stream
 	Close() error
 }
 

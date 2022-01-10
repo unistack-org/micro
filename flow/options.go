@@ -70,7 +70,7 @@ func Client(c client.Client) Option {
 
 // Context specifies a context for the service.
 // Can be used to signal shutdown of the flow
-// Can be used for extra option values.
+// or can be used for extra option values.
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
 		o.Context = ctx
@@ -91,7 +91,7 @@ func Store(s store.Store) Option {
 	}
 }
 
-// WorflowOption signature
+// WorflowOption func signature
 type WorkflowOption func(*WorkflowOptions)
 
 // WorkflowOptions holds workflow options
@@ -107,6 +107,7 @@ func WorkflowID(id string) WorkflowOption {
 	}
 }
 
+// ExecuteOptions holds execute options
 type ExecuteOptions struct {
 	// Client holds the client.Client
 	Client client.Client
@@ -128,56 +129,66 @@ type ExecuteOptions struct {
 	Async bool
 }
 
+// ExecuteOption func signature
 type ExecuteOption func(*ExecuteOptions)
 
+// ExecuteClient pass client.Client to ExecuteOption
 func ExecuteClient(c client.Client) ExecuteOption {
 	return func(o *ExecuteOptions) {
 		o.Client = c
 	}
 }
 
+// ExecuteTracer pass tracer.Tracer to ExecuteOption
 func ExecuteTracer(t tracer.Tracer) ExecuteOption {
 	return func(o *ExecuteOptions) {
 		o.Tracer = t
 	}
 }
 
+// ExecuteLogger pass logger.Logger to ExecuteOption
 func ExecuteLogger(l logger.Logger) ExecuteOption {
 	return func(o *ExecuteOptions) {
 		o.Logger = l
 	}
 }
 
+// ExecuteMeter pass meter.Meter to ExecuteOption
 func ExecuteMeter(m meter.Meter) ExecuteOption {
 	return func(o *ExecuteOptions) {
 		o.Meter = m
 	}
 }
 
+// ExecuteContext pass context.Context ot ExecuteOption
 func ExecuteContext(ctx context.Context) ExecuteOption {
 	return func(o *ExecuteOptions) {
 		o.Context = ctx
 	}
 }
 
+// ExecuteReverse says that dag must be run in reverse order
 func ExecuteReverse(b bool) ExecuteOption {
 	return func(o *ExecuteOptions) {
 		o.Reverse = b
 	}
 }
 
+// ExecuteTimeout pass timeout time.Duration for execution
 func ExecuteTimeout(td time.Duration) ExecuteOption {
 	return func(o *ExecuteOptions) {
 		o.Timeout = td
 	}
 }
 
+// ExecuteAsync says that caller does not wait for execution complete
 func ExecuteAsync(b bool) ExecuteOption {
 	return func(o *ExecuteOptions) {
 		o.Async = b
 	}
 }
 
+// NewExecuteOptions create new ExecuteOptions struct
 func NewExecuteOptions(opts ...ExecuteOption) ExecuteOptions {
 	options := ExecuteOptions{
 		Client:  client.DefaultClient,
@@ -192,6 +203,7 @@ func NewExecuteOptions(opts ...ExecuteOption) ExecuteOptions {
 	return options
 }
 
+// StepOptions holds step options
 type StepOptions struct {
 	Context  context.Context
 	Fallback string
@@ -199,8 +211,10 @@ type StepOptions struct {
 	Requires []string
 }
 
+// StepOption func signature
 type StepOption func(*StepOptions)
 
+// NewStepOptions create new StepOptions struct
 func NewStepOptions(opts ...StepOption) StepOptions {
 	options := StepOptions{
 		Context: context.Background(),
@@ -211,18 +225,21 @@ func NewStepOptions(opts ...StepOption) StepOptions {
 	return options
 }
 
+// StepID sets the step id for dag
 func StepID(id string) StepOption {
 	return func(o *StepOptions) {
 		o.ID = id
 	}
 }
 
+// StepRequires specifies required steps
 func StepRequires(steps ...string) StepOption {
 	return func(o *StepOptions) {
 		o.Requires = steps
 	}
 }
 
+// StepFallback set the step to run on error
 func StepFallback(step string) StepOption {
 	return func(o *StepOptions) {
 		o.Fallback = step

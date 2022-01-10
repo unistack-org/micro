@@ -9,7 +9,7 @@ import (
 // Option powers the configuration for metrics implementations:
 type Option func(*Options)
 
-// Options for metrics implementations:
+// Options for metrics implementations
 type Options struct {
 	// Logger used for logging
 	Logger logger.Logger
@@ -102,6 +102,7 @@ func Logger(l logger.Logger) Option {
 	}
 }
 
+// Labels sets the meter labels
 func Labels(ls ...string) Option {
 	return func(o *Options) {
 		o.Labels = append(o.Labels, ls...)

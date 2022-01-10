@@ -92,10 +92,16 @@ type Stream interface {
 	Send(msg interface{}) error
 	// Recv will decode and read a response
 	Recv(msg interface{}) error
+	// SendMsg will encode and send a request
+	SendMsg(msg interface{}) error
+	// RecvMsg will decode and read a response
+	RecvMsg(msg interface{}) error
 	// Error returns the stream error
 	Error() error
 	// Close closes the stream
 	Close() error
+	// CloseSend closes the send direction of the stream
+	CloseSend() error
 }
 
 // Option used by the Client

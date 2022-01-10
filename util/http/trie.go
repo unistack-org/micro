@@ -45,8 +45,7 @@ var methodMap = map[string]methodTyp{
 	http.MethodTrace:   mTRACE,
 }
 
-// RegisterMethod adds support for custom HTTP method handlers, available
-// via Router#Method and Router#MethodFunc
+// RegisterMethod adds support for custom HTTP method handlers
 func RegisterMethod(method string) error {
 	if method == "" {
 		return nil
@@ -75,13 +74,13 @@ const (
 	ntCatchAll                // /api/v1/*
 )
 
-func NewTrie() *Node {
-	return &Node{}
+// NewTrie create new tree
+func NewTrie() *Trie {
+	return &Trie{}
 }
 
-type Trie = Node
-
-type Node struct {
+// Trie holds nodes for path based tree search
+type Trie struct {
 	// regexp matcher for regexp nodes
 	rex *regexp.Regexp
 
@@ -128,7 +127,8 @@ func (s endpoints) Value(method methodTyp) *endpoint {
 	return mh
 }
 
-func (n *Node) Insert(methods []string, pattern string, handler interface{}) error {
+// Insert add elemenent to tree
+func (n *Trie) Insert(methods []string, pattern string, handler interface{}) error {
 	var err error
 	for _, method := range methods {
 		if err = n.insert(methodMap[method], pattern, handler); err != nil {
@@ -138,8 +138,8 @@ func (n *Node) Insert(methods []string, pattern string, handler interface{}) err
 	return nil
 }
 
-func (n *Node) insert(method methodTyp, pattern string, handler interface{}) error {
-	var parent *Node
+func (n *Trie) insert(method methodTyp, pattern string, handler interface{}) error {
+	var parent *Trie
 	search := pattern
 
 	for {
@@ -175,8 +175,8 @@ func (n *Node) insert(method methodTyp, pattern string, handler interface{}) err
 
 		// No edge, create one
 		if n == nil {
-			child := &Node{typ: ntStatic, label: label, tail: segTail, prefix: search}
-			var hn *Node
+			child := &Trie{typ: ntStatic, label: label, tail: segTail, prefix: search}
+			var hn *Trie
 			hn, err = parent.addChild(child, search)
 			if err != nil {
 				return err
@@ -205,7 +205,7 @@ func (n *Node) insert(method methodTyp, pattern string, handler interface{}) err
 		}
 
 		// Split the node
-		child := &Node{
+		child := &Trie{
 			typ:    ntStatic,
 			prefix: search[:commonPrefix],
 		}
@@ -227,12 +227,12 @@ func (n *Node) insert(method methodTyp, pattern string, handler interface{}) err
 		}
 
 		// Create a new edge for the node
-		subchild := &Node{
+		subchild := &Trie{
 			typ:    ntStatic,
 			label:  search[0],
 			prefix: search,
 		}
-		var hn *Node
+		var hn *Trie
 		hn, err = child.addChild(subchild, search)
 		if err != nil {
 			return err
@@ -245,7 +245,7 @@ func (n *Node) insert(method methodTyp, pattern string, handler interface{}) err
 // For a URL router like chi's, we split the static, param, regexp and wildcard segments
 // into different nodes. In addition, addChild will recursively call itself until every
 // pattern segment is added to the url pattern tree as individual nodes, depending on type.
-func (n *Node) addChild(child *Node, prefix string) (*Node, error) {
+func (n *Trie) addChild(child *Trie, prefix string) (*Trie, error) {
 	search := prefix
 
 	// handler leaf node added to the tree is the child.
@@ -298,7 +298,7 @@ func (n *Node) addChild(child *Node, prefix string) (*Node, error) {
 
 				search = search[segStartIdx:] // advance search position
 
-				nn := &Node{
+				nn := &Trie{
 					typ:    ntStatic,
 					label:  search[0],
 					prefix: search,
@@ -321,7 +321,7 @@ func (n *Node) addChild(child *Node, prefix string) (*Node, error) {
 			// add the param edge node
 			search = search[segStartIdx:]
 
-			nn := &Node{
+			nn := &Trie{
 				typ:   segTyp,
 				label: search[0],
 				tail:  segTail,
@@ -339,7 +339,7 @@ func (n *Node) addChild(child *Node, prefix string) (*Node, error) {
 	return hn, nil
 }
 
-func (n *Node) replaceChild(label, tail byte, child *Node) error {
+func (n *Trie) replaceChild(label, tail byte, child *Trie) error {
 	for i := 0; i < len(n.children[child.typ]); i++ {
 		if n.children[child.typ][i].label == label && n.children[child.typ][i].tail == tail {
 			n.children[child.typ][i] = child
@@ -351,7 +351,7 @@ func (n *Node) replaceChild(label, tail byte, child *Node) error {
 	return fmt.Errorf("replacing missing child")
 }
 
-func (n *Node) getEdge(ntyp nodeTyp, label, tail byte, prefix string) *Node {
+func (n *Trie) getEdge(ntyp nodeTyp, label, tail byte, prefix string) *Trie {
 	nds := n.children[ntyp]
 	for i := 0; i < len(nds); i++ {
 		if nds[i].label == label && nds[i].tail == tail {
@@ -364,7 +364,7 @@ func (n *Node) getEdge(ntyp nodeTyp, label, tail byte, prefix string) *Node {
 	return nil
 }
 
-func (n *Node) setEndpoint(method methodTyp, handler interface{}, pattern string) error {
+func (n *Trie) setEndpoint(method methodTyp, handler interface{}, pattern string) error {
 	// Set the handler for the method type on the node
 	if n.endpoints == nil {
 		n.endpoints = make(endpoints)
@@ -398,7 +398,8 @@ func (n *Node) setEndpoint(method methodTyp, handler interface{}, pattern string
 	return nil
 }
 
-func (n *Node) Search(method string, path string) (interface{}, map[string]string, bool) {
+// Search try to find element in tree with path and method
+func (n *Trie) Search(method string, path string) (interface{}, map[string]string, bool) {
 	params := &routeParams{}
 	// Find the routing handlers for the path
 	rn := n.findRoute(params, methodMap[method], path)
@@ -425,7 +426,7 @@ type routeParams struct {
 
 // Recursive edge traversal by checking all nodeTyp groups along the way.
 // It's like searching through a multi-dimensional radix trie.
-func (n *Node) findRoute(params *routeParams, method methodTyp, path string) *Node {
+func (n *Trie) findRoute(params *routeParams, method methodTyp, path string) *Trie {
 	nn := n
 	search := path
 
@@ -435,7 +436,7 @@ func (n *Node) findRoute(params *routeParams, method methodTyp, path string) *No
 			continue
 		}
 
-		var xn *Node
+		var xn *Trie
 		xsearch := search
 
 		var label byte
@@ -550,7 +551,7 @@ func (n *Node) findRoute(params *routeParams, method methodTyp, path string) *No
 	return nil
 }
 
-func (n *Node) isLeaf() bool {
+func (n *Trie) isLeaf() bool {
 	return n.endpoints != nil
 }
 
@@ -665,7 +666,7 @@ func longestPrefix(k1, k2 string) int {
 	return i
 }
 
-type nodes []*Node
+type nodes []*Trie
 
 // Sort the list of nodes by label
 func (ns nodes) Sort()              { sort.Sort(ns); ns.tailSort() }
@@ -684,7 +685,7 @@ func (ns nodes) tailSort() {
 	}
 }
 
-func (ns nodes) findEdge(label byte) *Node {
+func (ns nodes) findEdge(label byte) *Trie {
 	num := len(ns)
 	idx := 0
 	i, j := 0, num-1

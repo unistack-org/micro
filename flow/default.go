@@ -349,6 +349,7 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 	return eid, err
 }
 
+// NewFlow create new flow
 func NewFlow(opts ...Option) Flow {
 	options := NewOptions(opts...)
 	return &microFlow{opts: options}
@@ -574,11 +575,13 @@ func (s *microPublishStep) Execute(ctx context.Context, req *Message, opts ...Ex
 	return nil, nil
 }
 
+// NewCallStep create new step with client.Call
 func NewCallStep(service string, name string, method string, opts ...StepOption) Step {
 	options := NewStepOptions(opts...)
 	return &microCallStep{service: service, method: name + "." + method, opts: options}
 }
 
+// NewPublishStep create new step with client.Publish
 func NewPublishStep(topic string, opts ...StepOption) Step {
 	options := NewStepOptions(opts...)
 	return &microPublishStep{topic: topic, opts: options}

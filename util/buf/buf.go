@@ -2,8 +2,12 @@ package buf // import "go.unistack.org/micro/v3/util/buf"
 
 import (
 	"bytes"
+	"io"
 )
 
+var _ io.Closer = &Buffer{}
+
+// Buffer bytes.Buffer wrapper to satisfie io.Closer interface
 type Buffer struct {
 	*bytes.Buffer
 }

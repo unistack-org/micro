@@ -20,104 +20,104 @@ type Wrapper interface {
 	Logf(LogfFunc) LogfFunc
 }
 
-var _ Logger = &OmitLogger{}
+var _ Logger = &omitLogger{}
 
-type OmitLogger struct {
+type omitLogger struct {
 	l Logger
 }
 
 func NewOmitLogger(l Logger) Logger {
-	return &OmitLogger{l: l}
+	return &omitLogger{l: l}
 }
 
-func (w *OmitLogger) Init(opts ...Option) error {
+func (w *omitLogger) Init(opts ...Option) error {
 	return w.l.Init(append(opts, WrapLogger(NewOmitWrapper()))...)
 }
 
-func (w *OmitLogger) V(level Level) bool {
+func (w *omitLogger) V(level Level) bool {
 	return w.l.V(level)
 }
 
-func (w *OmitLogger) Level(level Level) {
+func (w *omitLogger) Level(level Level) {
 	w.l.Level(level)
 }
 
-func (w *OmitLogger) Clone(opts ...Option) Logger {
+func (w *omitLogger) Clone(opts ...Option) Logger {
 	return w.l.Clone(opts...)
 }
 
-func (w *OmitLogger) Options() Options {
+func (w *omitLogger) Options() Options {
 	return w.l.Options()
 }
 
-func (w *OmitLogger) Fields(fields ...interface{}) Logger {
+func (w *omitLogger) Fields(fields ...interface{}) Logger {
 	return w.l.Fields(fields...)
 }
 
-func (w *OmitLogger) Info(ctx context.Context, args ...interface{}) {
+func (w *omitLogger) Info(ctx context.Context, args ...interface{}) {
 	w.l.Info(ctx, args...)
 }
 
-func (w *OmitLogger) Trace(ctx context.Context, args ...interface{}) {
+func (w *omitLogger) Trace(ctx context.Context, args ...interface{}) {
 	w.l.Trace(ctx, args...)
 }
 
-func (w *OmitLogger) Debug(ctx context.Context, args ...interface{}) {
+func (w *omitLogger) Debug(ctx context.Context, args ...interface{}) {
 	w.l.Debug(ctx, args...)
 }
 
-func (w *OmitLogger) Warn(ctx context.Context, args ...interface{}) {
+func (w *omitLogger) Warn(ctx context.Context, args ...interface{}) {
 	w.l.Warn(ctx, args...)
 }
 
-func (w *OmitLogger) Error(ctx context.Context, args ...interface{}) {
+func (w *omitLogger) Error(ctx context.Context, args ...interface{}) {
 	w.l.Error(ctx, args...)
 }
 
-func (w *OmitLogger) Fatal(ctx context.Context, args ...interface{}) {
+func (w *omitLogger) Fatal(ctx context.Context, args ...interface{}) {
 	w.l.Fatal(ctx, args...)
 }
 
-func (w *OmitLogger) Infof(ctx context.Context, msg string, args ...interface{}) {
+func (w *omitLogger) Infof(ctx context.Context, msg string, args ...interface{}) {
 	w.l.Infof(ctx, msg, args...)
 }
 
-func (w *OmitLogger) Tracef(ctx context.Context, msg string, args ...interface{}) {
+func (w *omitLogger) Tracef(ctx context.Context, msg string, args ...interface{}) {
 	w.l.Tracef(ctx, msg, args...)
 }
 
-func (w *OmitLogger) Debugf(ctx context.Context, msg string, args ...interface{}) {
+func (w *omitLogger) Debugf(ctx context.Context, msg string, args ...interface{}) {
 	w.l.Debugf(ctx, msg, args...)
 }
 
-func (w *OmitLogger) Warnf(ctx context.Context, msg string, args ...interface{}) {
+func (w *omitLogger) Warnf(ctx context.Context, msg string, args ...interface{}) {
 	w.l.Warnf(ctx, msg, args...)
 }
 
-func (w *OmitLogger) Errorf(ctx context.Context, msg string, args ...interface{}) {
+func (w *omitLogger) Errorf(ctx context.Context, msg string, args ...interface{}) {
 	w.l.Errorf(ctx, msg, args...)
 }
 
-func (w *OmitLogger) Fatalf(ctx context.Context, msg string, args ...interface{}) {
+func (w *omitLogger) Fatalf(ctx context.Context, msg string, args ...interface{}) {
 	w.l.Fatalf(ctx, msg, args...)
 }
 
-func (w *OmitLogger) Log(ctx context.Context, level Level, args ...interface{}) {
+func (w *omitLogger) Log(ctx context.Context, level Level, args ...interface{}) {
 	w.l.Log(ctx, level, args...)
 }
 
-func (w *OmitLogger) Logf(ctx context.Context, level Level, msg string, args ...interface{}) {
+func (w *omitLogger) Logf(ctx context.Context, level Level, msg string, args ...interface{}) {
 	w.l.Logf(ctx, level, msg, args...)
 }
 
-func (w *OmitLogger) String() string {
+func (w *omitLogger) String() string {
 	return w.l.String()
 }
 
-type OmitWrapper struct{}
+type omitWrapper struct{}
 
 func NewOmitWrapper() Wrapper {
-	return &OmitWrapper{}
+	return &omitWrapper{}
 }
 
 func getArgs(args []interface{}) []interface{} {
@@ -153,13 +153,13 @@ func getArgs(args []interface{}) []interface{} {
 	return nargs
 }
 
-func (w *OmitWrapper) Log(fn LogFunc) LogFunc {
+func (w *omitWrapper) Log(fn LogFunc) LogFunc {
 	return func(ctx context.Context, level Level, args ...interface{}) {
 		fn(ctx, level, getArgs(args)...)
 	}
 }
 
-func (w *OmitWrapper) Logf(fn LogfFunc) LogfFunc {
+func (w *omitWrapper) Logf(fn LogfFunc) LogfFunc {
 	return func(ctx context.Context, level Level, msg string, args ...interface{}) {
 		fn(ctx, level, msg, getArgs(args)...)
 	}
