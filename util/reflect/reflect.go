@@ -10,30 +10,40 @@ import (
 )
 
 var (
+	// ErrInvalidStruct happens when passed not struct and not struct pointer
 	ErrInvalidStruct = errors.New("invalid struct specified")
-	ErrInvalidValue  = errors.New("invalid value specified")
-	ErrNotFound      = errors.New("struct field not found")
+	// ErrInvalidValue happens when passed invalid value for field
+	ErrInvalidValue = errors.New("invalid value specified")
+	// ErrNotFound happens when struct field not found
+	ErrNotFound = errors.New("struct field not found")
 )
 
+// Option func signature
 type Option func(*Options)
 
+// Options for merge
 type Options struct {
-	Tags        []string
+	// Tags specifies tags to lookup
+	Tags []string
+	// SliceAppend controls slice appending
 	SliceAppend bool
 }
 
+// Tags sets the merge tags for lookup
 func Tags(t []string) Option {
 	return func(o *Options) {
 		o.Tags = t
 	}
 }
 
+// SliceAppend sets the option
 func SliceAppend(b bool) Option {
 	return func(o *Options) {
 		o.SliceAppend = b
 	}
 }
 
+// Merge merges map[string]interface{} to destination struct
 func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 	var err error
 	var sval reflect.Value
@@ -481,6 +491,7 @@ func IsEmpty(v reflect.Value) bool {
 	return true
 }
 
+// FieldName returns map field name that can be looked up in struct field
 func FieldName(name string) string {
 	newstr := make([]rune, 0, len(name))
 	for idx, chr := range name {

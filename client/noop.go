@@ -119,11 +119,23 @@ func (n *noopStream) Recv(interface{}) error {
 	return nil
 }
 
+func (n *noopStream) SendMsg(interface{}) error {
+	return nil
+}
+
+func (n *noopStream) RecvMsg(interface{}) error {
+	return nil
+}
+
 func (n *noopStream) Error() error {
 	return nil
 }
 
 func (n *noopStream) Close() error {
+	return nil
+}
+
+func (n *noopStream) CloseSend() error {
 	return nil
 }
 

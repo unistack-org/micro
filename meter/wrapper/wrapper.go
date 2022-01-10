@@ -11,25 +11,38 @@ import (
 )
 
 var (
-	ClientRequestDurationSeconds     = "client_request_duration_seconds"
+	// ClientRequestDurationSeconds specifies meter metric name
+	ClientRequestDurationSeconds = "client_request_duration_seconds"
+	// ClientRequestLatencyMicroseconds specifies meter metric name
 	ClientRequestLatencyMicroseconds = "client_request_latency_microseconds"
-	ClientRequestTotal               = "client_request_total"
-	ClientRequestInflight            = "client_request_inflight"
-
-	ServerRequestDurationSeconds     = "server_request_duration_seconds"
+	// ClientRequestTotal specifies meter metric name
+	ClientRequestTotal = "client_request_total"
+	// ClientRequestInflight specifies meter metric name
+	ClientRequestInflight = "client_request_inflight"
+	// ServerRequestDurationSeconds specifies meter metric name
+	ServerRequestDurationSeconds = "server_request_duration_seconds"
+	// ServerRequestLatencyMicroseconds specifies meter metric name
 	ServerRequestLatencyMicroseconds = "server_request_latency_microseconds"
-	ServerRequestTotal               = "server_request_total"
-	ServerRequestInflight            = "server_request_inflight"
-
-	PublishMessageDurationSeconds     = "publish_message_duration_seconds"
+	// ServerRequestTotal specifies meter metric name
+	ServerRequestTotal = "server_request_total"
+	// ServerRequestInflight specifies meter metric name
+	ServerRequestInflight = "server_request_inflight"
+	// PublishMessageDurationSeconds specifies meter metric name
+	PublishMessageDurationSeconds = "publish_message_duration_seconds"
+	// PublishMessageLatencyMicroseconds specifies meter metric name
 	PublishMessageLatencyMicroseconds = "publish_message_latency_microseconds"
-	PublishMessageTotal               = "publish_message_total"
-	PublishMessageInflight            = "publish_message_inflight"
-
-	SubscribeMessageDurationSeconds     = "subscribe_message_duration_seconds"
+	// PublishMessageTotal specifies meter metric name
+	PublishMessageTotal = "publish_message_total"
+	// PublishMessageInflight specifies meter metric name
+	PublishMessageInflight = "publish_message_inflight"
+	// SubscribeMessageDurationSeconds specifies meter metric name
+	SubscribeMessageDurationSeconds = "subscribe_message_duration_seconds"
+	// SubscribeMessageLatencyMicroseconds specifies meter metric name
 	SubscribeMessageLatencyMicroseconds = "subscribe_message_latency_microseconds"
-	SubscribeMessageTotal               = "subscribe_message_total"
-	SubscribeMessageInflight            = "subscribe_message_inflight"
+	// SubscribeMessageTotal specifies meter metric name
+	SubscribeMessageTotal = "subscribe_message_total"
+	// SubscribeMessageInflight specifies meter metric name
+	SubscribeMessageInflight = "subscribe_message_inflight"
 
 	labelSuccess  = "success"
 	labelFailure  = "failure"
@@ -40,14 +53,17 @@ var (
 	DefaultSkipEndpoints = []string{"Meter.Metrics"}
 )
 
+// Options struct
 type Options struct {
 	Meter         meter.Meter
 	lopts         []meter.Option
 	SkipEndpoints []string
 }
 
+// Option func signature
 type Option func(*Options)
 
+// NewOptions creates new Options struct
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Meter:         meter.DefaultMeter,
@@ -60,30 +76,35 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+// ServiceName passes service name to meter label
 func ServiceName(name string) Option {
 	return func(o *Options) {
 		o.lopts = append(o.lopts, meter.Labels("name", name))
 	}
 }
 
+// ServiceVersion passes service version to meter label
 func ServiceVersion(version string) Option {
 	return func(o *Options) {
 		o.lopts = append(o.lopts, meter.Labels("version", version))
 	}
 }
 
+// ServiceID passes service id to meter label
 func ServiceID(id string) Option {
 	return func(o *Options) {
 		o.lopts = append(o.lopts, meter.Labels("id", id))
 	}
 }
 
+// Meter passes meter
 func Meter(m meter.Meter) Option {
 	return func(o *Options) {
 		o.Meter = m
 	}
 }
 
+// SkipEndpoint add endpoint to skip
 func SkipEndoints(eps ...string) Option {
 	return func(o *Options) {
 		o.SkipEndpoints = append(o.SkipEndpoints, eps...)
@@ -96,6 +117,7 @@ type wrapper struct {
 	opts     Options
 }
 
+// NewClientWrapper create new client wrapper
 func NewClientWrapper(opts ...Option) client.Wrapper {
 	return func(c client.Client) client.Client {
 		handler := &wrapper{
@@ -106,6 +128,7 @@ func NewClientWrapper(opts ...Option) client.Wrapper {
 	}
 }
 
+// NewCallWrapper create new call wrapper
 func NewCallWrapper(opts ...Option) client.CallWrapper {
 	return func(fn client.CallFunc) client.CallFunc {
 		handler := &wrapper{
@@ -231,6 +254,7 @@ func (w *wrapper) Publish(ctx context.Context, p client.Message, opts ...client.
 	return err
 }
 
+// NewHandlerWrapper create new server handler wrapper
 func NewHandlerWrapper(opts ...Option) server.HandlerWrapper {
 	handler := &wrapper{
 		opts: NewOptions(opts...),
@@ -240,7 +264,7 @@ func NewHandlerWrapper(opts ...Option) server.HandlerWrapper {
 
 func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
-		endpoint := req.Endpoint()
+		endpoint := req.Service() + "." + req.Endpoint()
 		for _, ep := range w.opts.SkipEndpoints {
 			if ep == endpoint {
 				return fn(ctx, req, rsp)
@@ -270,6 +294,7 @@ func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 	}
 }
 
+// NewSubscribeWrapper create server subscribe wrapper
 func NewSubscriberWrapper(opts ...Option) server.SubscriberWrapper {
 	handler := &wrapper{
 		opts: NewOptions(opts...),
