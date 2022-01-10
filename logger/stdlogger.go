@@ -10,6 +10,7 @@ type stdLogger struct {
 	level Level
 }
 
+// NewStdLogger returns new *log.Logger baked by logger.Logger implementation
 func NewStdLogger(l Logger, level Level) *log.Logger {
 	return log.New(&stdLogger{l: l, level: level}, "" /* prefix */, 0 /* flags */)
 }
@@ -20,6 +21,7 @@ func (sl *stdLogger) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
+// RedirectStdLogger replace *log.Logger with logger.Logger implementation
 func RedirectStdLogger(l Logger, level Level) func() {
 	flags := log.Flags()
 	prefix := log.Prefix()
