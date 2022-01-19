@@ -7,6 +7,19 @@ import (
 	"testing"
 )
 
+func TestFields(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
+	if err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+	l.Fields("key", "val").Info(ctx, "message")
+	if !bytes.Contains(buf.Bytes(), []byte(`"key":"val"`)) {
+		t.Fatalf("logger fields not works, buf contains: %s", buf.Bytes())
+	}
+}
+
 func TestClone(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
