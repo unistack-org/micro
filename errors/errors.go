@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -237,4 +239,65 @@ func FromError(err error) *Error {
 	}
 
 	return Parse(err.Error())
+}
+
+// MarshalJSON returns error data
+func (e *Error) MarshalJSON() ([]byte, error) {
+	return e.Marshal()
+}
+
+// UnmarshalJSON set error data
+func (e *Error) UnmarshalJSON(data []byte) error {
+	return e.Unmarshal(data)
+}
+
+// ProtoMessage noop func
+func (e *Error) ProtoMessage() {}
+
+// Reset resets error
+func (e *Error) Reset() {
+	*e = Error{}
+}
+
+// String returns error as string
+func (e *Error) String() string {
+	return fmt.Sprintf(`{"id":"%s","detail":"%s","status":"%s","code":%d}`, e.ID, e.Detail, e.Status, e.Code)
+}
+
+// Marshal returns error data
+func (e *Error) Marshal() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
+// Unmarshal set error data
+func (e *Error) Unmarshal(data []byte) error {
+	str := string(data)
+	if len(data) < 41 {
+		return fmt.Errorf("invalid data")
+	}
+	parts := strings.FieldsFunc(str[1:len(str)-1], func(r rune) bool {
+		return r == ','
+	})
+	for _, part := range parts {
+		nparts := strings.FieldsFunc(part, func(r rune) bool {
+			return r == ':'
+		})
+		for idx := 0; idx < len(nparts); idx++ {
+			switch {
+			case nparts[idx] == `"id"`:
+				e.ID = nparts[idx+1][1 : len(nparts[idx+1])-1]
+			case nparts[idx] == `"detail"`:
+				e.Detail = nparts[idx+1][1 : len(nparts[idx+1])-1]
+			case nparts[idx] == `"status"`:
+				e.Status = nparts[idx+1][1 : len(nparts[idx+1])-1]
+			case nparts[idx] == `"code"`:
+				c, err := strconv.ParseInt(nparts[idx+1], 10, 32)
+				if err != nil {
+					return err
+				}
+				e.Code = int32(c)
+			}
+		}
+	}
+	return nil
 }
