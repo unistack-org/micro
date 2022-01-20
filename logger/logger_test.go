@@ -7,6 +7,24 @@ import (
 	"testing"
 )
 
+func TestContext(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
+	if err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+
+	nl, ok := FromContext(NewContext(ctx, l.Fields("key", "val")))
+	if !ok {
+		t.Fatal("context without logger")
+	}
+	nl.Info(ctx, "message")
+	if !bytes.Contains(buf.Bytes(), []byte(`"key":"val"`)) {
+		t.Fatalf("logger fields not works, buf contains: %s", buf.Bytes())
+	}
+}
+
 func TestFields(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
