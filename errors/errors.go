@@ -84,9 +84,9 @@ func New(id, detail string, code int32) error {
 // Parse tries to parse a JSON string into an error. If that
 // fails, it will set the given string as the error detail.
 func Parse(err string) *Error {
-	e := new(Error)
-	errr := json.Unmarshal([]byte(err), e)
-	if errr != nil {
+	e := &Error{}
+	nerr := json.Unmarshal([]byte(err), e)
+	if nerr != nil {
 		e.Detail = err
 	}
 	return e
@@ -283,6 +283,10 @@ func (e *Error) Unmarshal(data []byte) error {
 			return r == ':'
 		})
 		for idx := 0; idx < len(nparts); idx++ {
+			if len(nparts[idx+1]) < 3 {
+				idx++
+				continue
+			}
 			switch {
 			case nparts[idx] == `"id"`:
 				e.ID = nparts[idx+1][1 : len(nparts[idx+1])-1]
@@ -297,6 +301,7 @@ func (e *Error) Unmarshal(data []byte) error {
 				}
 				e.Code = int32(c)
 			}
+			idx++
 		}
 	}
 	return nil
