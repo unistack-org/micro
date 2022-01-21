@@ -2,9 +2,23 @@ package errors
 
 import (
 	er "errors"
+	"fmt"
 	"net/http"
 	"testing"
 )
+
+func TestEmpty(t *testing.T) {
+	msg := "test"
+	var err *Error
+	err = FromError(fmt.Errorf(msg))
+	if err.Detail != msg {
+		t.Fatalf("invalid error %v", err)
+	}
+	err = FromError(fmt.Errorf(`{"id":"","detail":"%s","status":"%s","code":0}`, msg, msg))
+	if err.Detail != msg || err.Status != msg {
+		t.Fatalf("invalid error %#+v", err)
+	}
+}
 
 func TestFromError(t *testing.T) {
 	err := NotFound("go.micro.test", "%s", "example")
