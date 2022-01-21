@@ -282,20 +282,20 @@ func (e *Error) Unmarshal(data []byte) error {
 		nparts := strings.FieldsFunc(part, func(r rune) bool {
 			return r == ':'
 		})
-		for idx := 0; idx < len(nparts); idx++ {
-			if len(nparts[idx+1]) < 3 {
-				idx++
+		for idx := 0; idx < len(nparts)/2; idx += 2 {
+			val := strings.Trim(nparts[idx+1], `"`)
+			if len(val) == 0 {
 				continue
 			}
 			switch {
 			case nparts[idx] == `"id"`:
-				e.ID = nparts[idx+1][1 : len(nparts[idx+1])-1]
+				e.ID = val
 			case nparts[idx] == `"detail"`:
-				e.Detail = nparts[idx+1][1 : len(nparts[idx+1])-1]
+				e.Detail = val
 			case nparts[idx] == `"status"`:
-				e.Status = nparts[idx+1][1 : len(nparts[idx+1])-1]
+				e.Status = val
 			case nparts[idx] == `"code"`:
-				c, err := strconv.ParseInt(nparts[idx+1], 10, 32)
+				c, err := strconv.ParseInt(val, 10, 32)
 				if err != nil {
 					return err
 				}
