@@ -3,6 +3,7 @@
 package errors // import "go.unistack.org/micro/v3/errors"
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -261,7 +262,7 @@ func (e *Error) Reset() {
 
 // String returns error as string
 func (e *Error) String() string {
-	return fmt.Sprintf(`{"id":"%s","detail":"%s","status":"%s","code":%d}`, e.ID, e.Detail, e.Status, e.Code)
+	return fmt.Sprintf(`{"id":"%s","detail":"%s","status":"%s","code":%d}`, addslashes(e.ID), addslashes(e.Detail), addslashes(e.Status), e.Code)
 }
 
 // Marshal returns error data
@@ -305,4 +306,16 @@ func (e *Error) Unmarshal(data []byte) error {
 		}
 	}
 	return nil
+}
+
+func addslashes(str string) string {
+	var buf bytes.Buffer
+	for _, char := range str {
+		switch char {
+		case '\'', '"', '\\':
+			buf.WriteRune('\\')
+		}
+		buf.WriteRune(char)
+	}
+	return buf.String()
 }
