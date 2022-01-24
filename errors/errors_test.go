@@ -1,11 +1,20 @@
 package errors
 
 import (
+	"encoding/json"
 	er "errors"
 	"fmt"
 	"net/http"
 	"testing"
 )
+
+func TestMarshalJSON(t *testing.T) {
+	e := InternalServerError("id", "err: %v", fmt.Errorf("err: %v", `xxx: "UNIX_TIMESTAMP": invalid identifier`))
+	_, err := json.Marshal(e)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 
 func TestEmpty(t *testing.T) {
 	msg := "test"
