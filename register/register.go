@@ -11,9 +11,10 @@ import (
 const (
 	// WildcardDomain indicates any domain
 	WildcardDomain = "*"
-	// DefaultDomain to use if none was provided in options
-	DefaultDomain = "micro"
 )
+
+// DefaultDomain to use if none was provided in options
+var DefaultDomain = "micro"
 
 var (
 	// DefaultRegister is the global default register
