@@ -20,7 +20,7 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: ${{ runner.os }}-go-
     - name: sdk checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: sdk deps
       run: go get -v -t -d ./...
     - name: sdk test
@@ -28,7 +28,7 @@ jobs:
         INTEGRATION_TESTS: yes
       run: go test -mod readonly -v ./...
     - name: tests checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: unistack-org/micro-tests
         ref: refs/heads/master
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: lint
         uses: golangci/golangci-lint-action@v3
         continue-on-error: true
