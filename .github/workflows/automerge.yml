@@ -1,4 +1,4 @@
-name: "dependabot-automerge"
+name: "automerge"
 
 on:
   pull_request_target:
@@ -11,16 +11,10 @@ permissions:
 jobs:
   automerge:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: github.actor == 'vtolstov'
     steps:
-      - name: metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@v1.3.0
-        with:
-          github-token: "${{ secrets.TOKEN }}"
       - name: merge
         id: merge
-        if: ${{contains(steps.metadata.outputs.dependency-names, 'go.unistack.org')}}
         run: gh pr merge --auto --merge "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}

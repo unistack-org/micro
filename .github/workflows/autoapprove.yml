@@ -1,0 +1,20 @@
+name: "autoapprove"
+
+on:
+  pull_request_target:
+    types: [assigned, opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  autoapprove:
+    runs-on: ubuntu-latest
+    steps:
+      - name: approve
+        uses: hmarr/auto-approve-action@v2
+        if: github.actor == 'vtolstov' || github.actor == 'dependabot[bot]'
+        id: approve
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
