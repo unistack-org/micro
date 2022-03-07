@@ -12,7 +12,7 @@ jobs:
     - name: setup
       uses: actions/setup-go@v2
       with:
-        go-version: 1.16
+        go-version: 1.17
     - name: cache
       uses: actions/cache@v2
       with:
