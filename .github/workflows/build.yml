@@ -50,7 +50,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - name: lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3.1.0
         continue-on-error: true
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
