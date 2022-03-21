@@ -252,7 +252,7 @@ func (n *noopServer) newBatchSubHandler(sb *subscriber, opts Options) broker.Bat
 					return err
 				}
 				rb := reflect.New(req.Type().Elem())
-				if err = cf.ReadBody(bytes.NewReader(msg.Body()), rb.Interface()); err != nil {
+				if err = cf.ReadBody(bytes.NewReader(msg.(*rpcMessage).body), rb.Interface()); err != nil {
 					return err
 				}
 				msg.(*rpcMessage).codec = cf
@@ -269,7 +269,7 @@ func (n *noopServer) newBatchSubHandler(sb *subscriber, opts Options) broker.Bat
 				}
 				payloads := reflect.MakeSlice(reqType, 0, len(ms))
 				for _, m := range ms {
-					payloads = reflect.Append(payloads, reflect.ValueOf(m.Payload()))
+					payloads = reflect.Append(payloads, reflect.ValueOf(m.Body()))
 				}
 				vals = append(vals, payloads)
 
@@ -381,7 +381,7 @@ func (n *noopServer) newSubHandler(sb *subscriber, opts Options) broker.Handler 
 					vals = append(vals, reflect.ValueOf(ctx))
 				}
 
-				vals = append(vals, reflect.ValueOf(msg.Payload()))
+				vals = append(vals, reflect.ValueOf(msg.Body()))
 
 				returnValues := handler.method.Call(vals)
 				if rerr := returnValues[0].Interface(); rerr != nil {
@@ -406,7 +406,6 @@ func (n *noopServer) newSubHandler(sb *subscriber, opts Options) broker.Handler 
 					contentType: ct,
 					payload:     req.Interface(),
 					header:      msg.Header,
-					body:        msg.Body,
 				})
 				results <- cerr
 			}()
