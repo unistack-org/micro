@@ -75,13 +75,11 @@ type Message interface {
 	// Topic of the message
 	Topic() string
 	// The decoded payload value
-	Payload() interface{}
+	Body() interface{}
 	// The content type of the payload
 	ContentType() string
 	// The raw headers of the message
 	Header() metadata.Metadata
-	// The raw body of the message
-	Body() []byte
 	// Codec used to decode the message
 	Codec() codec.Codec
 }
