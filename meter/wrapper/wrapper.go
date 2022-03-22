@@ -104,7 +104,7 @@ func Meter(m meter.Meter) Option {
 	}
 }
 
-// SkipEndpoint add endpoint to skip
+// SkipEndoints add endpoint to skip
 func SkipEndoints(eps ...string) Option {
 	return func(o *Options) {
 		o.SkipEndpoints = append(o.SkipEndpoints, eps...)
@@ -294,7 +294,7 @@ func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 	}
 }
 
-// NewSubscribeWrapper create server subscribe wrapper
+// NewSubscriberWrapper create server subscribe wrapper
 func NewSubscriberWrapper(opts ...Option) server.SubscriberWrapper {
 	handler := &wrapper{
 		opts: NewOptions(opts...),

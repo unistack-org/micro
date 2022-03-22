@@ -50,6 +50,7 @@ type Handler func(Event) error
 // Events contains multiple events
 type Events []Event
 
+// Ack try to ack all events and return
 func (evs Events) Ack() error {
 	var err error
 	for _, ev := range evs {
@@ -60,6 +61,7 @@ func (evs Events) Ack() error {
 	return nil
 }
 
+// SetError sets error on event
 func (evs Events) SetError(err error) {
 	for _, ev := range evs {
 		ev.SetError(err)

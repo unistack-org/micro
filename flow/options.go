@@ -91,7 +91,7 @@ func Store(s store.Store) Option {
 	}
 }
 
-// WorflowOption func signature
+// WorkflowOption func signature
 type WorkflowOption func(*WorkflowOptions)
 
 // WorkflowOptions holds workflow options

@@ -4,11 +4,16 @@ package config // import "go.unistack.org/micro/v3/config"
 import (
 	"context"
 	"errors"
+	"reflect"
 	"time"
 )
 
+type Validator interface {
+	Validate() error
+}
+
 // DefaultConfig default config
-var DefaultConfig Config = NewConfig()
+var DefaultConfig = NewConfig()
 
 // DefaultWatcherMinInterval default min interval for poll changes
 var DefaultWatcherMinInterval = 5 * time.Second
@@ -67,7 +72,59 @@ func Load(ctx context.Context, cs []Config, opts ...LoadOption) error {
 	return nil
 }
 
+// Validate runs Validate() error func for each struct field
+func Validate(ctx context.Context, cfg interface{}) error {
+	if cfg == nil {
+		return nil
+	}
+
+	if v, ok := cfg.(Validator); ok {
+		if err := v.Validate(); err != nil {
+			return err
+		}
+	}
+
+	sv := reflect.ValueOf(cfg)
+	if sv.Kind() == reflect.Ptr {
+		sv = sv.Elem()
+	}
+	if sv.Kind() != reflect.Struct {
+		return nil
+	}
+
+	typ := sv.Type()
+	for idx := 0; idx < typ.NumField(); idx++ {
+		fld := typ.Field(idx)
+		val := sv.Field(idx)
+		if !val.IsValid() || len(fld.PkgPath) != 0 {
+			continue
+		}
+
+		if v, ok := val.Interface().(Validator); ok {
+			if err := v.Validate(); err != nil {
+				return err
+			}
+		}
+
+		switch val.Kind() {
+		case reflect.Ptr:
+			if reflect.Indirect(val).Kind() == reflect.Struct {
+				if err := Validate(ctx, val.Interface()); err != nil {
+					return err
+				}
+			}
+		case reflect.Struct:
+			if err := Validate(ctx, val.Interface()); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 var (
+	// DefaultAfterLoad default func that runs after config load
 	DefaultAfterLoad = func(ctx context.Context, c Config) error {
 		for _, fn := range c.Options().AfterLoad {
 			if err := fn(ctx, c); err != nil {
@@ -79,7 +136,7 @@ var (
 		}
 		return nil
 	}
-
+	// DefaultAfterSave default func that runs after config save
 	DefaultAfterSave = func(ctx context.Context, c Config) error {
 		for _, fn := range c.Options().AfterSave {
 			if err := fn(ctx, c); err != nil {
@@ -91,7 +148,7 @@ var (
 		}
 		return nil
 	}
-
+	// DefaultBeforeLoad default func that runs before config load
 	DefaultBeforeLoad = func(ctx context.Context, c Config) error {
 		for _, fn := range c.Options().BeforeLoad {
 			if err := fn(ctx, c); err != nil {
@@ -103,11 +160,11 @@ var (
 		}
 		return nil
 	}
-
+	// DefaultBeforeSave default func that runs befora config save
 	DefaultBeforeSave = func(ctx context.Context, c Config) error {
 		for _, fn := range c.Options().BeforeSave {
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s BeforeSavec err: %v", c.String(), err)
+				c.Options().Logger.Errorf(ctx, "%s BeforeSave err: %v", c.String(), err)
 				if !c.Options().AllowFail {
 					return err
 				}

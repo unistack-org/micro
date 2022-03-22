@@ -11,13 +11,13 @@ import (
 
 func TestStructfields(t *testing.T) {
 	type Config struct {
-		Wait     time.Duration
 		Time     time.Time
+		Nested   *Config
 		Metadata map[string]int
 		Broker   string
 		Addr     []string
+		Wait     time.Duration
 		Verbose  bool
-		Nested   *Config
 	}
 	cfg := &Config{Nested: &Config{}}
 	fields, err := rutil.StructFields(cfg)

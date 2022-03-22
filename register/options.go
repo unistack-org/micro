@@ -44,9 +44,8 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
-// nolint: golint,revive
 // RegisterOptions holds options for register method
-type RegisterOptions struct {
+type RegisterOptions struct { // nolint: golint,revive
 	Context  context.Context
 	Domain   string
 	TTL      time.Duration
@@ -197,33 +196,29 @@ func TLSConfig(t *tls.Config) Option {
 	}
 }
 
-// nolint: golint,revive
 // RegisterAttempts specifies register atempts count
-func RegisterAttempts(t int) RegisterOption {
+func RegisterAttempts(t int) RegisterOption { // nolint: golint,revive
 	return func(o *RegisterOptions) {
 		o.Attempts = t
 	}
 }
 
-// nolint: golint,revive
 // RegisterTTL specifies register ttl
-func RegisterTTL(t time.Duration) RegisterOption {
+func RegisterTTL(t time.Duration) RegisterOption { // nolint: golint,revive
 	return func(o *RegisterOptions) {
 		o.TTL = t
 	}
 }
 
-// nolint: golint,revive
 // RegisterContext sets the register context
-func RegisterContext(ctx context.Context) RegisterOption {
+func RegisterContext(ctx context.Context) RegisterOption { // nolint: golint,revive
 	return func(o *RegisterOptions) {
 		o.Context = ctx
 	}
 }
 
-// nolint: golint,revive
 // RegisterDomain secifies register domain
-func RegisterDomain(d string) RegisterOption {
+func RegisterDomain(d string) RegisterOption { // nolint: golint,revive
 	return func(o *RegisterOptions) {
 		o.Domain = d
 	}
