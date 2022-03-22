@@ -69,6 +69,7 @@ type LoadOptions struct {
 	Context  context.Context
 }
 
+// NewLoadOptions create LoadOptions struct with provided opts
 func NewLoadOptions(opts ...LoadOption) LoadOptions {
 	options := LoadOptions{}
 	for _, o := range opts {
@@ -221,8 +222,10 @@ type WatchOptions struct {
 	Coalesce bool
 }
 
+// WatchOption func signature
 type WatchOption func(*WatchOptions)
 
+// NewWatchOptions create WatchOptions struct with provided opts
 func NewWatchOptions(opts ...WatchOption) WatchOptions {
 	options := WatchOptions{
 		Context:     context.Background(),

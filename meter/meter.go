@@ -102,7 +102,7 @@ func (k byKey) Swap(i, j int) {
 	k[i*2+1], k[j*2+1] = k[j*2+1], k[i*2+1]
 }
 
-// BuildLables used to sort labels and delete duplicates.
+// BuildLabels used to sort labels and delete duplicates.
 // Last value wins in case of duplicate label keys.
 func BuildLabels(labels ...string) []string {
 	if len(labels)%2 == 1 {

@@ -2,12 +2,16 @@ package tracer
 
 import "go.unistack.org/micro/v3/logger"
 
+// SpanOptions contains span option
 type SpanOptions struct{}
 
+// SpanOption func signature
 type SpanOption func(o *SpanOptions)
 
+// EventOptions contains event options
 type EventOptions struct{}
 
+// EventOption func signature
 type EventOption func(o *EventOptions)
 
 // Options struct
@@ -18,7 +22,7 @@ type Options struct {
 	Name string
 }
 
-// Option func
+// Option func signature
 type Option func(o *Options)
 
 // Logger sets the logger

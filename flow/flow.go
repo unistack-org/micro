@@ -11,7 +11,9 @@ import (
 )
 
 var (
+	// ErrStepNotExists returns when step not found
 	ErrStepNotExists = errors.New("step not exists")
+	// ErrMissingClient returns when client.Client is missing
 	ErrMissingClient = errors.New("client not set")
 )
 
@@ -36,6 +38,7 @@ func (m *RawMessage) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// Message used to transfer data between steps
 type Message struct {
 	Header metadata.Metadata
 	Body   RawMessage
@@ -67,6 +70,7 @@ type Step interface {
 	Response() *Message
 }
 
+// Status contains step current status
 type Status int
 
 func (status Status) String() string {
@@ -74,15 +78,22 @@ func (status Status) String() string {
 }
 
 const (
+	// StatusPending step waiting to start
 	StatusPending Status = iota
+	// StatusRunning step is running
 	StatusRunning
+	// StatusFailure step competed with error
 	StatusFailure
+	// StatusSuccess step completed without error
 	StatusSuccess
+	// StatusAborted step aborted while it running
 	StatusAborted
+	// StatusSuspend step suspended
 	StatusSuspend
 )
 
 var (
+	// StatusString contains map status => string
 	StatusString = map[Status]string{
 		StatusPending: "StatusPending",
 		StatusRunning: "StatusRunning",
@@ -91,6 +102,7 @@ var (
 		StatusAborted: "StatusAborted",
 		StatusSuspend: "StatusSuspend",
 	}
+	// StringStatus contains map string => status
 	StringStatus = map[string]Status{
 		"StatusPending": StatusPending,
 		"StatusRunning": StatusRunning,
@@ -144,6 +156,7 @@ var (
 	atomicSteps atomic.Value
 )
 
+// RegisterStep register own step with workflow
 func RegisterStep(step Step) {
 	flowMu.Lock()
 	steps, _ := atomicSteps.Load().([]Step)

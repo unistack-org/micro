@@ -20,8 +20,8 @@ var bracketSplitter = regexp.MustCompile(`\[|\]`)
 
 // StructField contains struct field path its value and field
 type StructField struct {
-	Path  string
 	Value reflect.Value
+	Path  string
 	Field reflect.StructField
 }
 

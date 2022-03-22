@@ -9,18 +9,30 @@ import (
 )
 
 const (
-	SplitToken     = "."
+	// SplitToken used to detect path components
+	SplitToken = "."
+	// IndexCloseChar used to detect index end
 	IndexCloseChar = "]"
-	IndexOpenChar  = "["
+	// IndexOpenChar used to detect index start
+	IndexOpenChar = "["
 )
 
 var (
-	ErrMalformedIndex    = errors.New("Malformed index key")
-	ErrInvalidIndexUsage = errors.New("Invalid index key usage")
-	ErrKeyNotFound       = errors.New("Unable to find the key")
-	ErrBadJSONPath       = errors.New("Bad path: must start with $ and have more then 2 chars")
+	// ErrMalformedIndex returns when index key have invalid format
+	ErrMalformedIndex = errors.New("malformed index key")
+	// ErrInvalidIndexUsage returns when index key usage error
+	ErrInvalidIndexUsage = errors.New("invalid index key usage")
+	// ErrKeyNotFound returns when key not found
+	ErrKeyNotFound = errors.New("unable to find the key")
+	// ErrBadJSONPath returns when path have invalid syntax
+	ErrBadJSONPath = errors.New("bad path: must start with $ and have more then 2 chars")
 )
 
+// Lookup performs a lookup into a value, using a path of keys. The key should
+// match with a Field or a MapIndex. For slice you can use the syntax key[index]
+// to access a specific index. If one key owns to a slice and an index is not
+// specificied the rest of the path will be apllied to evaley value of the
+// slice, and the value will be merged into a slice.
 func Lookup(i interface{}, path string) (reflect.Value, error) {
 	if path == "" || path[0:1] != "$" {
 		return reflect.Value{}, ErrBadJSONPath
@@ -37,11 +49,6 @@ func Lookup(i interface{}, path string) (reflect.Value, error) {
 	return lookup(i, strings.Split(path[2:], SplitToken)...)
 }
 
-// Lookup performs a lookup into a value, using a path of keys. The key should
-// match with a Field or a MapIndex. For slice you can use the syntax key[index]
-// to access a specific index. If one key owns to a slice and an index is not
-// specificied the rest of the path will be apllied to evaley value of the
-// slice, and the value will be merged into a slice.
 func lookup(i interface{}, path ...string) (reflect.Value, error) {
 	value := reflect.ValueOf(i)
 	var parent reflect.Value

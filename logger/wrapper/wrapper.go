@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	// DefaultClientCallObserver called by wrapper in client Call
 	DefaultClientCallObserver = func(ctx context.Context, req client.Request, rsp interface{}, opts []client.CallOption, err error) []string {
 		labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
 		if err != nil {
@@ -19,6 +20,7 @@ var (
 		return labels
 	}
 
+	// DefaultClientStreamObserver called by wrapper in client Stream
 	DefaultClientStreamObserver = func(ctx context.Context, req client.Request, opts []client.CallOption, stream client.Stream, err error) []string {
 		labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
 		if err != nil {
@@ -27,6 +29,7 @@ var (
 		return labels
 	}
 
+	// DefaultClientPublishObserver called by wrapper in client Publish
 	DefaultClientPublishObserver = func(ctx context.Context, msg client.Message, opts []client.PublishOption, err error) []string {
 		labels := []string{"endpoint", msg.Topic()}
 		if err != nil {
@@ -35,6 +38,7 @@ var (
 		return labels
 	}
 
+	// DefaultServerHandlerObserver called by wrapper in server Handler
 	DefaultServerHandlerObserver = func(ctx context.Context, req server.Request, rsp interface{}, err error) []string {
 		labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
 		if err != nil {
@@ -43,6 +47,7 @@ var (
 		return labels
 	}
 
+	// DefaultServerSubscriberObserver called by wrapper in server Subscriber
 	DefaultServerSubscriberObserver = func(ctx context.Context, msg server.Message, err error) []string {
 		labels := []string{"endpoint", msg.Topic()}
 		if err != nil {
@@ -51,6 +56,7 @@ var (
 		return labels
 	}
 
+	// DefaultClientCallFuncObserver called by wrapper in client CallFunc
 	DefaultClientCallFuncObserver = func(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions, err error) []string {
 		labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
 		if err != nil {
@@ -59,6 +65,7 @@ var (
 		return labels
 	}
 
+	// DefaultSkipEndpoints wrapper not called for this endpoints
 	DefaultSkipEndpoints = []string{"Meter.Metrics"}
 )
 
@@ -71,11 +78,17 @@ type lWrapper struct {
 }
 
 type (
-	ClientCallObserver       func(context.Context, client.Request, interface{}, []client.CallOption, error) []string
-	ClientStreamObserver     func(context.Context, client.Request, []client.CallOption, client.Stream, error) []string
-	ClientPublishObserver    func(context.Context, client.Message, []client.PublishOption, error) []string
-	ClientCallFuncObserver   func(context.Context, string, client.Request, interface{}, client.CallOptions, error) []string
-	ServerHandlerObserver    func(context.Context, server.Request, interface{}, error) []string
+	// ClientCallObserver func signature
+	ClientCallObserver func(context.Context, client.Request, interface{}, []client.CallOption, error) []string
+	// ClientStreamObserver func signature
+	ClientStreamObserver func(context.Context, client.Request, []client.CallOption, client.Stream, error) []string
+	// ClientPublishObserver func signature
+	ClientPublishObserver func(context.Context, client.Message, []client.PublishOption, error) []string
+	// ClientCallFuncObserver func signature
+	ClientCallFuncObserver func(context.Context, string, client.Request, interface{}, client.CallOptions, error) []string
+	// ServerHandlerObserver func signature
+	ServerHandlerObserver func(context.Context, server.Request, interface{}, error) []string
+	// ServerSubscriberObserver func signature
 	ServerSubscriberObserver func(context.Context, server.Message, error) []string
 )
 

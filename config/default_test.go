@@ -8,30 +8,46 @@ import (
 	"go.unistack.org/micro/v3/config"
 )
 
-type Cfg struct {
+type cfg struct {
 	StringValue string `default:"string_value"`
 	IgnoreValue string `json:"-"`
-	StructValue struct {
-		StringValue string `default:"string_value"`
+	StructValue *cfgStructValue
+	IntValue    int `default:"99"`
+}
+
+type cfgStructValue struct {
+	StringValue string `default:"string_value"`
+}
+
+func (c *cfg) Validate() error {
+	if c.IntValue != 10 {
+		return fmt.Errorf("invalid IntValue %d != %d", 10, c.IntValue)
 	}
-	IntValue int `default:"99"`
+	return nil
+}
+
+func (c *cfgStructValue) Validate() error {
+	if c.StringValue != "string_value" {
+		return fmt.Errorf("invalid StringValue %s != %s", "string_value", c.StringValue)
+	}
+	return nil
 }
 
 func TestDefault(t *testing.T) {
 	ctx := context.Background()
-	conf := &Cfg{IntValue: 10}
-	blfn := func(ctx context.Context, cfg config.Config) error {
-		nconf, ok := cfg.Options().Struct.(*Cfg)
+	conf := &cfg{IntValue: 10}
+	blfn := func(_ context.Context, c config.Config) error {
+		nconf, ok := c.Options().Struct.(*cfg)
 		if !ok {
-			return fmt.Errorf("failed to get Struct from options: %v", cfg.Options())
+			return fmt.Errorf("failed to get Struct from options: %v", c.Options())
 		}
 		nconf.StringValue = "before_load"
 		return nil
 	}
-	alfn := func(ctx context.Context, cfg config.Config) error {
-		nconf, ok := cfg.Options().Struct.(*Cfg)
+	alfn := func(_ context.Context, c config.Config) error {
+		nconf, ok := c.Options().Struct.(*cfg)
 		if !ok {
-			return fmt.Errorf("failed to get Struct from options: %v", cfg.Options())
+			return fmt.Errorf("failed to get Struct from options: %v", c.Options())
 		}
 		nconf.StringValue = "after_load"
 		return nil
@@ -49,4 +65,20 @@ func TestDefault(t *testing.T) {
 	}
 	_ = conf
 	// t.Logf("%#+v\n", conf)
+}
+
+func TestValidate(t *testing.T) {
+	ctx := context.Background()
+	conf := &cfg{IntValue: 10}
+	cfg := config.NewConfig(config.Struct(conf))
+	if err := cfg.Init(); err != nil {
+		t.Fatal(err)
+	}
+	if err := cfg.Load(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := config.Validate(ctx, conf); err != nil {
+		t.Fatal(err)
+	}
 }
