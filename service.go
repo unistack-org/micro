@@ -54,8 +54,10 @@ type Service interface {
 	// Runtime(string) (runtime.Runtime, bool)
 	// Profile
 	// Profile(string) (profile.Profile, bool)
-	// Run the service
+	// Run the service and wait
 	Run() error
+	// Start the service
+	Start() error
 	// The service implementation
 	String() string
 }
@@ -257,7 +259,7 @@ func (s *service) Start() error {
 	s.RUnlock()
 
 	if config.Loggers[0].V(logger.InfoLevel) {
-		config.Loggers[0].Infof(s.opts.Context, "starting [service] %s", s.Name())
+		config.Loggers[0].Infof(s.opts.Context, "starting [service] %s-%s", s.Options().Name, s.Options().Version)
 	}
 
 	for _, fn := range s.opts.BeforeStart {

@@ -10,22 +10,28 @@ import (
 )
 
 func TestStructfields(t *testing.T) {
+	type NestedConfig struct {
+		Value string
+	}
 	type Config struct {
 		Time     time.Time
-		Nested   *Config
+		Nested   *NestedConfig
 		Metadata map[string]int
 		Broker   string
 		Addr     []string
 		Wait     time.Duration
 		Verbose  bool
 	}
-	cfg := &Config{Nested: &Config{}}
+	cfg := &Config{Nested: &NestedConfig{}}
 	fields, err := rutil.StructFields(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(fields) != 13 {
-		t.Fatalf("invalid fields number: %v", fields)
+	if len(fields) != 7 {
+		for _, field := range fields {
+			t.Logf("field %#+v\n", field)
+		}
+		t.Fatalf("invalid fields number: %d != %d", 7, len(fields))
 	}
 }
 
