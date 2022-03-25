@@ -2,7 +2,6 @@ package register
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"time"
 
@@ -438,7 +437,7 @@ func (m *watcher) Next() (*Result, error) {
 				return r, nil
 			}
 		case <-m.exit:
-			return nil, errors.New("watcher stopped")
+			return nil, ErrWatcherStopped
 		}
 	}
 }

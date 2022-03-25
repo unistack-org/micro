@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 )
@@ -284,29 +285,39 @@ func TestMemoryWildcard(t *testing.T) {
 }
 
 func TestWatcher(t *testing.T) {
-	w := &watcher{
-		id:   "test",
-		res:  make(chan *Result),
-		exit: make(chan bool),
-		wo: WatchOptions{
-			Domain: WildcardDomain,
-		},
-	}
+	testSrv := &Service{Name: "foo", Version: "1.0.0"}
 
+	ctx := context.TODO()
+	m := NewRegister()
+	m.Init()
+	m.Connect(ctx)
+	wc, err := m.Watch(ctx)
+	if err != nil {
+		t.Fatalf("cant watch: %v", err)
+	}
+	defer wc.Stop()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
-		w.res <- &Result{
-			Service: &Service{Name: "foo"},
+		for {
+			ch, err := wc.Next()
+			if err != nil {
+				t.Fatal("unexpected err", err)
+			}
+			t.Logf("changes %#+v", ch.Service)
+			wc.Stop()
+			wg.Done()
+			return
 		}
 	}()
 
-	_, err := w.Next()
-	if err != nil {
-		t.Fatal("unexpected err", err)
+	if err := m.Register(ctx, testSrv); err != nil {
+		t.Fatalf("Register err: %v", err)
 	}
 
-	w.Stop()
-
-	if _, err := w.Next(); err == nil {
+	wg.Wait()
+	if _, err := wc.Next(); err == nil {
 		t.Fatal("expected error on Next()")
 	}
 }

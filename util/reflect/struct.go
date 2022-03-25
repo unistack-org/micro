@@ -245,8 +245,13 @@ func StructFields(src interface{}) ([]StructField, error) {
 
 		switch val.Kind() {
 		case reflect.Ptr:
-			//	if !val.IsValid()
-			if reflect.Indirect(val).Kind() == reflect.Struct {
+			if val.CanSet() && fld.Type.Elem().Kind() == reflect.Struct {
+				if val.IsNil() {
+					val.Set(reflect.New(fld.Type.Elem()))
+				}
+			}
+			switch reflect.Indirect(val).Kind() {
+			case reflect.Struct:
 				infields, err := StructFields(val.Interface())
 				if err != nil {
 					return nil, err
@@ -255,7 +260,7 @@ func StructFields(src interface{}) ([]StructField, error) {
 					infield.Path = fmt.Sprintf("%s.%s", fld.Name, infield.Path)
 					fields = append(fields, infield)
 				}
-			} else {
+			default:
 				fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
 			}
 		case reflect.Struct:
@@ -268,6 +273,7 @@ func StructFields(src interface{}) ([]StructField, error) {
 				fields = append(fields, infield)
 			}
 		default:
+
 			fields = append(fields, StructField{Field: fld, Value: val, Path: fld.Name})
 		}
 	}
