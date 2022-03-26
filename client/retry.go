@@ -19,18 +19,32 @@ func RetryNever(ctx context.Context, req Request, retryCount int, err error) (bo
 	return false, nil
 }
 
-// RetryOnError retries a request on a 500 or timeout error
+// RetryOnError retries a request on a 500 or 408 (timeout) error
 func RetryOnError(_ context.Context, _ Request, _ int, err error) (bool, error) {
 	if err == nil {
 		return false, nil
 	}
-
 	me := errors.FromError(err)
 	switch me.Code {
 	// retry on timeout or internal server error
 	case 408, 500:
 		return true, nil
 	}
-
 	return false, nil
+}
+
+// RetryOnErrors retries a request on specified error codes
+func RetryOnErrors(codes ...int32) RetryFunc {
+	return func(_ context.Context, _ Request, _ int, err error) (bool, error) {
+		if err == nil {
+			return false, nil
+		}
+		me := errors.FromError(err)
+		for _, code := range codes {
+			if me.Code == code {
+				return true, nil
+			}
+		}
+		return false, nil
+	}
 }

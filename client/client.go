@@ -14,8 +14,8 @@ var (
 	DefaultClient Client = NewClient()
 	// DefaultContentType is the default content-type if not specified
 	DefaultContentType = "application/json"
-	// DefaultBackoff is the default backoff function for retries
-	DefaultBackoff = exponentialBackoff
+	// DefaultBackoff is the default backoff function for retries (minimum 10 millisecond and maximum 5 second)
+	DefaultBackoff = BackoffInterval(10*time.Millisecond, 5*time.Second)
 	// DefaultRetry is the default check-for-retry function for retries
 	DefaultRetry = RetryNever
 	// DefaultRetries is the default number of times a request is tried

@@ -22,7 +22,7 @@ func TestBackoff(t *testing.T) {
 	}
 
 	for i := 0; i < 5; i++ {
-		d, err := exponentialBackoff(context.TODO(), r, i)
+		d, err := BackoffExp(context.TODO(), r, i)
 		if err != nil {
 			t.Fatal(err)
 		}
