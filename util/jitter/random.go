@@ -13,3 +13,8 @@ func Random(d time.Duration) time.Duration {
 	v := rng.Float64() * float64(d.Nanoseconds())
 	return time.Duration(v)
 }
+
+func RandomInterval(min, max time.Duration) time.Duration {
+	var rng rand.Rand
+	return time.Duration(rng.Int63n(max.Nanoseconds()-min.Nanoseconds())+min.Nanoseconds()) * time.Nanosecond
+}
