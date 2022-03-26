@@ -1,7 +1,11 @@
 package register // import "go.unistack.org/micro/v3/util/register"
 
 import (
+	"context"
+	"time"
+
 	"go.unistack.org/micro/v3/register"
+	jitter "go.unistack.org/micro/v3/util/jitter"
 )
 
 func addNodes(old, neu []*register.Node) []*register.Node {
@@ -145,4 +149,31 @@ func Remove(old, del []*register.Service) []*register.Service {
 	}
 
 	return services
+}
+
+// WaitService using register wait for service to appear with min/max interval for check and optional timeout.
+// Timeout can be 0 to wait infinitive.
+func WaitService(ctx context.Context, reg register.Register, name string, min time.Duration, max time.Duration, timeout time.Duration, opts ...register.LookupOption) error {
+	if timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, timeout)
+		defer cancel()
+	}
+
+	ticker := jitter.NewTickerContext(ctx, min, max)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case _, ok := <-ticker.C:
+			if _, err := reg.LookupService(ctx, name, opts...); err == nil {
+				return nil
+			}
+			if ok {
+				return register.ErrNotFound
+			}
+		}
+	}
 }

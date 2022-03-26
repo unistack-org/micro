@@ -259,7 +259,7 @@ func (s *service) Start() error {
 	s.RUnlock()
 
 	if config.Loggers[0].V(logger.InfoLevel) {
-		config.Loggers[0].Infof(s.opts.Context, "starting [service] %s-%s", s.Options().Name, s.Options().Version)
+		config.Loggers[0].Infof(s.opts.Context, "starting [service] %s version %s", s.Options().Name, s.Options().Version)
 	}
 
 	for _, fn := range s.opts.BeforeStart {
