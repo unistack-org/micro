@@ -12,10 +12,9 @@ import (
 
 // Resolver is a DNS network resolve
 type Resolver struct {
-	goresolver *net.Resolver
-	// Address of resolver to use
-	Address string
 	sync.RWMutex
+	goresolver *net.Resolver
+	Address    string
 }
 
 // Resolve tries to resolve endpoint address
@@ -47,7 +46,7 @@ func (r *Resolver) Resolve(name string) ([]*resolver.Record, error) {
 	if goresolver == nil {
 		r.Lock()
 		r.goresolver = &net.Resolver{
-			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			Dial: func(ctx context.Context, _ string, _ string) (net.Conn, error) {
 				d := net.Dialer{
 					Timeout: time.Millisecond * time.Duration(100),
 				}

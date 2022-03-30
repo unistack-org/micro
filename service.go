@@ -73,9 +73,8 @@ func RegisterSubscriber(topic string, s server.Server, h interface{}, opts ...se
 }
 
 type service struct {
-	opts Options
 	sync.RWMutex
-	//	once sync.Once
+	opts Options
 }
 
 // NewService creates and returns a new Service based on the packages within.
@@ -108,11 +107,6 @@ func (s *service) Init(opts ...Option) error {
 		if err = cfg.Init(config.Context(cfg.Options().Context)); err != nil {
 			return err
 		}
-
-		if err = cfg.Load(cfg.Options().Context); err != nil {
-			return err
-		}
-
 	}
 
 	for _, log := range s.opts.Loggers {

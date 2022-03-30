@@ -36,11 +36,11 @@ type handler struct {
 type subscriber struct {
 	typ        reflect.Type
 	subscriber interface{}
-	rcvr       reflect.Value
 	topic      string
 	endpoints  []*register.Endpoint
 	handlers   []*handler
 	opts       SubscriberOptions
+	rcvr       reflect.Value
 }
 
 // Is this an exported - upper case - name?
