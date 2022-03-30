@@ -252,16 +252,6 @@ func (s *service) Start() error {
 	config := s.opts
 	s.RUnlock()
 
-	if config.Loggers[0].V(logger.InfoLevel) {
-		config.Loggers[0].Infof(s.opts.Context, "starting [service] %s version %s", s.Options().Name, s.Options().Version)
-	}
-
-	for _, fn := range s.opts.BeforeStart {
-		if err = fn(s.opts.Context); err != nil {
-			return err
-		}
-	}
-
 	for _, cfg := range s.opts.Configs {
 		if cfg.Options().Struct == nil {
 			// skip config as the struct not passed
@@ -271,6 +261,16 @@ func (s *service) Start() error {
 		if err = cfg.Load(s.opts.Context); err != nil {
 			return err
 		}
+	}
+
+	for _, fn := range s.opts.BeforeStart {
+		if err = fn(s.opts.Context); err != nil {
+			return err
+		}
+	}
+
+	if config.Loggers[0].V(logger.InfoLevel) {
+		config.Loggers[0].Infof(s.opts.Context, "starting [service] %s version %s", s.Options().Name, s.Options().Version)
 	}
 
 	if len(s.opts.Servers) == 0 {
