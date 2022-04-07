@@ -3,6 +3,10 @@ name: "autoapprove"
 on:
   pull_request_target:
     types: [assigned, opened, synchronize, reopened]
+  workflow_run:
+    workflows: ["prbuild"]
+    types:
+      - completed
 
 permissions:
   pull-requests: write
