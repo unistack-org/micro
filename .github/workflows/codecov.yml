@@ -13,8 +13,8 @@ on:
     - cron: '34 1 * * 0'
 
 jobs:
-  analyze:
-    name: analyze
+  codecov:
+    name: codecov
     runs-on: ubuntu-latest
     permissions:
       actions: read
