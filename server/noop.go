@@ -277,7 +277,7 @@ func (n *noopServer) Deregister() error {
 
 	wg := sync.WaitGroup{}
 	for sb, subs := range n.subscribers {
-		for _, sub := range subs {
+		for idx := range subs {
 			if sb.Options().Context != nil {
 				cx = sb.Options().Context
 			}
@@ -293,7 +293,7 @@ func (n *noopServer) Deregister() error {
 						config.Logger.Errorf(n.opts.Context, "unsubscribing from topic: %s err: %v", s.Topic(), err)
 					}
 				}
-			}(sub)
+			}(subs[idx])
 		}
 		n.subscribers[sb] = nil
 	}
