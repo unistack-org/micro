@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func TestBackoff(t *testing.T) {
+func TestBackoffExp(t *testing.T) {
 	results := []time.Duration{
 		0 * time.Second,
 		100 * time.Millisecond,
@@ -29,6 +29,28 @@ func TestBackoff(t *testing.T) {
 
 		if d != results[i] {
 			t.Fatalf("Expected equal than %v, got %v", results[i], d)
+		}
+	}
+}
+
+func TestBackoffInterval(t *testing.T) {
+	min := 100 * time.Millisecond
+	max := 300 * time.Millisecond
+
+	r := &testRequest{
+		service: "test",
+		method:  "test",
+	}
+
+	fn := BackoffInterval(min, max)
+	for i := 0; i < 5; i++ {
+		d, err := fn(context.TODO(), r, i)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if d < min || d > max {
+			t.Fatalf("Expected %v < %v < %v", min, d, max)
 		}
 	}
 }
