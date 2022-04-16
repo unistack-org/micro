@@ -11,7 +11,7 @@ import (
 
 var (
 	// DefaultClient is the global default client
-	DefaultClient Client = NewClient()
+	DefaultClient = NewClient()
 	// DefaultContentType is the default content-type if not specified
 	DefaultContentType = "application/json"
 	// DefaultBackoff is the default backoff function for retries (minimum 10 millisecond and maximum 5 second)
