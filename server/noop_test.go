@@ -10,6 +10,7 @@ import (
 	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/metadata"
 	"go.unistack.org/micro/v3/server"
+	"go.unistack.org/micro/v3/logger"
 )
 
 type TestHandler struct {
@@ -50,6 +51,7 @@ func TestNoopSub(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	logger.DefaultLogger.Init(logger.WithLevel(logger.ErrorLevel))
 	s := server.NewServer(
 		server.Broker(b),
 		server.Codec("application/octet-stream", codec.NewCodec()),

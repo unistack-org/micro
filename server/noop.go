@@ -282,13 +282,14 @@ func (n *noopServer) Deregister() error {
 				cx = sb.Options().Context
 			}
 
+			ncx := cx
 			wg.Add(1)
 			go func(s broker.Subscriber) {
 				defer wg.Done()
 				if config.Logger.V(logger.InfoLevel) {
 					config.Logger.Infof(n.opts.Context, "unsubscribing from topic: %s", s.Topic())
 				}
-				if err := s.Unsubscribe(cx); err != nil {
+				if err := s.Unsubscribe(ncx); err != nil {
 					if config.Logger.V(logger.ErrorLevel) {
 						config.Logger.Errorf(n.opts.Context, "unsubscribing from topic: %s err: %v", s.Topic(), err)
 					}
