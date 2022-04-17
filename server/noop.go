@@ -281,7 +281,7 @@ func (n *noopServer) Deregister() error {
 			if sb.Options().Context != nil {
 				cx = sb.Options().Context
 			}
-			
+
 			ncx := cx
 			wg.Add(1)
 			go func(s broker.Subscriber) {
