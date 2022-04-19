@@ -16,22 +16,22 @@ func TestFSMStart(t *testing.T) {
 	pfa := func(_ context.Context, state string, _ interface{}) {
 		fmt.Fprintf(buf, "after state %s\n", state)
 	}
-	f := New(StateInitial("1"), StateHookBefore(pfb), StateHookAfter(pfa))
-	f1 := func(_ context.Context, req interface{}) (string, interface{}, error) {
+	f := New(InitialState("1"), HookBefore(pfb), HookAfter(pfa))
+	f1 := func(_ context.Context, req interface{}, _ ...StateOption) (string, interface{}, error) {
 		args := req.(map[string]interface{})
 		if v, ok := args["request"].(string); !ok || v == "" {
 			return "", nil, fmt.Errorf("empty request")
 		}
 		return "2", map[string]interface{}{"response": "test2"}, nil
 	}
-	f2 := func(_ context.Context, req interface{}) (string, interface{}, error) {
+	f2 := func(_ context.Context, req interface{}, _ ...StateOption) (string, interface{}, error) {
 		args := req.(map[string]interface{})
 		if v, ok := args["response"].(string); !ok || v == "" {
 			return "", nil, fmt.Errorf("empty response")
 		}
 		return "", map[string]interface{}{"response": "test"}, nil
 	}
-	f3 := func(_ context.Context, req interface{}) (string, interface{}, error) {
+	f3 := func(_ context.Context, req interface{}, _ ...StateOption) (string, interface{}, error) {
 		args := req.(map[string]interface{})
 		if v, ok := args["response"].(string); !ok || v == "" {
 			return "", nil, fmt.Errorf("empty response")
