@@ -233,6 +233,27 @@ func Equal(err1 error, err2 error) bool {
 	return true
 }
 
+// CodeIn return true if err has specified code
+func CodeIn(err interface{}, codes ...int32) bool {
+	var code int32
+	switch verr := err.(type) {
+	case *Error:
+		code = verr.Code
+	case int32:
+		code = verr
+	default:
+		return false
+	}
+
+	for _, check := range codes {
+		if code == check {
+			return true
+		}
+	}
+
+	return false
+}
+
 // FromError try to convert go error to *Error
 func FromError(err error) *Error {
 	if verr, ok := err.(*Error); ok && verr != nil {

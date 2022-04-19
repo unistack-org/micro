@@ -96,3 +96,20 @@ func TestErrors(t *testing.T) {
 		}
 	}
 }
+
+
+func TestCodeIn(t *testing.T) {
+	err := InternalServerError("id", "%s", "msg")
+
+	if ok := CodeIn(err, 400, 500); !ok {
+		t.Fatalf("CodeIn not works: %v", err)
+	}
+
+	if ok := CodeIn(err.(*Error).Code, 500); !ok {
+		t.Fatalf("CodeIn not works: %v", err)
+	}
+
+	if ok := CodeIn(err, 100); ok {
+		t.Fatalf("CodeIn not works: %v", err)
+	}
+}
