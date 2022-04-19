@@ -14,6 +14,8 @@ var (
 
 // Options struct holding fsm options
 type Options struct {
+	// DryRun mode
+	DryRun bool
 	// Initial state
 	Initial string
 	// HooksBefore func slice runs in order before state
@@ -31,29 +33,44 @@ type HookAfterFunc func(ctx context.Context, state string, args interface{})
 // Option func signature
 type Option func(*Options)
 
-// StateInitial sets init state for state machine
-func StateInitial(initial string) Option {
+// StateOptions holds state options
+type StateOptions struct {
+	DryRun bool
+}
+
+// StateDryRun says that state executes in dry run mode
+func StateDryRun(b bool) StateOption {
+	return func(o *StateOptions) {
+		o.DryRun = b
+	}
+}
+
+// StateOption func signature
+type StateOption func(*StateOptions)
+
+// InitialState sets init state for state machine
+func InitialState(initial string) Option {
 	return func(o *Options) {
 		o.Initial = initial
 	}
 }
 
-// StateHookBefore provides hook func slice
-func StateHookBefore(fns ...HookBeforeFunc) Option {
+// HookBefore provides hook func slice
+func HookBefore(fns ...HookBeforeFunc) Option {
 	return func(o *Options) {
 		o.HooksBefore = fns
 	}
 }
 
-// StateHookAfter provides hook func slice
-func StateHookAfter(fns ...HookAfterFunc) Option {
+// HookAfter provides hook func slice
+func HookAfter(fns ...HookAfterFunc) Option {
 	return func(o *Options) {
 		o.HooksAfter = fns
 	}
 }
 
 // StateFunc called on state transition and return next step and error
-type StateFunc func(ctx context.Context, args interface{}) (string, interface{}, error)
+type StateFunc func(ctx context.Context, args interface{}, opts...StateOption) (string, interface{}, error)
 
 // FSM is a finite state machine
 type FSM struct {
@@ -101,6 +118,8 @@ func (f *FSM) State(state string, fn StateFunc) {
 	f.mu.Unlock()
 }
 
+// Init initialize fsm and check states
+
 // Start runs state machine with provided data
 func (f *FSM) Start(ctx context.Context, args interface{}, opts ...Option) (interface{}, error) {
 	var err error
@@ -115,6 +134,8 @@ func (f *FSM) Start(ctx context.Context, args interface{}, opts ...Option) (inte
 		opt(options)
 	}
 
+	sopts := []StateOption{StateDryRun(options.DryRun)}
+	
 	cstate := options.Initial
 	states := make(map[string]StateFunc, len(f.statesMap))
 	for k, v := range f.statesMap {
@@ -138,15 +159,16 @@ func (f *FSM) Start(ctx context.Context, args interface{}, opts ...Option) (inte
 			for _, fn := range options.HooksBefore {
 				fn(ctx, cstate, args)
 			}
-			nstate, args, err = fn(ctx, args)
+			nstate, args, err = fn(ctx, args, sopts...)
 			for _, fn := range options.HooksAfter {
 				fn(ctx, cstate, args)
 			}
-			if err != nil {
+			switch {
+			case err != nil:
 				return args, err
-			} else if nstate == StateEnd {
+			case nstate == StateEnd:
 				return args, nil
-			} else if nstate == "" {
+			case nstate == "":
 				for idx := range f.statesOrder {
 					if f.statesOrder[idx] == cstate && len(f.statesOrder) > idx+1 {
 						nstate = f.statesOrder[idx+1]
