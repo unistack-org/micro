@@ -9,7 +9,34 @@ import (
 	rutil "go.unistack.org/micro/v3/util/reflect"
 )
 
-func TestStructfields(t *testing.T) {
+func TestStructFields(t *testing.T) {
+	type NestedStr struct {
+		BBB string
+		CCC int
+	}
+	type Str struct {
+		Name   []string `json:"name" codec:"flatten"`
+		XXX    string   `json:"xxx"`
+		Nested NestedStr
+	}
+
+	val := &Str{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
+	fields, err := rutil.StructFields(val)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ok bool
+	for _, field := range fields {
+		if field.Path == "Nested.CCC" {
+			ok = true
+		}
+	}
+	if !ok {
+		t.Fatalf("struct fields returns invalid path: %v", fields)
+	}
+}
+
+func TestStructFieldsNested(t *testing.T) {
 	type NestedConfig struct {
 		Value string
 	}
@@ -130,34 +157,7 @@ func TestStructFieldsMap(t *testing.T) {
 	}
 }
 
-func TestStructFields(t *testing.T) {
-	type NestedStr struct {
-		BBB string
-		CCC int
-	}
-	type Str struct {
-		Name   []string `json:"name" codec:"flatten"`
-		XXX    string   `json:"xxx"`
-		Nested NestedStr
-	}
-
-	val := &Str{Name: []string{"first", "second"}, XXX: "ttt", Nested: NestedStr{BBB: "ddd", CCC: 9}}
-	fields, err := rutil.StructFields(val)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var ok bool
-	for _, field := range fields {
-		if field.Path == "Nested.CCC" {
-			ok = true
-		}
-	}
-	if !ok {
-		t.Fatalf("struct fields returns invalid path: %v", fields)
-	}
-}
-
-func TestStructByPath(t *testing.T) {
+func TestStructFieldByPath(t *testing.T) {
 	type NestedStr struct {
 		BBB string
 		CCC int
@@ -178,7 +178,7 @@ func TestStructByPath(t *testing.T) {
 	}
 }
 
-func TestStructByTag(t *testing.T) {
+func TestStructFieldByTag(t *testing.T) {
 	type Str struct {
 		Name []string `json:"name" codec:"flatten"`
 	}
@@ -197,7 +197,7 @@ func TestStructByTag(t *testing.T) {
 	}
 }
 
-func TestStructByName(t *testing.T) {
+func TestStructFieldByName(t *testing.T) {
 	type Str struct {
 		Name []string `json:"name" codec:"flatten"`
 	}
@@ -260,7 +260,7 @@ func TestURLSliceVars(t *testing.T) {
 	}
 }
 
-func TestURLVars(t *testing.T) {
+func TestURLMap(t *testing.T) {
 	u, err := url.Parse("http://localhost/v1/test/call/my_name?req=key&arg1=arg1&arg2=12345&nested.string_args=str1&nested.string_args=str2&arg2=54321")
 	if err != nil {
 		t.Fatal(err)

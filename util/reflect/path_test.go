@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestPath(t *testing.T) {
+func TestLookup(t *testing.T) {
 	type Nested2 struct {
 		Name string
 	}
