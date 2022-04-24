@@ -241,7 +241,7 @@ func (s *service) Meter(names ...string) meter.Meter {
 }
 
 func (s *service) String() string {
-	return "micro"
+	return s.opts.Name
 }
 
 //nolint:gocyclo
