@@ -41,7 +41,6 @@ func TestFromOutgoingContext(t *testing.T) {
 	}
 }
 
-
 func TestSetIncomingContext(t *testing.T) {
 	md := New(1)
 	md.Set("key", "val")
@@ -72,7 +71,6 @@ func TestSetOutgoingContext(t *testing.T) {
 	}
 }
 
-
 func TestNewIncomingContext(t *testing.T) {
 	md := New(1)
 	md.Set("key", "val")
@@ -95,17 +93,16 @@ func TestNewOutgoingContext(t *testing.T) {
 	}
 }
 
-
 func TestAppendIncomingContext(t *testing.T) {
 	md := New(1)
 	md.Set("key1", "val1")
-	ctx := AppendIncomingContext(context.TODO(), "key2","val2")
+	ctx := AppendIncomingContext(context.TODO(), "key2", "val2")
 
 	nmd, ok := FromIncomingContext(ctx)
 	if nmd == nil || !ok {
 		t.Fatal("AppendIncomingContext not works")
 	}
-	if v, ok := nmd.Get("key2"); !ok || v != "val2"{
+	if v, ok := nmd.Get("key2"); !ok || v != "val2" {
 		t.Fatal("AppendIncomingContext not works")
 	}
 }
@@ -113,13 +110,13 @@ func TestAppendIncomingContext(t *testing.T) {
 func TestAppendOutgoingContext(t *testing.T) {
 	md := New(1)
 	md.Set("key1", "val1")
-	ctx := AppendOutgoingContext(context.TODO(), "key2","val2")
+	ctx := AppendOutgoingContext(context.TODO(), "key2", "val2")
 
 	nmd, ok := FromOutgoingContext(ctx)
 	if nmd == nil || !ok {
 		t.Fatal("AppendOutgoingContext not works")
 	}
-	if v, ok := nmd.Get("key2"); !ok || v != "val2"{
+	if v, ok := nmd.Get("key2"); !ok || v != "val2" {
 		t.Fatal("AppendOutgoingContext not works")
 	}
 }

@@ -97,7 +97,6 @@ func TestErrors(t *testing.T) {
 	}
 }
 
-
 func TestCodeIn(t *testing.T) {
 	err := InternalServerError("id", "%s", "msg")
 

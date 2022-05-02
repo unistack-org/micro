@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultBroker default memory broker
-var DefaultBroker Broker = NewBroker()
+var DefaultBroker = NewBroker()
 
 var (
 	// ErrNotConnected returns when broker used but not connected yet

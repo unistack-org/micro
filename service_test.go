@@ -1,8 +1,8 @@
 package micro
 
 import (
-	"reflect"
 	"context"
+	"reflect"
 	"testing"
 
 	"go.unistack.org/micro/v3/auth"
@@ -101,7 +101,6 @@ func TestRegisterSubscriber(t *testing.T) {
 	}
 }
 
-
 func TestNewService(t *testing.T) {
 	type args struct {
 		opts []Option
@@ -113,7 +112,7 @@ func TestNewService(t *testing.T) {
 	}{
 		{
 			name: "NewService",
-			args: args {
+			args: args{
 				opts: []Option{Name("test")},
 			},
 			want: NewService(Name("test")),
@@ -128,10 +127,9 @@ func TestNewService(t *testing.T) {
 	}
 }
 
-
 func Test_service_Name(t *testing.T) {
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	tests := []struct {
 		name   string
@@ -140,7 +138,7 @@ func Test_service_Name(t *testing.T) {
 	}{
 		{
 			name: "Test_service_Name",
-			fields: fields {
+			fields: fields{
 				opts: Options{Name: "test"},
 			},
 			want: "test",
@@ -149,7 +147,7 @@ func Test_service_Name(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Name(); got != tt.want {
 				t.Errorf("service.Name() = %v, want %v", got, tt.want)
@@ -158,10 +156,9 @@ func Test_service_Name(t *testing.T) {
 	}
 }
 
-
 func Test_service_Init(t *testing.T) {
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	type args struct {
 		opts []Option
@@ -178,7 +175,7 @@ func Test_service_Init(t *testing.T) {
 				opts: Options{},
 			},
 			args: args{
-opts: []Option{},
+				opts: []Option{},
 			},
 			wantErr: false,
 		},
@@ -186,7 +183,7 @@ opts: []Option{},
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if err := s.Init(tt.args.opts...); (err != nil) != tt.wantErr {
 				t.Errorf("service.Init() error = %v, wantErr %v", err, tt.wantErr)
@@ -195,29 +192,28 @@ opts: []Option{},
 	}
 }
 
-
 func Test_service_Options(t *testing.T) {
-	opts := Options{Name:"test"}
+	opts := Options{Name: "test"}
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	tests := []struct {
 		name   string
 		fields fields
 		want   Options
 	}{
-	{
-		name: "service.Options",
-		fields:fields{
-opts: opts,
+		{
+			name: "service.Options",
+			fields: fields{
+				opts: opts,
+			},
+			want: opts,
 		},
-		want: opts,
-	},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Options(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Options() = %v, want %v", got, tt.want)
@@ -226,11 +222,10 @@ opts: opts,
 	}
 }
 
-
 func Test_service_Broker(t *testing.T) {
 	b := broker.NewBroker()
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	type args struct {
 		names []string
@@ -242,9 +237,9 @@ func Test_service_Broker(t *testing.T) {
 		want   broker.Broker
 	}{
 		{
-			name:"service.Broker",
+			name: "service.Broker",
 			fields: fields{
-					opts: Options{Brokers: []broker.Broker{b}},
+				opts: Options{Brokers: []broker.Broker{b}},
 			},
 			args: args{
 				names: []string{"noop"},
@@ -255,7 +250,7 @@ func Test_service_Broker(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Broker(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Broker() = %v, want %v", got, tt.want)
@@ -264,11 +259,29 @@ func Test_service_Broker(t *testing.T) {
 	}
 }
 
+/*
+func TestServiceBroker(t *testing.T) {
+	b := broker.NewBroker(broker.Name("test"))
+
+	srv := server.NewServer()
+
+	svc := NewService(Server(srv),Broker(b))
+
+	if err := svc.Init(); err != nil {
+		t.Fatalf("failed to init service")
+	}
+
+	if brk := svc.Server().Options().Broker; brk.Name() != "test" {
+		t.Fatalf("server broker not set: %v", svc.Server().Options().Broker)
+	}
+
+}
+*/
 
 func Test_service_Tracer(t *testing.T) {
 	tr := tracer.NewTracer()
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	type args struct {
 		names []string
@@ -280,20 +293,20 @@ func Test_service_Tracer(t *testing.T) {
 		want   tracer.Tracer
 	}{
 		{
-		name:"service.Tracer",
-		fields: fields{
+			name: "service.Tracer",
+			fields: fields{
 				opts: Options{Tracers: []tracer.Tracer{tr}},
+			},
+			args: args{
+				names: []string{"noop"},
+			},
+			want: tr,
 		},
-		args: args{
-			names: []string{"noop"},
-		},
-		want: tr,
-	},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Tracer(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Tracer() = %v, want %v", got, tt.want)
@@ -305,7 +318,7 @@ func Test_service_Tracer(t *testing.T) {
 func Test_service_Config(t *testing.T) {
 	c := config.NewConfig()
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	type args struct {
 		names []string
@@ -317,9 +330,9 @@ func Test_service_Config(t *testing.T) {
 		want   config.Config
 	}{
 		{
-			name:"service.Config",
+			name: "service.Config",
 			fields: fields{
-					opts: Options{Configs: []config.Config{c}},
+				opts: Options{Configs: []config.Config{c}},
 			},
 			args: args{
 				names: []string{"noop"},
@@ -330,7 +343,7 @@ func Test_service_Config(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Config(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Config() = %v, want %v", got, tt.want)
@@ -339,11 +352,10 @@ func Test_service_Config(t *testing.T) {
 	}
 }
 
-
 func Test_service_Client(t *testing.T) {
 	c := client.NewClient()
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	type args struct {
 		names []string
@@ -355,9 +367,9 @@ func Test_service_Client(t *testing.T) {
 		want   client.Client
 	}{
 		{
-			name:"service.Client",
+			name: "service.Client",
 			fields: fields{
-					opts: Options{Clients: []client.Client{c}},
+				opts: Options{Clients: []client.Client{c}},
 			},
 			args: args{
 				names: []string{"noop"},
@@ -368,7 +380,7 @@ func Test_service_Client(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Client(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Client() = %v, want %v", got, tt.want)
@@ -377,11 +389,10 @@ func Test_service_Client(t *testing.T) {
 	}
 }
 
-
 func Test_service_Server(t *testing.T) {
 	s := server.NewServer()
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	type args struct {
 		names []string
@@ -393,9 +404,9 @@ func Test_service_Server(t *testing.T) {
 		want   server.Server
 	}{
 		{
-			name:"service.Server",
+			name: "service.Server",
 			fields: fields{
-					opts: Options{Servers: []server.Server{s}},
+				opts: Options{Servers: []server.Server{s}},
 			},
 			args: args{
 				names: []string{"noop"},
@@ -406,7 +417,7 @@ func Test_service_Server(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Server(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Server() = %v, want %v", got, tt.want)
@@ -415,11 +426,10 @@ func Test_service_Server(t *testing.T) {
 	}
 }
 
-
 func Test_service_Store(t *testing.T) {
 	s := store.NewStore()
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	type args struct {
 		names []string
@@ -431,9 +441,9 @@ func Test_service_Store(t *testing.T) {
 		want   store.Store
 	}{
 		{
-			name:"service.Store",
+			name: "service.Store",
 			fields: fields{
-					opts: Options{Stores: []store.Store{s}},
+				opts: Options{Stores: []store.Store{s}},
 			},
 			args: args{
 				names: []string{"noop"},
@@ -444,7 +454,7 @@ func Test_service_Store(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Store(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Store() = %v, want %v", got, tt.want)
@@ -453,11 +463,10 @@ func Test_service_Store(t *testing.T) {
 	}
 }
 
-
 func Test_service_Register(t *testing.T) {
 	r := register.NewRegister()
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	type args struct {
 		names []string
@@ -469,9 +478,9 @@ func Test_service_Register(t *testing.T) {
 		want   register.Register
 	}{
 		{
-			name:"service.Register",
+			name: "service.Register",
 			fields: fields{
-					opts: Options{Registers: []register.Register{r}},
+				opts: Options{Registers: []register.Register{r}},
 			},
 			args: args{
 				names: []string{"noop"},
@@ -482,7 +491,7 @@ func Test_service_Register(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Register(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Register() = %v, want %v", got, tt.want)
@@ -494,7 +503,7 @@ func Test_service_Register(t *testing.T) {
 func Test_service_Logger(t *testing.T) {
 	l := logger.NewLogger()
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	type args struct {
 		names []string
@@ -506,9 +515,9 @@ func Test_service_Logger(t *testing.T) {
 		want   logger.Logger
 	}{
 		{
-			name:"service.Logger",
+			name: "service.Logger",
 			fields: fields{
-					opts: Options{Loggers: []logger.Logger{l}},
+				opts: Options{Loggers: []logger.Logger{l}},
 			},
 			args: args{
 				names: []string{"noop"},
@@ -519,7 +528,7 @@ func Test_service_Logger(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Logger(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Logger() = %v, want %v", got, tt.want)
@@ -528,11 +537,10 @@ func Test_service_Logger(t *testing.T) {
 	}
 }
 
-
 func Test_service_Auth(t *testing.T) {
 	a := auth.NewAuth()
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	type args struct {
 		names []string
@@ -544,9 +552,9 @@ func Test_service_Auth(t *testing.T) {
 		want   auth.Auth
 	}{
 		{
-			name:"service.Auth",
+			name: "service.Auth",
 			fields: fields{
-					opts: Options{Auths: []auth.Auth{a}},
+				opts: Options{Auths: []auth.Auth{a}},
 			},
 			args: args{
 				names: []string{"noop"},
@@ -557,7 +565,7 @@ func Test_service_Auth(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Auth(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Auth() = %v, want %v", got, tt.want)
@@ -569,7 +577,7 @@ func Test_service_Auth(t *testing.T) {
 func Test_service_Router(t *testing.T) {
 	r := router.NewRouter()
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	type args struct {
 		names []string
@@ -581,9 +589,9 @@ func Test_service_Router(t *testing.T) {
 		want   router.Router
 	}{
 		{
-			name:"service.Router",
+			name: "service.Router",
 			fields: fields{
-					opts: Options{Routers: []router.Router{r}},
+				opts: Options{Routers: []router.Router{r}},
 			},
 			args: args{
 				names: []string{"noop"},
@@ -594,7 +602,7 @@ func Test_service_Router(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Router(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Router() = %v, want %v", got, tt.want)
@@ -606,7 +614,7 @@ func Test_service_Router(t *testing.T) {
 func Test_service_Meter(t *testing.T) {
 	m := meter.NewMeter()
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	type args struct {
 		names []string
@@ -618,9 +626,9 @@ func Test_service_Meter(t *testing.T) {
 		want   meter.Meter
 	}{
 		{
-			name:"service.Meter",
+			name: "service.Meter",
 			fields: fields{
-					opts: Options{Meters: []meter.Meter{m}},
+				opts: Options{Meters: []meter.Meter{m}},
 			},
 			args: args{
 				names: []string{"noop"},
@@ -631,7 +639,7 @@ func Test_service_Meter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.Meter(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Meter() = %v, want %v", got, tt.want)
@@ -640,10 +648,9 @@ func Test_service_Meter(t *testing.T) {
 	}
 }
 
-
 func Test_service_String(t *testing.T) {
 	type fields struct {
-		opts    Options
+		opts Options
 	}
 	tests := []struct {
 		name   string
@@ -651,9 +658,9 @@ func Test_service_String(t *testing.T) {
 		want   string
 	}{
 		{
-			name:"service.String",
+			name: "service.String",
 			fields: fields{
-					opts: Options{Name: "noop"},
+				opts: Options{Name: "noop"},
 			},
 			want: "noop",
 		},
@@ -661,7 +668,7 @@ func Test_service_String(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &service{
-				opts:    tt.fields.opts,
+				opts: tt.fields.opts,
 			}
 			if got := s.String(); got != tt.want {
 				t.Errorf("service.String() = %v, want %v", got, tt.want)

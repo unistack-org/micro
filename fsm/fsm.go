@@ -70,7 +70,7 @@ func HookAfter(fns ...HookAfterFunc) Option {
 }
 
 // StateFunc called on state transition and return next step and error
-type StateFunc func(ctx context.Context, args interface{}, opts...StateOption) (string, interface{}, error)
+type StateFunc func(ctx context.Context, args interface{}, opts ...StateOption) (string, interface{}, error)
 
 // FSM is a finite state machine
 type FSM struct {
@@ -135,7 +135,7 @@ func (f *FSM) Start(ctx context.Context, args interface{}, opts ...Option) (inte
 	}
 
 	sopts := []StateOption{StateDryRun(options.DryRun)}
-	
+
 	cstate := options.Initial
 	states := make(map[string]StateFunc, len(f.statesMap))
 	for k, v := range f.statesMap {
