@@ -34,7 +34,6 @@ func TestSetOption(t *testing.T) {
 	}
 }
 
-
 func TestSetSaveOption(t *testing.T) {
 	type key struct{}
 	o := SetSaveOption(key{}, "test")
@@ -46,8 +45,6 @@ func TestSetSaveOption(t *testing.T) {
 	}
 }
 
-
-
 func TestSetLoadOption(t *testing.T) {
 	type key struct{}
 	o := SetLoadOption(key{}, "test")
@@ -58,8 +55,6 @@ func TestSetLoadOption(t *testing.T) {
 		t.Fatal("SetLoadOption not works")
 	}
 }
-
-
 
 func TestSetWatchOption(t *testing.T) {
 	type key struct{}

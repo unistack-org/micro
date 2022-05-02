@@ -58,6 +58,8 @@ type Service interface {
 	Run() error
 	// Start the service
 	Start() error
+	// Stop the service
+	Stop() error
 	// The service implementation
 	String() string
 }

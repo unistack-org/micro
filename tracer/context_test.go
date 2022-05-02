@@ -6,7 +6,7 @@ import (
 )
 
 func TestFromContext(t *testing.T) {
-	ctx := context.WithValue(context.TODO(),tracerKey{}, NewTracer())
+	ctx := context.WithValue(context.TODO(), tracerKey{}, NewTracer())
 
 	c, ok := FromContext(ctx)
 	if c == nil || !ok {
@@ -22,4 +22,3 @@ func TestNewContext(t *testing.T) {
 		t.Fatal("NewContext not works")
 	}
 }
-

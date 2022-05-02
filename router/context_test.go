@@ -33,4 +33,3 @@ func TestSetOption(t *testing.T) {
 		t.Fatal("SetOption not works")
 	}
 }
-
