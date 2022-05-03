@@ -9,6 +9,7 @@ import (
 	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/errors"
 	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/selector"
 )
 
 // DefaultCodecs will be used to encode/decode data
@@ -233,18 +234,7 @@ func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opt
 		callOpts.Address = []string{n.opts.Proxy}
 	}
 
-	// lookup the route to send the reques to
-	// TODO apply any filtering here
-	routes, err := n.opts.Lookup(ctx, req, callOpts)
-	if err != nil {
-		return errors.InternalServerError("go.micro.client", err.Error())
-	}
-
-	// balance the list of nodes
-	next, err := callOpts.Selector.Select(routes)
-	if err != nil {
-		return err
-	}
+	var next selector.Next
 
 	// return errors.New("go.micro.client", "request timeout", 408)
 	call := func(i int) error {
@@ -257,6 +247,22 @@ func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opt
 		// only sleep if greater than 0
 		if t.Seconds() > 0 {
 			time.Sleep(t)
+		}
+
+		if next == nil {
+			var routes []string
+			// lookup the route to send the reques to
+			// TODO apply any filtering here
+			routes, err = n.opts.Lookup(ctx, req, callOpts)
+			if err != nil {
+				return errors.InternalServerError("go.micro.client", err.Error())
+			}
+
+			// balance the list of nodes
+			next, err = callOpts.Selector.Select(routes)
+			if err != nil {
+				return err
+			}
 		}
 
 		node := next()
@@ -323,6 +329,8 @@ func (n *noopClient) NewMessage(topic string, msg interface{}, opts ...MessageOp
 }
 
 func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error) {
+	var err error
+
 	// make a copy of call opts
 	callOpts := n.opts.CallOptions
 	for _, o := range opts {
@@ -374,18 +382,7 @@ func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption
 		callOpts.Address = []string{n.opts.Proxy}
 	}
 
-	// lookup the route to send the reques to
-	// TODO apply any filtering here
-	routes, err := n.opts.Lookup(ctx, req, callOpts)
-	if err != nil {
-		return nil, errors.InternalServerError("go.micro.client", err.Error())
-	}
-
-	// balance the list of nodes
-	next, err := callOpts.Selector.Select(routes)
-	if err != nil {
-		return nil, err
-	}
+	var next selector.Next
 
 	call := func(i int) (Stream, error) {
 		// call backoff first. Someone may want an initial start delay
@@ -397,6 +394,22 @@ func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption
 		// only sleep if greater than 0
 		if t.Seconds() > 0 {
 			time.Sleep(t)
+		}
+
+		if next == nil {
+			var routes []string
+			// lookup the route to send the reques to
+			// TODO apply any filtering here
+			routes, err = n.opts.Lookup(ctx, req, callOpts)
+			if err != nil {
+				return nil, errors.InternalServerError("go.micro.client", err.Error())
+			}
+
+			// balance the list of nodes
+			next, err = callOpts.Selector.Select(routes)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		node := next()
