@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"testing"
 
-	"go.unistack.org/micro/v3/auth"
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/client"
 	"go.unistack.org/micro/v3/config"
@@ -532,43 +531,6 @@ func Test_service_Logger(t *testing.T) {
 			}
 			if got := s.Logger(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("service.Logger() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_service_Auth(t *testing.T) {
-	a := auth.NewAuth()
-	type fields struct {
-		opts Options
-	}
-	type args struct {
-		names []string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   auth.Auth
-	}{
-		{
-			name: "service.Auth",
-			fields: fields{
-				opts: Options{Auths: []auth.Auth{a}},
-			},
-			args: args{
-				names: []string{"noop"},
-			},
-			want: a,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &service{
-				opts: tt.fields.opts,
-			}
-			if got := s.Auth(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("service.Auth() = %v, want %v", got, tt.want)
 			}
 		})
 	}

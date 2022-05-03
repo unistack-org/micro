@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"go.unistack.org/micro/v3/auth"
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/logger"
@@ -32,8 +31,6 @@ type Options struct {
 	Register register.Register
 	// Tracer holds the tracer
 	Tracer tracer.Tracer
-	// Auth holds the auth
-	Auth auth.Auth
 	// Logger holds the logger
 	Logger logger.Logger
 	// Meter holds the meter
@@ -91,7 +88,6 @@ type Options struct {
 // NewOptions returns new options struct with default or passed values
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Auth:             auth.DefaultAuth,
 		Codecs:           make(map[string]codec.Codec),
 		Context:          context.Background(),
 		Metadata:         metadata.New(0),
@@ -208,13 +204,6 @@ func Register(r register.Register) Option {
 func Tracer(t tracer.Tracer) Option {
 	return func(o *Options) {
 		o.Tracer = t
-	}
-}
-
-// Auth mechanism for role based access control
-func Auth(a auth.Auth) Option {
-	return func(o *Options) {
-		o.Auth = a
 	}
 }
 
