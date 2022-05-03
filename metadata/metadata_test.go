@@ -5,6 +5,21 @@ import (
 	"testing"
 )
 
+func TestMetadataSetMultiple(t *testing.T) {
+	md := New(4)
+	md.Set("key1", "val1", "key2", "val2", "key3")
+
+	if v, ok := md.Get("key1"); !ok || v != "val1" {
+		t.Fatalf("invalid kv %#+v", md)
+	}
+	if v, ok := md.Get("key2"); !ok || v != "val2" {
+		t.Fatalf("invalid kv %#+v", md)
+	}
+	if _, ok := md.Get("key3"); ok {
+		t.Fatalf("invalid kv %#+v", md)
+	}
+}
+
 func TestAppend(t *testing.T) {
 	ctx := context.Background()
 	ctx = AppendIncomingContext(ctx, "key1", "val1", "key2", "val2")
