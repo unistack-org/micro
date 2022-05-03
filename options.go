@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"go.unistack.org/micro/v3/auth"
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/client"
 	"go.unistack.org/micro/v3/config"
@@ -39,8 +38,6 @@ type Options struct {
 	Configs []config.Config
 	// Clients holds clients
 	Clients []client.Client
-	// Auths holds auths
-	Auths []auth.Auth
 	// Stores holds stores
 	Stores []store.Store
 	// Registers holds registers
@@ -70,7 +67,6 @@ func NewOptions(opts ...Option) Options {
 		Brokers:   []broker.Broker{broker.DefaultBroker},
 		Registers: []register.Register{register.DefaultRegister},
 		Routers:   []router.Router{router.DefaultRouter},
-		Auths:     []auth.Auth{auth.DefaultAuth},
 		Loggers:   []logger.Logger{logger.DefaultLogger},
 		Tracers:   []tracer.Tracer{tracer.DefaultTracer},
 		Meters:    []meter.Meter{meter.DefaultMeter},
@@ -496,19 +492,6 @@ func TracerStore(n string) TracerOption {
 		o.stores = append(o.stores, n)
 	}
 }
-
-/*
-// Auth sets the auth for the service
-func Auth(a auth.Auth) Option {
-	return func(o *Options) error {
-		o.Auth = a
-		if o.Server != nil {
-			o.Server.Init(server.Auth(a))
-		}
-		return nil
-	}
-}
-*/
 
 // Config sets the config for the service
 func Config(c ...config.Config) Option {

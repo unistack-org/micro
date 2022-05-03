@@ -11,7 +11,7 @@ import (
 
 var (
 	// DefaultMeter is the default meter
-	DefaultMeter Meter = NewMeter()
+	DefaultMeter = NewMeter()
 	// DefaultAddress data will be made available on this host:port
 	DefaultAddress = ":9090"
 	// DefaultPath the meter endpoint where the Meter data will be made available

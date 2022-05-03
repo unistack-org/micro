@@ -8,9 +8,9 @@ import (
 
 var (
 	// DefaultLogger variable
-	DefaultLogger Logger = NewLogger(WithLevel(ParseLevel(os.Getenv("MICRO_LOG_LEVEL"))))
+	DefaultLogger = NewLogger(WithLevel(ParseLevel(os.Getenv("MICRO_LOG_LEVEL"))))
 	// DefaultLevel used by logger
-	DefaultLevel Level = InfoLevel
+	DefaultLevel = InfoLevel
 	// DefaultCallerSkipCount used by logger
 	DefaultCallerSkipCount = 2
 )

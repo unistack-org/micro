@@ -1,11 +1,10 @@
 // Package micro is a pluggable framework for microservices
-package micro
+package micro // import "go.unistack.org/micro/v3"
 
 import (
 	"fmt"
 	"sync"
 
-	"go.unistack.org/micro/v3/auth"
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/client"
 	"go.unistack.org/micro/v3/config"
@@ -27,36 +26,34 @@ type Service interface {
 	Init(...Option) error
 	// Options returns the current options
 	Options() Options
-	// Auth is for handling auth
-	Auth(...string) auth.Auth
-	// Logger is for logs
+	// Logger is for output log from service components
 	Logger(...string) logger.Logger
-	// Config if for config
+	// Config if for config handling via load/save methods and also with ability to watch changes
 	Config(...string) config.Config
-	// Client is for calling services
+	// Client is for sync calling services via RPC
 	Client(...string) client.Client
-	// Broker is for sending and receiving events
+	// Broker is for sending and receiving async events
 	Broker(...string) broker.Broker
-	// Server is for handling requests and events
+	// Server is for handling requests and broker unmarshaled events
 	Server(...string) server.Server
 	// Store is for key/val store
 	Store(...string) store.Store
-	// Register
+	// Register used by client to lookup other services and server registers on it
 	Register(...string) register.Register
 	// Tracer
 	Tracer(...string) tracer.Tracer
 	// Router
 	Router(...string) router.Router
-	// Meter
+	// Meter may be used internally by other component to export metrics
 	Meter(...string) meter.Meter
 
 	// Runtime
 	// Runtime(string) (runtime.Runtime, bool)
 	// Profile
 	// Profile(string) (profile.Profile, bool)
-	// Run the service and wait
+	// Run the service and wait for stop
 	Run() error
-	// Start the service
+	// Start the service and not wait
 	Start() error
 	// Stop the service
 	Stop() error
@@ -216,14 +213,6 @@ func (s *service) Logger(names ...string) logger.Logger {
 		idx = getNameIndex(names[0], s.opts.Loggers)
 	}
 	return s.opts.Loggers[idx]
-}
-
-func (s *service) Auth(names ...string) auth.Auth {
-	idx := 0
-	if len(names) == 1 {
-		idx = getNameIndex(names[0], s.opts.Auths)
-	}
-	return s.opts.Auths[idx]
 }
 
 func (s *service) Router(names ...string) router.Router {

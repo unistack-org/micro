@@ -6,7 +6,7 @@ import (
 )
 
 // DefaultTracer is the global default tracer
-var DefaultTracer Tracer = NewTracer()
+var DefaultTracer = NewTracer()
 
 // Tracer is an interface for distributed tracing
 type Tracer interface {
