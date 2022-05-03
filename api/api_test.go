@@ -3,10 +3,27 @@ package api
 import (
 	"strings"
 	"testing"
+
+	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/server"
 )
 
+func TestDecode(t *testing.T) {
+	md := metadata.New(0)
+	md.Set("host", "localhost", "method", "GET", "path", "/")
+	ep := Decode(md)
+	if md == nil {
+		t.Fatalf("failed to decode md %#+v", md)
+	} else if len(ep.Host) != 1 || len(ep.Method) != 1 || len(ep.Path) != 1 {
+		t.Fatalf("ep invalid after decode %#+v", ep)
+	}
+	if ep.Host[0] != "localhost" || ep.Method[0] != "GET" || ep.Path[0] != "/" {
+		t.Fatalf("ep invalid after decode %#+v", ep)
+	}
+}
+
 //nolint:gocyclo
-func TestEncoding(t *testing.T) {
+func TestEncode(t *testing.T) {
 	testData := []*Endpoint{
 		nil,
 		{
@@ -148,5 +165,81 @@ func TestValidate(t *testing.T) {
 	}
 	if err := Validate(epPcreInvalid); err == nil {
 		t.Fatalf("invalid pcre %v", epPcreInvalid.Path[0])
+	}
+}
+
+func TestWithEndpoint(t *testing.T) {
+	ep := &Endpoint{
+		Name:        "Foo.Bar",
+		Description: "A test endpoint",
+		Handler:     "meta",
+		Host:        []string{"foo.com"},
+		Method:      []string{"GET"},
+		Path:        []string{"/test/{id}"},
+	}
+	o := WithEndpoint(ep)
+	opts := server.NewHandlerOptions(o)
+	if opts.Metadata == nil {
+		t.Fatalf("WithEndpoint not works %#+v", opts)
+	}
+	md, ok := opts.Metadata[ep.Name]
+	if !ok {
+		t.Fatalf("WithEndpoint not works %#+v", opts)
+	}
+	if v, ok := md.Get("Endpoint"); !ok || v != "Foo.Bar" {
+		t.Fatalf("WithEndpoint not works %#+v", md)
+	}
+}
+
+func TestValidateNilErr(t *testing.T) {
+	var ep *Endpoint
+	if err := Validate(ep); err == nil {
+		t.Fatalf("Validate not works")
+	}
+}
+
+func TestValidateMissingNameErr(t *testing.T) {
+	ep := &Endpoint{}
+	if err := Validate(ep); err == nil {
+		t.Fatalf("Validate not works")
+	}
+}
+
+func TestValidateMissingHandlerErr(t *testing.T) {
+	ep := &Endpoint{Name: "test"}
+	if err := Validate(ep); err == nil {
+		t.Fatalf("Validate not works")
+	}
+}
+
+func TestValidateRegexpStartErr(t *testing.T) {
+	ep := &Endpoint{Name: "test", Handler: "test"}
+	ep.Path = []string{"^/"}
+	if err := Validate(ep); err == nil {
+		t.Fatalf("Validate not works")
+	}
+}
+
+func TestValidateRegexpEndErr(t *testing.T) {
+	ep := &Endpoint{Name: "test", Handler: "test", Path: []string{""}}
+	ep.Path[0] = "/$"
+	if err := Validate(ep); err == nil {
+		t.Fatalf("Validate not works")
+	}
+}
+
+func TestValidateRegexpNonErr(t *testing.T) {
+	ep := &Endpoint{Name: "test", Handler: "test", Path: []string{""}}
+	ep.Path[0] = "^/(.*)$"
+	if err := Validate(ep); err != nil {
+		t.Fatalf("Validate not works")
+	}
+}
+
+func TestValidateRegexpErr(t *testing.T) {
+	ep := &Endpoint{Name: "test", Handler: "test", Path: []string{""}}
+	ep.Path[0] = "^/(.$"
+	if err := Validate(ep); err == nil {
+		t.Fatalf("Validate not works")
 	}
 }

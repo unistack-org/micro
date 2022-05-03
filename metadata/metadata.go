@@ -76,16 +76,23 @@ func (md Metadata) Get(key string) (string, bool) {
 }
 
 // Set is used to store value in metadata
-func (md Metadata) Set(key, val string) {
-	md[textproto.CanonicalMIMEHeaderKey(key)] = val
+func (md Metadata) Set(kv ...string) {
+	if len(kv)%2 == 1 {
+		kv = kv[:len(kv)-1]
+	}
+	for idx := 0; idx < len(kv); idx += 2 {
+		md[textproto.CanonicalMIMEHeaderKey(kv[idx])] = kv[idx+1]
+	}
 }
 
 // Del is used to remove value from metadata
-func (md Metadata) Del(key string) {
-	// fast path
-	delete(md, key)
-	// slow path
-	delete(md, textproto.CanonicalMIMEHeaderKey(key))
+func (md Metadata) Del(keys ...string) {
+	for _, key := range keys {
+		// fast path
+		delete(md, key)
+		// slow path
+		delete(md, textproto.CanonicalMIMEHeaderKey(key))
+	}
 }
 
 // Copy makes a copy of the metadata
@@ -129,13 +136,6 @@ func Pairs(kv ...string) (Metadata, bool) {
 		return nil, false
 	}
 	md := New(len(kv) / 2)
-	var k string
-	for i, v := range kv {
-		if i%2 == 0 {
-			k = v
-			continue
-		}
-		md.Set(k, v)
-	}
+	md.Set(kv...)
 	return md, true
 }
