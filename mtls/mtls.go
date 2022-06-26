@@ -179,7 +179,7 @@ type ServerOption func(*ServerOptions)
 
 func NewServerConfig(src *tls.Config) *tls.Config {
 	dst := src.Clone()
-	dst.InsecureSkipVerify = true
+	// dst.InsecureSkipVerify = true
 	dst.MinVersion = tls.VersionTLS13
 	dst.ClientAuth = tls.VerifyClientCertIfGiven
 	return dst
