@@ -94,7 +94,7 @@ func NewIntermediate(cacrt *x509.Certificate, cakey crypto.PrivateKey, opts ...C
 // SignCSR sign certificate request and return signed pubkey
 func SignCSR(rawcsr []byte, cacrt *x509.Certificate, cakey crypto.PrivateKey, opts ...CertificateOption) ([]byte, error) {
 	if cacrt == nil {
-		opts = append(opts, CertificateIsCA(false))
+		opts = append(opts, CertificateIsCA(true))
 	}
 
 	options := NewCertificateOptions(opts...)
@@ -124,7 +124,7 @@ func SignCSR(rawcsr []byte, cacrt *x509.Certificate, cakey crypto.PrivateKey, op
 		IsCA:                  options.IsCA,
 	}
 
-	if !options.IsCA {
+	if options.IsCA {
 		cacrt = tpl
 	} else {
 		tpl.Issuer = cacrt.Subject

@@ -10,6 +10,7 @@ func TestNewCa(t *testing.T) {
 	bcrt, key, err := NewCA(
 		CertificateOrganization("test_org"),
 		CertificateOrganizationalUnit("test_unit"),
+		CertificateIsCA(true),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -23,7 +24,7 @@ func TestNewCa(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if crt.IsCA {
+	if !crt.IsCA {
 		t.Fatalf("crt IsCA invalid %v", crt)
 	}
 	if crt.Subject.Organization[0] != "test_org" {
@@ -31,5 +32,42 @@ func TestNewCa(t *testing.T) {
 	}
 	if crt.Subject.OrganizationalUnit[0] != "test_unit" {
 		t.Fatalf("crt subject invalid %v", crt.Subject)
+	}
+}
+
+func TestNewIntermediate(t *testing.T) {
+	bcrt, cakey, err := NewCA(
+		CertificateOrganization("test_org"),
+		CertificateOrganizationalUnit("test_unit"),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cacrt, err := x509.ParseCertificate(bcrt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bcrt, ikey, err := NewIntermediate(cacrt, cakey,
+		CertificateOrganization("test_org"),
+		CertificateOrganizationalUnit("test_unit"),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = ikey
+	icrt, err := x509.ParseCertificate(bcrt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if icrt.IsCA {
+		t.Fatalf("crt IsCA invalid %v", icrt)
+	}
+	if icrt.Subject.Organization[0] != "test_org" {
+		t.Fatalf("crt subject invalid %v", icrt.Subject)
+	}
+	if icrt.Subject.OrganizationalUnit[0] != "test_unit" {
+		t.Fatalf("crt subject invalid %v", icrt.Subject)
 	}
 }
