@@ -123,8 +123,6 @@ type ExecuteOptions struct {
 	Start string
 	// Timeout for execution
 	Timeout time.Duration
-	// Reverse execution
-	Reverse bool
 	// Async enables async execution
 	Async bool
 }
@@ -164,13 +162,6 @@ func ExecuteMeter(m meter.Meter) ExecuteOption {
 func ExecuteContext(ctx context.Context) ExecuteOption {
 	return func(o *ExecuteOptions) {
 		o.Context = ctx
-	}
-}
-
-// ExecuteReverse says that dag must be run in reverse order
-func ExecuteReverse(b bool) ExecuteOption {
-	return func(o *ExecuteOptions) {
-		o.Reverse = b
 	}
 }
 
