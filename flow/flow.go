@@ -125,8 +125,6 @@ type Workflow interface {
 	AppendSteps(steps ...Step) error
 	// Status returns workflow status
 	Status() Status
-	// Steps returns steps slice where parallel steps returned on the same level
-	Steps() ([][]Step, error)
 	// Suspend suspends execution
 	Suspend(ctx context.Context, id string) error
 	// Resume resumes execution
