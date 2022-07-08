@@ -34,6 +34,8 @@ type Options struct {
 	Addrs []string
 	// Wrappers store wrapper that called before actual functions
 	// Wrappers []Wrapper
+	// Timeout specifies timeout duration for all operations
+	Timeout time.Duration
 }
 
 // NewOptions creates options struct
@@ -107,6 +109,13 @@ func Namespace(ns string) Option {
 func Tracer(t tracer.Tracer) Option {
 	return func(o *Options) {
 		o.Tracer = t
+	}
+}
+
+// Timeout sets the timeout
+func Timeout(td time.Duration) Option {
+	return func(o *Options) {
+		o.Timeout = td
 	}
 }
 
