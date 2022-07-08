@@ -301,11 +301,11 @@ func TestWatcher(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		for {
-			ch, err := wc.Next()
+			_, err := wc.Next()
 			if err != nil {
 				t.Fatal("unexpected err", err)
 			}
-			t.Logf("changes %#+v", ch.Service)
+			// t.Logf("changes %#+v", ch.Service)
 			wc.Stop()
 			wg.Done()
 			return
