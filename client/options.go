@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"crypto/tls"
+	"net"
 	"time"
 
 	"go.unistack.org/micro/v3/broker"
@@ -56,6 +57,8 @@ type Options struct {
 	PoolSize int
 	// PoolTTL connection pool ttl
 	PoolTTL time.Duration
+	// ContextDialer used to connect
+	ContextDialer func(context.Context, string) (net.Conn, error)
 }
 
 // NewCallOptions creates new call options struct
@@ -99,6 +102,15 @@ type CallOptions struct {
 	DialTimeout time.Duration
 	// Retries specifies retries num
 	Retries int
+	// ContextDialer used to connect
+	ContextDialer func(context.Context, string) (net.Conn, error)
+}
+
+// ContextDialer pass ContextDialer to client
+func ContextDialer(fn func(context.Context, string) (net.Conn, error)) Option {
+	return func(o *Options) {
+		o.ContextDialer = fn
+	}
 }
 
 // Context pass context to client
@@ -410,6 +422,13 @@ func PublishBodyOnly(b bool) PublishOption {
 func PublishContext(ctx context.Context) PublishOption {
 	return func(o *PublishOptions) {
 		o.Context = ctx
+	}
+}
+
+// WithContextDialer pass ContextDialer to client call
+func WithContextDialer(fn func(context.Context, string) (net.Conn, error)) CallOption {
+	return func(o *CallOptions) {
+		o.ContextDialer = fn
 	}
 }
 
