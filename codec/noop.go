@@ -106,6 +106,10 @@ func (c *noopCodec) Unmarshal(d []byte, v interface{}, opts ...Option) error {
 	case *string:
 		*ve = string(d)
 		return nil
+	case []byte:
+		ve = make([]byte, len(d))
+		copy(ve, d)
+		return nil
 	case *[]byte:
 		*ve = d
 		return nil
