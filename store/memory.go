@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -33,12 +32,11 @@ type memoryStore struct {
 }
 
 func (m *memoryStore) key(prefix, key string) string {
-	return filepath.Join(prefix, key)
+	return prefix + m.opts.Separator + key
 }
 
 func (m *memoryStore) exists(prefix, key string) error {
 	key = m.key(prefix, key)
-
 	_, found := m.store.Get(key)
 	if !found {
 		return ErrNotFound

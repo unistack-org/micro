@@ -3,7 +3,6 @@ package flow
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"sync"
 
 	"github.com/silas/dag"
@@ -150,17 +149,17 @@ func (w *microWorkflow) getSteps(start string, reverse bool) ([][]Step, error) {
 }
 
 func (w *microWorkflow) Abort(ctx context.Context, id string) error {
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", id))
+	workflowStore := store.NewNamespaceStore(w.opts.Store, "workflows"+w.opts.Store.Options().Separator+id)
 	return workflowStore.Write(ctx, "status", &codec.Frame{Data: []byte(StatusAborted.String())})
 }
 
 func (w *microWorkflow) Suspend(ctx context.Context, id string) error {
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", id))
+	workflowStore := store.NewNamespaceStore(w.opts.Store, "workflows"+w.opts.Store.Options().Separator+id)
 	return workflowStore.Write(ctx, "status", &codec.Frame{Data: []byte(StatusSuspend.String())})
 }
 
 func (w *microWorkflow) Resume(ctx context.Context, id string) error {
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", id))
+	workflowStore := store.NewNamespaceStore(w.opts.Store, "workflows"+w.opts.Store.Options().Separator+id)
 	return workflowStore.Write(ctx, "status", &codec.Frame{Data: []byte(StatusRunning.String())})
 }
 
@@ -181,8 +180,8 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 		return "", err
 	}
 
-	stepStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("steps", eid))
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", eid))
+	stepStore := store.NewNamespaceStore(w.opts.Store, "steps"+w.opts.Store.Options().Separator+eid)
+	workflowStore := store.NewNamespaceStore(w.opts.Store, "workflows"+w.opts.Store.Options().Separator+eid)
 
 	options := NewExecuteOptions(opts...)
 
@@ -219,7 +218,7 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 	for idx := range steps {
 		for nidx := range steps[idx] {
 			cstep := steps[idx][nidx]
-			if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "status"), &codec.Frame{Data: []byte(StatusPending.String())}); werr != nil {
+			if werr := stepStore.Write(ctx, cstep.ID()+w.opts.Store.Options().Separator+"status", &codec.Frame{Data: []byte(StatusPending.String())}); werr != nil {
 				return eid, werr
 			}
 		}
@@ -246,32 +245,32 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 					wg.Add(1)
 					go func(step Step) {
 						defer wg.Done()
-						if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "req"), req); werr != nil {
+						if werr := stepStore.Write(ctx, step.ID()+w.opts.Store.Options().Separator+"req", req); werr != nil {
 							cherr <- werr
 							return
 						}
-						if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "status"), &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
+						if werr := stepStore.Write(ctx, step.ID()+w.opts.Store.Options().Separator+"status", &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
 							cherr <- werr
 							return
 						}
 						rsp, serr := step.Execute(nctx, req, nopts...)
 						if serr != nil {
 							step.SetStatus(StatusFailure)
-							if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "rsp"), serr); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
+							if werr := stepStore.Write(ctx, step.ID()+w.opts.Store.Options().Separator+"rsp", serr); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
 								w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
 							}
-							if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "status"), &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
+							if werr := stepStore.Write(ctx, step.ID()+w.opts.Store.Options().Separator+"status", &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
 								w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
 							}
 							cherr <- serr
 							return
 						}
-						if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "rsp"), rsp); werr != nil {
+						if werr := stepStore.Write(ctx, step.ID()+w.opts.Store.Options().Separator+"rsp", rsp); werr != nil {
 							w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
 							cherr <- werr
 							return
 						}
-						if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
+						if werr := stepStore.Write(ctx, step.ID()+w.opts.Store.Options().Separator+"status", &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
 							w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
 							cherr <- werr
 							return
@@ -279,32 +278,32 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 					}(cstep)
 					wg.Wait()
 				} else {
-					if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "req"), req); werr != nil {
+					if werr := stepStore.Write(ctx, cstep.ID()+w.opts.Store.Options().Separator+"req", req); werr != nil {
 						cherr <- werr
 						return
 					}
-					if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "status"), &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
+					if werr := stepStore.Write(ctx, cstep.ID()+w.opts.Store.Options().Separator+"status", &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
 						cherr <- werr
 						return
 					}
 					rsp, serr := cstep.Execute(nctx, req, nopts...)
 					if serr != nil {
 						cstep.SetStatus(StatusFailure)
-						if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "rsp"), serr); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
+						if werr := stepStore.Write(ctx, cstep.ID()+w.opts.Store.Options().Separator+"rsp", serr); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
 							w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
 						}
-						if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "status"), &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
+						if werr := stepStore.Write(ctx, cstep.ID()+w.opts.Store.Options().Separator+"status", &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
 							w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
 						}
 						cherr <- serr
 						return
 					}
-					if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "rsp"), rsp); werr != nil {
+					if werr := stepStore.Write(ctx, cstep.ID()+w.opts.Store.Options().Separator+"rsp", rsp); werr != nil {
 						w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
 						cherr <- werr
 						return
 					}
-					if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
+					if werr := stepStore.Write(ctx, cstep.ID()+w.opts.Store.Options().Separator+"status", &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
 						cherr <- werr
 						return
 					}

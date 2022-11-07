@@ -164,7 +164,7 @@ func (m *memory) Register(ctx context.Context, s *Service, opts ...RegisterOptio
 			continue
 		}
 
-		metadata := make(map[string]string)
+		metadata := make(map[string]string, len(n.Metadata))
 
 		// make copy of metadata
 		for k, v := range n.Metadata {

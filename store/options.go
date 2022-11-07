@@ -30,6 +30,8 @@ type Options struct {
 	Name string
 	// Namespace of the records
 	Namespace string
+	// Separator used as key parts separator
+	Separator string
 	// Addrs contains store address
 	Addrs []string
 	// Wrappers store wrapper that called before actual functions
@@ -41,11 +43,12 @@ type Options struct {
 // NewOptions creates options struct
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Logger:  logger.DefaultLogger,
-		Context: context.Background(),
-		Codec:   codec.DefaultCodec,
-		Tracer:  tracer.DefaultTracer,
-		Meter:   meter.DefaultMeter,
+		Logger:    logger.DefaultLogger,
+		Context:   context.Background(),
+		Codec:     codec.DefaultCodec,
+		Tracer:    tracer.DefaultTracer,
+		Meter:     meter.DefaultMeter,
+		Separator: DefaultSeparator,
 	}
 	for _, o := range opts {
 		o(&options)
@@ -95,6 +98,13 @@ func Meter(m meter.Meter) Option {
 func Name(n string) Option {
 	return func(o *Options) {
 		o.Name = n
+	}
+}
+
+// Separator the value used as key parts separator
+func Separator(s string) Option {
+	return func(o *Options) {
+		o.Separator = s
 	}
 }
 

@@ -49,12 +49,12 @@ func (p *profiler) Start() error {
 	// create exit channel
 	p.exit = make(chan bool)
 
-	cpuFile := filepath.Join("/tmp", "cpu.pprof")
-	memFile := filepath.Join("/tmp", "mem.pprof")
+	cpuFile := filepath.Join(string(os.PathSeparator)+"tmp", "cpu.pprof")
+	memFile := filepath.Join(string(os.PathSeparator)+"tmp", "mem.pprof")
 
 	if len(p.opts.Name) > 0 {
-		cpuFile = filepath.Join("/tmp", p.opts.Name+".cpu.pprof")
-		memFile = filepath.Join("/tmp", p.opts.Name+".mem.pprof")
+		cpuFile = filepath.Join(string(os.PathSeparator)+"tmp", p.opts.Name+".cpu.pprof")
+		memFile = filepath.Join(string(os.PathSeparator)+"tmp", p.opts.Name+".mem.pprof")
 	}
 
 	f1, err := os.Create(cpuFile)
