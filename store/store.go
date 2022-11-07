@@ -13,6 +13,8 @@ var (
 	ErrInvalidKey = errors.New("invalid key")
 	// DefaultStore is the global default store
 	DefaultStore = NewStore()
+	// DefaultSeparator is the gloabal default key parts separator
+	DefaultSeparator = "/"
 )
 
 // Store is a data storage interface
