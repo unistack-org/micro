@@ -168,9 +168,7 @@ func (f *unwrap) formatPtr(v reflect.Value) {
 		} else {
 			_, _ = f.s.Write(bytes.Repeat(ampBytes, indirects))
 		}
-
 		_, _ = f.s.Write([]byte(ve.Type().String()))
-
 		if f.depth > 0 {
 			_, _ = f.s.Write(closeParenBytes)
 		}
@@ -238,11 +236,19 @@ func (f *unwrap) format(v reflect.Value) {
 
 	// get type information unless already handled elsewhere.
 	if !f.ignoreNextType && f.s.Flag('#') {
-		if v.Type().Kind() != reflect.Map {
+		if v.Type().Kind() != reflect.Map &&
+			v.Type().Kind() != reflect.String &&
+			v.Type().Kind() != reflect.Array &&
+			v.Type().Kind() != reflect.Slice {
 			_, _ = f.s.Write(openParenBytes)
 		}
-		_, _ = f.s.Write([]byte(v.Type().String()))
-		if v.Type().Kind() != reflect.Map {
+		if v.Kind() != reflect.String {
+			_, _ = f.s.Write([]byte(v.Type().String()))
+		}
+		if v.Type().Kind() != reflect.Map &&
+			v.Type().Kind() != reflect.String &&
+			v.Type().Kind() != reflect.Array &&
+			v.Type().Kind() != reflect.Slice {
 			_, _ = f.s.Write(closeParenBytes)
 		}
 	}
@@ -282,18 +288,19 @@ func (f *unwrap) format(v reflect.Value) {
 		}
 		fallthrough
 	case reflect.Array:
-		_, _ = f.s.Write(openBracketBytes)
+		_, _ = f.s.Write(openBraceBytes)
 		f.depth++
 		numEntries := v.Len()
 		for i := 0; i < numEntries; i++ {
 			if i > 0 {
+				_, _ = f.s.Write(commaBytes)
 				_, _ = f.s.Write(spaceBytes)
 			}
 			f.ignoreNextType = true
 			f.format(f.unpackValue(v.Index(i)))
 		}
 		f.depth--
-		_, _ = f.s.Write(closeBracketBytes)
+		_, _ = f.s.Write(closeBraceBytes)
 	case reflect.String:
 		_, _ = f.s.Write([]byte(`"` + v.String() + `"`))
 	case reflect.Interface:
@@ -331,10 +338,19 @@ func (f *unwrap) format(v reflect.Value) {
 		_, _ = f.s.Write(openBraceBytes)
 		f.depth++
 		vt := v.Type()
+		prevSkip := false
 		for i := 0; i < numFields; i++ {
-			if i > 0 {
+			sv, ok := vt.Field(i).Tag.Lookup("logger")
+			if ok && sv == "omit" {
+				prevSkip = true
+				continue
+			}
+			if i > 0 && !prevSkip {
 				_, _ = f.s.Write(commaBytes)
 				_, _ = f.s.Write(spaceBytes)
+			}
+			if prevSkip {
+				prevSkip = false
 			}
 			vtf := vt.Field(i)
 			if f.s.Flag('+') || f.s.Flag('#') {
