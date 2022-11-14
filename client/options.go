@@ -101,7 +101,7 @@ type CallOptions struct {
 	// RequestMetadata holds additional metadata for call
 	RequestMetadata metadata.Metadata
 	// ResponseMetadata holds additional metadata from call
-	ResponseMetadata metadata.Metadata
+	ResponseMetadata *metadata.Metadata
 	// DialTimeout dial timeout
 	DialTimeout time.Duration
 	// Retries specifies retries num
@@ -482,7 +482,7 @@ func WithRetries(i int) CallOption {
 }
 
 // WithResponseMetadata is a CallOption which adds metadata.Metadata to Options.CallOptions
-func WithResponseMetadata(md metadata.Metadata) CallOption {
+func WithResponseMetadata(md *metadata.Metadata) CallOption {
 	return func(o *CallOptions) {
 		o.ResponseMetadata = md
 	}
