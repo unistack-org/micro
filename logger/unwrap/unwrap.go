@@ -55,15 +55,16 @@ type unwrap struct {
 }
 
 type Options struct {
-	Codec         codec.Codec
-	Indent        string
-	UnwrapMethods bool
+	Codec   codec.Codec
+	Indent  string
+	Methods bool
+	Tagged  bool
 }
 
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Indent:        " ",
-		UnwrapMethods: false,
+		Indent:  " ",
+		Methods: false,
 	}
 	for _, o := range opts {
 		o(&options)
@@ -73,21 +74,27 @@ func NewOptions(opts ...Option) Options {
 
 type Option func(*Options)
 
-func UnwrapIndent(f string) Option {
+func Indent(f string) Option {
 	return func(o *Options) {
 		o.Indent = f
 	}
 }
 
-func UnwrapMethods(b bool) Option {
+func Methods(b bool) Option {
 	return func(o *Options) {
-		o.UnwrapMethods = b
+		o.Methods = b
 	}
 }
 
-func UnwrapCodec(c codec.Codec) Option {
+func Codec(c codec.Codec) Option {
 	return func(o *Options) {
 		o.Codec = c
+	}
+}
+
+func Tagged(b bool) Option {
+	return func(o *Options) {
+		o.Tagged = b
 	}
 }
 
@@ -256,7 +263,7 @@ func (f *unwrap) format(v reflect.Value) {
 
 	// Call Stringer/error interfaces if they exist and the handle methods
 	// flag is enabled.
-	if !f.opts.UnwrapMethods {
+	if !f.opts.Methods {
 		if (kind != reflect.Invalid) && (kind != reflect.Interface) {
 			if handled := handleMethods(f.opts, f.s, v); handled {
 				return
@@ -341,7 +348,12 @@ func (f *unwrap) format(v reflect.Value) {
 		prevSkip := false
 		for i := 0; i < numFields; i++ {
 			sv, ok := vt.Field(i).Tag.Lookup("logger")
-			if ok && sv == "omit" {
+			if ok {
+				if sv == "omit" {
+					prevSkip = true
+					continue
+				}
+			} else if f.opts.Tagged {
 				prevSkip = true
 				continue
 			}
