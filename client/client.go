@@ -74,7 +74,7 @@ type Request interface {
 type Response interface {
 	// Read the response
 	Codec() codec.Codec
-	// read the header
+	// Header data
 	Header() metadata.Metadata
 	// Read the undecoded response
 	Read() ([]byte, error)
