@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: approve
-        uses: hmarr/auto-approve-action@v2
+        uses: hmarr/auto-approve-action@v3
         if: github.actor == 'vtolstov' || github.actor == 'dependabot[bot]'
         id: approve
         with:
