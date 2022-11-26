@@ -50,7 +50,7 @@ var (
 	labelEndpoint = "endpoint"
 
 	// DefaultSkipEndpoints contains list of endpoints that not evaluted by wrapper
-	DefaultSkipEndpoints = []string{"Meter.Metrics"}
+	DefaultSkipEndpoints = []string{"Meter.Metrics", "Health.Live", "Health.Ready", "Health.Version"}
 )
 
 // Options struct

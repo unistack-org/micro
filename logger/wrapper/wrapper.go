@@ -66,7 +66,7 @@ var (
 	}
 
 	// DefaultSkipEndpoints wrapper not called for this endpoints
-	DefaultSkipEndpoints = []string{"Meter.Metrics"}
+	DefaultSkipEndpoints = []string{"Meter.Metrics", "Health.Live", "Health.Ready", "Health.Version"}
 )
 
 type lWrapper struct {
@@ -228,11 +228,7 @@ func (l *lWrapper) Call(ctx context.Context, req client.Request, rsp interface{}
 	for _, o := range l.opts.ClientCallObservers {
 		labels = append(labels, o(ctx, req, rsp, opts, err)...)
 	}
-	fields := make(map[string]interface{}, len(labels)/2)
-	for i := 0; i < len(labels); i += 2 {
-		fields[labels[i]] = labels[i+1]
-	}
-	l.opts.Logger.Fields(fields).Log(ctx, l.opts.Level)
+	l.opts.Logger.Fields(labels).Log(ctx, l.opts.Level)
 
 	return err
 }
@@ -255,11 +251,7 @@ func (l *lWrapper) Stream(ctx context.Context, req client.Request, opts ...clien
 	for _, o := range l.opts.ClientStreamObservers {
 		labels = append(labels, o(ctx, req, opts, stream, err)...)
 	}
-	fields := make(map[string]interface{}, len(labels)/2)
-	for i := 0; i < len(labels); i += 2 {
-		fields[labels[i]] = labels[i+1]
-	}
-	l.opts.Logger.Fields(fields).Log(ctx, l.opts.Level)
+	l.opts.Logger.Fields(labels).Log(ctx, l.opts.Level)
 
 	return stream, err
 }
@@ -282,11 +274,7 @@ func (l *lWrapper) Publish(ctx context.Context, msg client.Message, opts ...clie
 	for _, o := range l.opts.ClientPublishObservers {
 		labels = append(labels, o(ctx, msg, opts, err)...)
 	}
-	fields := make(map[string]interface{}, len(labels)/2)
-	for i := 0; i < len(labels); i += 2 {
-		fields[labels[i]] = labels[i+1]
-	}
-	l.opts.Logger.Fields(fields).Log(ctx, l.opts.Level)
+	l.opts.Logger.Fields(labels).Log(ctx, l.opts.Level)
 
 	return err
 }
@@ -309,11 +297,7 @@ func (l *lWrapper) ServerHandler(ctx context.Context, req server.Request, rsp in
 	for _, o := range l.opts.ServerHandlerObservers {
 		labels = append(labels, o(ctx, req, rsp, err)...)
 	}
-	fields := make(map[string]interface{}, len(labels)/2)
-	for i := 0; i < len(labels); i += 2 {
-		fields[labels[i]] = labels[i+1]
-	}
-	l.opts.Logger.Fields(fields).Log(ctx, l.opts.Level)
+	l.opts.Logger.Fields(labels).Log(ctx, l.opts.Level)
 
 	return err
 }
@@ -336,11 +320,7 @@ func (l *lWrapper) ServerSubscriber(ctx context.Context, msg server.Message) err
 	for _, o := range l.opts.ServerSubscriberObservers {
 		labels = append(labels, o(ctx, msg, err)...)
 	}
-	fields := make(map[string]interface{}, len(labels)/2)
-	for i := 0; i < len(labels); i += 2 {
-		fields[labels[i]] = labels[i+1]
-	}
-	l.opts.Logger.Fields(fields).Log(ctx, l.opts.Level)
+	l.opts.Logger.Fields(labels).Log(ctx, l.opts.Level)
 
 	return err
 }
@@ -387,11 +367,7 @@ func (l *lWrapper) ClientCallFunc(ctx context.Context, addr string, req client.R
 	for _, o := range l.opts.ClientCallFuncObservers {
 		labels = append(labels, o(ctx, addr, req, rsp, opts, err)...)
 	}
-	fields := make(map[string]interface{}, len(labels)/2)
-	for i := 0; i < len(labels); i += 2 {
-		fields[labels[i]] = labels[i+1]
-	}
-	l.opts.Logger.Fields(fields).Log(ctx, l.opts.Level)
+	l.opts.Logger.Fields(labels).Log(ctx, l.opts.Level)
 
 	return err
 }
