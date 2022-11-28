@@ -255,7 +255,16 @@ func (w *wrapper) Publish(ctx context.Context, p client.Message, opts ...client.
 }
 
 // NewHandlerWrapper create new server handler wrapper
+// deprecated
 func NewHandlerWrapper(opts ...Option) server.HandlerWrapper {
+	handler := &wrapper{
+		opts: NewOptions(opts...),
+	}
+	return handler.HandlerFunc
+}
+
+// NewServerHandlerWrapper create new server handler wrapper
+func NewServerHandlerWrapper(opts ...Option) server.HandlerWrapper {
 	handler := &wrapper{
 		opts: NewOptions(opts...),
 	}
@@ -295,7 +304,15 @@ func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 }
 
 // NewSubscriberWrapper create server subscribe wrapper
+// deprecated
 func NewSubscriberWrapper(opts ...Option) server.SubscriberWrapper {
+	handler := &wrapper{
+		opts: NewOptions(opts...),
+	}
+	return handler.SubscriberFunc
+}
+
+func NewServerSubscriberWrapper(opts ...Option) server.SubscriberWrapper {
 	handler := &wrapper{
 		opts: NewOptions(opts...),
 	}
