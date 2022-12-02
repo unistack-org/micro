@@ -1,12 +1,22 @@
 package unwrap
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
 
 	"go.unistack.org/micro/v3/codec"
 )
+
+func TestSql(t *testing.T) {
+	type val struct {
+		S sql.NullString
+	}
+	v := &val{S: sql.NullString{Valid: true, String: "test"}}
+	buf := fmt.Sprintf("%#v", Unwrap(v))
+	t.Logf(buf)
+}
 
 func TestUnwrap(t *testing.T) {
 	string1 := "string1"
@@ -22,8 +32,9 @@ func TestUnwrap(t *testing.T) {
 	v1 := &val1{ar: []*string{&string1, &string2}, str: &string1, val: &val1{str: &string2}, mp: map[string]string{"key": "val"}}
 
 	buf := fmt.Sprintf("%#v", Unwrap(v1))
-	if strings.Compare(buf, `&unwrap.val1{mp:map[string]string{"key":"val"}, val:(*unwrap.val1){mp:map[string]string<nil>, val:(*unwrap.val1)<nil>, str:(*string)"string2", ar:[]*string<nil>}, str:(*string)"string1", ar:[]*string{<*><shown>, <*>"string2"}}`) != 0 {
-		t.Fatalf("not proper written %s", buf)
+	chk := `&unwrap.val1{mp:map[string]string{"key":"val"}, val:(*unwrap.val1){mp:map[string]string<nil>, val:(*unwrap.val1)<nil>, str:(*string)"string2", ar:[]*string<nil>}, str:(*string)"string1", ar:[]*string{<*><shown>, <*>"string2"}}`
+	if strings.Compare(buf, chk) != 0 {
+		t.Fatalf("not proper written\n%s\n%s", buf, chk)
 	}
 
 	type val2 struct {

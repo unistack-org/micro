@@ -235,10 +235,69 @@ func (f *unwrap) format(v reflect.Value) {
 		return
 	}
 
-	// Handle pointers specially.
-	if kind == reflect.Ptr {
+	if (kind == reflect.Ptr) && (!reflect.Indirect(v).IsValid()) {
 		f.formatPtr(v)
 		return
+	}
+
+	// Handle pointers specially.
+	if kind == reflect.Ptr {
+		fmt.Printf("AAAA %s\n", reflect.Indirect(v).Type().String())
+		switch reflect.Indirect(v).Type().String() {
+		case "sql.NullBool":
+			if eva := reflect.Indirect(v).FieldByName("Valid"); eva.IsValid() && eva.Bool() {
+				v = reflect.Indirect(v).FieldByName("Bool")
+				kind = v.Kind()
+			}
+		case "sql.NullByte":
+			if eva := reflect.Indirect(v).FieldByName("Valid"); eva.IsValid() && eva.Bool() {
+				v = reflect.Indirect(v).FieldByName("Byte")
+				kind = v.Kind()
+			}
+		case "sql.NullFloat64":
+			if eva := reflect.Indirect(v).FieldByName("Valid"); eva.IsValid() && eva.Bool() {
+				v = reflect.Indirect(v).FieldByName("Float64")
+				kind = v.Kind()
+			}
+		case "sql.NullInt16":
+			if eva := reflect.Indirect(v).FieldByName("Valid"); eva.IsValid() && eva.Bool() {
+				v = reflect.Indirect(v).FieldByName("Int16")
+				kind = v.Kind()
+			}
+		case "sql.NullInt32":
+			if eva := reflect.Indirect(v).FieldByName("Valid"); eva.IsValid() && eva.Bool() {
+				v = reflect.Indirect(v).FieldByName("Int32")
+				kind = v.Kind()
+			}
+		case "sql.NullInt64":
+			if eva := reflect.Indirect(v).FieldByName("Valid"); eva.IsValid() && eva.Bool() {
+				v = reflect.Indirect(v).FieldByName("Int64")
+				kind = v.Kind()
+			}
+		case "sql.NullString":
+			fmt.Printf("AAAAAAAAAA")
+			if eva := reflect.Indirect(v).FieldByName("Valid"); eva.IsValid() && eva.Bool() {
+				v = reflect.Indirect(v).FieldByName("String")
+				kind = v.Kind()
+			}
+		case "sql.NullTime":
+			if eva := reflect.Indirect(v).FieldByName("Valid"); eva.IsValid() && eva.Bool() {
+				v = reflect.Indirect(v).FieldByName("Time")
+				kind = v.Kind()
+			}
+		case "wrapperspb.BoolValue", "wrapperspb.BytesValue",
+			"wrapperspb.DoubleValue", "wrapperspb.FloatValue",
+			"wrapperspb.Int32Value", "wrapperspb.Int64Value",
+			"wrapperspb.UInt32Value", "wrapperspb.UInt64Value",
+			"wrapperspb.StringValue":
+			if eva := reflect.Indirect(v).FieldByName("Value"); eva.IsValid() {
+				v = eva
+				kind = v.Kind()
+			}
+		default:
+			f.formatPtr(v)
+			return
+		}
 	}
 
 	// get type information unless already handled elsewhere.
