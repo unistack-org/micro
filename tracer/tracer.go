@@ -31,4 +31,6 @@ type Span interface {
 	SetName(name string)
 	// SetLabels set the span labels
 	SetLabels(labels ...interface{})
+	// AddLabels append the span labels
+	AddLabels(labels ...interface{})
 }
