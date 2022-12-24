@@ -60,6 +60,10 @@ func (s *noopSpan) SetLabels(labels ...interface{}) {
 	s.opts.Labels = labels
 }
 
+func (s *noopSpan) AddLabels(labels ...interface{}) {
+	s.opts.Labels = append(s.opts.Labels, labels...)
+}
+
 // NewTracer returns new memory tracer
 func NewTracer(opts ...Option) Tracer {
 	return &noopTracer{
