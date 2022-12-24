@@ -14,95 +14,95 @@ import (
 var (
 	DefaultClientCallObserver = func(ctx context.Context, req client.Request, rsp interface{}, opts []client.CallOption, sp tracer.Span, err error) {
 		sp.SetName(fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
-		var labels []tracer.Label
+		var labels []interface{}
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
-			labels = make([]tracer.Label, 0, len(md))
+			labels = make([]interface{}, 0, len(md))
 			for k, v := range md {
-				labels = append(labels, tracer.LabelString(k, v))
+				labels = append(labels, k, v)
 			}
 		}
 		if err != nil {
-			labels = append(labels, tracer.LabelBool("error", true))
+			labels = append(labels, "error", true)
 		}
 		sp.SetLabels(labels...)
 	}
 
 	DefaultClientStreamObserver = func(ctx context.Context, req client.Request, opts []client.CallOption, stream client.Stream, sp tracer.Span, err error) {
 		sp.SetName(fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
-		var labels []tracer.Label
+		var labels []interface{}
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
-			labels = make([]tracer.Label, 0, len(md))
+			labels = make([]interface{}, 0, len(md))
 			for k, v := range md {
-				labels = append(labels, tracer.LabelString(k, v))
+				labels = append(labels, k, v)
 			}
 		}
 		if err != nil {
-			labels = append(labels, tracer.LabelBool("error", true))
+			labels = append(labels, "error", true)
 		}
 		sp.SetLabels(labels...)
 	}
 
 	DefaultClientPublishObserver = func(ctx context.Context, msg client.Message, opts []client.PublishOption, sp tracer.Span, err error) {
 		sp.SetName(fmt.Sprintf("Pub to %s", msg.Topic()))
-		var labels []tracer.Label
+		var labels []interface{}
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
-			labels = make([]tracer.Label, 0, len(md))
+			labels = make([]interface{}, 0, len(md))
 			for k, v := range md {
-				labels = append(labels, tracer.LabelString(k, v))
+				labels = append(labels, k, v)
 			}
 		}
 		if err != nil {
-			labels = append(labels, tracer.LabelBool("error", true))
+			labels = append(labels, "error", true)
 		}
 		sp.SetLabels(labels...)
 	}
 
 	DefaultServerHandlerObserver = func(ctx context.Context, req server.Request, rsp interface{}, sp tracer.Span, err error) {
 		sp.SetName(fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
-		var labels []tracer.Label
+		var labels []interface{}
 		if md, ok := metadata.FromIncomingContext(ctx); ok {
-			labels = make([]tracer.Label, 0, len(md))
+			labels = make([]interface{}, 0, len(md))
 			for k, v := range md {
-				labels = append(labels, tracer.LabelString(k, v))
+				labels = append(labels, k, v)
 			}
 		}
 		if err != nil {
-			labels = append(labels, tracer.LabelBool("error", true))
+			labels = append(labels, "error", true)
 		}
 		sp.SetLabels(labels...)
 	}
 
 	DefaultServerSubscriberObserver = func(ctx context.Context, msg server.Message, sp tracer.Span, err error) {
 		sp.SetName(fmt.Sprintf("Sub from %s", msg.Topic()))
-		var labels []tracer.Label
+		var labels []interface{}
 		if md, ok := metadata.FromIncomingContext(ctx); ok {
-			labels = make([]tracer.Label, 0, len(md))
+			labels = make([]interface{}, 0, len(md))
 			for k, v := range md {
-				labels = append(labels, tracer.LabelString(k, v))
+				labels = append(labels, k, v)
 			}
 		}
 		if err != nil {
-			labels = append(labels, tracer.LabelBool("error", true))
+			labels = append(labels, "error", true)
 		}
 		sp.SetLabels(labels...)
 	}
 
 	DefaultClientCallFuncObserver = func(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions, sp tracer.Span, err error) {
 		sp.SetName(fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
-		var labels []tracer.Label
+		var labels []interface{}
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
-			labels = make([]tracer.Label, 0, len(md))
+			labels = make([]interface{}, 0, len(md))
 			for k, v := range md {
-				labels = append(labels, tracer.LabelString(k, v))
+				labels = append(labels, k, v)
 			}
 		}
 		if err != nil {
-			labels = append(labels, tracer.LabelBool("error", true))
+			labels = append(labels, "error", true)
 		}
 		sp.SetLabels(labels...)
 	}
 
-	DefaultSkipEndpoints = []string{"Meter.Metrics"}
+	DefaultSkipEndpoints = []string{"Meter.Metrics", "Health.Live", "Health.Ready", "Health.Version"}
 )
 
 type tWrapper struct {
