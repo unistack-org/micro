@@ -30,34 +30,5 @@ type Span interface {
 	// SetName set the span name
 	SetName(name string)
 	// SetLabels set the span labels
-	SetLabels(labels ...Label)
-}
-
-type Label struct {
-	val interface{}
-	key string
-}
-
-func LabelAny(k string, v interface{}) Label {
-	return Label{key: k, val: v}
-}
-
-func LabelString(k string, v string) Label {
-	return Label{key: k, val: v}
-}
-
-func LabelInt(k string, v int) Label {
-	return Label{key: k, val: v}
-}
-
-func LabelInt64(k string, v int64) Label {
-	return Label{key: k, val: v}
-}
-
-func LabelFloat64(k string, v float64) Label {
-	return Label{key: k, val: v}
-}
-
-func LabelBool(k string, v bool) Label {
-	return Label{key: k, val: v}
+	SetLabels(labels ...interface{})
 }

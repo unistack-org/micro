@@ -3,7 +3,9 @@ package tracer
 import "go.unistack.org/micro/v3/logger"
 
 // SpanOptions contains span option
-type SpanOptions struct{}
+type SpanOptions struct {
+	Labels []interface{}
+}
 
 // SpanOption func signature
 type SpanOption func(o *SpanOptions)
@@ -13,6 +15,12 @@ type EventOptions struct{}
 
 // EventOption func signature
 type EventOption func(o *EventOptions)
+
+func SpanLabels(labels ...interface{}) SpanOption {
+	return func(o *SpanOptions) {
+		o.Labels = labels
+	}
+}
 
 // Options struct
 type Options struct {
