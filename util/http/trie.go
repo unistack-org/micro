@@ -7,12 +7,18 @@ package http
 // Modified by Unistack LLC to support interface{} type handler and parameters in map[string]string
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+)
+
+var (
+	ErrNotFound         = errors.New("route not found")
+	ErrMethodNotAllowed = errors.New("method not allowed")
 )
 
 type methodTyp uint
@@ -399,16 +405,19 @@ func (n *Trie) setEndpoint(method methodTyp, handler interface{}, pattern string
 }
 
 // Search try to find element in tree with path and method
-func (n *Trie) Search(method string, path string) (interface{}, map[string]string, bool) {
+func (n *Trie) Search(method string, path string) (interface{}, map[string]string, error) {
 	params := &routeParams{}
 	// Find the routing handlers for the path
 	rn := n.findRoute(params, methodMap[method], path)
-	if rn == nil {
-		return nil, nil, false
+	if rn == nil && !params.methodNotAllowed {
+		return nil, nil, ErrNotFound
+	}
+	if params.methodNotAllowed {
+		return nil, nil, ErrMethodNotAllowed
 	}
 	ep, ok := rn.endpoints[methodMap[method]]
 	if !ok {
-		return nil, nil, false
+		return nil, nil, ErrMethodNotAllowed
 	}
 
 	eparams := make(map[string]string, len(params.keys))
@@ -416,12 +425,13 @@ func (n *Trie) Search(method string, path string) (interface{}, map[string]strin
 		eparams[key] = params.vals[idx]
 	}
 
-	return ep.handler, eparams, true
+	return ep.handler, eparams, nil
 }
 
 type routeParams struct {
-	keys []string
-	vals []string
+	keys             []string
+	vals             []string
+	methodNotAllowed bool
 }
 
 // Recursive edge traversal by checking all nodeTyp groups along the way.
@@ -495,6 +505,7 @@ func (n *Trie) findRoute(params *routeParams, method methodTyp, path string) *Tr
 							params.keys = append(params.keys, h.paramKeys...)
 							return xn
 						}
+						params.methodNotAllowed = true
 					}
 				}
 
@@ -530,6 +541,7 @@ func (n *Trie) findRoute(params *routeParams, method methodTyp, path string) *Tr
 					params.keys = append(params.keys, h.paramKeys...)
 					return xn
 				}
+				params.methodNotAllowed = true
 			}
 		}
 
