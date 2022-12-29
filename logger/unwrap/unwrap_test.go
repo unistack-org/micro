@@ -57,10 +57,11 @@ func TestOmit(t *testing.T) {
 	type val struct {
 		Key1 string `logger:"omit"`
 		Key2 string `logger:"take"`
+		Key3 string
 	}
-	v1 := &val{Key1: "val1", Key2: "val2"}
+	v1 := &val{Key1: "val1", Key2: "val2", Key3: "val3"}
 	buf := fmt.Sprintf("%#v", Unwrap(v1))
-	if strings.Compare(buf, `&unwrap.val{Key2:"val2"}`) != 0 {
+	if strings.Compare(buf, `&unwrap.val{Key2:"val2", Key3:"val3"}`) != 0 {
 		t.Fatalf("not proper written %s", buf)
 	}
 }
@@ -74,6 +75,26 @@ func TestTagged(t *testing.T) {
 	v1 := &val{Key1: "val1", Key2: "val2"}
 	buf := fmt.Sprintf("%#v", Unwrap(v1, Tagged(true)))
 	if strings.Compare(buf, `&unwrap.val{Key1:"val1"}`) != 0 {
+		t.Fatalf("not proper written %s", buf)
+	}
+}
+
+func TestTaggedNested(t *testing.T) {
+	type val struct {
+		key string `logger:"take"`
+		val string `logger:"omit"`
+		unk string
+	}
+	type str struct {
+		key string `logger:"omit"`
+		val *val   `logger:"take"`
+	}
+
+	var iface interface{}
+	v := &str{val: &val{key: "test", unk: "unk"}}
+	iface = v
+	buf := fmt.Sprintf("%#v", Unwrap(iface, Tagged(true)))
+	if strings.Compare(buf, `&unwrap.str{val:(*unwrap.val){key:"test"}}`) != 0 {
 		t.Fatalf("not proper written %s", buf)
 	}
 }
