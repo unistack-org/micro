@@ -35,6 +35,7 @@ var (
 	nilAngleBytes      = []byte("<nil>")
 	circularShortBytes = []byte("<shown>")
 	invalidAngleBytes  = []byte("<invalid>")
+	filteredBytes      = []byte("<filtered>")
 	openBracketBytes   = []byte("[")
 	closeBracketBytes  = []byte("]")
 	percentBytes       = []byte("%")
@@ -48,12 +49,13 @@ var (
 type unwrap struct {
 	val            interface{}
 	s              fmt.State
-	depth          int
 	pointers       map[uintptr]int
 	opts           *Options
+	depth          int
 	ignoreNextType bool
 }
 
+// Options struct
 type Options struct {
 	Codec   codec.Codec
 	Indent  string
@@ -61,6 +63,7 @@ type Options struct {
 	Tagged  bool
 }
 
+// NewOptions creates new Options struct via provided args
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Indent:  " ",
@@ -72,26 +75,31 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
+// Option func signature
 type Option func(*Options)
 
+// Indent option specify indent level
 func Indent(f string) Option {
 	return func(o *Options) {
 		o.Indent = f
 	}
 }
 
+// Methods option toggles fmt.Stringer methods
 func Methods(b bool) Option {
 	return func(o *Options) {
 		o.Methods = b
 	}
 }
 
+// Codec option automatic marshal arg via specified codec and write it to log
 func Codec(c codec.Codec) Option {
 	return func(o *Options) {
 		o.Codec = c
 	}
 }
 
+// Tagged option toggles output only logger:"take" fields
 func Tagged(b bool) Option {
 	return func(o *Options) {
 		o.Tagged = b
@@ -204,10 +212,8 @@ func (f *unwrap) formatPtr(v reflect.Value) {
 	switch {
 	case nilFound:
 		_, _ = f.s.Write(nilAngleBytes)
-
 	case cycleFound:
 		_, _ = f.s.Write(circularShortBytes)
-
 	default:
 		f.ignoreNextType = true
 		f.format(ve)
@@ -263,7 +269,7 @@ func (f *unwrap) format(v reflect.Value) {
 
 	// Call Stringer/error interfaces if they exist and the handle methods
 	// flag is enabled.
-	if !f.opts.Methods {
+	if f.opts.Methods {
 		if (kind != reflect.Invalid) && (kind != reflect.Interface) {
 			if handled := handleMethods(f.opts, f.s, v); handled {
 				return
@@ -342,6 +348,7 @@ func (f *unwrap) format(v reflect.Value) {
 		_, _ = f.s.Write(closeMapBytes)
 	case reflect.Struct:
 		numFields := v.NumField()
+		numWritten := 0
 		_, _ = f.s.Write(openBraceBytes)
 		f.depth++
 		vt := v.Type()
@@ -349,9 +356,12 @@ func (f *unwrap) format(v reflect.Value) {
 		for i := 0; i < numFields; i++ {
 			sv, ok := vt.Field(i).Tag.Lookup("logger")
 			if ok {
-				if sv == "omit" {
+				switch sv {
+				case "omit":
 					prevSkip = true
 					continue
+				case "take":
+					break
 				}
 			} else if f.opts.Tagged {
 				prevSkip = true
@@ -370,8 +380,12 @@ func (f *unwrap) format(v reflect.Value) {
 				_, _ = f.s.Write(colonBytes)
 			}
 			f.format(f.unpackValue(v.Field(i)))
+			numWritten++
 		}
 		f.depth--
+		if numWritten == 0 && f.depth < 0 {
+			_, _ = f.s.Write(filteredBytes)
+		}
 		_, _ = f.s.Write(closeBraceBytes)
 	case reflect.Uintptr:
 		getHexPtr(f.s, uintptr(v.Uint()))
