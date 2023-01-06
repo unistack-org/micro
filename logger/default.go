@@ -49,7 +49,7 @@ func (l *defaultLogger) Clone(opts ...Option) Logger {
 
 	oldopts.Wrappers = newopts.Wrappers
 	l.Lock()
-	cl := &defaultLogger{opts: oldopts, logFunc: l.logFunc, logfFunc: l.logfFunc}
+	cl := &defaultLogger{opts: oldopts, logFunc: l.logFunc, logfFunc: l.logfFunc, enc: json.NewEncoder(l.opts.Out)}
 	l.Unlock()
 
 	// wrap the Log func
