@@ -13,7 +13,7 @@ import (
 
 var (
 	DefaultClientCallObserver = func(ctx context.Context, req client.Request, rsp interface{}, opts []client.CallOption, sp tracer.Span, err error) {
-		sp.SetName(fmt.Sprintf("Call %s.%s", req.Service(), req.Endpoint()))
+		sp.SetName(fmt.Sprintf("Call %s.%s", req.Service(), req.Method()))
 		var labels []interface{}
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
 			labels = make([]interface{}, 0, len(md)+1)
@@ -29,7 +29,7 @@ var (
 	}
 
 	DefaultClientStreamObserver = func(ctx context.Context, req client.Request, opts []client.CallOption, stream client.Stream, sp tracer.Span, err error) {
-		sp.SetName(fmt.Sprintf("Stream %s.%s", req.Service(), req.Endpoint()))
+		sp.SetName(fmt.Sprintf("Stream %s.%s", req.Service(), req.Method()))
 		var labels []interface{}
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
 			labels = make([]interface{}, 0, len(md))
@@ -93,7 +93,7 @@ var (
 	}
 
 	DefaultClientCallFuncObserver = func(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions, sp tracer.Span, err error) {
-		sp.SetName(fmt.Sprintf("Call %s.%s", req.Service(), req.Endpoint()))
+		sp.SetName(fmt.Sprintf("Call %s.%s", req.Service(), req.Method()))
 		var labels []interface{}
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
 			labels = make([]interface{}, 0, len(md))
@@ -237,7 +237,7 @@ func (ot *tWrapper) Call(ctx context.Context, req client.Request, rsp interface{
 
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, endpoint)
+		ctx, sp = ot.opts.Tracer.Start(ctx, "")
 	}
 	defer sp.Finish()
 
@@ -260,7 +260,7 @@ func (ot *tWrapper) Stream(ctx context.Context, req client.Request, opts ...clie
 
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, endpoint)
+		ctx, sp = ot.opts.Tracer.Start(ctx, "")
 	}
 	defer sp.Finish()
 
@@ -276,7 +276,7 @@ func (ot *tWrapper) Stream(ctx context.Context, req client.Request, opts ...clie
 func (ot *tWrapper) Publish(ctx context.Context, msg client.Message, opts ...client.PublishOption) error {
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, msg.Topic())
+		ctx, sp = ot.opts.Tracer.Start(ctx, "")
 	}
 	defer sp.Finish()
 
@@ -290,7 +290,7 @@ func (ot *tWrapper) Publish(ctx context.Context, msg client.Message, opts ...cli
 }
 
 func (ot *tWrapper) ServerHandler(ctx context.Context, req server.Request, rsp interface{}) error {
-	endpoint := req.Endpoint()
+	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Method())
 	for _, ep := range ot.opts.SkipEndpoints {
 		if ep == endpoint {
 			return ot.serverHandler(ctx, req, rsp)
@@ -299,7 +299,7 @@ func (ot *tWrapper) ServerHandler(ctx context.Context, req server.Request, rsp i
 
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, fmt.Sprintf("%s.%s", req.Service(), req.Endpoint()))
+		ctx, sp = ot.opts.Tracer.Start(ctx, "")
 	}
 	defer sp.Finish()
 
@@ -315,7 +315,7 @@ func (ot *tWrapper) ServerHandler(ctx context.Context, req server.Request, rsp i
 func (ot *tWrapper) ServerSubscriber(ctx context.Context, msg server.Message) error {
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, msg.Topic())
+		ctx, sp = ot.opts.Tracer.Start(ctx, "")
 	}
 	defer sp.Finish()
 
@@ -353,7 +353,7 @@ func NewClientCallWrapper(opts ...Option) client.CallWrapper {
 }
 
 func (ot *tWrapper) ClientCallFunc(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions) error {
-	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Method())
 	for _, ep := range ot.opts.SkipEndpoints {
 		if ep == endpoint {
 			return ot.ClientCallFunc(ctx, addr, req, rsp, opts)
@@ -362,7 +362,7 @@ func (ot *tWrapper) ClientCallFunc(ctx context.Context, addr string, req client.
 
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, endpoint)
+		ctx, sp = ot.opts.Tracer.Start(ctx, "")
 	}
 	defer sp.Finish()
 
