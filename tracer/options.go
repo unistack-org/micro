@@ -1,6 +1,10 @@
 package tracer
 
-import "go.unistack.org/micro/v3/logger"
+import (
+	"context"
+
+	"go.unistack.org/micro/v3/logger"
+)
 
 // SpanOptions contains span option
 type SpanOptions struct {
@@ -28,6 +32,8 @@ type Options struct {
 	Logger logger.Logger
 	// Name of the tracer
 	Name string
+	// Context used to store custome tracer options
+	Context context.Context
 }
 
 // Option func signature
