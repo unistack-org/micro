@@ -33,4 +33,6 @@ type Span interface {
 	SetLabels(labels ...interface{})
 	// AddLabels append the span labels
 	AddLabels(labels ...interface{})
+	// Kind returns span kind
+	Kind() SpanKind
 }
