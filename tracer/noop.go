@@ -13,6 +13,7 @@ func (t *noopTracer) Start(ctx context.Context, name string, opts ...SpanOption)
 		name:   name,
 		ctx:    ctx,
 		tracer: t,
+		opts:   NewSpanOptions(opts...),
 	}
 	if span.ctx == nil {
 		span.ctx = context.Background()
@@ -62,6 +63,10 @@ func (s *noopSpan) SetLabels(labels ...interface{}) {
 
 func (s *noopSpan) AddLabels(labels ...interface{}) {
 	s.opts.Labels = append(s.opts.Labels, labels...)
+}
+
+func (s *noopSpan) Kind() SpanKind {
+	return s.opts.Kind
 }
 
 // NewTracer returns new memory tracer

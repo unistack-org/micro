@@ -24,7 +24,7 @@ var (
 		if err != nil {
 			labels = append(labels, "error", true)
 		}
-		labels = append(labels, "type", "client")
+		labels = append(labels, "kind", sp.Kind())
 		sp.SetLabels(labels...)
 	}
 
@@ -40,7 +40,7 @@ var (
 		if err != nil {
 			labels = append(labels, "error", true)
 		}
-		labels = append(labels, "type", "client")
+		labels = append(labels, "kind", sp.Kind())
 		sp.SetLabels(labels...)
 	}
 
@@ -56,7 +56,7 @@ var (
 		if err != nil {
 			labels = append(labels, "error", true)
 		}
-		labels = append(labels, "type", "publisher")
+		labels = append(labels, "kind", sp.Kind())
 		sp.SetLabels(labels...)
 	}
 
@@ -72,7 +72,7 @@ var (
 		if err != nil {
 			labels = append(labels, "error", true)
 		}
-		labels = append(labels, "type", "server")
+		labels = append(labels, "kind", sp.Kind())
 		sp.SetLabels(labels...)
 	}
 
@@ -88,7 +88,7 @@ var (
 		if err != nil {
 			labels = append(labels, "error", true)
 		}
-		labels = append(labels, "type", "subscriber")
+		labels = append(labels, "kind", sp.Kind())
 		sp.SetLabels(labels...)
 	}
 
@@ -104,7 +104,7 @@ var (
 		if err != nil {
 			labels = append(labels, "error", true)
 		}
-		labels = append(labels, "type", "client")
+		labels = append(labels, "kind", sp.Kind())
 		sp.SetLabels(labels...)
 	}
 
@@ -237,7 +237,7 @@ func (ot *tWrapper) Call(ctx context.Context, req client.Request, rsp interface{
 
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, "")
+		ctx, sp = ot.opts.Tracer.Start(ctx, "", tracer.WithSpanKind(tracer.SpanKindClient))
 	}
 	defer sp.Finish()
 
@@ -260,7 +260,7 @@ func (ot *tWrapper) Stream(ctx context.Context, req client.Request, opts ...clie
 
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, "")
+		ctx, sp = ot.opts.Tracer.Start(ctx, "", tracer.WithSpanKind(tracer.SpanKindClient))
 	}
 	defer sp.Finish()
 
@@ -276,7 +276,7 @@ func (ot *tWrapper) Stream(ctx context.Context, req client.Request, opts ...clie
 func (ot *tWrapper) Publish(ctx context.Context, msg client.Message, opts ...client.PublishOption) error {
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, "")
+		ctx, sp = ot.opts.Tracer.Start(ctx, "", tracer.WithSpanKind(tracer.SpanKindProducer))
 	}
 	defer sp.Finish()
 
@@ -299,7 +299,7 @@ func (ot *tWrapper) ServerHandler(ctx context.Context, req server.Request, rsp i
 
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, "")
+		ctx, sp = ot.opts.Tracer.Start(ctx, "", tracer.WithSpanKind(tracer.SpanKindServer))
 	}
 	defer sp.Finish()
 
@@ -315,7 +315,7 @@ func (ot *tWrapper) ServerHandler(ctx context.Context, req server.Request, rsp i
 func (ot *tWrapper) ServerSubscriber(ctx context.Context, msg server.Message) error {
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, "")
+		ctx, sp = ot.opts.Tracer.Start(ctx, "", tracer.WithSpanKind(tracer.SpanKindConsumer))
 	}
 	defer sp.Finish()
 
@@ -362,7 +362,7 @@ func (ot *tWrapper) ClientCallFunc(ctx context.Context, addr string, req client.
 
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, "")
+		ctx, sp = ot.opts.Tracer.Start(ctx, "", tracer.WithSpanKind(tracer.SpanKindClient))
 	}
 	defer sp.Finish()
 
