@@ -22,7 +22,8 @@ var (
 			}
 		}
 		if err != nil {
-			labels = append(labels, "error", true)
+			labels = append(labels, "error", err.Error())
+			sp.SetStatus(tracer.SpanStatusError, err.Error())
 		}
 		labels = append(labels, "kind", sp.Kind())
 		sp.SetLabels(labels...)
@@ -38,7 +39,8 @@ var (
 			}
 		}
 		if err != nil {
-			labels = append(labels, "error", true)
+			labels = append(labels, "error", err.Error())
+			sp.SetStatus(tracer.SpanStatusError, err.Error())
 		}
 		labels = append(labels, "kind", sp.Kind())
 		sp.SetLabels(labels...)
@@ -54,7 +56,8 @@ var (
 			}
 		}
 		if err != nil {
-			labels = append(labels, "error", true)
+			labels = append(labels, "error", err.Error())
+			sp.SetStatus(tracer.SpanStatusError, err.Error())
 		}
 		labels = append(labels, "kind", sp.Kind())
 		sp.SetLabels(labels...)
@@ -70,7 +73,8 @@ var (
 			}
 		}
 		if err != nil {
-			labels = append(labels, "error", true)
+			labels = append(labels, "error", err.Error())
+			sp.SetStatus(tracer.SpanStatusError, err.Error())
 		}
 		labels = append(labels, "kind", sp.Kind())
 		sp.SetLabels(labels...)
@@ -86,7 +90,8 @@ var (
 			}
 		}
 		if err != nil {
-			labels = append(labels, "error", true)
+			labels = append(labels, "error", err.Error())
+			sp.SetStatus(tracer.SpanStatusError, err.Error())
 		}
 		labels = append(labels, "kind", sp.Kind())
 		sp.SetLabels(labels...)
@@ -102,7 +107,8 @@ var (
 			}
 		}
 		if err != nil {
-			labels = append(labels, "error", true)
+			labels = append(labels, "error", err.Error())
+			sp.SetStatus(tracer.SpanStatusError, err.Error())
 		}
 		labels = append(labels, "kind", sp.Kind())
 		sp.SetLabels(labels...)

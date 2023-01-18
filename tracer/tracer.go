@@ -29,6 +29,10 @@ type Span interface {
 	Context() context.Context
 	// SetName set the span name
 	SetName(name string)
+	// SetStatus set the span status code and msg
+	SetStatus(status SpanStatus, msg string)
+	// Status returns span status and msg
+	Status() (SpanStatus, string)
 	// SetLabels set the span labels
 	SetLabels(labels ...interface{})
 	// AddLabels append the span labels
