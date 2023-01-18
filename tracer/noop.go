@@ -33,10 +33,12 @@ func (t *noopTracer) Name() string {
 }
 
 type noopSpan struct {
-	ctx    context.Context
-	tracer Tracer
-	name   string
-	opts   SpanOptions
+	ctx       context.Context
+	tracer    Tracer
+	name      string
+	opts      SpanOptions
+	status    SpanStatus
+	statusMsg string
 }
 
 func (s *noopSpan) Finish(opts ...SpanOption) {
@@ -67,6 +69,15 @@ func (s *noopSpan) AddLabels(labels ...interface{}) {
 
 func (s *noopSpan) Kind() SpanKind {
 	return s.opts.Kind
+}
+
+func (s *noopSpan) Status() (SpanStatus, string) {
+	return s.status, s.statusMsg
+}
+
+func (s *noopSpan) SetStatus(st SpanStatus, msg string) {
+	s.status = st
+	s.statusMsg = msg
 }
 
 // NewTracer returns new memory tracer

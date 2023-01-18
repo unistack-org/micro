@@ -6,6 +6,33 @@ import (
 	"go.unistack.org/micro/v3/logger"
 )
 
+type SpanStatus int
+
+const (
+	// SpanStatusUnset is the default status code.
+	SpanStatusUnset SpanStatus = 0
+
+	// SpanStatusError indicates the operation contains an error.
+	SpanStatusError SpanStatus = 1
+
+	// SpanStatusOK indicates operation has been validated by an Application developers
+	// or Operator to have completed successfully, or contain no error.
+	SpanStatusOK SpanStatus = 2
+)
+
+func (s SpanStatus) String() string {
+	switch s {
+	case SpanStatusUnset:
+		return "Unset"
+	case SpanStatusError:
+		return "Error"
+	case SpanStatusOK:
+		return "OK"
+	default:
+		return "Unset"
+	}
+}
+
 type SpanKind int
 
 const (
