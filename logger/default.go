@@ -12,10 +12,8 @@ import (
 )
 
 type defaultLogger struct {
-	enc      *json.Encoder
-	logFunc  LogFunc
-	logfFunc LogfFunc
-	opts     Options
+	enc  *json.Encoder
+	opts Options
 	sync.RWMutex
 }
 
@@ -27,10 +25,6 @@ func (l *defaultLogger) Init(opts ...Option) error {
 	}
 	l.enc = json.NewEncoder(l.opts.Out)
 	// wrap the Log func
-	for i := len(l.opts.Wrappers); i > 0; i-- {
-		l.logFunc = l.opts.Wrappers[i-1].Log(l.logFunc)
-		l.logfFunc = l.opts.Wrappers[i-1].Logf(l.logfFunc)
-	}
 	l.Unlock()
 	return nil
 }
@@ -47,16 +41,9 @@ func (l *defaultLogger) Clone(opts ...Option) Logger {
 		o(&oldopts)
 	}
 
-	oldopts.Wrappers = newopts.Wrappers
 	l.Lock()
-	cl := &defaultLogger{opts: oldopts, logFunc: l.logFunc, logfFunc: l.logfFunc, enc: json.NewEncoder(l.opts.Out)}
+	cl := &defaultLogger{opts: oldopts, enc: json.NewEncoder(l.opts.Out)}
 	l.Unlock()
-
-	// wrap the Log func
-	for i := len(newopts.Wrappers); i > 0; i-- {
-		cl.logFunc = newopts.Wrappers[i-1].Log(cl.logFunc)
-		cl.logfFunc = newopts.Wrappers[i-1].Logf(cl.logfFunc)
-	}
 
 	return cl
 }
@@ -82,12 +69,6 @@ func (l *defaultLogger) Fields(fields ...interface{}) Logger {
 		return nl
 	} else if len(fields)%2 != 0 {
 		fields = fields[:len(fields)-1]
-	}
-	nl.logFunc = nl.Log
-	nl.logfFunc = nl.Logf
-	for i := len(nl.opts.Wrappers); i > 0; i-- {
-		nl.logFunc = nl.opts.Wrappers[i-1].Log(nl.logFunc)
-		nl.logfFunc = nl.opts.Wrappers[i-1].Logf(nl.logfFunc)
 	}
 	nl.opts.Fields = copyFields(l.opts.Fields)
 	nl.opts.Fields = append(nl.opts.Fields, fields...)
@@ -126,52 +107,52 @@ func logCallerfilePath(loggingFilePath string) string {
 }
 
 func (l *defaultLogger) Info(ctx context.Context, args ...interface{}) {
-	l.logFunc(ctx, InfoLevel, args...)
+	l.Log(ctx, InfoLevel, args...)
 }
 
 func (l *defaultLogger) Error(ctx context.Context, args ...interface{}) {
-	l.logFunc(ctx, ErrorLevel, args...)
+	l.Log(ctx, ErrorLevel, args...)
 }
 
 func (l *defaultLogger) Debug(ctx context.Context, args ...interface{}) {
-	l.logFunc(ctx, DebugLevel, args...)
+	l.Log(ctx, DebugLevel, args...)
 }
 
 func (l *defaultLogger) Warn(ctx context.Context, args ...interface{}) {
-	l.logFunc(ctx, WarnLevel, args...)
+	l.Log(ctx, WarnLevel, args...)
 }
 
 func (l *defaultLogger) Trace(ctx context.Context, args ...interface{}) {
-	l.logFunc(ctx, TraceLevel, args...)
+	l.Log(ctx, TraceLevel, args...)
 }
 
 func (l *defaultLogger) Fatal(ctx context.Context, args ...interface{}) {
-	l.logFunc(ctx, FatalLevel, args...)
+	l.Log(ctx, FatalLevel, args...)
 	os.Exit(1)
 }
 
 func (l *defaultLogger) Infof(ctx context.Context, msg string, args ...interface{}) {
-	l.logfFunc(ctx, InfoLevel, msg, args...)
+	l.Logf(ctx, InfoLevel, msg, args...)
 }
 
 func (l *defaultLogger) Errorf(ctx context.Context, msg string, args ...interface{}) {
-	l.logfFunc(ctx, ErrorLevel, msg, args...)
+	l.Logf(ctx, ErrorLevel, msg, args...)
 }
 
 func (l *defaultLogger) Debugf(ctx context.Context, msg string, args ...interface{}) {
-	l.logfFunc(ctx, DebugLevel, msg, args...)
+	l.Logf(ctx, DebugLevel, msg, args...)
 }
 
 func (l *defaultLogger) Warnf(ctx context.Context, msg string, args ...interface{}) {
-	l.logfFunc(ctx, WarnLevel, msg, args...)
+	l.Logf(ctx, WarnLevel, msg, args...)
 }
 
 func (l *defaultLogger) Tracef(ctx context.Context, msg string, args ...interface{}) {
-	l.logfFunc(ctx, TraceLevel, msg, args...)
+	l.Logf(ctx, TraceLevel, msg, args...)
 }
 
 func (l *defaultLogger) Fatalf(ctx context.Context, msg string, args ...interface{}) {
-	l.logfFunc(ctx, FatalLevel, msg, args...)
+	l.Logf(ctx, FatalLevel, msg, args...)
 	os.Exit(1)
 }
 
@@ -244,8 +225,6 @@ func NewLogger(opts ...Option) Logger {
 	l := &defaultLogger{
 		opts: NewOptions(opts...),
 	}
-	l.logFunc = l.Log
-	l.logfFunc = l.Logf
 	l.enc = json.NewEncoder(l.opts.Out)
 	return l
 }

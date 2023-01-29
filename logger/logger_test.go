@@ -136,39 +136,3 @@ func TestLogger(t *testing.T) {
 		t.Fatalf("logger error, buf %s", buf.Bytes())
 	}
 }
-
-func TestLoggerWrapper(t *testing.T) {
-	ctx := context.TODO()
-	buf := bytes.NewBuffer(nil)
-	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
-	if err := l.Init(WrapLogger(NewOmitWrapper())); err != nil {
-		t.Fatal(err)
-	}
-	type secret struct {
-		Name  string
-		Passw string `logger:"omit"`
-	}
-	s := &secret{Name: "name", Passw: "secret"}
-	l.Errorf(ctx, "test %#+v", s)
-	if !bytes.Contains(buf.Bytes(), []byte(`logger.secret{Name:\"name\", Passw:\"\"}"`)) {
-		t.Fatalf("omit not works, struct: %v, output: %s", s, buf.Bytes())
-	}
-}
-
-func TestOmitLoggerWrapper(t *testing.T) {
-	ctx := context.TODO()
-	buf := bytes.NewBuffer(nil)
-	l := NewOmitLogger(NewLogger(WithLevel(TraceLevel), WithOutput(buf)))
-	if err := l.Init(); err != nil {
-		t.Fatal(err)
-	}
-	type secret struct {
-		Name  string
-		Passw string `logger:"omit"`
-	}
-	s := &secret{Name: "name", Passw: "secret"}
-	l.Errorf(ctx, "test %#+v", s)
-	if !bytes.Contains(buf.Bytes(), []byte(`logger.secret{Name:\"name\", Passw:\"\"}"`)) {
-		t.Fatalf("omit not works, struct: %v, output: %s", s, buf.Bytes())
-	}
-}
