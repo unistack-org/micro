@@ -19,8 +19,6 @@ type Options struct {
 	Fields []interface{}
 	// Name holds the logger name
 	Name string
-	// Wrappers logger wrapper that called before actual Log/Logf function
-	Wrappers []Wrapper
 	// The logging level the logger should log
 	Level Level
 	// CallerSkipCount number of frmaes to skip
@@ -81,12 +79,5 @@ func WithContext(ctx context.Context) Option {
 func WithName(n string) Option {
 	return func(o *Options) {
 		o.Name = n
-	}
-}
-
-// WrapLogger adds a logger Wrapper to a list of options passed into the logger
-func WrapLogger(w Wrapper) Option {
-	return func(o *Options) {
-		o.Wrappers = append(o.Wrappers, w)
 	}
 }

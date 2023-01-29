@@ -12,10 +12,8 @@ import (
 )
 
 type defaultLogger struct {
-	enc      *json.Encoder
-	logFunc  LogFunc
-	logfFunc LogfFunc
-	opts     Options
+	enc  *json.Encoder
+	opts Options
 	sync.RWMutex
 }
 
@@ -27,10 +25,6 @@ func (l *defaultLogger) Init(opts ...Option) error {
 	}
 	l.enc = json.NewEncoder(l.opts.Out)
 	// wrap the Log func
-	for i := len(l.opts.Wrappers); i > 0; i-- {
-		l.logFunc = l.opts.Wrappers[i-1].Log(l.logFunc)
-		l.logfFunc = l.opts.Wrappers[i-1].Logf(l.logfFunc)
-	}
 	l.Unlock()
 	return nil
 }
@@ -47,16 +41,9 @@ func (l *defaultLogger) Clone(opts ...Option) Logger {
 		o(&oldopts)
 	}
 
-	oldopts.Wrappers = newopts.Wrappers
 	l.Lock()
-	cl := &defaultLogger{opts: oldopts, logFunc: l.logFunc, logfFunc: l.logfFunc, enc: json.NewEncoder(l.opts.Out)}
+	cl := &defaultLogger{opts: oldopts, enc: json.NewEncoder(l.opts.Out)}
 	l.Unlock()
-
-	// wrap the Log func
-	for i := len(newopts.Wrappers); i > 0; i-- {
-		cl.logFunc = newopts.Wrappers[i-1].Log(cl.logFunc)
-		cl.logfFunc = newopts.Wrappers[i-1].Logf(cl.logfFunc)
-	}
 
 	return cl
 }
@@ -75,15 +62,17 @@ func (l *defaultLogger) Level(level Level) {
 }
 
 func (l *defaultLogger) Fields(fields ...interface{}) Logger {
+	l.RLock()
 	nl := &defaultLogger{opts: l.opts, enc: l.enc}
 	if len(fields) == 0 {
+		l.RUnlock()
 		return nl
 	} else if len(fields)%2 != 0 {
 		fields = fields[:len(fields)-1]
 	}
-	nl.logFunc = l.logFunc
-	nl.logfFunc = l.logfFunc
+	nl.opts.Fields = copyFields(l.opts.Fields)
 	nl.opts.Fields = append(nl.opts.Fields, fields...)
+	l.RUnlock()
 	return nl
 }
 
@@ -143,27 +132,27 @@ func (l *defaultLogger) Fatal(ctx context.Context, args ...interface{}) {
 }
 
 func (l *defaultLogger) Infof(ctx context.Context, msg string, args ...interface{}) {
-	l.logfFunc(ctx, InfoLevel, msg, args...)
+	l.Logf(ctx, InfoLevel, msg, args...)
 }
 
 func (l *defaultLogger) Errorf(ctx context.Context, msg string, args ...interface{}) {
-	l.logfFunc(ctx, ErrorLevel, msg, args...)
+	l.Logf(ctx, ErrorLevel, msg, args...)
 }
 
 func (l *defaultLogger) Debugf(ctx context.Context, msg string, args ...interface{}) {
-	l.logfFunc(ctx, DebugLevel, msg, args...)
+	l.Logf(ctx, DebugLevel, msg, args...)
 }
 
 func (l *defaultLogger) Warnf(ctx context.Context, msg string, args ...interface{}) {
-	l.logfFunc(ctx, WarnLevel, msg, args...)
+	l.Logf(ctx, WarnLevel, msg, args...)
 }
 
 func (l *defaultLogger) Tracef(ctx context.Context, msg string, args ...interface{}) {
-	l.logfFunc(ctx, TraceLevel, msg, args...)
+	l.Logf(ctx, TraceLevel, msg, args...)
 }
 
 func (l *defaultLogger) Fatalf(ctx context.Context, msg string, args ...interface{}) {
-	l.logfFunc(ctx, FatalLevel, msg, args...)
+	l.Logf(ctx, FatalLevel, msg, args...)
 	os.Exit(1)
 }
 
@@ -236,8 +225,6 @@ func NewLogger(opts ...Option) Logger {
 	l := &defaultLogger{
 		opts: NewOptions(opts...),
 	}
-	l.logFunc = l.Log
-	l.logfFunc = l.Logf
 	l.enc = json.NewEncoder(l.opts.Out)
 	return l
 }
