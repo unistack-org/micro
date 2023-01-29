@@ -75,15 +75,23 @@ func (l *defaultLogger) Level(level Level) {
 }
 
 func (l *defaultLogger) Fields(fields ...interface{}) Logger {
+	l.RLock()
 	nl := &defaultLogger{opts: l.opts, enc: l.enc}
 	if len(fields) == 0 {
+		l.RUnlock()
 		return nl
 	} else if len(fields)%2 != 0 {
 		fields = fields[:len(fields)-1]
 	}
-	nl.logFunc = l.logFunc
-	nl.logfFunc = l.logfFunc
+	nl.logFunc = nl.Log
+	nl.logfFunc = nl.Logf
+	for i := len(nl.opts.Wrappers); i > 0; i-- {
+		nl.logFunc = nl.opts.Wrappers[i-1].Log(nl.logFunc)
+		nl.logfFunc = nl.opts.Wrappers[i-1].Logf(nl.logfFunc)
+	}
+	nl.opts.Fields = copyFields(l.opts.Fields)
 	nl.opts.Fields = append(nl.opts.Fields, fields...)
+	l.RUnlock()
 	return nl
 }
 
@@ -118,27 +126,27 @@ func logCallerfilePath(loggingFilePath string) string {
 }
 
 func (l *defaultLogger) Info(ctx context.Context, args ...interface{}) {
-	l.Log(ctx, InfoLevel, args...)
+	l.logFunc(ctx, InfoLevel, args...)
 }
 
 func (l *defaultLogger) Error(ctx context.Context, args ...interface{}) {
-	l.Log(ctx, ErrorLevel, args...)
+	l.logFunc(ctx, ErrorLevel, args...)
 }
 
 func (l *defaultLogger) Debug(ctx context.Context, args ...interface{}) {
-	l.Log(ctx, DebugLevel, args...)
+	l.logFunc(ctx, DebugLevel, args...)
 }
 
 func (l *defaultLogger) Warn(ctx context.Context, args ...interface{}) {
-	l.Log(ctx, WarnLevel, args...)
+	l.logFunc(ctx, WarnLevel, args...)
 }
 
 func (l *defaultLogger) Trace(ctx context.Context, args ...interface{}) {
-	l.Log(ctx, TraceLevel, args...)
+	l.logFunc(ctx, TraceLevel, args...)
 }
 
 func (l *defaultLogger) Fatal(ctx context.Context, args ...interface{}) {
-	l.Log(ctx, FatalLevel, args...)
+	l.logFunc(ctx, FatalLevel, args...)
 	os.Exit(1)
 }
 
