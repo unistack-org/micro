@@ -353,6 +353,7 @@ func (f *unwrap) format(v reflect.Value) {
 		f.depth++
 		vt := v.Type()
 		prevSkip := false
+
 		for i := 0; i < numFields; i++ {
 			sv, ok := vt.Field(i).Tag.Lookup("logger")
 			if ok {
@@ -367,13 +368,16 @@ func (f *unwrap) format(v reflect.Value) {
 				prevSkip = true
 				continue
 			}
-			if i > 0 && !prevSkip {
-				_, _ = f.s.Write(commaBytes)
-				_, _ = f.s.Write(spaceBytes)
-			}
+
 			if prevSkip {
 				prevSkip = false
 			}
+
+			if numWritten > 0 {
+				_, _ = f.s.Write(commaBytes)
+				_, _ = f.s.Write(spaceBytes)
+			}
+
 			vtf := vt.Field(i)
 			if f.s.Flag('+') || f.s.Flag('#') {
 				_, _ = f.s.Write([]byte(vtf.Name))
