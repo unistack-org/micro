@@ -86,12 +86,12 @@ func TestTaggedNested(t *testing.T) {
 		unk string
 	}
 	type str struct {
-		val *val   `logger:"take"`
 		key string `logger:"omit"`
+		val *val   `logger:"take"`
 	}
 
 	var iface interface{}
-	v := &str{key: "omit", val: &val{key: "test", val: "omit", unk: "unk"}}
+	v := &str{val: &val{key: "test", unk: "unk"}}
 	iface = v
 	buf := fmt.Sprintf("%#v", Unwrap(iface, Tagged(true)))
 	if strings.Compare(buf, `&unwrap.str{val:(*unwrap.val){key:"test"}}`) != 0 {
