@@ -616,7 +616,7 @@ func (f *unwrap) checkTakeAll(v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Struct:
 		break
-	case reflect.Pointer:
+	case reflect.Ptr:
 		v = v.Elem()
 		if v.Kind() != reflect.Struct {
 			return true
