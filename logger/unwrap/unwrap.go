@@ -47,12 +47,15 @@ var (
 )
 
 type unwrap struct {
-	val            interface{}
-	s              fmt.State
-	pointers       map[uintptr]int
-	opts           *Options
-	depth          int
-	ignoreNextType bool
+	val              interface{}
+	s                fmt.State
+	pointers         map[uintptr]int
+	opts             *Options
+	depth            int
+	ignoreNextType   bool
+	takeAll          bool
+	protoWrapperType bool
+	sqlWrapperType   bool
 }
 
 // Options struct
@@ -242,9 +245,23 @@ func (f *unwrap) format(v reflect.Value) {
 	}
 
 	// Handle pointers specially.
-	if kind == reflect.Ptr {
+	switch kind {
+	case reflect.Ptr:
+		if !v.IsZero() {
+			if strings.HasPrefix(reflect.Indirect(v).Type().String(), "wrapperspb.") {
+				f.protoWrapperType = true
+			} else if strings.HasPrefix(reflect.Indirect(v).Type().String(), "sql.Null") {
+				f.sqlWrapperType = true
+			}
+		}
 		f.formatPtr(v)
 		return
+	case reflect.Struct:
+		if !v.IsZero() {
+			if strings.HasPrefix(reflect.Indirect(v).Type().String(), "sql.Null") {
+				f.sqlWrapperType = true
+			}
+		}
 	}
 
 	// get type information unless already handled elsewhere.
@@ -355,8 +372,17 @@ func (f *unwrap) format(v reflect.Value) {
 		prevSkip := false
 
 		for i := 0; i < numFields; i++ {
+			f.takeAll = false
+			if f.protoWrapperType && !vt.Field(i).IsExported() {
+				prevSkip = true
+				continue
+			} else if f.sqlWrapperType && vt.Field(i).Name == "Valid" {
+				prevSkip = true
+				continue
+			}
 			sv, ok := vt.Field(i).Tag.Lookup("logger")
-			if ok {
+			switch {
+			case ok:
 				switch sv {
 				case "omit":
 					prevSkip = true
@@ -364,7 +390,9 @@ func (f *unwrap) format(v reflect.Value) {
 				case "take":
 					break
 				}
-			} else if f.opts.Tagged {
+			case f.takeAll:
+				break
+			case !ok && f.opts.Tagged:
 				prevSkip = true
 				continue
 			}
@@ -383,7 +411,9 @@ func (f *unwrap) format(v reflect.Value) {
 				_, _ = f.s.Write([]byte(vtf.Name))
 				_, _ = f.s.Write(colonBytes)
 			}
-			f.format(f.unpackValue(v.Field(i)))
+			unpackValue := f.unpackValue(v.Field(i))
+			f.takeAll = f.checkTakeAll(unpackValue)
+			f.format(unpackValue)
 			numWritten++
 		}
 		f.depth--
@@ -578,4 +608,32 @@ func (f *unwrap) constructOrigFormat(verb rune) (format string) {
 
 	format = buf.String()
 	return format
+}
+
+func (f *unwrap) checkTakeAll(v reflect.Value) bool {
+	takeAll := true
+
+	switch v.Kind() {
+	case reflect.Struct:
+		break
+	case reflect.Pointer:
+		v = v.Elem()
+		if v.Kind() != reflect.Struct {
+			return true
+		}
+	default:
+		return true
+	}
+
+	vt := v.Type()
+
+	for i := 0; i < v.NumField(); i++ {
+		sv, ok := vt.Field(i).Tag.Lookup("logger")
+		if ok && sv == "take" {
+			return false
+		}
+		takeAll = f.checkTakeAll(v.Field(i))
+	}
+
+	return takeAll
 }
