@@ -5,9 +5,11 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/imdario/mergo"
 	rutil "go.unistack.org/micro/v3/util/reflect"
+	mtime "go.unistack.org/micro/v3/util/time"
 )
 
 type defaultConfig struct {
@@ -75,6 +77,7 @@ func fillValue(value reflect.Value, val string) error {
 	if !rutil.IsEmpty(value) {
 		return nil
 	}
+
 	switch value.Kind() {
 	case reflect.Map:
 		t := value.Type()
@@ -151,11 +154,26 @@ func fillValue(value reflect.Value, val string) error {
 		}
 		value.Set(reflect.ValueOf(int32(v)))
 	case reflect.Int64:
-		v, err := strconv.ParseInt(val, 10, 64)
-		if err != nil {
-			return err
+		switch {
+		case value.Type().String() == "time.Duration" && value.Type().PkgPath() == "time":
+			v, err := time.ParseDuration(val)
+			if err != nil {
+				return err
+			}
+			value.Set(reflect.ValueOf(v))
+		case value.Type().String() == "time.Duration" && value.Type().PkgPath() == "go.unistack.org/micro/v3/util/time":
+			v, err := mtime.ParseDuration(val)
+			if err != nil {
+				return err
+			}
+			value.SetInt(int64(v))
+		default:
+			v, err := strconv.ParseInt(val, 10, 64)
+			if err != nil {
+				return err
+			}
+			value.Set(reflect.ValueOf(v))
 		}
-		value.Set(reflect.ValueOf(v))
 	case reflect.Uint:
 		v, err := strconv.ParseUint(val, 10, 0)
 		if err != nil {

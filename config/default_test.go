@@ -4,15 +4,19 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"go.unistack.org/micro/v3/config"
+	mtime "go.unistack.org/micro/v3/util/time"
 )
 
 type cfg struct {
-	StringValue string `default:"string_value"`
-	IgnoreValue string `json:"-"`
-	StructValue *cfgStructValue
-	IntValue    int `default:"99"`
+	StringValue    string `default:"string_value"`
+	IgnoreValue    string `json:"-"`
+	StructValue    *cfgStructValue
+	IntValue       int            `default:"99"`
+	DurationValue  time.Duration  `default:"10s"`
+	MDurationValue mtime.Duration `default:"10s"`
 }
 
 type cfgStructValue struct {
