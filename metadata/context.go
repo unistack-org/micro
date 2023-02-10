@@ -124,7 +124,7 @@ func AppendOutgoingContext(ctx context.Context, kv ...string) context.Context {
 		return NewOutgoingContext(ctx, md)
 	}
 	for k, v := range md {
-		omd.Set(k, v)
+		omd[k] = v
 	}
 	return NewOutgoingContext(ctx, omd)
 }
@@ -140,7 +140,7 @@ func AppendIncomingContext(ctx context.Context, kv ...string) context.Context {
 		return NewIncomingContext(ctx, md)
 	}
 	for k, v := range md {
-		omd.Set(k, v)
+		omd[k] = v
 	}
 	return NewIncomingContext(ctx, omd)
 }

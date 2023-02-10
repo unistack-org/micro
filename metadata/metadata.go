@@ -24,7 +24,7 @@ var (
 // Metadata is our way of representing request headers internally.
 // They're used at the RPC level and translate back and forth
 // from Transport headers.
-type Metadata map[string]string
+type Metadata map[string][]string
 
 type rawMetadata struct {
 	md Metadata
@@ -42,7 +42,7 @@ type Iterator struct {
 }
 
 // Next advance iterator to next element
-func (iter *Iterator) Next(k, v *string) bool {
+func (iter *Iterator) Next(k *string, v *[]string) bool {
 	if iter.cur+1 > iter.cnt {
 		return false
 	}
@@ -64,8 +64,11 @@ func (md Metadata) Iterator() *Iterator {
 	return iter
 }
 
-// Get returns value from metadata by key
-func (md Metadata) Get(key string) (string, bool) {
+// Values returns values from metadata by key
+func (md Metadata) Values(key string) ([]string, bool) {
+	if md == nil {
+		return nil, false
+	}
 	// fast path
 	val, ok := md[key]
 	if !ok {
@@ -75,14 +78,40 @@ func (md Metadata) Get(key string) (string, bool) {
 	return val, ok
 }
 
+// Get returns value from metadata by key
+func (md Metadata) Get(key string) (string, bool) {
+	if md == nil {
+		return "", false
+	}
+	// fast path
+	val, ok := md[key]
+	if !ok {
+		// slow path
+		val, ok = md[textproto.CanonicalMIMEHeaderKey(key)]
+	}
+	if len(val) == 0 {
+		return "", false
+	}
+	return val[0], ok
+}
+
 // Set is used to store value in metadata
 func (md Metadata) Set(kv ...string) {
+	if md == nil {
+		return
+	}
 	if len(kv)%2 == 1 {
 		kv = kv[:len(kv)-1]
 	}
 	for idx := 0; idx < len(kv); idx += 2 {
-		md[textproto.CanonicalMIMEHeaderKey(kv[idx])] = kv[idx+1]
+		md[textproto.CanonicalMIMEHeaderKey(kv[idx])] = []string{kv[idx+1]}
 	}
+}
+
+// Add is used to append value in metadata
+func (md Metadata) Add(k string, v string) {
+	kn := textproto.CanonicalMIMEHeaderKey(k)
+	md[kn] = append(md[kn], v)
 }
 
 // Del is used to remove value from metadata
@@ -99,7 +128,7 @@ func (md Metadata) Del(keys ...string) {
 func Copy(md Metadata) Metadata {
 	nmd := New(len(md))
 	for key, val := range md {
-		nmd.Set(key, val)
+		nmd[key] = val
 	}
 	return nmd
 }
@@ -114,16 +143,24 @@ func New(size int) Metadata {
 
 // Merge merges metadata to existing metadata, overwriting if specified
 func Merge(omd Metadata, mmd Metadata, overwrite bool) Metadata {
-	var ok bool
 	nmd := Copy(omd)
-	for key, val := range mmd {
-		_, ok = nmd[key]
+	for key, nval := range mmd {
+		oval, ok := nmd[key]
 		switch {
 		case ok && !overwrite:
 			continue
-		case val != "":
-			nmd.Set(key, val)
-		case ok && val == "":
+		case len(nval) == 1 && nval[0] != "":
+			nmd[key] = nval
+		case ok && len(nval) > 1:
+			sort.Strings(nval)
+			sort.Strings(oval)
+			for idx, v := range nval {
+				if oval[idx] != v {
+					oval[idx] = v
+				}
+			}
+			nmd[key] = oval
+		case ok && nval[0] == "":
 			nmd.Del(key)
 		}
 	}

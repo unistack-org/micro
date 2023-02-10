@@ -68,10 +68,10 @@ func TestPassing(t *testing.T) {
 
 func TestMerge(t *testing.T) {
 	omd := Metadata{
-		"key1": "val1",
+		"key1": []string{"val1"},
 	}
 	mmd := Metadata{
-		"key2": "val2",
+		"key2": []string{"val2"},
 	}
 
 	nmd := Merge(omd, mmd, true)
@@ -82,13 +82,14 @@ func TestMerge(t *testing.T) {
 
 func TestIterator(t *testing.T) {
 	md := Metadata{
-		"1Last":   "last",
-		"2First":  "first",
-		"3Second": "second",
+		"1Last":   []string{"last"},
+		"2First":  []string{"first"},
+		"3Second": []string{"second"},
 	}
 
 	iter := md.Iterator()
-	var k, v string
+	var k string
+	var v []string
 
 	for iter.Next(&k, &v) {
 		// fmt.Printf("k: %s, v: %s\n", k, v)
@@ -101,20 +102,20 @@ func TestMedataCanonicalKey(t *testing.T) {
 	v, ok := md.Get("x-request-id")
 	if !ok {
 		t.Fatalf("failed to get x-request-id")
-	} else if v != "12345" {
+	} else if len(v) != 1 && v != "12345" {
 		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
 	}
 
 	v, ok = md.Get("X-Request-Id")
 	if !ok {
 		t.Fatalf("failed to get x-request-id")
-	} else if v != "12345" {
+	} else if len(v) != 1 && v != "12345" {
 		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
 	}
 	v, ok = md.Get("X-Request-ID")
 	if !ok {
 		t.Fatalf("failed to get x-request-id")
-	} else if v != "12345" {
+	} else if len(v) != 1 && v != "12345" {
 		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
 	}
 }
@@ -135,8 +136,8 @@ func TestMetadataSet(t *testing.T) {
 
 func TestMetadataDelete(t *testing.T) {
 	md := Metadata{
-		"Foo": "bar",
-		"Baz": "empty",
+		"Foo": []string{"bar"},
+		"Baz": []string{"empty"},
 	}
 
 	md.Del("Baz")
@@ -157,14 +158,14 @@ func TestNilContext(t *testing.T) {
 
 func TestMetadataCopy(t *testing.T) {
 	md := Metadata{
-		"Foo": "bar",
-		"Bar": "baz",
+		"Foo": []string{"bar"},
+		"Bar": []string{"baz"},
 	}
 
 	cp := Copy(md)
 
 	for k, v := range md {
-		if cv := cp[k]; cv != v {
+		if cv := cp[k]; len(cv) != len(v) || (cv[0] != v[0] && cv[1] != v[1]) {
 			t.Fatalf("Got %s:%s for %s:%s", k, cv, k, v)
 		}
 	}
@@ -172,7 +173,7 @@ func TestMetadataCopy(t *testing.T) {
 
 func TestMetadataContext(t *testing.T) {
 	md := Metadata{
-		"Foo": "bar",
+		"Foo": []string{"bar"},
 	}
 
 	ctx := NewContext(context.TODO(), md)
@@ -182,7 +183,7 @@ func TestMetadataContext(t *testing.T) {
 		t.Errorf("Unexpected error retrieving metadata, got %t", ok)
 	}
 
-	if emd["Foo"] != md["Foo"] {
+	if len(emd["Foo"]) != len(md["Foo"]) || (emd["Foo"][0] != md["Foo"][0]) {
 		t.Errorf("Expected key: %s val: %s, got key: %s val: %s", "Foo", md["Foo"], "Foo", emd["Foo"])
 	}
 
