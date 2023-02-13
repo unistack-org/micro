@@ -78,5 +78,5 @@ func (d Duration) MarshalYAML() (interface{}, error) {
 	return nil, nil
 }
 
-func (d Duration)
+func (d Duration) UnmarshalYAML(fn func(interface{}) error) error
 */
