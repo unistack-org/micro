@@ -322,7 +322,7 @@ type HandlerOption func(*HandlerOptions)
 type HandlerOptions struct {
 	// Context holds external options
 	Context context.Context
-	// Metadata for hondler
+	// Metadata for handler
 	Metadata map[string]metadata.Metadata
 }
 
