@@ -1,6 +1,7 @@
 package time
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -46,3 +47,36 @@ func ParseDuration(s string) (time.Duration, error) {
 
 	return td, err
 }
+
+func (d Duration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Duration(d).String())
+}
+
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	switch value := v.(type) {
+	case float64:
+		*d = Duration(time.Duration(value))
+		return nil
+	case string:
+		dv, err := time.ParseDuration(value)
+		if err != nil {
+			return err
+		}
+		*d = Duration(dv)
+		return nil
+	default:
+		return fmt.Errorf("invalid duration")
+	}
+}
+
+/*
+func (d Duration) MarshalYAML() (interface{}, error) {
+	return nil, nil
+}
+
+func (d Duration)
+*/
