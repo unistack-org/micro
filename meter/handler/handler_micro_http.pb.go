@@ -6,7 +6,7 @@ package handler
 
 import (
 	context "context"
-	api "go.unistack.org/micro/v3/api"
+	v3 "go.unistack.org/micro-server-http/v3"
 	codec "go.unistack.org/micro/v3/codec"
 	server "go.unistack.org/micro/v3/server"
 )
@@ -21,15 +21,12 @@ func (h *meterServer) Metrics(ctx context.Context, req *codec.Frame, rsp *codec.
 
 func RegisterMeterServer(s server.Server, sh MeterServer, opts ...server.HandlerOption) error {
 	type meter interface {
-		Metrics(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error
 	}
 	type Meter struct {
 		meter
 	}
 	h := &meterServer{sh}
 	var nopts []server.HandlerOption
-	for _, endpoint := range MeterEndpoints {
-		nopts = append(nopts, api.WithEndpoint(&endpoint))
-	}
+	nopts = append(nopts, v3.HandlerMetadata(MeterServerEndpoints))
 	return s.Handle(s.NewHandler(&Meter{h}, append(nopts, opts...)...))
 }

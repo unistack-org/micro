@@ -6,7 +6,7 @@ package health
 
 import (
 	context "context"
-	api "go.unistack.org/micro/v3/api"
+	v3 "go.unistack.org/micro-server-http/v3"
 	codec "go.unistack.org/micro/v3/codec"
 	server "go.unistack.org/micro/v3/server"
 )
@@ -29,17 +29,12 @@ func (h *healthServer) Version(ctx context.Context, req *codec.Frame, rsp *codec
 
 func RegisterHealthServer(s server.Server, sh HealthServer, opts ...server.HandlerOption) error {
 	type health interface {
-		Live(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error
-		Ready(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error
-		Version(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error
 	}
 	type Health struct {
 		health
 	}
 	h := &healthServer{sh}
 	var nopts []server.HandlerOption
-	for _, endpoint := range HealthEndpoints {
-		nopts = append(nopts, api.WithEndpoint(&endpoint))
-	}
+	nopts = append(nopts, v3.HandlerMetadata(HealthServerEndpoints))
 	return s.Handle(s.NewHandler(&Health{h}, append(nopts, opts...)...))
 }
