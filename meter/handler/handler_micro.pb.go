@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	MeterName = "Meter"
+	MeterServiceName = "MeterService"
 )
 var (
-	MeterServerEndpoints = map[string]map[string]string{
+	MeterServiceServerEndpoints = map[string]map[string]string{
 		"/metrics": map[string]string{
 			"Method": http.MethodGet,
 			"Stream": "false",
@@ -24,6 +24,6 @@ var (
 	}
 )
 
-type MeterServer interface {
+type MeterServiceServer interface {
 	Metrics(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error
 }

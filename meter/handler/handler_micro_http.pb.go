@@ -11,22 +11,22 @@ import (
 	server "go.unistack.org/micro/v3/server"
 )
 
-type meterServer struct {
-	MeterServer
+type meterServiceServer struct {
+	MeterServiceServer
 }
 
-func (h *meterServer) Metrics(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
-	return h.MeterServer.Metrics(ctx, req, rsp)
+func (h *meterServiceServer) Metrics(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
+	return h.MeterServiceServer.Metrics(ctx, req, rsp)
 }
 
-func RegisterMeterServer(s server.Server, sh MeterServer, opts ...server.HandlerOption) error {
-	type meter interface {
+func RegisterMeterServiceServer(s server.Server, sh MeterServiceServer, opts ...server.HandlerOption) error {
+	type meterService interface {
 	}
-	type Meter struct {
-		meter
+	type MeterService struct {
+		meterService
 	}
-	h := &meterServer{sh}
+	h := &meterServiceServer{sh}
 	var nopts []server.HandlerOption
-	nopts = append(nopts, v3.HandlerMetadata(MeterServerEndpoints))
-	return s.Handle(s.NewHandler(&Meter{h}, append(nopts, opts...)...))
+	nopts = append(nopts, v3.HandlerMetadata(MeterServiceServerEndpoints))
+	return s.Handle(s.NewHandler(&MeterService{h}, append(nopts, opts...)...))
 }
