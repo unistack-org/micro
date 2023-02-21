@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	HealthName = "Health"
+	HealthServiceName = "HealthService"
 )
 var (
-	HealthServerEndpoints = map[string]map[string]string{
+	HealthServiceServerEndpoints = map[string]map[string]string{
 		"/live": map[string]string{
 			"Method": http.MethodGet,
 			"Stream": "false",
@@ -32,7 +32,7 @@ var (
 	}
 )
 
-type HealthServer interface {
+type HealthServiceServer interface {
 	Live(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error
 	Ready(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error
 	Version(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error

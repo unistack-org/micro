@@ -11,30 +11,30 @@ import (
 	server "go.unistack.org/micro/v3/server"
 )
 
-type healthServer struct {
-	HealthServer
+type healthServiceServer struct {
+	HealthServiceServer
 }
 
-func (h *healthServer) Live(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
-	return h.HealthServer.Live(ctx, req, rsp)
+func (h *healthServiceServer) Live(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
+	return h.HealthServiceServer.Live(ctx, req, rsp)
 }
 
-func (h *healthServer) Ready(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
-	return h.HealthServer.Ready(ctx, req, rsp)
+func (h *healthServiceServer) Ready(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
+	return h.HealthServiceServer.Ready(ctx, req, rsp)
 }
 
-func (h *healthServer) Version(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
-	return h.HealthServer.Version(ctx, req, rsp)
+func (h *healthServiceServer) Version(ctx context.Context, req *codec.Frame, rsp *codec.Frame) error {
+	return h.HealthServiceServer.Version(ctx, req, rsp)
 }
 
-func RegisterHealthServer(s server.Server, sh HealthServer, opts ...server.HandlerOption) error {
-	type health interface {
+func RegisterHealthServiceServer(s server.Server, sh HealthServiceServer, opts ...server.HandlerOption) error {
+	type healthService interface {
 	}
-	type Health struct {
-		health
+	type HealthService struct {
+		healthService
 	}
-	h := &healthServer{sh}
+	h := &healthServiceServer{sh}
 	var nopts []server.HandlerOption
-	nopts = append(nopts, v3.HandlerMetadata(HealthServerEndpoints))
-	return s.Handle(s.NewHandler(&Health{h}, append(nopts, opts...)...))
+	nopts = append(nopts, v3.HandlerMetadata(HealthServiceServerEndpoints))
+	return s.Handle(s.NewHandler(&HealthService{h}, append(nopts, opts...)...))
 }

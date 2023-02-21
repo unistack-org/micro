@@ -7,7 +7,7 @@ import (
 	"go.unistack.org/micro/v3/errors"
 )
 
-var _ HealthServer = &Handler{}
+var _ HealthServiceServer = &Handler{}
 
 type Handler struct {
 	opts Options

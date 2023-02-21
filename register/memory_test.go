@@ -207,9 +207,9 @@ func TestMemoryRegistryTTLConcurrent(t *testing.T) {
 		}
 	}
 
-	if len(os.Getenv("IN_TRAVIS_CI")) == 0 {
-		t.Logf("test will wait %v, then check TTL timeouts", waitTime)
-	}
+	//if len(os.Getenv("IN_TRAVIS_CI")) == 0 {
+	//	t.Logf("test will wait %v, then check TTL timeouts", waitTime)
+	//}
 
 	errChan := make(chan error, concurrency)
 	syncChan := make(chan struct{})
