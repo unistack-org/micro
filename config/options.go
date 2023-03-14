@@ -28,14 +28,18 @@ type Options struct {
 	Name string
 	// StructTag name
 	StructTag string
-	// BeforeSave contains slice of funcs that runs before save
+	// BeforeSave contains slice of funcs that runs before Save
 	BeforeSave []func(context.Context, Config) error
-	// AfterLoad contains slice of funcs that runs after load
-	AfterLoad []func(context.Context, Config) error
-	// BeforeLoad contains slice of funcs that runs before load
-	BeforeLoad []func(context.Context, Config) error
-	// AfterSave contains slice of funcs that runs after save
+	// AfterSave contains slice of funcs that runs after Save
 	AfterSave []func(context.Context, Config) error
+	// BeforeLoad contains slice of funcs that runs before Load
+	BeforeLoad []func(context.Context, Config) error
+	// AfterLoad contains slice of funcs that runs after Load
+	AfterLoad []func(context.Context, Config) error
+	// BeforeInit contains slice of funcs that runs before Init
+	BeforeInit []func(context.Context, Config) error
+	// AfterInit contains slice of funcs that runs after Init
+	AfterInit []func(context.Context, Config) error
 	// AllowFail flag to allow fail in config source
 	AllowFail bool
 }
@@ -128,6 +132,20 @@ func NewSaveOptions(opts ...SaveOption) SaveOptions {
 func AllowFail(b bool) Option {
 	return func(o *Options) {
 		o.AllowFail = b
+	}
+}
+
+// BeforeInit run funcs before config Init
+func BeforeInit(fn ...func(context.Context, Config) error) Option {
+	return func(o *Options) {
+		o.BeforeInit = fn
+	}
+}
+
+// AfterInit run funcs after config Init
+func AfterInit(fn ...func(context.Context, Config) error) Option {
+	return func(o *Options) {
+		o.AfterInit = fn
 	}
 }
 
