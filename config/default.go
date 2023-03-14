@@ -24,11 +24,20 @@ func (c *defaultConfig) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&c.opts)
 	}
+
+	if err := DefaultBeforeInit(c.opts.Context, c); err != nil && !c.opts.AllowFail {
+		return err
+	}
+
+	if err := DefaultAfterInit(c.opts.Context, c); err != nil && !c.opts.AllowFail {
+		return err
+	}
+
 	return nil
 }
 
 func (c *defaultConfig) Load(ctx context.Context, opts ...LoadOption) error {
-	if err := DefaultBeforeLoad(ctx, c); err != nil {
+	if err := DefaultBeforeLoad(ctx, c); err != nil && !c.opts.AllowFail {
 		return err
 	}
 
@@ -51,21 +60,20 @@ func (c *defaultConfig) Load(ctx context.Context, opts ...LoadOption) error {
 		if !c.opts.AllowFail {
 			return err
 		}
-		return DefaultAfterLoad(ctx, c)
+		if err = DefaultAfterLoad(ctx, c); err != nil && !c.opts.AllowFail {
+			return err
+		}
 	}
 
 	if err = fillValues(reflect.ValueOf(src), c.opts.StructTag); err == nil {
 		err = mergo.Merge(dst, src, mopts...)
 	}
 
-	if err != nil {
-		c.opts.Logger.Errorf(ctx, "default load error: %v", err)
-		if !c.opts.AllowFail {
-			return err
-		}
+	if err != nil && !c.opts.AllowFail {
+		return err
 	}
 
-	if err := DefaultAfterLoad(ctx, c); err != nil {
+	if err := DefaultAfterLoad(ctx, c); err != nil && !c.opts.AllowFail {
 		return err
 	}
 
