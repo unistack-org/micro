@@ -126,10 +126,10 @@ func Validate(ctx context.Context, cfg interface{}) error {
 var (
 	// DefaultBeforeLoad default func that runs before config Load
 	DefaultBeforeLoad = func(ctx context.Context, c Config) error {
-		if c.Options().BeforeLoad == nil {
-			return nil
-		}
 		for _, fn := range c.Options().BeforeLoad {
+			if fn == nil {
+				return nil
+			}
 			if err := fn(ctx, c); err != nil {
 				c.Options().Logger.Errorf(ctx, "%s BeforeLoad err: %v", c.String(), err)
 				if !c.Options().AllowFail {
@@ -141,10 +141,10 @@ var (
 	}
 	// DefaultAfterLoad default func that runs after config Load
 	DefaultAfterLoad = func(ctx context.Context, c Config) error {
-		if c.Options().AfterLoad == nil {
-			return nil
-		}
 		for _, fn := range c.Options().AfterLoad {
+			if fn == nil {
+				return nil
+			}
 			if err := fn(ctx, c); err != nil {
 				c.Options().Logger.Errorf(ctx, "%s AfterLoad err: %v", c.String(), err)
 				if !c.Options().AllowFail {
@@ -156,10 +156,10 @@ var (
 	}
 	// DefaultBeforeSave default func that runs befora config Save
 	DefaultBeforeSave = func(ctx context.Context, c Config) error {
-		if c.Options().BeforeSave == nil {
-			return nil
-		}
 		for _, fn := range c.Options().BeforeSave {
+			if fn == nil {
+				return nil
+			}
 			if err := fn(ctx, c); err != nil {
 				c.Options().Logger.Errorf(ctx, "%s BeforeSave err: %v", c.String(), err)
 				if !c.Options().AllowFail {
@@ -171,10 +171,10 @@ var (
 	}
 	// DefaultAfterSave default func that runs after config Save
 	DefaultAfterSave = func(ctx context.Context, c Config) error {
-		if c.Options().AfterSave == nil {
-			return nil
-		}
 		for _, fn := range c.Options().AfterSave {
+			if fn == nil {
+				return nil
+			}
 			if err := fn(ctx, c); err != nil {
 				c.Options().Logger.Errorf(ctx, "%s AfterSave err: %v", c.String(), err)
 				if !c.Options().AllowFail {
@@ -186,10 +186,10 @@ var (
 	}
 	// DefaultBeforeInit default func that runs befora config Init
 	DefaultBeforeInit = func(ctx context.Context, c Config) error {
-		if c.Options().BeforeInit == nil {
-			return nil
-		}
 		for _, fn := range c.Options().BeforeInit {
+			if fn == nil {
+				return nil
+			}
 			if err := fn(ctx, c); err != nil {
 				c.Options().Logger.Errorf(ctx, "%s BeforeInit err: %v", c.String(), err)
 				if !c.Options().AllowFail {
@@ -201,10 +201,10 @@ var (
 	}
 	// DefaultAfterInit default func that runs after config Init
 	DefaultAfterInit = func(ctx context.Context, c Config) error {
-		if c.Options().AfterInit == nil {
-			return nil
-		}
 		for _, fn := range c.Options().AfterSave {
+			if fn == nil {
+				return nil
+			}
 			if err := fn(ctx, c); err != nil {
 				c.Options().Logger.Errorf(ctx, "%s AfterInit err: %v", c.String(), err)
 				if !c.Options().AllowFail {
