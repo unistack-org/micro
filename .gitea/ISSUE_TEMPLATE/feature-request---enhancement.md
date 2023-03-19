@@ -1,6 +1,6 @@
 ---
 name: Feature request / Enhancement
-about: If you have a need not served by go-micro
+about: If you have a need not served by micro
 title: "[FEATURE]"
 labels: ''
 assignees: ''
