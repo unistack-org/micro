@@ -1,0 +1,39 @@
+name: "codecov"
+
+on:
+  workflow_run:
+    workflows: ["build"]
+    types:
+      - completed
+  push:
+    branches: [ v3 ]
+  pull_request:
+    branches: [ v3 ]
+  schedule:
+    - cron: '34 1 * * 0'
+
+jobs:
+  codecov:
+    name: codecov
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'go' ]
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+    - name: setup
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.17
+    - name: Run coverage
+      run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+    - name: codecov
+      uses: codecov/codecov-action@v3.1.1

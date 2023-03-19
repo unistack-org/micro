@@ -1,0 +1,28 @@
+name: "autoapprove"
+
+on:
+  pull_request_target:
+    types: [assigned, opened, synchronize, reopened]
+  workflow_run:
+    workflows: ["prbuild"]
+    types:
+      - completed
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  autoapprove:
+    runs-on: ubuntu-latest
+    steps:
+      - name: approve
+        run: [ "curl -o tea https://dl.gitea.com/tea/main/tea-main-linux-amd64",
+               "chmod +x ./tea",
+               "./tea login add --name unistack --token ${{ secrets.GITHUB_TOKEN }} --url https://git.unistack.org",
+               "./tea pr --repo ${{ github.event.repository.name }}"
+        ]
+        if: github.actor == 'vtolstov'
+        id: approve
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
