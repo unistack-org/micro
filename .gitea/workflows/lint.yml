@@ -22,5 +22,3 @@ jobs:
       continue-on-error: true
       with:
         version: v1.52
-
-
