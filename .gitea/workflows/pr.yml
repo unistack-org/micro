@@ -9,10 +9,6 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     steps:
-    - name: setup-node
-      uses: https://gitea.com/actions/setup-node@v3
-      with:
-        node-version: 18
     - name: checkout
       uses: https://gitea.com/actions/checkout@v3
     - name: setup-go
