@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: setup
-      uses: actions/setup-go@v3
+      uses: actions/setup-go
       with:
         go-version: 1.19
     - name: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout
     - name: deps
       run: go get -v -t -d ./...
     - name: test
