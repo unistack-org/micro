@@ -13,6 +13,7 @@ import (
 	"go.unistack.org/micro/v3/metadata"
 	"go.unistack.org/micro/v3/meter"
 	"go.unistack.org/micro/v3/network/transport"
+	"go.unistack.org/micro/v3/options"
 	"go.unistack.org/micro/v3/register"
 	"go.unistack.org/micro/v3/tracer"
 	"go.unistack.org/micro/v3/util/id"
@@ -83,6 +84,8 @@ type Options struct {
 	MaxConn int
 	// DeregisterAttempts holds the number of deregister attempts before error
 	DeregisterAttempts int
+	// Hooks may contains SubscriberWrapper, HandlerWrapper or Server func wrapper
+	Hooks options.Hooks
 }
 
 // NewOptions returns new options struct with default or passed values

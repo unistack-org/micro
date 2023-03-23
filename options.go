@@ -211,6 +211,7 @@ func Stores(s ...store.Store) Option {
 }
 
 // Logger set the logger to use
+//
 //nolint:gocyclo
 func Logger(l logger.Logger, opts ...LoggerOption) Option {
 	return func(o *Options) error {
@@ -329,6 +330,7 @@ func Meters(m ...meter.Meter) Option {
 
 // Register sets the register for the service
 // and the underlying components
+//
 //nolint:gocyclo
 func Register(r register.Register, opts ...RegisterOption) Option {
 	return func(o *Options) error {
@@ -403,6 +405,7 @@ func RegisterBroker(n string) RegisterOption {
 }
 
 // Tracer sets the tracer
+//
 //nolint:gocyclo
 func Tracer(t tracer.Tracer, opts ...TracerOption) Option {
 	return func(o *Options) error {
