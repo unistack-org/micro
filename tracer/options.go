@@ -3,7 +3,7 @@ package tracer
 import (
 	"context"
 
-	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v4/logger"
 )
 
 type SpanStatus int

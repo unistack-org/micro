@@ -1,4 +1,4 @@
-package fsm // import "go.unistack.org/micro/v3/fsm"
+package fsm // import "go.unistack.org/micro/v4/fsm"
 
 import (
 	"context"

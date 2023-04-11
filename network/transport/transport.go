@@ -1,11 +1,11 @@
 // Package transport is an interface for synchronous connection based communication
-package transport // import "go.unistack.org/micro/v3/network/transport"
+package transport // import "go.unistack.org/micro/v4/network/transport"
 
 import (
 	"context"
 	"time"
 
-	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v4/metadata"
 )
 
 var (

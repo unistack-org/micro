@@ -1,8 +1,8 @@
 // Package static is a static resolver
-package static // import "go.unistack.org/micro/v3/resolver/static"
+package static // import "go.unistack.org/micro/v4/resolver/static"
 
 import (
-	"go.unistack.org/micro/v3/resolver"
+	"go.unistack.org/micro/v4/resolver"
 )
 
 // Resolver returns a static list of nodes. In the event the node list

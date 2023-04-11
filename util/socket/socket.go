@@ -1,10 +1,10 @@
 // Package socket provides a pseudo socket
-package socket // import "go.unistack.org/micro/v3/util/socket"
+package socket // import "go.unistack.org/micro/v4/util/socket"
 
 import (
 	"io"
 
-	"go.unistack.org/micro/v3/network/transport"
+	"go.unistack.org/micro/v4/network/transport"
 )
 
 // Socket is our pseudo socket for transport.Socket

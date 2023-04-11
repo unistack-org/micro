@@ -1,13 +1,13 @@
-package wrapper // import "go.unistack.org/micro/v3/meter/wrapper"
+package wrapper // import "go.unistack.org/micro/v4/meter/wrapper"
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	"go.unistack.org/micro/v3/client"
-	"go.unistack.org/micro/v3/meter"
-	"go.unistack.org/micro/v3/server"
+	"go.unistack.org/micro/v4/client"
+	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/server"
 )
 
 var (

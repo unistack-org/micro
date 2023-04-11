@@ -1,11 +1,11 @@
 // Package register resolves names using the micro register
-package register // import "go.unistack.org/micro/v3/resolver/registry"
+package register // import "go.unistack.org/micro/v4/resolver/registry"
 
 import (
 	"context"
 
-	"go.unistack.org/micro/v3/register"
-	"go.unistack.org/micro/v3/resolver"
+	"go.unistack.org/micro/v4/register"
+	"go.unistack.org/micro/v4/resolver"
 )
 
 // Resolver is a register network resolver

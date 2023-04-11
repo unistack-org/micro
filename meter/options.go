@@ -3,7 +3,7 @@ package meter
 import (
 	"context"
 
-	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v4/logger"
 )
 
 // Option powers the configuration for metrics implementations:

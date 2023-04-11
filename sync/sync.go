@@ -1,5 +1,5 @@
 // Package sync is an interface for distributed synchronization
-package sync // import "go.unistack.org/micro/v3/sync"
+package sync // import "go.unistack.org/micro/v4/sync"
 
 import (
 	"errors"

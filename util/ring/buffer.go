@@ -1,11 +1,11 @@
 // Package ring provides a simple ring buffer for storing local data
-package ring // import "go.unistack.org/micro/v3/util/ring"
+package ring // import "go.unistack.org/micro/v4/util/ring"
 
 import (
 	"sync"
 	"time"
 
-	"go.unistack.org/micro/v3/util/id"
+	"go.unistack.org/micro/v4/util/id"
 )
 
 // Buffer is ring buffer

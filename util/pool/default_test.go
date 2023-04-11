@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"go.unistack.org/micro/v3/network/transport"
-	"go.unistack.org/micro/v3/network/transport/memory"
+	"go.unistack.org/micro/v4/network/transport"
+	"go.unistack.org/micro/v4/network/transport/memory"
 )
 
 func testPool(t *testing.T, size int, ttl time.Duration) {

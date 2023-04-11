@@ -6,13 +6,13 @@ import (
 	"sync"
 	"time"
 
-	"go.unistack.org/micro/v3/broker"
-	"go.unistack.org/micro/v3/codec"
-	"go.unistack.org/micro/v3/logger"
-	"go.unistack.org/micro/v3/register"
-	maddr "go.unistack.org/micro/v3/util/addr"
-	mnet "go.unistack.org/micro/v3/util/net"
-	"go.unistack.org/micro/v3/util/rand"
+	"go.unistack.org/micro/v4/broker"
+	"go.unistack.org/micro/v4/codec"
+	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/register"
+	maddr "go.unistack.org/micro/v4/util/addr"
+	mnet "go.unistack.org/micro/v4/util/net"
+	"go.unistack.org/micro/v4/util/rand"
 )
 
 // DefaultCodecs will be used to encode/decode

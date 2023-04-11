@@ -6,17 +6,17 @@ import (
 	"net"
 	"time"
 
-	"go.unistack.org/micro/v3/broker"
-	"go.unistack.org/micro/v3/codec"
-	"go.unistack.org/micro/v3/logger"
-	"go.unistack.org/micro/v3/metadata"
-	"go.unistack.org/micro/v3/meter"
-	"go.unistack.org/micro/v3/network/transport"
-	"go.unistack.org/micro/v3/register"
-	"go.unistack.org/micro/v3/router"
-	"go.unistack.org/micro/v3/selector"
-	"go.unistack.org/micro/v3/selector/random"
-	"go.unistack.org/micro/v3/tracer"
+	"go.unistack.org/micro/v4/broker"
+	"go.unistack.org/micro/v4/codec"
+	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/network/transport"
+	"go.unistack.org/micro/v4/register"
+	"go.unistack.org/micro/v4/router"
+	"go.unistack.org/micro/v4/selector"
+	"go.unistack.org/micro/v4/selector/random"
+	"go.unistack.org/micro/v4/tracer"
 )
 
 // Options holds client options

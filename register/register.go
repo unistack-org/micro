@@ -1,11 +1,11 @@
 // Package register is an interface for service discovery
-package register // import "go.unistack.org/micro/v3/register"
+package register // import "go.unistack.org/micro/v4/register"
 
 import (
 	"context"
 	"errors"
 
-	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v4/metadata"
 )
 
 const (

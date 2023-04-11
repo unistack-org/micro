@@ -1,11 +1,11 @@
 // Package pool is a connection pool
-package pool // import "go.unistack.org/micro/v3/util/pool"
+package pool // import "go.unistack.org/micro/v4/util/pool"
 
 import (
 	"context"
 	"time"
 
-	"go.unistack.org/micro/v3/network/transport"
+	"go.unistack.org/micro/v4/network/transport"
 )
 
 // Pool is an interface for connection pooling

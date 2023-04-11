@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"testing"
 
-	"go.unistack.org/micro/v3/register"
-	"go.unistack.org/micro/v3/register/memory"
-	"go.unistack.org/micro/v3/router"
-	regRouter "go.unistack.org/micro/v3/router/register"
+	"go.unistack.org/micro/v4/register"
+	"go.unistack.org/micro/v4/register/memory"
+	"go.unistack.org/micro/v4/router"
+	regRouter "go.unistack.org/micro/v4/router/register"
 )
 
 func TestRoundTripper(t *testing.T) {

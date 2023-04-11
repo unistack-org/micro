@@ -1,11 +1,11 @@
-package register // import "go.unistack.org/micro/v3/util/register"
+package register // import "go.unistack.org/micro/v4/util/register"
 
 import (
 	"context"
 	"time"
 
-	"go.unistack.org/micro/v3/register"
-	jitter "go.unistack.org/micro/v3/util/jitter"
+	"go.unistack.org/micro/v4/register"
+	jitter "go.unistack.org/micro/v4/util/jitter"
 )
 
 func addNodes(old, neu []*register.Node) []*register.Node {

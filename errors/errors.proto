@@ -1,4 +1,4 @@
-// Copyright 2021 Unistack LLC
+// Copyright 2021-2023 Unistack LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ syntax = "proto3";
 package micro.errors;
 
 option cc_enable_arenas = true;
-option go_package = "go.unistack.org/micro/v3/errors;errors";
+option go_package = "go.unistack.org/micro/v4/errors;errors";
 option java_multiple_files = true;
 option java_outer_classname = "MicroErrors";
 option java_package = "micro.errors";

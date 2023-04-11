@@ -1,4 +1,4 @@
-package http // import "go.unistack.org/micro/v3/util/http"
+package http // import "go.unistack.org/micro/v4/util/http"
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strings"
 
-	"go.unistack.org/micro/v3/metadata"
-	"go.unistack.org/micro/v3/selector/random"
+	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/selector/random"
 )
 
 // Write sets the status and body on a http ResponseWriter

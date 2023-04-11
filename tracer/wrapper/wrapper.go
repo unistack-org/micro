@@ -1,14 +1,14 @@
 // Package wrapper provides wrapper for Tracer
-package wrapper // import "go.unistack.org/micro/v3/tracer/wrapper"
+package wrapper // import "go.unistack.org/micro/v4/tracer/wrapper"
 
 import (
 	"context"
 	"fmt"
 
-	"go.unistack.org/micro/v3/client"
-	"go.unistack.org/micro/v3/metadata"
-	"go.unistack.org/micro/v3/server"
-	"go.unistack.org/micro/v3/tracer"
+	"go.unistack.org/micro/v4/client"
+	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/server"
+	"go.unistack.org/micro/v4/tracer"
 )
 
 var (

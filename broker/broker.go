@@ -1,12 +1,12 @@
 // Package broker is an interface used for asynchronous messaging
-package broker // import "go.unistack.org/micro/v3/broker"
+package broker // import "go.unistack.org/micro/v4/broker"
 
 import (
 	"context"
 	"errors"
 
-	"go.unistack.org/micro/v3/codec"
-	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v4/codec"
+	"go.unistack.org/micro/v4/metadata"
 )
 
 // DefaultBroker default memory broker

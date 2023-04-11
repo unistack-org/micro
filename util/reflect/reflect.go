@@ -1,4 +1,4 @@
-package reflect // import "go.unistack.org/micro/v3/util/reflect"
+package reflect // import "go.unistack.org/micro/v4/util/reflect"
 
 import (
 	"errors"

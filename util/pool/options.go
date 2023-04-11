@@ -3,7 +3,7 @@ package pool
 import (
 	"time"
 
-	"go.unistack.org/micro/v3/network/transport"
+	"go.unistack.org/micro/v4/network/transport"
 )
 
 // Options struct

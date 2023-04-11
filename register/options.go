@@ -5,9 +5,9 @@ import (
 	"crypto/tls"
 	"time"
 
-	"go.unistack.org/micro/v3/logger"
-	"go.unistack.org/micro/v3/meter"
-	"go.unistack.org/micro/v3/tracer"
+	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/tracer"
 )
 
 // Options holds options for register

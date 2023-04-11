@@ -6,12 +6,12 @@ import (
 	"sync"
 
 	"github.com/silas/dag"
-	"go.unistack.org/micro/v3/client"
-	"go.unistack.org/micro/v3/codec"
-	"go.unistack.org/micro/v3/logger"
-	"go.unistack.org/micro/v3/metadata"
-	"go.unistack.org/micro/v3/store"
-	"go.unistack.org/micro/v3/util/id"
+	"go.unistack.org/micro/v4/client"
+	"go.unistack.org/micro/v4/codec"
+	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/store"
+	"go.unistack.org/micro/v4/util/id"
 )
 
 type microFlow struct {

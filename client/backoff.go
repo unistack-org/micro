@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	"go.unistack.org/micro/v3/util/backoff"
+	"go.unistack.org/micro/v4/util/backoff"
 )
 
 // BackoffFunc is the backoff call func

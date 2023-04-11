@@ -4,8 +4,8 @@ import (
 	"context"
 	"sort"
 
-	"go.unistack.org/micro/v3/errors"
-	"go.unistack.org/micro/v3/router"
+	"go.unistack.org/micro/v4/errors"
+	"go.unistack.org/micro/v4/router"
 )
 
 // LookupFunc is used to lookup routes for a service

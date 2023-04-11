@@ -1,5 +1,5 @@
 // Package http resolves names to network addresses using a http request
-package http // import "go.unistack.org/micro/v3/resolver/http"
+package http // import "go.unistack.org/micro/v4/resolver/http"
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"go.unistack.org/micro/v3/resolver"
+	"go.unistack.org/micro/v4/resolver"
 )
 
 // nolint: golint,revive

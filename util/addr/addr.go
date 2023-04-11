@@ -1,4 +1,4 @@
-package addr // import "go.unistack.org/micro/v3/util/addr"
+package addr // import "go.unistack.org/micro/v4/util/addr"
 
 import (
 	"fmt"

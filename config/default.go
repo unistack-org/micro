@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/imdario/mergo"
-	rutil "go.unistack.org/micro/v3/util/reflect"
-	mtime "go.unistack.org/micro/v3/util/time"
+	rutil "go.unistack.org/micro/v4/util/reflect"
+	mtime "go.unistack.org/micro/v4/util/time"
 )
 
 type defaultConfig struct {
@@ -169,7 +169,7 @@ func fillValue(value reflect.Value, val string) error {
 				return err
 			}
 			value.Set(reflect.ValueOf(v))
-		case value.Type().String() == "time.Duration" && value.Type().PkgPath() == "go.unistack.org/micro/v3/util/time":
+		case value.Type().String() == "time.Duration" && value.Type().PkgPath() == "go.unistack.org/micro/v4/util/time":
 			v, err := mtime.ParseDuration(val)
 			if err != nil {
 				return err

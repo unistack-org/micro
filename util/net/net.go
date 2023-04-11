@@ -1,4 +1,4 @@
-package net // import "go.unistack.org/micro/v3/util/net"
+package net // import "go.unistack.org/micro/v4/util/net"
 
 import (
 	"errors"

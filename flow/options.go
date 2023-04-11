@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"go.unistack.org/micro/v3/client"
-	"go.unistack.org/micro/v3/logger"
-	"go.unistack.org/micro/v3/meter"
-	"go.unistack.org/micro/v3/store"
-	"go.unistack.org/micro/v3/tracer"
+	"go.unistack.org/micro/v4/client"
+	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/store"
+	"go.unistack.org/micro/v4/tracer"
 )
 
 // Option func

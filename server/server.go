@@ -1,13 +1,13 @@
 // Package server is an interface for a micro server
-package server // import "go.unistack.org/micro/v3/server"
+package server // import "go.unistack.org/micro/v4/server"
 
 import (
 	"context"
 	"time"
 
-	"go.unistack.org/micro/v3/codec"
-	"go.unistack.org/micro/v3/metadata"
-	"go.unistack.org/micro/v3/register"
+	"go.unistack.org/micro/v4/codec"
+	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/register"
 )
 
 // DefaultServer default server

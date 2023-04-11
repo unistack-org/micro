@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"go.unistack.org/micro/v3/errors"
+	"go.unistack.org/micro/v4/errors"
 )
 
 func TestRetryAlways(t *testing.T) {
