@@ -88,6 +88,7 @@ func (s *service) Name() string {
 // Init initialises options. Additionally it calls cmd.Init
 // which parses command line flags. cmd.Init is only called
 // on first Init.
+//
 //nolint:gocyclo
 func (s *service) Init(opts ...Option) error {
 	var err error
