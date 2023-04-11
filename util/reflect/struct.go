@@ -493,13 +493,14 @@ func btSplitter(str string) []string {
 }
 
 // queryToMap turns something like a[b][c]=4 into
-//   map[string]interface{}{
-//     "a": map[string]interface{}{
-// 		  "b": map[string]interface{}{
-// 			  "c": 4,
-// 		  },
-// 	  },
-//   }
+//
+//	  map[string]interface{}{
+//	    "a": map[string]interface{}{
+//			  "b": map[string]interface{}{
+//				  "c": 4,
+//			  },
+//		  },
+//	  }
 func queryToMap(param string) (map[string]interface{}, error) {
 	rawKey, rawValue, err := splitKeyAndValue(param)
 	if err != nil {

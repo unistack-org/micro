@@ -1,6 +1,5 @@
 package text
 
-
 func DetectEncoding(text string) map[string]int {
 	charsets := map[string]int{
 		"UTF-8":      0,
@@ -77,7 +76,7 @@ func DetectEncoding(text string) map[string]int {
 			charsets["MAC"] += uppercase
 		}
 
-	  last_simb = char
+		last_simb = char
 	}
 
 	return charsets
