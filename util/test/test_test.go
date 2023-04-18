@@ -56,8 +56,8 @@ func Test_SQLFromFile(t *testing.T) {
 	}
 }
 
-func Test_getFiles(t *testing.T) {
-	files, err := getFiles("testdata/", nil)
+func Test_GetCases(t *testing.T) {
+	files, err := GetCases("testdata/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

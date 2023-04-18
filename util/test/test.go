@@ -157,7 +157,7 @@ func SQLFromReader(m sqlmock.Sqlmock, r io.Reader) error {
 }
 
 func RunWithClientExpectResults(ctx context.Context, c client.Client, m sqlmock.Sqlmock, dir string, exts []string) error {
-	tcases, err := getFiles(dir, exts)
+	tcases, err := GetCases(dir, exts)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ type Case struct {
 	rspfiles []string
 }
 
-func getFiles(dir string, exts []string) ([]Case, error) {
+func GetCases(dir string, exts []string) ([]Case, error) {
 	var tcases []Case
 	entries, err := os.ReadDir(dir)
 	if len(entries) == 0 && err != nil {
@@ -263,7 +263,7 @@ func getFiles(dir string, exts []string) ([]Case, error) {
 	}
 
 	for _, dir = range dirs {
-		ntcases, err := getFiles(dir, exts)
+		ntcases, err := GetCases(dir, exts)
 		if len(ntcases) == 0 && err != nil {
 			return tcases, err
 		} else if len(ntcases) == 0 {
