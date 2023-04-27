@@ -12,6 +12,53 @@ import (
 	"go.unistack.org/micro/v4/tracer"
 )
 
+/*
+
+func (w *wrapper) Publish(ctx context.Context, p client.Message, opts ...client.PublishOption) error {
+	endpoint := p.Topic()
+
+	labels := make([]string, 0, 4)
+	labels = append(labels, labelEndpoint, endpoint)
+
+	w.opts.Meter.Counter(PublishMessageInflight, labels...).Inc()
+	ts := time.Now()
+	err := w.Client.Publish(ctx, p, opts...)
+	te := time.Since(ts)
+	w.opts.Meter.Counter(PublishMessageInflight, labels...).Dec()
+
+	w.opts.Meter.Summary(PublishMessageLatencyMicroseconds, labels...).Update(te.Seconds())
+	w.opts.Meter.Histogram(PublishMessageDurationSeconds, labels...).Update(te.Seconds())
+
+	if err == nil {
+		labels = append(labels, labelStatus, labelSuccess)
+	} else {
+		labels = append(labels, labelStatus, labelFailure)
+	}
+	w.opts.Meter.Counter(PublishMessageTotal, labels...).Inc()
+
+	return err
+}
+*/
+
+var (
+	// PublishMessageDurationSeconds specifies meter metric name
+	PublishMessageDurationSeconds = "publish_message_duration_seconds"
+	// PublishMessageLatencyMicroseconds specifies meter metric name
+	PublishMessageLatencyMicroseconds = "publish_message_latency_microseconds"
+	// PublishMessageTotal specifies meter metric name
+	PublishMessageTotal = "publish_message_total"
+	// PublishMessageInflight specifies meter metric name
+	PublishMessageInflight = "publish_message_inflight"
+	// SubscribeMessageDurationSeconds specifies meter metric name
+	SubscribeMessageDurationSeconds = "subscribe_message_duration_seconds"
+	// SubscribeMessageLatencyMicroseconds specifies meter metric name
+	SubscribeMessageLatencyMicroseconds = "subscribe_message_latency_microseconds"
+	// SubscribeMessageTotal specifies meter metric name
+	SubscribeMessageTotal = "subscribe_message_total"
+	// SubscribeMessageInflight specifies meter metric name
+	SubscribeMessageInflight = "subscribe_message_inflight"
+)
+
 // Options struct
 type Options struct {
 	// Tracer used for tracing
