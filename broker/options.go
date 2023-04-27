@@ -12,34 +12,6 @@ import (
 	"go.unistack.org/micro/v4/tracer"
 )
 
-/*
-
-func (w *wrapper) Publish(ctx context.Context, p client.Message, opts ...client.PublishOption) error {
-	endpoint := p.Topic()
-
-	labels := make([]string, 0, 4)
-	labels = append(labels, labelEndpoint, endpoint)
-
-	w.opts.Meter.Counter(PublishMessageInflight, labels...).Inc()
-	ts := time.Now()
-	err := w.Client.Publish(ctx, p, opts...)
-	te := time.Since(ts)
-	w.opts.Meter.Counter(PublishMessageInflight, labels...).Dec()
-
-	w.opts.Meter.Summary(PublishMessageLatencyMicroseconds, labels...).Update(te.Seconds())
-	w.opts.Meter.Histogram(PublishMessageDurationSeconds, labels...).Update(te.Seconds())
-
-	if err == nil {
-		labels = append(labels, labelStatus, labelSuccess)
-	} else {
-		labels = append(labels, labelStatus, labelFailure)
-	}
-	w.opts.Meter.Counter(PublishMessageTotal, labels...).Inc()
-
-	return err
-}
-*/
-
 var (
 	// PublishMessageDurationSeconds specifies meter metric name
 	PublishMessageDurationSeconds = "publish_message_duration_seconds"
