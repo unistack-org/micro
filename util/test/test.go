@@ -4,20 +4,198 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"database/sql/driver"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"strings"
+	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"go.unistack.org/micro/v4/client"
 	"go.unistack.org/micro/v4/codec"
+	"go.unistack.org/micro/v4/errors"
+	"go.unistack.org/micro/v4/metadata"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
+
+var ErrUnknownContentType = fmt.Errorf("unknown content type")
+
+type Extension struct {
+	Ext []string
+}
+
+var (
+	// ExtToTypes map file extension to content type
+	ExtToTypes = map[string][]string{
+		"json":  {"application/json", "application/grpc+json"},
+		"yaml":  {"application/yaml", "application/yml", "text/yaml", "text/yml"},
+		"yml":   {"application/yaml", "application/yml", "text/yaml", "text/yml"},
+		"proto": {"application/grpc", "application/grpc+proto", "application/proto"},
+	}
+	// DefaultExts specifies default file extensions to load data
+	DefaultExts = []string{"csv", "json", "yaml", "yml", "proto"}
+	// Codecs map to detect codec for test file or request content type
+	Codecs map[string]codec.Codec
+
+	// ResponseCompareFunc used to compare actual response with test case data
+	ResponseCompareFunc = func(expectRsp []byte, testRsp interface{}, expectCodec codec.Codec, testCodec codec.Codec) error {
+		var err error
+
+		expectMap := make(map[string]interface{})
+		if err = expectCodec.Unmarshal(expectRsp, &expectMap); err != nil {
+			return fmt.Errorf("failed to unmarshal err: %w", err)
+		}
+
+		testMap := make(map[string]interface{})
+		switch v := testRsp.(type) {
+		case *codec.Frame:
+			if err = testCodec.Unmarshal(v.Data, &testMap); err != nil {
+				return fmt.Errorf("failed to unmarshal err: %w", err)
+			}
+		case *errors.Error:
+			if err = expectCodec.Unmarshal([]byte(v.Error()), &testMap); err != nil {
+				return fmt.Errorf("failed to unmarshal err: %w", err)
+			}
+		case error:
+			st, ok := status.FromError(v)
+			if !ok {
+				return v
+			}
+			me := errors.Parse(st.Message())
+			if me.Code != 0 {
+				if err = expectCodec.Unmarshal([]byte(me.Error()), &testMap); err != nil {
+					return fmt.Errorf("failed to unmarshal err: %w", err)
+				}
+				break
+			}
+			for _, se := range st.Details() {
+				switch ne := se.(type) {
+				case proto.Message:
+					buf, err := testCodec.Marshal(ne)
+					if err != nil {
+						return fmt.Errorf("failed to marshal err: %w", err)
+					}
+					if err = testCodec.Unmarshal(buf, &testMap); err != nil {
+						return fmt.Errorf("failed to unmarshal err: %w", err)
+					}
+				default:
+					return st.Err()
+				}
+			}
+		case interface{ GRPCStatus() *status.Status }:
+			st := v.GRPCStatus()
+			me := errors.Parse(st.Message())
+			if me.Code != 0 {
+				if err = expectCodec.Unmarshal([]byte(me.Error()), &testMap); err != nil {
+					return fmt.Errorf("failed to unmarshal err: %w", err)
+				}
+				break
+			}
+		case *status.Status:
+			me := errors.Parse(v.Message())
+			if me.Code != 0 {
+				if err = expectCodec.Unmarshal([]byte(me.Error()), &testMap); err != nil {
+					return fmt.Errorf("failed to unmarshal err: %w", err)
+				}
+				break
+			}
+			for _, se := range v.Details() {
+				switch ne := se.(type) {
+				case proto.Message:
+					buf, err := testCodec.Marshal(ne)
+					if err != nil {
+						return fmt.Errorf("failed to marshal err: %w", err)
+					}
+					if err = testCodec.Unmarshal(buf, &testMap); err != nil {
+						return fmt.Errorf("failed to unmarshal err: %w", err)
+					}
+				default:
+					return v.Err()
+				}
+			}
+		}
+
+		if !reflect.DeepEqual(expectMap, testMap) {
+			return fmt.Errorf("test: %s != rsp: %s", expectMap, testMap)
+		}
+
+		return nil
+	}
+)
+
+func FromCSVString(columns []*sqlmock.Column, rows *sqlmock.Rows, s string) *sqlmock.Rows {
+	res := strings.NewReader(strings.TrimSpace(s))
+	csvReader := csv.NewReader(res)
+
+	for {
+		res, err := csvReader.Read()
+		if err != nil || res == nil {
+			break
+		}
+
+		var row []driver.Value
+		for i, v := range res {
+			item := CSVColumnParser(strings.TrimSpace(v))
+			if null, nullOk := columns[i].IsNullable(); null && nullOk && item == nil {
+				row = append(row, nil)
+			} else {
+				row = append(row, item)
+			}
+
+		}
+		rows = rows.AddRow(row...)
+	}
+
+	return rows
+}
+
+func CSVColumnParser(s string) []byte {
+	switch {
+	case strings.ToLower(s) == "null":
+		return nil
+	case s == "":
+		return nil
+	}
+	return []byte(s)
+}
+
+func NewResponseFromFile(rspfile string) (*codec.Frame, error) {
+	rspbuf, err := os.ReadFile(rspfile)
+	if err != nil {
+		return nil, err
+	}
+	return &codec.Frame{Data: rspbuf}, nil
+}
+
+func getCodec(codecs map[string]codec.Codec, ext string) (codec.Codec, error) {
+	var c codec.Codec
+	if cts, ok := ExtToTypes[ext]; ok {
+		for _, t := range cts {
+			if c, ok = codecs[t]; ok {
+				return c, nil
+			}
+		}
+	}
+	return nil, ErrUnknownContentType
+}
+
+func getContentType(codecs map[string]codec.Codec, ext string) (string, error) {
+	if cts, ok := ExtToTypes[ext]; ok {
+		for _, t := range cts {
+			if _, ok = codecs[t]; ok {
+				return t, nil
+			}
+		}
+	}
+	return "", ErrUnknownContentType
+}
 
 func getExt(name string) string {
 	ext := filepath.Ext(name)
@@ -31,35 +209,6 @@ func getNameWithoutExt(name string) string {
 	return strings.TrimSuffix(name, filepath.Ext(name))
 }
 
-var ErrUnknownContentType = errors.New("unknown content type")
-
-type Extension struct {
-	Ext []string
-}
-
-var (
-	ExtToTypes = map[string][]string{
-		"json":  {"application/json", "application/grpc+json"},
-		"yaml":  {"application/yaml", "application/yml", "text/yaml", "text/yml"},
-		"yml":   {"application/yaml", "application/yml", "text/yaml", "text/yml"},
-		"proto": {"application/grpc", "application/grpc+proto", "application/proto"},
-	}
-
-	DefaultExts = []string{"csv", "json", "yaml", "yml", "proto"}
-)
-
-func clientCall(ctx context.Context, c client.Client, req client.Request, rsp interface{}) error {
-	return nil
-}
-
-func NewResponseFromFile(rspfile string) (*codec.Frame, error) {
-	rspbuf, err := os.ReadFile(rspfile)
-	if err != nil {
-		return nil, err
-	}
-	return &codec.Frame{Data: rspbuf}, nil
-}
-
 func NewRequestFromFile(c client.Client, reqfile string) (client.Request, error) {
 	reqbuf, err := os.ReadFile(reqfile)
 	if err != nil {
@@ -67,20 +216,14 @@ func NewRequestFromFile(c client.Client, reqfile string) (client.Request, error)
 	}
 
 	endpoint := path.Base(path.Dir(reqfile))
+	if idx := strings.Index(endpoint, "_"); idx > 0 {
+		endpoint = endpoint[idx+1:]
+	}
 	ext := getExt(reqfile)
 
-	var ct string
-	if cts, ok := ExtToTypes[ext]; ok {
-		for _, t := range cts {
-			if _, ok = c.Options().Codecs[t]; ok {
-				ct = t
-				break
-			}
-		}
-	}
-
-	if ct == "" {
-		return nil, ErrUnknownContentType
+	ct, err := getContentType(c.Options().Codecs, ext)
+	if err != nil {
+		return nil, err
 	}
 
 	req := c.NewRequest("test", endpoint, &codec.Frame{Data: reqbuf}, client.RequestContentType(ct))
@@ -108,6 +251,8 @@ func SQLFromString(m sqlmock.Sqlmock, buf string) error {
 func SQLFromReader(m sqlmock.Sqlmock, r io.Reader) error {
 	var rows *sqlmock.Rows
 	var exp *sqlmock.ExpectedQuery
+	var columns []*sqlmock.Column
+
 	br := bufio.NewReader(r)
 
 	for {
@@ -115,6 +260,9 @@ func SQLFromReader(m sqlmock.Sqlmock, r io.Reader) error {
 		if err != nil && err != io.EOF {
 			return err
 		} else if err == io.EOF && len(s) == 0 {
+			if rows != nil && exp != nil {
+				exp.WillReturnRows(rows)
+			}
 			return nil
 		}
 
@@ -126,11 +274,14 @@ func SQLFromReader(m sqlmock.Sqlmock, r io.Reader) error {
 			if err != nil {
 				return err
 			}
-			if rows == nil {
-				rows = m.NewRows(records[0])
+			if rows == nil && len(columns) > 0 {
+				rows = m.NewRowsWithColumnDefinition(columns...)
 			} else {
 				for idx := 0; idx < len(records); idx++ {
-					rows.FromCSVString(strings.Join(records[idx], ","))
+					if len(columns) == 0 {
+						return fmt.Errorf("csv file not valid, does not have %q line", "# columns ")
+					}
+					rows = FromCSVString(columns, rows, strings.Join(records[idx], ","))
 				}
 			}
 			continue
@@ -142,6 +293,29 @@ func SQLFromReader(m sqlmock.Sqlmock, r io.Reader) error {
 		}
 
 		switch {
+		case strings.HasPrefix(strings.ToLower(s[2:]), "columns"):
+			for _, field := range strings.Split(s[2+len("columns")+1:], ",") {
+				args := strings.Split(field, "|")
+
+				column := sqlmock.NewColumn(args[0]).Nullable(false)
+
+				if len(args) > 1 {
+					for _, arg := range args {
+						switch arg {
+						case "BOOLEAN", "BOOL":
+							column = column.OfType("BOOL", false)
+						case "NUMBER", "DECIMAL":
+							column = column.OfType("DECIMAL", float64(0.0)).WithPrecisionAndScale(10, 4)
+						case "VARCHAR":
+							column = column.OfType("VARCHAR", nil)
+						case "NULL":
+							column = column.Nullable(true)
+						}
+					}
+				}
+
+				columns = append(columns, column)
+			}
 		case strings.HasPrefix(strings.ToLower(s[2:]), "begin"):
 			m.ExpectBegin()
 		case strings.HasPrefix(strings.ToLower(s[2:]), "commit"):
@@ -156,66 +330,118 @@ func SQLFromReader(m sqlmock.Sqlmock, r io.Reader) error {
 	}
 }
 
-func RunWithClientExpectResults(ctx context.Context, c client.Client, m sqlmock.Sqlmock, dir string, exts []string) error {
+func Run(ctx context.Context, c client.Client, m sqlmock.Sqlmock, dir string, exts []string) error {
 	tcases, err := GetCases(dir, exts)
 	if err != nil {
 		return err
 	}
+
 	g, gctx := errgroup.WithContext(ctx)
 	if !strings.Contains(dir, "parallel") {
 		g.SetLimit(1)
 	}
 
 	for _, tcase := range tcases {
+
 		for _, dbfile := range tcase.dbfiles {
 			if err = SQLFromFile(m, dbfile); err != nil {
 				return err
 			}
 		}
 
-		for idx := 0; idx < len(tcase.reqfiles); idx++ {
-			g.TryGo(func() error {
-				req, err := NewRequestFromFile(c, tcase.reqfiles[idx])
-				if err != nil {
-					return err
-				}
-				rsp, err := NewResponseFromFile(tcase.rspfiles[idx])
-				if err != nil {
-					return err
-				}
-				data := &codec.Frame{}
-				err = c.Call(gctx, req, data, client.WithContentType(req.ContentType()))
-				if err != nil {
-					return err
-				}
-				if !bytes.Equal(rsp.Data, data.Data) {
-					return fmt.Errorf("rsp not equal test %s != %s", rsp.Data, data.Data)
-				}
-				return nil
-			})
-		}
-	}
-	return g.Wait()
-}
+		tc := tcase
+		g.Go(func() error {
+			var xrid string
+			var gerr error
 
-func RunWithClientExpectErrors(ctx context.Context, c client.Client, dir string) error {
-	g, gctx := errgroup.WithContext(ctx)
-	if !strings.Contains(dir, "parallel") {
-		g.SetLimit(1)
+			treq, err := NewRequestFromFile(c, tc.reqfile)
+			if err != nil {
+				gerr = fmt.Errorf("failed to read request from file %s err: %w", tc.reqfile, err)
+				return gerr
+			}
+
+			xrid = fmt.Sprintf("%s-%d", treq.Endpoint(), time.Now().Unix())
+
+			defer func() {
+				if gerr == nil {
+					fmt.Printf("test %s xrid: %s status: success\n", filepath.Dir(tc.reqfile), xrid)
+				} else {
+					fmt.Printf("test %s xrid: %s status: failure error: %v\n", filepath.Dir(tc.reqfile), xrid, err)
+				}
+			}()
+
+			data := &codec.Frame{}
+			md := metadata.New(1)
+			md.Set("X-Request-Id", xrid)
+			cerr := c.Call(metadata.NewOutgoingContext(gctx, md), treq, data, client.WithContentType(treq.ContentType()))
+
+			var rspfile string
+
+			if tc.errfile != "" {
+				rspfile = tc.errfile
+			} else if tc.rspfile != "" {
+				rspfile = tc.rspfile
+			} else {
+				gerr = fmt.Errorf("errfile and rspfile is empty")
+				return gerr
+			}
+
+			expectRsp, err := NewResponseFromFile(rspfile)
+			if err != nil {
+				gerr = fmt.Errorf("failed to read response from file %s err: %w", rspfile, err)
+				return gerr
+			}
+
+			testCodec, err := getCodec(Codecs, getExt(tc.reqfile))
+			if err != nil {
+				gerr = fmt.Errorf("failed to get response file codec err: %w", err)
+				return gerr
+			}
+
+			expectCodec, err := getCodec(Codecs, getExt(rspfile))
+			if err != nil {
+				gerr = fmt.Errorf("failed to get response file codec err: %w", err)
+				return gerr
+			}
+
+			if cerr == nil && tc.errfile != "" {
+				gerr = fmt.Errorf("expected err %s not happened", expectRsp.Data)
+				return gerr
+			} else if cerr != nil && tc.errfile != "" {
+				if err = ResponseCompareFunc(expectRsp.Data, cerr, expectCodec, testCodec); err != nil {
+					gerr = err
+					return gerr
+				}
+			} else if cerr != nil && tc.errfile == "" {
+				gerr = cerr
+				return gerr
+			} else if cerr == nil && tc.errfile == "" {
+				if err = ResponseCompareFunc(expectRsp.Data, data, expectCodec, testCodec); err != nil {
+					gerr = err
+					return gerr
+				}
+			}
+
+			/*
+				cf, err := getCodec(c.Options().Codecs, getExt(tc.rspfile))
+				if err != nil {
+					return err
+				}
+			*/
+
+			return nil
+		})
+
 	}
-	_ = gctx
-	g.TryGo(func() error {
-		// rsp := &codec.Frame{}
-		// return c.Call(ctx, req, rsp, client.WithContentType(req.ContentType()))
-		return nil
-	})
+
 	return g.Wait()
 }
 
 type Case struct {
-	dbfiles  []string
-	reqfiles []string
-	rspfiles []string
+	dbfiles []string
+	reqfile string
+	rspfile string
+	errfile string
 }
 
 func GetCases(dir string, exts []string) ([]Case, error) {
@@ -230,7 +456,8 @@ func GetCases(dir string, exts []string) ([]Case, error) {
 	}
 
 	var dirs []string
-	var dbfiles, reqfiles, rspfiles []string
+	var dbfiles []string
+	var reqfile, rspfile, errfile string
 
 	for _, entry := range entries {
 		if entry.IsDir() {
@@ -250,16 +477,18 @@ func GetCases(dir string, exts []string) ([]Case, error) {
 				case strings.HasSuffix(name, "_db"):
 					dbfiles = append(dbfiles, filepath.Join(dir, entry.Name()))
 				case strings.HasSuffix(name, "_req"):
-					reqfiles = append(reqfiles, filepath.Join(dir, entry.Name()))
+					reqfile = filepath.Join(dir, entry.Name())
 				case strings.HasSuffix(name, "_rsp"):
-					rspfiles = append(rspfiles, filepath.Join(dir, entry.Name()))
+					rspfile = filepath.Join(dir, entry.Name())
+				case strings.HasSuffix(name, "_err"):
+					errfile = filepath.Join(dir, entry.Name())
 				}
 			}
 		}
 	}
 
-	if len(reqfiles) > 0 && len(rspfiles) > 0 {
-		tcases = append(tcases, Case{dbfiles: dbfiles, reqfiles: reqfiles, rspfiles: rspfiles})
+	if reqfile != "" && (rspfile != "" || errfile != "") {
+		tcases = append(tcases, Case{dbfiles: dbfiles, reqfile: reqfile, rspfile: rspfile, errfile: errfile})
 	}
 
 	for _, dir = range dirs {
