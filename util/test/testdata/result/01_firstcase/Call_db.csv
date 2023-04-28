@@ -1,5 +1,6 @@
 # begin
 # query select \* from test;
+# columns id|VARCHAR,name|VARCHAR
 id,name
 1,test
 # commit
