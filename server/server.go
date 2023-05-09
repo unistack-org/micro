@@ -48,40 +48,12 @@ type Server interface {
 	Handle(h Handler) error
 	// Create a new handler
 	NewHandler(h interface{}, opts ...HandlerOption) Handler
-	// Create a new subscriber
-	NewSubscriber(topic string, h interface{}, opts ...SubscriberOption) Subscriber
-	// Register a subscriber
-	Subscribe(s Subscriber) error
 	// Start the server
 	Start() error
 	// Stop the server
 	Stop() error
 	// Server implementation
 	String() string
-}
-
-/*
-// Router handle serving messages
-type Router interface {
-	// ProcessMessage processes a message
-	ProcessMessage(ctx context.Context, msg Message) error
-	// ServeRequest processes a request to completion
-	ServeRequest(ctx context.Context, req Request, rsp Response) error
-}
-*/
-
-// Message is an async message interface
-type Message interface {
-	// Topic of the message
-	Topic() string
-	// The decoded payload value
-	Body() interface{}
-	// The content type of the payload
-	ContentType() string
-	// The raw headers of the message
-	Header() metadata.Metadata
-	// Codec used to decode the message
-	Codec() codec.Codec
 }
 
 // Request is a synchronous request interface
@@ -155,14 +127,4 @@ type Handler interface {
 	Handler() interface{}
 	Endpoints() []*register.Endpoint
 	Options() HandlerOptions
-}
-
-// Subscriber interface represents a subscription to a given topic using
-// a specific subscriber function or object with endpoints. It mirrors
-// the handler in its behaviour.
-type Subscriber interface {
-	Topic() string
-	Subscriber() interface{}
-	Endpoints() []*register.Endpoint
-	Options() SubscriberOptions
 }

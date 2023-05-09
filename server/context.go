@@ -33,16 +33,6 @@ func SetOption(k, v interface{}) Option {
 	}
 }
 
-// SetSubscriberOption returns a function to setup a context with given value
-func SetSubscriberOption(k, v interface{}) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		if o.Context == nil {
-			o.Context = context.Background()
-		}
-		o.Context = context.WithValue(o.Context, k, v)
-	}
-}
-
 // SetHandlerOption returns a function to setup a context with given value
 func SetHandlerOption(k, v interface{}) HandlerOption {
 	return func(o *HandlerOptions) {

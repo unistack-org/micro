@@ -1,7 +1,6 @@
 package micro
 
 import (
-	"context"
 	"reflect"
 	"testing"
 
@@ -60,41 +59,6 @@ func TestRegisterHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := RegisterHandler(tt.args.s, tt.args.h, tt.args.opts...); (err != nil) != tt.wantErr {
 				t.Errorf("RegisterHandler() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestRegisterSubscriber(t *testing.T) {
-	type args struct {
-		topic string
-		s     server.Server
-		h     interface{}
-		opts  []server.SubscriberOption
-	}
-	h := func(_ context.Context, _ interface{}) error {
-		return nil
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "RegisterSubscriber",
-			args: args{
-				topic: "test",
-				s:     server.DefaultServer,
-				h:     h,
-				opts:  nil,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := RegisterSubscriber(tt.args.topic, tt.args.s, tt.args.h, tt.args.opts...); (err != nil) != tt.wantErr {
-				t.Errorf("RegisterSubscriber() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -222,7 +186,6 @@ func Test_service_Options(t *testing.T) {
 }
 
 func Test_service_Broker(t *testing.T) {
-	b := broker.NewBroker()
 	type fields struct {
 		opts Options
 	}
@@ -238,12 +201,12 @@ func Test_service_Broker(t *testing.T) {
 		{
 			name: "service.Broker",
 			fields: fields{
-				opts: Options{Brokers: []broker.Broker{b}},
+				opts: Options{Brokers: []broker.Broker{broker.DefaultBroker}},
 			},
 			args: args{
 				names: []string{"noop"},
 			},
-			want: b,
+			want: broker.DefaultBroker,
 		},
 	}
 	for _, tt := range tests {

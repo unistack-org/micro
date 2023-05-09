@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"go.unistack.org/micro/v4/broker"
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/metadata"
@@ -19,6 +18,17 @@ import (
 	"go.unistack.org/micro/v4/util/id"
 )
 
+var (
+	// ServerRequestDurationSeconds specifies meter metric name
+	ServerRequestDurationSeconds = "server_request_duration_seconds"
+	// ServerRequestLatencyMicroseconds specifies meter metric name
+	ServerRequestLatencyMicroseconds = "server_request_latency_microseconds"
+	// ServerRequestTotal specifies meter metric name
+	ServerRequestTotal = "server_request_total"
+	// ServerRequestInflight specifies meter metric name
+	ServerRequestInflight = "server_request_inflight"
+)
+
 // Option func
 type Option func(*Options)
 
@@ -26,8 +36,6 @@ type Option func(*Options)
 type Options struct {
 	// Context holds the external options and can be used for server shutdown
 	Context context.Context
-	// Broker holds the server broker
-	Broker broker.Broker
 	// Register holds the register
 	Register register.Register
 	// Tracer holds the tracer
@@ -38,12 +46,6 @@ type Options struct {
 	Meter meter.Meter
 	// Transport holds the transport
 	Transport transport.Transport
-
-	/*
-		// Router for requests
-		Router Router
-	*/
-
 	// Listener may be passed if already created
 	Listener net.Listener
 	// Wait group
@@ -68,10 +70,6 @@ type Options struct {
 	Advertise string
 	// Version holds the server version
 	Version string
-	// SubWrappers holds the server subscribe wrappers
-	SubWrappers []SubscriberWrapper
-	// BatchSubWrappers holds the server batch subscribe wrappers
-	BatchSubWrappers []BatchSubscriberWrapper
 	// HdlrWrappers holds the handler wrappers
 	HdlrWrappers []HandlerWrapper
 	// RegisterAttempts holds the number of register attempts before error
@@ -84,7 +82,7 @@ type Options struct {
 	MaxConn int
 	// DeregisterAttempts holds the number of deregister attempts before error
 	DeregisterAttempts int
-	// Hooks may contains SubscriberWrapper, HandlerWrapper or Server func wrapper
+	// Hooks may contains HandlerWrapper or Server func wrapper
 	Hooks options.Hooks
 }
 
@@ -100,7 +98,6 @@ func NewOptions(opts ...Option) Options {
 		Logger:           logger.DefaultLogger,
 		Meter:            meter.DefaultMeter,
 		Tracer:           tracer.DefaultTracer,
-		Broker:           broker.DefaultBroker,
 		Register:         register.DefaultRegister,
 		Transport:        transport.DefaultTransport,
 		Address:          DefaultAddress,
@@ -170,13 +167,6 @@ func Address(a string) Option {
 func Advertise(a string) Option {
 	return func(o *Options) {
 		o.Advertise = a
-	}
-}
-
-// Broker to use for pub/sub
-func Broker(b broker.Broker) Option {
-	return func(o *Options) {
-		o.Broker = b
 	}
 }
 
@@ -261,15 +251,6 @@ func TLSConfig(t *tls.Config) Option {
 	}
 }
 
-/*
-// WithRouter sets the request router
-func WithRouter(r Router) Option {
-	return func(o *Options) {
-		o.Router = r
-	}
-}
-*/
-
 // Wait tells the server to wait for requests to finish before exiting
 // If `wg` is nil, server only wait for completion of rpc handler.
 // For user need finer grained control, pass a concrete `wg` here, server will
@@ -287,20 +268,6 @@ func Wait(wg *sync.WaitGroup) Option {
 func WrapHandler(w HandlerWrapper) Option {
 	return func(o *Options) {
 		o.HdlrWrappers = append(o.HdlrWrappers, w)
-	}
-}
-
-// WrapSubscriber adds a subscriber Wrapper to a list of options passed into the server
-func WrapSubscriber(w SubscriberWrapper) Option {
-	return func(o *Options) {
-		o.SubWrappers = append(o.SubWrappers, w)
-	}
-}
-
-// WrapBatchSubscriber adds a batch subscriber Wrapper to a list of options passed into the server
-func WrapBatchSubscriber(w BatchSubscriberWrapper) Option {
-	return func(o *Options) {
-		o.BatchSubWrappers = append(o.BatchSubWrappers, w)
 	}
 }
 
@@ -343,110 +310,10 @@ func NewHandlerOptions(opts ...HandlerOption) HandlerOptions {
 	return options
 }
 
-// SubscriberOption func
-type SubscriberOption func(*SubscriberOptions)
-
-// SubscriberOptions struct
-type SubscriberOptions struct {
-	// Context holds the external options
-	Context context.Context
-	// Queue holds the subscription queue
-	Queue string
-	// AutoAck flag for auto ack messages after processing
-	AutoAck bool
-	// BodyOnly flag specifies that message without headers
-	BodyOnly bool
-	// Batch flag specifies that message processed in batches
-	Batch bool
-	// BatchSize flag specifies max size of batch
-	BatchSize int
-	// BatchWait flag specifies max wait time for batch filling
-	BatchWait time.Duration
-}
-
-// NewSubscriberOptions create new SubscriberOptions
-func NewSubscriberOptions(opts ...SubscriberOption) SubscriberOptions {
-	options := SubscriberOptions{
-		AutoAck: true,
-		Context: context.Background(),
-	}
-
-	for _, o := range opts {
-		o(&options)
-	}
-
-	return options
-}
-
 // EndpointMetadata is a Handler option that allows metadata to be added to
 // individual endpoints.
 func EndpointMetadata(name string, md metadata.Metadata) HandlerOption {
 	return func(o *HandlerOptions) {
 		o.Metadata[name] = metadata.Copy(md)
-	}
-}
-
-// DisableAutoAck will disable auto acking of messages
-// after they have been handled.
-func DisableAutoAck() SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.AutoAck = false
-	}
-}
-
-// SubscriberQueue sets the shared queue name distributed messages across subscribers
-func SubscriberQueue(n string) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.Queue = n
-	}
-}
-
-// SubscriberGroup sets the shared group name distributed messages across subscribers
-func SubscriberGroup(n string) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.Queue = n
-	}
-}
-
-// SubscriberBodyOnly says broker that message contains raw data with absence of micro broker.Message format
-func SubscriberBodyOnly(b bool) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.BodyOnly = b
-	}
-}
-
-// SubscriberContext set context options to allow broker SubscriberOption passed
-func SubscriberContext(ctx context.Context) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.Context = ctx
-	}
-}
-
-// SubscriberAck control auto ack processing for handler
-func SubscriberAck(b bool) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.AutoAck = b
-	}
-}
-
-// SubscriberBatch control batch processing for handler
-func SubscriberBatch(b bool) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.Batch = b
-	}
-}
-
-// SubscriberBatchSize control batch filling size for handler
-// Batch filling max waiting time controlled by SubscriberBatchWait
-func SubscriberBatchSize(n int) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.BatchSize = n
-	}
-}
-
-// SubscriberBatchWait control batch filling wait time for handler
-func SubscriberBatchWait(td time.Duration) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.BatchWait = td
 	}
 }
