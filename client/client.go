@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"go.unistack.org/micro/v4/codec"
-	"go.unistack.org/micro/v4/metadata"
 )
 
 var (
@@ -35,21 +34,10 @@ type Client interface {
 	Name() string
 	Init(opts ...Option) error
 	Options() Options
-	NewMessage(topic string, msg interface{}, opts ...MessageOption) Message
 	NewRequest(service string, endpoint string, req interface{}, opts ...RequestOption) Request
 	Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error
 	Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error)
-	Publish(ctx context.Context, msg Message, opts ...PublishOption) error
-	BatchPublish(ctx context.Context, msg []Message, opts ...PublishOption) error
 	String() string
-}
-
-// Message is the interface for publishing asynchronously
-type Message interface {
-	Topic() string
-	Payload() interface{}
-	ContentType() string
-	Metadata() metadata.Metadata
 }
 
 // Request is the interface for a synchronous request used by Call or Stream
@@ -68,16 +56,22 @@ type Request interface {
 	Codec() codec.Codec
 	// indicates whether the request will be a streaming one rather than unary
 	Stream() bool
+	// Header data
+	// Header() metadata.Metadata
 }
 
 // Response is the response received from a service
 type Response interface {
 	// Read the response
 	Codec() codec.Codec
+	// The content type
+	// ContentType() string
 	// Header data
-	Header() metadata.Metadata
+	// Header() metadata.Metadata
 	// Read the undecoded response
 	Read() ([]byte, error)
+	// The unencoded request body
+	// Body() interface{}
 }
 
 // Stream is the interface for a bidirectional synchronous stream

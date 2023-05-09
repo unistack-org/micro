@@ -90,33 +90,7 @@ type Option func(*Options) error
 // Broker to be used for client and server
 func Broker(b broker.Broker, opts ...BrokerOption) Option {
 	return func(o *Options) error {
-		var err error
-		bopts := brokerOptions{}
-		for _, opt := range opts {
-			opt(&bopts)
-		}
-		all := false
-		if len(opts) == 0 {
-			all = true
-		}
-		for _, srv := range o.Servers {
-			for _, os := range bopts.servers {
-				if srv.Name() == os || all {
-					if err = srv.Init(server.Broker(b)); err != nil {
-						return err
-					}
-				}
-			}
-		}
-		for _, cli := range o.Clients {
-			for _, oc := range bopts.clients {
-				if cli.Name() == oc || all {
-					if err = cli.Init(client.Broker(b)); err != nil {
-						return err
-					}
-				}
-			}
-		}
+		o.Brokers = []broker.Broker{b}
 		return nil
 	}
 }

@@ -11,23 +11,6 @@ import (
 )
 
 var (
-	// ClientRequestDurationSeconds specifies meter metric name
-	ClientRequestDurationSeconds = "client_request_duration_seconds"
-	// ClientRequestLatencyMicroseconds specifies meter metric name
-	ClientRequestLatencyMicroseconds = "client_request_latency_microseconds"
-	// ClientRequestTotal specifies meter metric name
-	ClientRequestTotal = "client_request_total"
-	// ClientRequestInflight specifies meter metric name
-	ClientRequestInflight = "client_request_inflight"
-	// ServerRequestDurationSeconds specifies meter metric name
-	ServerRequestDurationSeconds = "server_request_duration_seconds"
-	// ServerRequestLatencyMicroseconds specifies meter metric name
-	ServerRequestLatencyMicroseconds = "server_request_latency_microseconds"
-	// ServerRequestTotal specifies meter metric name
-	ServerRequestTotal = "server_request_total"
-	// ServerRequestInflight specifies meter metric name
-	ServerRequestInflight = "server_request_inflight"
-
 	labelSuccess  = "success"
 	labelFailure  = "failure"
 	labelStatus   = "status"

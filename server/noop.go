@@ -1,12 +1,11 @@
 package server
 
 import (
-	"fmt"
+	"reflect"
 	"sort"
 	"sync"
 	"time"
 
-	"go.unistack.org/micro/v4/broker"
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/register"
@@ -25,13 +24,12 @@ const (
 )
 
 type noopServer struct {
-	h           Handler
-	wg          *sync.WaitGroup
-	rsvc        *register.Service
-	handlers    map[string]Handler
-	subscribers map[*subscriber][]broker.Subscriber
-	exit        chan chan error
-	opts        Options
+	h        Handler
+	wg       *sync.WaitGroup
+	rsvc     *register.Service
+	handlers map[string]Handler
+	exit     chan chan error
+	opts     Options
 	sync.RWMutex
 	registered bool
 	started    bool
@@ -42,9 +40,6 @@ func NewServer(opts ...Option) Server {
 	n := &noopServer{opts: NewOptions(opts...)}
 	if n.handlers == nil {
 		n.handlers = make(map[string]Handler)
-	}
-	if n.subscribers == nil {
-		n.subscribers = make(map[*subscriber][]broker.Subscriber)
 	}
 	if n.exit == nil {
 		n.exit = make(chan chan error)
@@ -71,35 +66,8 @@ func (n *noopServer) Name() string {
 	return n.opts.Name
 }
 
-func (n *noopServer) Subscribe(sb Subscriber) error {
-	sub, ok := sb.(*subscriber)
-	if !ok {
-		return fmt.Errorf("invalid subscriber: expected *subscriber")
-	} else if len(sub.handlers) == 0 {
-		return fmt.Errorf("invalid subscriber: no handler functions")
-	}
-
-	if err := ValidateSubscriber(sb); err != nil {
-		return err
-	}
-
-	n.Lock()
-	if _, ok = n.subscribers[sub]; ok {
-		n.Unlock()
-		return fmt.Errorf("subscriber %v already exists", sub)
-	}
-
-	n.subscribers[sub] = nil
-	n.Unlock()
-	return nil
-}
-
 func (n *noopServer) NewHandler(h interface{}, opts ...HandlerOption) Handler {
 	return newRPCHandler(h, opts...)
-}
-
-func (n *noopServer) NewSubscriber(topic string, sb interface{}, opts ...SubscriberOption) Subscriber {
-	return newSubscriber(topic, sb, opts...)
 }
 
 func (n *noopServer) Init(opts ...Option) error {
@@ -109,9 +77,6 @@ func (n *noopServer) Init(opts ...Option) error {
 
 	if n.handlers == nil {
 		n.handlers = make(map[string]Handler, 1)
-	}
-	if n.subscribers == nil {
-		n.subscribers = make(map[*subscriber][]broker.Subscriber, 1)
 	}
 
 	if n.exit == nil {
@@ -158,20 +123,9 @@ func (n *noopServer) Register() error {
 
 	sort.Strings(handlerList)
 
-	subscriberList := make([]*subscriber, 0, len(n.subscribers))
-	for e := range n.subscribers {
-		subscriberList = append(subscriberList, e)
-	}
-	sort.Slice(subscriberList, func(i, j int) bool {
-		return subscriberList[i].topic > subscriberList[j].topic
-	})
-
-	endpoints := make([]*register.Endpoint, 0, len(handlerList)+len(subscriberList))
+	endpoints := make([]*register.Endpoint, 0, len(handlerList))
 	for _, h := range handlerList {
 		endpoints = append(endpoints, n.handlers[h].Endpoints()...)
-	}
-	for _, e := range subscriberList {
-		endpoints = append(endpoints, e.Endpoints()...)
 	}
 	n.RUnlock()
 
@@ -201,39 +155,6 @@ func (n *noopServer) Register() error {
 
 	n.Lock()
 	defer n.Unlock()
-
-	cx := config.Context
-
-	var sub broker.Subscriber
-
-	for sb := range n.subscribers {
-		if sb.Options().Context != nil {
-			cx = sb.Options().Context
-		}
-
-		opts := []broker.SubscribeOption{broker.SubscribeContext(cx), broker.SubscribeAutoAck(sb.Options().AutoAck)}
-		if queue := sb.Options().Queue; len(queue) > 0 {
-			opts = append(opts, broker.SubscribeGroup(queue))
-		}
-
-		if sb.Options().Batch {
-			// batch processing handler
-			sub, err = config.Broker.BatchSubscribe(cx, sb.Topic(), n.newBatchSubHandler(sb, config), opts...)
-		} else {
-			// single processing handler
-			sub, err = config.Broker.Subscribe(cx, sb.Topic(), n.newSubHandler(sb, config), opts...)
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if config.Logger.V(logger.InfoLevel) {
-			config.Logger.Infof(n.opts.Context, "subscribing to topic: %s", sb.Topic())
-		}
-
-		n.subscribers[sb] = []broker.Subscriber{sub}
-	}
 
 	n.registered = true
 	if cacheService {
@@ -273,33 +194,6 @@ func (n *noopServer) Deregister() error {
 
 	n.registered = false
 
-	cx := config.Context
-
-	wg := sync.WaitGroup{}
-	for sb, subs := range n.subscribers {
-		for idx := range subs {
-			if sb.Options().Context != nil {
-				cx = sb.Options().Context
-			}
-
-			ncx := cx
-			wg.Add(1)
-			go func(s broker.Subscriber) {
-				defer wg.Done()
-				if config.Logger.V(logger.InfoLevel) {
-					config.Logger.Infof(n.opts.Context, "unsubscribing from topic: %s", s.Topic())
-				}
-				if err := s.Unsubscribe(ncx); err != nil {
-					if config.Logger.V(logger.ErrorLevel) {
-						config.Logger.Errorf(n.opts.Context, "unsubscribing from topic: %s err: %v", s.Topic(), err)
-					}
-				}
-			}(subs[idx])
-		}
-		n.subscribers[sb] = nil
-	}
-	wg.Wait()
-
 	n.Unlock()
 	return nil
 }
@@ -335,21 +229,6 @@ func (n *noopServer) Start() error {
 		config.Advertise = config.Address
 	}
 	n.Unlock()
-
-	// only connect if we're subscribed
-	if len(n.subscribers) > 0 {
-		// connect to the broker
-		if err := config.Broker.Connect(config.Context); err != nil {
-			if config.Logger.V(logger.ErrorLevel) {
-				config.Logger.Errorf(n.opts.Context, "broker [%s] connect error: %v", config.Broker.String(), err)
-			}
-			return err
-		}
-
-		if config.Logger.V(logger.InfoLevel) {
-			config.Logger.Infof(n.opts.Context, "broker [%s] Connected to %s", config.Broker.String(), config.Broker.Address())
-		}
-	}
 
 	// use RegisterCheck func before register
 	// nolint: nestif
@@ -429,16 +308,6 @@ func (n *noopServer) Start() error {
 
 		// close transport
 		ch <- nil
-
-		if config.Logger.V(logger.InfoLevel) {
-			config.Logger.Infof(n.opts.Context, "broker [%s] Disconnected from %s", config.Broker.String(), config.Broker.Address())
-		}
-		// disconnect broker
-		if err := config.Broker.Disconnect(config.Context); err != nil {
-			if config.Logger.V(logger.ErrorLevel) {
-				config.Logger.Errorf(n.opts.Context, "broker [%s] disconnect error: %v", config.Broker.String(), err)
-			}
-		}
 	}()
 
 	// mark the server as started
@@ -467,4 +336,56 @@ func (n *noopServer) Stop() error {
 	n.Unlock()
 
 	return err
+}
+
+type rpcHandler struct {
+	opts      HandlerOptions
+	handler   interface{}
+	name      string
+	endpoints []*register.Endpoint
+}
+
+func newRPCHandler(handler interface{}, opts ...HandlerOption) Handler {
+	options := NewHandlerOptions(opts...)
+
+	typ := reflect.TypeOf(handler)
+	hdlr := reflect.ValueOf(handler)
+	name := reflect.Indirect(hdlr).Type().Name()
+
+	var endpoints []*register.Endpoint
+
+	for m := 0; m < typ.NumMethod(); m++ {
+		if e := register.ExtractEndpoint(typ.Method(m)); e != nil {
+			e.Name = name + "." + e.Name
+
+			for k, v := range options.Metadata[e.Name] {
+				e.Metadata[k] = v
+			}
+
+			endpoints = append(endpoints, e)
+		}
+	}
+
+	return &rpcHandler{
+		name:      name,
+		handler:   handler,
+		endpoints: endpoints,
+		opts:      options,
+	}
+}
+
+func (r *rpcHandler) Name() string {
+	return r.name
+}
+
+func (r *rpcHandler) Handler() interface{} {
+	return r.handler
+}
+
+func (r *rpcHandler) Endpoints() []*register.Endpoint {
+	return r.endpoints
+}
+
+func (r *rpcHandler) Options() HandlerOptions {
+	return r.opts
 }

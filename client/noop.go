@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"go.unistack.org/micro/v4/broker"
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/errors"
 	"go.unistack.org/micro/v4/metadata"
@@ -285,6 +284,9 @@ func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opt
 	ch := make(chan error, callOpts.Retries)
 	var gerr error
 
+	ts := time.Now()
+	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+	n.opts.Meter.Counter(ClientRequestInflight, "endpoint", endpoint).Inc()
 	for i := 0; i <= callOpts.Retries; i++ {
 		go func() {
 			ch <- call(i)
@@ -312,6 +314,16 @@ func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opt
 		}
 	}
 
+	if gerr != nil {
+		n.opts.Meter.Counter(ClientRequestTotal, "endpoint", endpoint, "status", "failure").Inc()
+	} else {
+		n.opts.Meter.Counter(ClientRequestTotal, "endpoint", endpoint, "status", "success").Inc()
+	}
+	n.opts.Meter.Counter(ClientRequestInflight, "endpoint", endpoint).Dec()
+	te := time.Since(ts)
+	n.opts.Meter.Summary(ClientRequestLatencyMicroseconds, "endpoint", endpoint).Update(te.Seconds())
+	n.opts.Meter.Histogram(ClientRequestDurationSeconds, "endpoint", endpoint).Update(te.Seconds())
+
 	return gerr
 }
 
@@ -321,11 +333,6 @@ func (n *noopClient) call(ctx context.Context, addr string, req Request, rsp int
 
 func (n *noopClient) NewRequest(service, endpoint string, req interface{}, opts ...RequestOption) Request {
 	return &noopRequest{service: service, endpoint: endpoint}
-}
-
-func (n *noopClient) NewMessage(topic string, msg interface{}, opts ...MessageOption) Message {
-	options := NewMessageOptions(append([]MessageOption{MessageContentType(n.opts.ContentType)}, opts...)...)
-	return &noopMessage{topic: topic, payload: msg, opts: options}
 }
 
 func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error) {
@@ -414,7 +421,15 @@ func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption
 
 		node := next()
 
+		// ts := time.Now()
+		endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
+		n.opts.Meter.Counter(ClientRequestInflight, "endpoint", endpoint).Inc()
 		stream, cerr := n.stream(ctx, node, req, callOpts)
+		if cerr != nil {
+			n.opts.Meter.Counter(ClientRequestTotal, "endpoint", endpoint, "status", "failure").Inc()
+		} else {
+			n.opts.Meter.Counter(ClientRequestTotal, "endpoint", endpoint, "status", "success").Inc()
+		}
 
 		// record the result of the call to inform future routing decisions
 		if verr := n.opts.Selector.Record(node, cerr); verr != nil {
@@ -468,64 +483,6 @@ func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption
 	return nil, grr
 }
 
-func (n *noopClient) stream(ctx context.Context, addr string, req Request, opts CallOptions) (Stream, error) {
+func (n *noopClient) stream(ctx context.Context, addr string, req Request, opts CallOptions) (*noopStream, error) {
 	return &noopStream{}, nil
-}
-
-func (n *noopClient) BatchPublish(ctx context.Context, ps []Message, opts ...PublishOption) error {
-	return n.publish(ctx, ps, opts...)
-}
-
-func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOption) error {
-	return n.publish(ctx, []Message{p}, opts...)
-}
-
-func (n *noopClient) publish(ctx context.Context, ps []Message, opts ...PublishOption) error {
-	options := NewPublishOptions(opts...)
-
-	msgs := make([]*broker.Message, 0, len(ps))
-
-	for _, p := range ps {
-		md, ok := metadata.FromOutgoingContext(ctx)
-		if !ok {
-			md = metadata.New(0)
-		}
-		md[metadata.HeaderContentType] = p.ContentType()
-
-		topic := p.Topic()
-
-		// get the exchange
-		if len(options.Exchange) > 0 {
-			topic = options.Exchange
-		}
-
-		md[metadata.HeaderTopic] = topic
-
-		var body []byte
-
-		// passed in raw data
-		if d, ok := p.Payload().(*codec.Frame); ok {
-			body = d.Data
-		} else {
-			// use codec for payload
-			cf, err := n.newCodec(p.ContentType())
-			if err != nil {
-				return errors.InternalServerError("go.micro.client", err.Error())
-			}
-
-			// set the body
-			b, err := cf.Marshal(p.Payload())
-			if err != nil {
-				return errors.InternalServerError("go.micro.client", err.Error())
-			}
-			body = b
-		}
-
-		msgs = append(msgs, &broker.Message{Header: md, Body: body})
-	}
-
-	return n.opts.Broker.BatchPublish(ctx, msgs,
-		broker.PublishContext(options.Context),
-		broker.PublishBodyOnly(options.BodyOnly),
-	)
 }

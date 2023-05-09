@@ -6,7 +6,6 @@ import (
 	"net"
 	"time"
 
-	"go.unistack.org/micro/v4/broker"
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/metadata"
@@ -19,6 +18,17 @@ import (
 	"go.unistack.org/micro/v4/tracer"
 )
 
+var (
+	// ClientRequestDurationSeconds specifies meter metric name
+	ClientRequestDurationSeconds = "client_request_duration_seconds"
+	// ClientRequestLatencyMicroseconds specifies meter metric name
+	ClientRequestLatencyMicroseconds = "client_request_latency_microseconds"
+	// ClientRequestTotal specifies meter metric name
+	ClientRequestTotal = "client_request_total"
+	// ClientRequestInflight specifies meter metric name
+	ClientRequestInflight = "client_request_inflight"
+)
+
 // Options holds client options
 type Options struct {
 	// Transport used for transfer messages
@@ -29,8 +39,6 @@ type Options struct {
 	Logger logger.Logger
 	// Tracer used for tracing
 	Tracer tracer.Tracer
-	// Broker used to publish messages
-	Broker broker.Broker
 	// Meter used for metrics
 	Meter meter.Meter
 	// Context is used for external options
@@ -199,7 +207,6 @@ func NewOptions(opts ...Option) Options {
 		PoolTTL:   DefaultPoolTTL,
 		Selector:  random.NewSelector(),
 		Logger:    logger.DefaultLogger,
-		Broker:    broker.DefaultBroker,
 		Meter:     meter.DefaultMeter,
 		Tracer:    tracer.DefaultTracer,
 		Router:    router.DefaultRouter,
@@ -211,13 +218,6 @@ func NewOptions(opts ...Option) Options {
 	}
 
 	return options
-}
-
-// Broker to be used for pub/sub
-func Broker(b broker.Broker) Option {
-	return func(o *Options) {
-		o.Broker = b
-	}
 }
 
 // Tracer to be used for tracing

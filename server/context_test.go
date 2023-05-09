@@ -51,14 +51,3 @@ func TestSetOption(t *testing.T) {
 		t.Fatal("SetOption not works")
 	}
 }
-
-func TestSetSubscriberOption(t *testing.T) {
-	type key struct{}
-	o := SetSubscriberOption(key{}, "test")
-	opts := &SubscriberOptions{}
-	o(opts)
-
-	if v, ok := opts.Context.Value(key{}).(string); !ok || v == "" {
-		t.Fatal("SetSubscriberOption not works")
-	}
-}

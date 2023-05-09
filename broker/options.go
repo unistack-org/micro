@@ -7,6 +7,7 @@ import (
 
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/metadata"
 	"go.unistack.org/micro/v4/meter"
 	"go.unistack.org/micro/v4/register"
 	"go.unistack.org/micro/v4/tracer"
@@ -37,8 +38,8 @@ type Options struct {
 	Tracer tracer.Tracer
 	// Register can be used for clustering
 	Register register.Register
-	// Codec holds the codec for marshal/unmarshal
-	Codec codec.Codec
+	// Codecs holds the codec for marshal/unmarshal
+	Codecs map[string]codec.Codec
 	// Logger used for logging
 	Logger logger.Logger
 	// Meter used for metrics
@@ -48,14 +49,15 @@ type Options struct {
 	// TLSConfig holds tls.TLSConfig options
 	TLSConfig *tls.Config
 	// ErrorHandler used when broker can't unmarshal incoming message
-	ErrorHandler Handler
-	// BatchErrorHandler used when broker can't unmashal incoming messages
-	BatchErrorHandler BatchHandler
+	ErrorHandler func(Message)
 	// Name holds the broker name
 	Name string
 	// Addrs holds the broker address
 	Addrs []string
 }
+
+// Option func
+type Option func(*Options)
 
 // NewOptions create new Options
 func NewOptions(opts ...Option) Options {
@@ -64,7 +66,7 @@ func NewOptions(opts ...Option) Options {
 		Logger:   logger.DefaultLogger,
 		Context:  context.Background(),
 		Meter:    meter.DefaultMeter,
-		Codec:    codec.DefaultCodec,
+		Codecs:   make(map[string]codec.Codec),
 		Tracer:   tracer.DefaultTracer,
 	}
 	for _, o := range opts {
@@ -79,6 +81,32 @@ func Context(ctx context.Context) Option {
 		o.Context = ctx
 	}
 }
+
+// MessageOption func
+type MessageOption func(*MessageOptions)
+
+// MessageOptions struct
+type MessageOptions struct {
+	Metadata    metadata.Metadata
+	ContentType string
+}
+
+// MessageMetadata pass additional message metadata
+func MessageMetadata(md metadata.Metadata) MessageOption {
+	return func(o *MessageOptions) {
+		o.Metadata = md
+	}
+}
+
+// MessageContentType pass ContentType for message data
+func MessageContentType(ct string) MessageOption {
+	return func(o *MessageOptions) {
+		o.ContentType = ct
+	}
+}
+
+// PublishOption func
+type PublishOption func(*PublishOptions)
 
 // PublishOptions struct
 type PublishOptions struct {
@@ -104,11 +132,9 @@ type SubscribeOptions struct {
 	// Context holds external options
 	Context context.Context
 	// ErrorHandler used when broker can't unmarshal incoming message
-	ErrorHandler Handler
-	// BatchErrorHandler used when broker can't unmashal incoming messages
-	BatchErrorHandler BatchHandler
-	// Group holds consumer group
-	Group string
+	ErrorHandler func(Message)
+	// QueueGroup holds consumer group
+	QueueGroup string
 	// AutoAck flag specifies auto ack of incoming message when no error happens
 	AutoAck bool
 	// BodyOnly flag specifies that message contains only body bytes without header
@@ -118,12 +144,6 @@ type SubscribeOptions struct {
 	// BatchWait flag specifies max wait time for batch filling
 	BatchWait time.Duration
 }
-
-// Option func
-type Option func(*Options)
-
-// PublishOption func
-type PublishOption func(*PublishOptions)
 
 // PublishBodyOnly publish only body of the message
 func PublishBodyOnly(b bool) PublishOption {
@@ -148,56 +168,26 @@ func Addrs(addrs ...string) Option {
 
 // Codec sets the codec used for encoding/decoding used where
 // a broker does not support headers
-func Codec(c codec.Codec) Option {
+// Codec to be used to encode/decode requests for a given content type
+func Codec(contentType string, c codec.Codec) Option {
 	return func(o *Options) {
-		o.Codec = c
+		o.Codecs[contentType] = c
 	}
 }
 
 // ErrorHandler will catch all broker errors that cant be handled
 // in normal way, for example Codec errors
-func ErrorHandler(h Handler) Option {
+func ErrorHandler(h func(Message)) Option {
 	return func(o *Options) {
 		o.ErrorHandler = h
-	}
-}
-
-// BatchErrorHandler will catch all broker errors that cant be handled
-// in normal way, for example Codec errors
-func BatchErrorHandler(h BatchHandler) Option {
-	return func(o *Options) {
-		o.BatchErrorHandler = h
 	}
 }
 
 // SubscribeErrorHandler will catch all broker errors that cant be handled
 // in normal way, for example Codec errors
-func SubscribeErrorHandler(h Handler) SubscribeOption {
+func SubscribeErrorHandler(h func(Message)) SubscribeOption {
 	return func(o *SubscribeOptions) {
 		o.ErrorHandler = h
-	}
-}
-
-// SubscribeBatchErrorHandler will catch all broker errors that cant be handled
-// in normal way, for example Codec errors
-func SubscribeBatchErrorHandler(h BatchHandler) SubscribeOption {
-	return func(o *SubscribeOptions) {
-		o.BatchErrorHandler = h
-	}
-}
-
-// Queue sets the subscribers queue
-// Deprecated
-func Queue(name string) SubscribeOption {
-	return func(o *SubscribeOptions) {
-		o.Group = name
-	}
-}
-
-// SubscribeGroup sets the name of the queue to share messages on
-func SubscribeGroup(name string) SubscribeOption {
-	return func(o *SubscribeOptions) {
-		o.Group = name
 	}
 }
 
@@ -243,18 +233,25 @@ func Name(n string) Option {
 	}
 }
 
+// SubscribeOption func signature
+type SubscribeOption func(*SubscribeOptions)
+
+// NewSubscribeOptions creates new SubscribeOptions
+func NewSubscribeOptions(opts ...SubscribeOption) SubscribeOptions {
+	options := SubscribeOptions{
+		AutoAck: true,
+		Context: context.Background(),
+	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 // SubscribeContext set context
 func SubscribeContext(ctx context.Context) SubscribeOption {
 	return func(o *SubscribeOptions) {
 		o.Context = ctx
-	}
-}
-
-// DisableAutoAck disables auto ack
-// Deprecated
-func DisableAutoAck() SubscribeOption {
-	return func(o *SubscribeOptions) {
-		o.AutoAck = false
 	}
 }
 
@@ -287,17 +284,16 @@ func SubscribeBatchWait(td time.Duration) SubscribeOption {
 	}
 }
 
-// SubscribeOption func
-type SubscribeOption func(*SubscribeOptions)
+// SubscribeQueueGroup sets the shared queue name distributed messages across subscribers
+func SubscribeQueueGroup(n string) SubscribeOption {
+	return func(o *SubscribeOptions) {
+		o.QueueGroup = n
+	}
+}
 
-// NewSubscribeOptions creates new SubscribeOptions
-func NewSubscribeOptions(opts ...SubscribeOption) SubscribeOptions {
-	options := SubscribeOptions{
-		AutoAck: true,
-		Context: context.Background(),
+// SubscribeAutoAck control auto ack processing for handler
+func SubscribeAuthAck(b bool) SubscribeOption {
+	return func(o *SubscribeOptions) {
+		o.AutoAck = b
 	}
-	for _, o := range opts {
-		o(&options)
-	}
-	return options
 }

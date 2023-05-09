@@ -14,9 +14,10 @@ type cfg struct {
 	StringValue    string `default:"string_value"`
 	IgnoreValue    string `json:"-"`
 	StructValue    *cfgStructValue
-	IntValue       int            `default:"99"`
-	DurationValue  time.Duration  `default:"10s"`
-	MDurationValue mtime.Duration `default:"10s"`
+	IntValue       int             `default:"99"`
+	DurationValue  time.Duration   `default:"10s"`
+	MDurationValue mtime.Duration  `default:"10s"`
+	MapValue       map[string]bool `default:"key1=true,key2=false"`
 }
 
 type cfgStructValue struct {
@@ -66,6 +67,9 @@ func TestDefault(t *testing.T) {
 	}
 	if conf.StringValue != "after_load" {
 		t.Fatal("AfterLoad option not working")
+	}
+	if len(conf.MapValue) != 2 {
+		t.Fatalf("map value invalid: %#+v\n", conf.MapValue)
 	}
 	_ = conf
 	// t.Logf("%#+v\n", conf)
