@@ -191,7 +191,7 @@ func newSubscriber(topic string, sub interface{}, opts ...SubscriberOption) Subs
 }
 
 //nolint:gocyclo
-func (n *noopServer) newBatchSubHandler(sb *subscriber, opts Options) broker.BatchHandler {
+func (n *noopServer) createBatchSubHandler(sb *subscriber, opts Options) broker.BatchHandler {
 	return func(ps broker.Events) (err error) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -309,7 +309,7 @@ func (n *noopServer) newBatchSubHandler(sb *subscriber, opts Options) broker.Bat
 }
 
 //nolint:gocyclo
-func (n *noopServer) newSubHandler(sb *subscriber, opts Options) broker.Handler {
+func (n *noopServer) createSubHandler(sb *subscriber, opts Options) broker.Handler {
 	return func(p broker.Event) (err error) {
 		defer func() {
 			if r := recover(); r != nil {
