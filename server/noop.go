@@ -202,39 +202,6 @@ func (n *noopServer) Register() error {
 	n.Lock()
 	defer n.Unlock()
 
-	cx := config.Context
-
-	var sub broker.Subscriber
-
-	for sb := range n.subscribers {
-		if sb.Options().Context != nil {
-			cx = sb.Options().Context
-		}
-
-		opts := []broker.SubscribeOption{broker.SubscribeContext(cx), broker.SubscribeAutoAck(sb.Options().AutoAck)}
-		if queue := sb.Options().Queue; len(queue) > 0 {
-			opts = append(opts, broker.SubscribeGroup(queue))
-		}
-
-		if sb.Options().Batch {
-			// batch processing handler
-			sub, err = config.Broker.BatchSubscribe(cx, sb.Topic(), n.newBatchSubHandler(sb, config), opts...)
-		} else {
-			// single processing handler
-			sub, err = config.Broker.Subscribe(cx, sb.Topic(), n.newSubHandler(sb, config), opts...)
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if config.Logger.V(logger.InfoLevel) {
-			config.Logger.Infof(n.opts.Context, "subscribing to topic: %s", sb.Topic())
-		}
-
-		n.subscribers[sb] = []broker.Subscriber{sub}
-	}
-
 	n.registered = true
 	if cacheService {
 		n.rsvc = service
@@ -366,6 +333,10 @@ func (n *noopServer) Start() error {
 		}
 	}
 
+	if err := n.subscribe(); err != nil {
+		return err
+	}
+
 	go func() {
 		t := new(time.Ticker)
 
@@ -445,6 +416,45 @@ func (n *noopServer) Start() error {
 	n.Lock()
 	n.started = true
 	n.Unlock()
+
+	return nil
+}
+
+func (n *noopServer) subscribe() error {
+	config := n.Options()
+
+	cx := config.Context
+	var err error
+	var sub broker.Subscriber
+
+	for sb := range n.subscribers {
+		if sb.Options().Context != nil {
+			cx = sb.Options().Context
+		}
+
+		opts := []broker.SubscribeOption{broker.SubscribeContext(cx), broker.SubscribeAutoAck(sb.Options().AutoAck)}
+		if queue := sb.Options().Queue; len(queue) > 0 {
+			opts = append(opts, broker.SubscribeGroup(queue))
+		}
+
+		if sb.Options().Batch {
+			// batch processing handler
+			sub, err = config.Broker.BatchSubscribe(cx, sb.Topic(), n.createBatchSubHandler(sb, config), opts...)
+		} else {
+			// single processing handler
+			sub, err = config.Broker.Subscribe(cx, sb.Topic(), n.createSubHandler(sb, config), opts...)
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if config.Logger.V(logger.InfoLevel) {
+			config.Logger.Infof(n.opts.Context, "subscribing to topic: %s", sb.Topic())
+		}
+
+		n.subscribers[sb] = []broker.Subscriber{sub}
+	}
 
 	return nil
 }
