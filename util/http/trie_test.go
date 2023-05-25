@@ -5,8 +5,29 @@ import (
 	"testing"
 )
 
-func TestTrieBackwards(t *testing.T) {
-	_ = &Trie{}
+func TestTrieWithDot(t *testing.T) {
+	var err error
+	type handler struct {
+		name string
+	}
+
+	tr := NewTrie()
+	if err = tr.Insert([]string{http.MethodGet}, "/*", &handler{name: "slash_astar"}); err != nil {
+		t.Fatal(err)
+	}
+	if err = tr.Insert([]string{http.MethodGet}, "*", &handler{name: "astar"}); err != nil {
+		t.Fatal(err)
+	}
+	if err = tr.Insert([]string{http.MethodGet}, "/.well-known/test", &handler{name: "well-known"}); err != nil {
+		t.Fatal(err)
+	}
+	h, _, err := tr.Search(http.MethodGet, "/.well-known/test")
+	if err != nil {
+		t.Fatalf("unexpected error handler not found")
+	}
+	if h.(*handler).name != "well-known" {
+		t.Fatalf("error matching route with wildcard")
+	}
 }
 
 func TestTrieWildcardPathPrefix(t *testing.T) {

@@ -196,10 +196,6 @@ func (w *wrapper) Stream(ctx context.Context, req client.Request, opts ...client
 	return stream, err
 }
 
-func (w *wrapper) Publish(ctx context.Context, p client.Message, opts ...client.PublishOption) error {
-	return w.Client.Publish(ctx, p, opts...)
-}
-
 // NewServerHandlerWrapper create new server handler wrapper
 func NewServerHandlerWrapper(opts ...Option) server.HandlerWrapper {
 	handler := &wrapper{
