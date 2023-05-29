@@ -21,7 +21,6 @@ loop:
 	for i, r := range s {
 		switch r {
 		case 's', 'm':
-			p = i
 			break loop
 		case 'h':
 			d, err := strconv.Atoi(s[p:i])
@@ -68,7 +67,7 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 		*d = Duration(time.Duration(value))
 		return nil
 	case string:
-		dv, err := time.ParseDuration(value)
+		dv, err := ParseDuration(value)
 		if err != nil {
 			return err
 		}
