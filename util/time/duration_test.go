@@ -23,12 +23,20 @@ func TestUnmarshalJSON(t *testing.T) {
 		TTL Duration `json:"ttl"`
 	}
 	v := &str{}
+	var err error
 
-	err := json.Unmarshal([]byte(`{"ttl":"10ms"}`), v)
+	err = json.Unmarshal([]byte(`{"ttl":"10ms"}`), v)
 	if err != nil {
 		t.Fatal(err)
 	} else if v.TTL != 10000000 {
 		t.Fatalf("invalid duration %v != 10000000", v.TTL)
+	}
+
+	err = json.Unmarshal([]byte(`{"ttl":"1y"}`), v)
+	if err != nil {
+		t.Fatal(err)
+	} else if v.TTL != 31536000000000000 {
+		t.Fatalf("invalid duration %v != 31536000000000000", v.TTL)
 	}
 }
 
