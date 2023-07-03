@@ -4,6 +4,8 @@ import (
 	"context"
 )
 
+var _ Tracer = (*noopTracer)(nil)
+
 type noopTracer struct {
 	opts Options
 }
@@ -19,6 +21,10 @@ func (t *noopTracer) Start(ctx context.Context, name string, opts ...SpanOption)
 		span.ctx = context.Background()
 	}
 	return NewSpanContext(ctx, span), span
+}
+
+func (t *noopTracer) Flush(ctx context.Context) error {
+	return nil
 }
 
 func (t *noopTracer) Init(opts ...Option) error {
