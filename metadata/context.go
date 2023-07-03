@@ -39,8 +39,6 @@ func FromOutgoingContext(ctx context.Context) (Metadata, bool) {
 
 // FromContext returns metadata from the given context
 // returned metadata shoud not be modified or race condition happens
-//
-// Deprecated: use FromIncomingContext or FromOutgoingContext
 func FromContext(ctx context.Context) (Metadata, bool) {
 	if ctx == nil {
 		return nil, false
@@ -53,8 +51,6 @@ func FromContext(ctx context.Context) (Metadata, bool) {
 }
 
 // NewContext creates a new context with the given metadata
-//
-// Deprecated: use NewIncomingContext or NewOutgoingContext
 func NewContext(ctx context.Context, md Metadata) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
