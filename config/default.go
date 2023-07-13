@@ -7,7 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/imdario/mergo"
+	mid "go.unistack.org/micro/v3/util/id"
 	rutil "go.unistack.org/micro/v3/util/reflect"
 	mtime "go.unistack.org/micro/v3/util/time"
 )
@@ -124,6 +126,20 @@ func fillValue(value reflect.Value, val string) error {
 		}
 		value.Set(reflect.ValueOf(v))
 	case reflect.String:
+		switch val {
+		case "micro:generate uuid":
+			uid, err := uuid.NewRandom()
+			if err != nil {
+				return err
+			}
+			val = uid.String()
+		case "micro:generate id":
+			uid, err := mid.New()
+			if err != nil {
+				return err
+			}
+			val = uid
+		}
 		value.Set(reflect.ValueOf(val))
 	case reflect.Float32:
 		v, err := strconv.ParseFloat(val, 32)
