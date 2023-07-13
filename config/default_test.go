@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.unistack.org/micro/v3/config"
+	mid "go.unistack.org/micro/v3/util/id"
 	mtime "go.unistack.org/micro/v3/util/time"
 )
 
@@ -14,9 +15,12 @@ type cfg struct {
 	StringValue    string `default:"string_value"`
 	IgnoreValue    string `json:"-"`
 	StructValue    *cfgStructValue
-	IntValue       int            `default:"99"`
-	DurationValue  time.Duration  `default:"10s"`
-	MDurationValue mtime.Duration `default:"10s"`
+	IntValue       int             `default:"99"`
+	DurationValue  time.Duration   `default:"10s"`
+	MDurationValue mtime.Duration  `default:"10s"`
+	MapValue       map[string]bool `default:"key1=true,key2=false"`
+	UUIDValue      string          `default:"micro:generate uuid"`
+	IDValue        string          `default:"micro:generate id"`
 }
 
 type cfgStructValue struct {
@@ -66,6 +70,21 @@ func TestDefault(t *testing.T) {
 	}
 	if conf.StringValue != "after_load" {
 		t.Fatal("AfterLoad option not working")
+	}
+	if len(conf.MapValue) != 2 {
+		t.Fatalf("map value invalid: %#+v\n", conf.MapValue)
+	}
+
+	if conf.UUIDValue == "" {
+		t.Fatalf("uuid value empty")
+	} else if len(conf.UUIDValue) != 36 {
+		t.Fatalf("uuid value invalid: %s", conf.UUIDValue)
+	}
+
+	if conf.IDValue == "" {
+		t.Fatalf("id value empty")
+	} else if len(conf.IDValue) != mid.DefaultSize {
+		t.Fatalf("id value invalid: %s", conf.IDValue)
 	}
 	_ = conf
 	// t.Logf("%#+v\n", conf)
