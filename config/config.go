@@ -6,6 +6,8 @@ import (
 	"errors"
 	"reflect"
 	"time"
+
+	"go.unistack.org/micro/v4/options"
 )
 
 type Validator interface {
@@ -37,15 +39,15 @@ type Config interface {
 	// Name returns name of config
 	Name() string
 	// Init the config
-	Init(opts ...Option) error
+	Init(opts ...options.Option) error
 	// Options in the config
 	Options() Options
 	// Load config from sources
-	Load(context.Context, ...LoadOption) error
+	Load(context.Context, ...options.Option) error
 	// Save config to sources
-	Save(context.Context, ...SaveOption) error
+	Save(context.Context, ...options.Option) error
 	// Watch a config for changes
-	Watch(context.Context, ...WatchOption) (Watcher, error)
+	Watch(context.Context, ...options.Option) (Watcher, error)
 	// String returns config type name
 	String() string
 }
@@ -59,7 +61,7 @@ type Watcher interface {
 }
 
 // Load loads config from config sources
-func Load(ctx context.Context, cs []Config, opts ...LoadOption) error {
+func Load(ctx context.Context, cs []Config, opts ...options.Option) error {
 	var err error
 	for _, c := range cs {
 		if err = c.Init(); err != nil {

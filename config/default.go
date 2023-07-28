@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/imdario/mergo"
+	"go.unistack.org/micro/v4/options"
 	mid "go.unistack.org/micro/v4/util/id"
 	rutil "go.unistack.org/micro/v4/util/reflect"
 	mtime "go.unistack.org/micro/v4/util/time"
@@ -22,7 +23,7 @@ func (c *defaultConfig) Options() Options {
 	return c.opts
 }
 
-func (c *defaultConfig) Init(opts ...Option) error {
+func (c *defaultConfig) Init(opts ...options.Option) error {
 	for _, o := range opts {
 		o(&c.opts)
 	}
@@ -38,7 +39,7 @@ func (c *defaultConfig) Init(opts ...Option) error {
 	return nil
 }
 
-func (c *defaultConfig) Load(ctx context.Context, opts ...LoadOption) error {
+func (c *defaultConfig) Load(ctx context.Context, opts ...options.Option) error {
 	if err := DefaultBeforeLoad(ctx, c); err != nil && !c.opts.AllowFail {
 		return err
 	}
@@ -291,7 +292,7 @@ func fillValues(valueOf reflect.Value, tname string) error {
 	return nil
 }
 
-func (c *defaultConfig) Save(ctx context.Context, opts ...SaveOption) error {
+func (c *defaultConfig) Save(ctx context.Context, opts ...options.Option) error {
 	if err := DefaultBeforeSave(ctx, c); err != nil {
 		return err
 	}
@@ -311,12 +312,12 @@ func (c *defaultConfig) Name() string {
 	return c.opts.Name
 }
 
-func (c *defaultConfig) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
+func (c *defaultConfig) Watch(ctx context.Context, opts ...options.Option) (Watcher, error) {
 	return nil, ErrWatcherNotImplemented
 }
 
 // NewConfig returns new default config source
-func NewConfig(opts ...Option) Config {
+func NewConfig(opts ...options.Option) Config {
 	options := NewOptions(opts...)
 	if len(options.StructTag) == 0 {
 		options.StructTag = "default"

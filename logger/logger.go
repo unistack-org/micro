@@ -4,6 +4,8 @@ package logger // import "go.unistack.org/micro/v4/logger"
 import (
 	"context"
 	"os"
+
+	"go.unistack.org/micro/v4/options"
 )
 
 var (
@@ -18,9 +20,9 @@ var (
 // Logger is a generic logging interface
 type Logger interface {
 	// Init initialises options
-	Init(opts ...Option) error
+	Init(opts ...options.Option) error
 	// Clone create logger copy with new options
-	Clone(opts ...Option) Logger
+	Clone(opts ...options.Option) Logger
 	// V compare provided verbosity level with current log level
 	V(level Level) bool
 	// Level sets the log level for logger
@@ -130,7 +132,7 @@ func V(level Level) bool {
 }
 
 // Init initialize logger
-func Init(opts ...Option) error {
+func Init(opts ...options.Option) error {
 	return DefaultLogger.Init(opts...)
 }
 

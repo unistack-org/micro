@@ -62,6 +62,42 @@ func TestStructFieldsNested(t *testing.T) {
 	}
 }
 
+func TestSetFieldByPathMultiple(t *testing.T) {
+	var err error
+	tv := "test_val"
+	type Str1 struct {
+		Name []string `json:"name"`
+	}
+	val1 := &Str1{}
+
+	err = rutil.SetFieldByPath(val1, tv, ".Name")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(val1.Name) != 1 {
+		t.Fatal("assign error")
+	} else if val1.Name[0] != tv {
+		t.Fatal("assign error")
+	}
+
+	type Str2 struct {
+		Name string `json:"name"`
+	}
+	val2 := &Str2{}
+
+	err = rutil.SetFieldByPath(val2, []string{tv}, ".Name")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(val1.Name) != 1 {
+		t.Fatal("assign error")
+	} else if val1.Name[0] != tv {
+		t.Fatal("assign error")
+	}
+}
+
 func TestSetFieldByPath(t *testing.T) {
 	type NestedStr struct {
 		BBB string `json:"bbb"`

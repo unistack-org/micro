@@ -46,42 +46,8 @@ var (
 		sp.SetLabels(labels...)
 	}
 
-	DefaultClientPublishObserver = func(ctx context.Context, msg client.Message, opts []client.PublishOption, sp tracer.Span, err error) {
-		sp.SetName(fmt.Sprintf("Publish %s", msg.Topic()))
-		var labels []interface{}
-		if md, ok := metadata.FromOutgoingContext(ctx); ok {
-			labels = make([]interface{}, 0, len(md))
-			for k, v := range md {
-				labels = append(labels, k, v)
-			}
-		}
-		if err != nil {
-			labels = append(labels, "error", err.Error())
-			sp.SetStatus(tracer.SpanStatusError, err.Error())
-		}
-		labels = append(labels, "kind", sp.Kind())
-		sp.SetLabels(labels...)
-	}
-
 	DefaultServerHandlerObserver = func(ctx context.Context, req server.Request, rsp interface{}, sp tracer.Span, err error) {
 		sp.SetName(fmt.Sprintf("Handler %s.%s", req.Service(), req.Method()))
-		var labels []interface{}
-		if md, ok := metadata.FromIncomingContext(ctx); ok {
-			labels = make([]interface{}, 0, len(md))
-			for k, v := range md {
-				labels = append(labels, k, v)
-			}
-		}
-		if err != nil {
-			labels = append(labels, "error", err.Error())
-			sp.SetStatus(tracer.SpanStatusError, err.Error())
-		}
-		labels = append(labels, "kind", sp.Kind())
-		sp.SetLabels(labels...)
-	}
-
-	DefaultServerSubscriberObserver = func(ctx context.Context, msg server.Message, sp tracer.Span, err error) {
-		sp.SetName(fmt.Sprintf("Subscriber %s", msg.Topic()))
 		var labels []interface{}
 		if md, ok := metadata.FromIncomingContext(ctx); ok {
 			labels = make([]interface{}, 0, len(md))
@@ -119,19 +85,16 @@ var (
 
 type tWrapper struct {
 	client.Client
-	serverHandler    server.HandlerFunc
-	serverSubscriber server.SubscriberFunc
-	clientCallFunc   client.CallFunc
-	opts             Options
+	serverHandler  server.HandlerFunc
+	clientCallFunc client.CallFunc
+	opts           Options
 }
 
 type (
-	ClientCallObserver       func(context.Context, client.Request, interface{}, []client.CallOption, tracer.Span, error)
-	ClientStreamObserver     func(context.Context, client.Request, []client.CallOption, client.Stream, tracer.Span, error)
-	ClientPublishObserver    func(context.Context, client.Message, []client.PublishOption, tracer.Span, error)
-	ClientCallFuncObserver   func(context.Context, string, client.Request, interface{}, client.CallOptions, tracer.Span, error)
-	ServerHandlerObserver    func(context.Context, server.Request, interface{}, tracer.Span, error)
-	ServerSubscriberObserver func(context.Context, server.Message, tracer.Span, error)
+	ClientCallObserver     func(context.Context, client.Request, interface{}, []client.CallOption, tracer.Span, error)
+	ClientStreamObserver   func(context.Context, client.Request, []client.CallOption, client.Stream, tracer.Span, error)
+	ClientCallFuncObserver func(context.Context, string, client.Request, interface{}, client.CallOptions, tracer.Span, error)
+	ServerHandlerObserver  func(context.Context, server.Request, interface{}, tracer.Span, error)
 )
 
 // Options struct
@@ -142,14 +105,10 @@ type Options struct {
 	ClientCallObservers []ClientCallObserver
 	// ClientStreamObservers funcs
 	ClientStreamObservers []ClientStreamObserver
-	// ClientPublishObservers funcs
-	ClientPublishObservers []ClientPublishObserver
 	// ClientCallFuncObservers funcs
 	ClientCallFuncObservers []ClientCallFuncObserver
 	// ServerHandlerObservers funcs
 	ServerHandlerObservers []ServerHandlerObserver
-	// ServerSubscriberObservers funcs
-	ServerSubscriberObservers []ServerSubscriberObserver
 	// SkipEndpoints
 	SkipEndpoints []string
 }
@@ -160,14 +119,12 @@ type Option func(*Options)
 // NewOptions create Options from Option slice
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Tracer:                    tracer.DefaultTracer,
-		ClientCallObservers:       []ClientCallObserver{DefaultClientCallObserver},
-		ClientStreamObservers:     []ClientStreamObserver{DefaultClientStreamObserver},
-		ClientPublishObservers:    []ClientPublishObserver{DefaultClientPublishObserver},
-		ClientCallFuncObservers:   []ClientCallFuncObserver{DefaultClientCallFuncObserver},
-		ServerHandlerObservers:    []ServerHandlerObserver{DefaultServerHandlerObserver},
-		ServerSubscriberObservers: []ServerSubscriberObserver{DefaultServerSubscriberObserver},
-		SkipEndpoints:             DefaultSkipEndpoints,
+		Tracer:                  tracer.DefaultTracer,
+		ClientCallObservers:     []ClientCallObserver{DefaultClientCallObserver},
+		ClientStreamObservers:   []ClientStreamObserver{DefaultClientStreamObserver},
+		ClientCallFuncObservers: []ClientCallFuncObserver{DefaultClientCallFuncObserver},
+		ServerHandlerObservers:  []ServerHandlerObserver{DefaultServerHandlerObserver},
+		SkipEndpoints:           DefaultSkipEndpoints,
 	}
 
 	for _, o := range opts {
@@ -205,13 +162,6 @@ func WithClientStreamObservers(ob ...ClientStreamObserver) Option {
 	}
 }
 
-// WithClientPublishObservers funcs
-func WithClientPublishObservers(ob ...ClientPublishObserver) Option {
-	return func(o *Options) {
-		o.ClientPublishObservers = ob
-	}
-}
-
 // WithClientCallFuncObservers funcs
 func WithClientCallFuncObservers(ob ...ClientCallFuncObserver) Option {
 	return func(o *Options) {
@@ -223,13 +173,6 @@ func WithClientCallFuncObservers(ob ...ClientCallFuncObserver) Option {
 func WithServerHandlerObservers(ob ...ServerHandlerObserver) Option {
 	return func(o *Options) {
 		o.ServerHandlerObservers = ob
-	}
-}
-
-// WithServerSubscriberObservers funcs
-func WithServerSubscriberObservers(ob ...ServerSubscriberObserver) Option {
-	return func(o *Options) {
-		o.ServerSubscriberObservers = ob
 	}
 }
 
@@ -279,22 +222,6 @@ func (ot *tWrapper) Stream(ctx context.Context, req client.Request, opts ...clie
 	return stream, err
 }
 
-func (ot *tWrapper) Publish(ctx context.Context, msg client.Message, opts ...client.PublishOption) error {
-	sp, ok := tracer.SpanFromContext(ctx)
-	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, "", tracer.WithSpanKind(tracer.SpanKindProducer))
-	}
-	defer sp.Finish()
-
-	err := ot.Client.Publish(ctx, msg, opts...)
-
-	for _, o := range ot.opts.ClientPublishObservers {
-		o(ctx, msg, opts, sp, err)
-	}
-
-	return err
-}
-
 func (ot *tWrapper) ServerHandler(ctx context.Context, req server.Request, rsp interface{}) error {
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Method())
 	for _, ep := range ot.opts.SkipEndpoints {
@@ -313,22 +240,6 @@ func (ot *tWrapper) ServerHandler(ctx context.Context, req server.Request, rsp i
 
 	for _, o := range ot.opts.ServerHandlerObservers {
 		o(ctx, req, rsp, sp, err)
-	}
-
-	return err
-}
-
-func (ot *tWrapper) ServerSubscriber(ctx context.Context, msg server.Message) error {
-	sp, ok := tracer.SpanFromContext(ctx)
-	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, "", tracer.WithSpanKind(tracer.SpanKindConsumer))
-	}
-	defer sp.Finish()
-
-	err := ot.serverSubscriber(ctx, msg)
-
-	for _, o := range ot.opts.ServerSubscriberObservers {
-		o(ctx, msg, sp, err)
 	}
 
 	return err
@@ -391,18 +302,5 @@ func NewServerHandlerWrapper(opts ...Option) server.HandlerWrapper {
 
 		ot := &tWrapper{opts: options, serverHandler: h}
 		return ot.ServerHandler
-	}
-}
-
-// NewServerSubscriberWrapper accepts an opentracing Tracer and returns a Subscriber Wrapper
-func NewServerSubscriberWrapper(opts ...Option) server.SubscriberWrapper {
-	return func(h server.SubscriberFunc) server.SubscriberFunc {
-		options := NewOptions()
-		for _, o := range opts {
-			o(&options)
-		}
-
-		ot := &tWrapper{opts: options, serverSubscriber: h}
-		return ot.ServerSubscriber
 	}
 }

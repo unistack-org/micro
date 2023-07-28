@@ -29,27 +29,9 @@ var (
 		return labels
 	}
 
-	// DefaultClientPublishObserver called by wrapper in client Publish
-	DefaultClientPublishObserver = func(ctx context.Context, msg client.Message, opts []client.PublishOption, err error) []string {
-		labels := []string{"endpoint", msg.Topic()}
-		if err != nil {
-			labels = append(labels, "error", err.Error())
-		}
-		return labels
-	}
-
 	// DefaultServerHandlerObserver called by wrapper in server Handler
 	DefaultServerHandlerObserver = func(ctx context.Context, req server.Request, rsp interface{}, err error) []string {
 		labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
-		if err != nil {
-			labels = append(labels, "error", err.Error())
-		}
-		return labels
-	}
-
-	// DefaultServerSubscriberObserver called by wrapper in server Subscriber
-	DefaultServerSubscriberObserver = func(ctx context.Context, msg server.Message, err error) []string {
-		labels := []string{"endpoint", msg.Topic()}
 		if err != nil {
 			labels = append(labels, "error", err.Error())
 		}
@@ -71,10 +53,9 @@ var (
 
 type lWrapper struct {
 	client.Client
-	serverHandler    server.HandlerFunc
-	serverSubscriber server.SubscriberFunc
-	clientCallFunc   client.CallFunc
-	opts             Options
+	serverHandler  server.HandlerFunc
+	clientCallFunc client.CallFunc
+	opts           Options
 }
 
 type (
@@ -82,14 +63,10 @@ type (
 	ClientCallObserver func(context.Context, client.Request, interface{}, []client.CallOption, error) []string
 	// ClientStreamObserver func signature
 	ClientStreamObserver func(context.Context, client.Request, []client.CallOption, client.Stream, error) []string
-	// ClientPublishObserver func signature
-	ClientPublishObserver func(context.Context, client.Message, []client.PublishOption, error) []string
 	// ClientCallFuncObserver func signature
 	ClientCallFuncObserver func(context.Context, string, client.Request, interface{}, client.CallOptions, error) []string
 	// ServerHandlerObserver func signature
 	ServerHandlerObserver func(context.Context, server.Request, interface{}, error) []string
-	// ServerSubscriberObserver func signature
-	ServerSubscriberObserver func(context.Context, server.Message, error) []string
 )
 
 // Options struct for wrapper
@@ -98,14 +75,10 @@ type Options struct {
 	Logger logger.Logger
 	// ServerHandlerObservers funcs
 	ServerHandlerObservers []ServerHandlerObserver
-	// ServerSubscriberObservers funcs
-	ServerSubscriberObservers []ServerSubscriberObserver
 	// ClientCallObservers funcs
 	ClientCallObservers []ClientCallObserver
 	// ClientStreamObservers funcs
 	ClientStreamObservers []ClientStreamObserver
-	// ClientPublishObservers funcs
-	ClientPublishObservers []ClientPublishObserver
 	// ClientCallFuncObservers funcs
 	ClientCallFuncObservers []ClientCallFuncObserver
 	// SkipEndpoints
@@ -122,15 +95,13 @@ type Option func(*Options)
 // NewOptions creates Options from Option slice
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Logger:                    logger.DefaultLogger,
-		Level:                     logger.TraceLevel,
-		ClientCallObservers:       []ClientCallObserver{DefaultClientCallObserver},
-		ClientStreamObservers:     []ClientStreamObserver{DefaultClientStreamObserver},
-		ClientPublishObservers:    []ClientPublishObserver{DefaultClientPublishObserver},
-		ClientCallFuncObservers:   []ClientCallFuncObserver{DefaultClientCallFuncObserver},
-		ServerHandlerObservers:    []ServerHandlerObserver{DefaultServerHandlerObserver},
-		ServerSubscriberObservers: []ServerSubscriberObserver{DefaultServerSubscriberObserver},
-		SkipEndpoints:             DefaultSkipEndpoints,
+		Logger:                  logger.DefaultLogger,
+		Level:                   logger.TraceLevel,
+		ClientCallObservers:     []ClientCallObserver{DefaultClientCallObserver},
+		ClientStreamObservers:   []ClientStreamObserver{DefaultClientStreamObserver},
+		ClientCallFuncObservers: []ClientCallFuncObserver{DefaultClientCallFuncObserver},
+		ServerHandlerObservers:  []ServerHandlerObserver{DefaultServerHandlerObserver},
+		SkipEndpoints:           DefaultSkipEndpoints,
 	}
 
 	for _, o := range opts {
@@ -175,13 +146,6 @@ func WithClientStreamObservers(ob ...ClientStreamObserver) Option {
 	}
 }
 
-// WithClientPublishObservers funcs
-func WithClientPublishObservers(ob ...ClientPublishObserver) Option {
-	return func(o *Options) {
-		o.ClientPublishObservers = ob
-	}
-}
-
 // WithClientCallFuncObservers funcs
 func WithClientCallFuncObservers(ob ...ClientCallFuncObserver) Option {
 	return func(o *Options) {
@@ -193,13 +157,6 @@ func WithClientCallFuncObservers(ob ...ClientCallFuncObserver) Option {
 func WithServerHandlerObservers(ob ...ServerHandlerObserver) Option {
 	return func(o *Options) {
 		o.ServerHandlerObservers = ob
-	}
-}
-
-// WithServerSubscriberObservers funcs
-func WithServerSubscriberObservers(ob ...ServerSubscriberObserver) Option {
-	return func(o *Options) {
-		o.ServerSubscriberObservers = ob
 	}
 }
 
@@ -256,29 +213,6 @@ func (l *lWrapper) Stream(ctx context.Context, req client.Request, opts ...clien
 	return stream, err
 }
 
-func (l *lWrapper) Publish(ctx context.Context, msg client.Message, opts ...client.PublishOption) error {
-	err := l.Client.Publish(ctx, msg, opts...)
-
-	endpoint := msg.Topic()
-	for _, ep := range l.opts.SkipEndpoints {
-		if ep == endpoint {
-			return err
-		}
-	}
-
-	if !l.opts.Enabled {
-		return err
-	}
-
-	var labels []string
-	for _, o := range l.opts.ClientPublishObservers {
-		labels = append(labels, o(ctx, msg, opts, err)...)
-	}
-	l.opts.Logger.Fields(labels).Log(ctx, l.opts.Level)
-
-	return err
-}
-
 func (l *lWrapper) ServerHandler(ctx context.Context, req server.Request, rsp interface{}) error {
 	err := l.serverHandler(ctx, req, rsp)
 
@@ -296,29 +230,6 @@ func (l *lWrapper) ServerHandler(ctx context.Context, req server.Request, rsp in
 	var labels []string
 	for _, o := range l.opts.ServerHandlerObservers {
 		labels = append(labels, o(ctx, req, rsp, err)...)
-	}
-	l.opts.Logger.Fields(labels).Log(ctx, l.opts.Level)
-
-	return err
-}
-
-func (l *lWrapper) ServerSubscriber(ctx context.Context, msg server.Message) error {
-	err := l.serverSubscriber(ctx, msg)
-
-	endpoint := msg.Topic()
-	for _, ep := range l.opts.SkipEndpoints {
-		if ep == endpoint {
-			return err
-		}
-	}
-
-	if !l.opts.Enabled {
-		return err
-	}
-
-	var labels []string
-	for _, o := range l.opts.ServerSubscriberObservers {
-		labels = append(labels, o(ctx, msg, err)...)
 	}
 	l.opts.Logger.Fields(labels).Log(ctx, l.opts.Level)
 
@@ -382,18 +293,5 @@ func NewServerHandlerWrapper(opts ...Option) server.HandlerWrapper {
 
 		l := &lWrapper{opts: options, serverHandler: h}
 		return l.ServerHandler
-	}
-}
-
-// NewServerSubscriberWrapper accepts an options and returns a Subscriber Wrapper
-func NewServerSubscriberWrapper(opts ...Option) server.SubscriberWrapper {
-	return func(h server.SubscriberFunc) server.SubscriberFunc {
-		options := NewOptions()
-		for _, o := range opts {
-			o(&options)
-		}
-
-		l := &lWrapper{opts: options, serverSubscriber: h}
-		return l.ServerSubscriber
 	}
 }

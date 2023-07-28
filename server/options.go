@@ -11,26 +11,11 @@ import (
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/metadata"
 	"go.unistack.org/micro/v4/meter"
-	"go.unistack.org/micro/v4/network/transport"
 	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/register"
 	"go.unistack.org/micro/v4/tracer"
 	"go.unistack.org/micro/v4/util/id"
 )
-
-var (
-	// ServerRequestDurationSeconds specifies meter metric name
-	ServerRequestDurationSeconds = "server_request_duration_seconds"
-	// ServerRequestLatencyMicroseconds specifies meter metric name
-	ServerRequestLatencyMicroseconds = "server_request_latency_microseconds"
-	// ServerRequestTotal specifies meter metric name
-	ServerRequestTotal = "server_request_total"
-	// ServerRequestInflight specifies meter metric name
-	ServerRequestInflight = "server_request_inflight"
-)
-
-// Option func
-type Option func(*Options)
 
 // Options server struct
 type Options struct {
@@ -44,8 +29,6 @@ type Options struct {
 	Logger logger.Logger
 	// Meter holds the meter
 	Meter meter.Meter
-	// Transport holds the transport
-	Transport transport.Transport
 	// Listener may be passed if already created
 	Listener net.Listener
 	// Wait group
@@ -70,8 +53,6 @@ type Options struct {
 	Advertise string
 	// Version holds the server version
 	Version string
-	// HdlrWrappers holds the handler wrappers
-	HdlrWrappers []HandlerWrapper
 	// RegisterAttempts holds the number of register attempts before error
 	RegisterAttempts int
 	// RegisterInterval holds he interval for re-register
@@ -82,12 +63,12 @@ type Options struct {
 	MaxConn int
 	// DeregisterAttempts holds the number of deregister attempts before error
 	DeregisterAttempts int
-	// Hooks may contains HandlerWrapper or Server func wrapper
+	// Hooks may contains HandleWrapper or Server func wrapper
 	Hooks options.Hooks
 }
 
 // NewOptions returns new options struct with default or passed values
-func NewOptions(opts ...Option) Options {
+func NewOptions(opts ...options.Option) Options {
 	options := Options{
 		Codecs:           make(map[string]codec.Codec),
 		Context:          context.Background(),
@@ -99,12 +80,10 @@ func NewOptions(opts ...Option) Options {
 		Meter:            meter.DefaultMeter,
 		Tracer:           tracer.DefaultTracer,
 		Register:         register.DefaultRegister,
-		Transport:        transport.DefaultTransport,
 		Address:          DefaultAddress,
 		Name:             DefaultName,
 		Version:          DefaultVersion,
 		ID:               id.Must(),
-		Namespace:        DefaultNamespace,
 	}
 
 	for _, o := range opts {
@@ -114,140 +93,45 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
-// Name sets the server name option
-func Name(n string) Option {
-	return func(o *Options) {
-		o.Name = n
-	}
-}
-
-// Namespace to register handlers in
-func Namespace(n string) Option {
-	return func(o *Options) {
-		o.Namespace = n
-	}
-}
-
-// Logger sets the logger option
-func Logger(l logger.Logger) Option {
-	return func(o *Options) {
-		o.Logger = l
-	}
-}
-
-// Meter sets the meter option
-func Meter(m meter.Meter) Option {
-	return func(o *Options) {
-		o.Meter = m
-	}
-}
-
 // ID unique server id
-func ID(id string) Option {
-	return func(o *Options) {
-		o.ID = id
+func ID(id string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, id, ".ID")
 	}
 }
 
 // Version of the service
-func Version(v string) Option {
-	return func(o *Options) {
-		o.Version = v
-	}
-}
-
-// Address to bind to - host:port
-func Address(a string) Option {
-	return func(o *Options) {
-		o.Address = a
+func Version(v string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, v, ".Version")
 	}
 }
 
 // Advertise the address to advertise for discovery - host:port
-func Advertise(a string) Option {
-	return func(o *Options) {
-		o.Advertise = a
-	}
-}
-
-// Codec to use to encode/decode requests for a given content type
-func Codec(contentType string, c codec.Codec) Option {
-	return func(o *Options) {
-		o.Codecs[contentType] = c
-	}
-}
-
-// Context specifies a context for the service.
-// Can be used to signal shutdown of the service
-// Can be used for extra option values.
-func Context(ctx context.Context) Option {
-	return func(o *Options) {
-		o.Context = ctx
-	}
-}
-
-// Register used for discovery
-func Register(r register.Register) Option {
-	return func(o *Options) {
-		o.Register = r
-	}
-}
-
-// Tracer mechanism for distributed tracking
-func Tracer(t tracer.Tracer) Option {
-	return func(o *Options) {
-		o.Tracer = t
-	}
-}
-
-// Transport mechanism for communication e.g http, rabbitmq, etc
-func Transport(t transport.Transport) Option {
-	return func(o *Options) {
-		o.Transport = t
-	}
-}
-
-// Metadata associated with the server
-func Metadata(md metadata.Metadata) Option {
-	return func(o *Options) {
-		o.Metadata = metadata.Copy(md)
+func Advertise(a string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, a, ".Advertise")
 	}
 }
 
 // RegisterCheck run func before register service
-func RegisterCheck(fn func(context.Context) error) Option {
-	return func(o *Options) {
-		o.RegisterCheck = fn
+func RegisterCheck(fn func(context.Context) error) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fn, ".RegisterCheck")
 	}
 }
 
 // RegisterTTL registers service with a TTL
-func RegisterTTL(t time.Duration) Option {
-	return func(o *Options) {
-		o.RegisterTTL = t
+func RegisterTTL(td time.Duration) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, td, ".RegisterTTL")
 	}
 }
 
 // RegisterInterval registers service with at interval
-func RegisterInterval(t time.Duration) Option {
-	return func(o *Options) {
-		o.RegisterInterval = t
-	}
-}
-
-// TLSConfig specifies a *tls.Config
-func TLSConfig(t *tls.Config) Option {
-	return func(o *Options) {
-		// set the internal tls
-		o.TLSConfig = t
-
-		// set the default transport if one is not
-		// already set. Required for Init call below.
-
-		// set the transport tls
-		_ = o.Transport.Init(
-			transport.TLSConfig(t),
-		)
+func RegisterInterval(td time.Duration) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, td, ".RegisterInterval")
 	}
 }
 
@@ -255,50 +139,40 @@ func TLSConfig(t *tls.Config) Option {
 // If `wg` is nil, server only wait for completion of rpc handler.
 // For user need finer grained control, pass a concrete `wg` here, server will
 // wait against it on stop.
-func Wait(wg *sync.WaitGroup) Option {
-	return func(o *Options) {
-		if wg == nil {
-			wg = new(sync.WaitGroup)
-		}
-		o.Wait = wg
+func Wait(wg *sync.WaitGroup) options.Option {
+	if wg == nil {
+		wg = new(sync.WaitGroup)
 	}
-}
-
-// WrapHandler adds a handler Wrapper to a list of options passed into the server
-func WrapHandler(w HandlerWrapper) Option {
-	return func(o *Options) {
-		o.HdlrWrappers = append(o.HdlrWrappers, w)
+	return func(src interface{}) error {
+		return options.Set(src, wg, ".Wait")
 	}
 }
 
 // MaxConn specifies maximum number of max simultaneous connections to server
-func MaxConn(n int) Option {
-	return func(o *Options) {
-		o.MaxConn = n
+func MaxConn(n int) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, n, ".MaxConn")
 	}
 }
 
 // Listener specifies the net.Listener to use instead of the default
-func Listener(l net.Listener) Option {
-	return func(o *Options) {
-		o.Listener = l
+func Listener(nl net.Listener) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, nl, ".Listener")
 	}
 }
 
-// HandlerOption func
-type HandlerOption func(*HandlerOptions)
-
-// HandlerOptions struct
-type HandlerOptions struct {
+// HandleOptions struct
+type HandleOptions struct {
 	// Context holds external options
 	Context context.Context
 	// Metadata for handler
 	Metadata map[string]metadata.Metadata
 }
 
-// NewHandlerOptions creates new HandlerOptions
-func NewHandlerOptions(opts ...HandlerOption) HandlerOptions {
-	options := HandlerOptions{
+// NewHandleOptions creates new HandleOptions
+func NewHandleOptions(opts ...options.Option) HandleOptions {
+	options := HandleOptions{
 		Context:  context.Background(),
 		Metadata: make(map[string]metadata.Metadata),
 	}
@@ -308,12 +182,4 @@ func NewHandlerOptions(opts ...HandlerOption) HandlerOptions {
 	}
 
 	return options
-}
-
-// EndpointMetadata is a Handler option that allows metadata to be added to
-// individual endpoints.
-func EndpointMetadata(name string, md metadata.Metadata) HandlerOption {
-	return func(o *HandlerOptions) {
-		o.Metadata[name] = metadata.Copy(md)
-	}
 }

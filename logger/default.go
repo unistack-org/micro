@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"go.unistack.org/micro/v4/options"
 )
 
 type defaultLogger struct {
@@ -18,7 +20,7 @@ type defaultLogger struct {
 }
 
 // Init(opts...) should only overwrite provided options
-func (l *defaultLogger) Init(opts ...Option) error {
+func (l *defaultLogger) Init(opts ...options.Option) error {
 	l.Lock()
 	for _, o := range opts {
 		o(&l.opts)
@@ -33,7 +35,7 @@ func (l *defaultLogger) String() string {
 	return "micro"
 }
 
-func (l *defaultLogger) Clone(opts ...Option) Logger {
+func (l *defaultLogger) Clone(opts ...options.Option) Logger {
 	newopts := NewOptions(opts...)
 	oldopts := l.opts
 	for _, o := range opts {
@@ -221,7 +223,7 @@ func (l *defaultLogger) Options() Options {
 }
 
 // NewLogger builds a new logger based on options
-func NewLogger(opts ...Option) Logger {
+func NewLogger(opts ...options.Option) Logger {
 	l := &defaultLogger{
 		opts: NewOptions(opts...),
 	}

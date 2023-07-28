@@ -3,6 +3,8 @@ package meter
 import (
 	"io"
 	"time"
+
+	"go.unistack.org/micro/v4/options"
 )
 
 // NoopMeter is an noop implementation of Meter
@@ -11,12 +13,12 @@ type noopMeter struct {
 }
 
 // NewMeter returns a configured noop reporter:
-func NewMeter(opts ...Option) Meter {
+func NewMeter(opts ...options.Option) Meter {
 	return &noopMeter{opts: NewOptions(opts...)}
 }
 
 // Clone return old meter with new options
-func (r *noopMeter) Clone(opts ...Option) Meter {
+func (r *noopMeter) Clone(opts ...options.Option) Meter {
 	options := r.opts
 	for _, o := range opts {
 		o(&options)
@@ -29,7 +31,7 @@ func (r *noopMeter) Name() string {
 }
 
 // Init initialize options
-func (r *noopMeter) Init(opts ...Option) error {
+func (r *noopMeter) Init(opts ...options.Option) error {
 	for _, o := range opts {
 		o(&r.opts)
 	}
@@ -67,7 +69,7 @@ func (r *noopMeter) Histogram(name string, labels ...string) Histogram {
 }
 
 // Set implements the Meter interface
-func (r *noopMeter) Set(opts ...Option) Meter {
+func (r *noopMeter) Set(opts ...options.Option) Meter {
 	m := &noopMeter{opts: r.opts}
 
 	for _, o := range opts {
@@ -77,7 +79,7 @@ func (r *noopMeter) Set(opts ...Option) Meter {
 	return m
 }
 
-func (r *noopMeter) Write(w io.Writer, opts ...Option) error {
+func (r *noopMeter) Write(_ io.Writer, _ ...options.Option) error {
 	return nil
 }
 

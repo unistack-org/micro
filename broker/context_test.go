@@ -37,36 +37,3 @@ func TestNewNilContext(t *testing.T) {
 		t.Fatal("NewContext not works")
 	}
 }
-
-func TestSetSubscribeOption(t *testing.T) {
-	type key struct{}
-	o := SetSubscribeOption(key{}, "test")
-	opts := &SubscribeOptions{}
-	o(opts)
-
-	if v, ok := opts.Context.Value(key{}).(string); !ok || v == "" {
-		t.Fatal("SetSubscribeOption not works")
-	}
-}
-
-func TestSetPublishOption(t *testing.T) {
-	type key struct{}
-	o := SetPublishOption(key{}, "test")
-	opts := &PublishOptions{}
-	o(opts)
-
-	if v, ok := opts.Context.Value(key{}).(string); !ok || v == "" {
-		t.Fatal("SetPublishOption not works")
-	}
-}
-
-func TestSetOption(t *testing.T) {
-	type key struct{}
-	o := SetOption(key{}, "test")
-	opts := &Options{}
-	o(opts)
-
-	if v, ok := opts.Context.Value(key{}).(string); !ok || v == "" {
-		t.Fatal("SetOption not works")
-	}
-}

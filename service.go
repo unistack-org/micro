@@ -10,6 +10,7 @@ import (
 	"go.unistack.org/micro/v4/config"
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/register"
 	"go.unistack.org/micro/v4/router"
 	"go.unistack.org/micro/v4/server"
@@ -62,8 +63,8 @@ type Service interface {
 }
 
 // RegisterHandler is syntactic sugar for registering a handler
-func RegisterHandler(s server.Server, h interface{}, opts ...server.HandlerOption) error {
-	return s.Handle(s.NewHandler(h, opts...))
+func RegisterHandler(s server.Server, h interface{}, opts ...options.Option) error {
+	return s.Handle(h, opts...)
 }
 
 type service struct {
@@ -99,13 +100,13 @@ func (s *service) Init(opts ...Option) error {
 			// skip config as the struct not passed
 			continue
 		}
-		if err = cfg.Init(config.Context(cfg.Options().Context)); err != nil {
+		if err = cfg.Init(options.Context(cfg.Options().Context)); err != nil {
 			return err
 		}
 	}
 
 	for _, log := range s.opts.Loggers {
-		if err = log.Init(logger.WithContext(log.Options().Context)); err != nil {
+		if err = log.Init(options.Context(log.Options().Context)); err != nil {
 			return err
 		}
 	}
@@ -117,25 +118,25 @@ func (s *service) Init(opts ...Option) error {
 	}
 
 	for _, brk := range s.opts.Brokers {
-		if err = brk.Init(broker.Context(brk.Options().Context)); err != nil {
+		if err = brk.Init(options.Context(brk.Options().Context)); err != nil {
 			return err
 		}
 	}
 
 	for _, str := range s.opts.Stores {
-		if err = str.Init(store.Context(str.Options().Context)); err != nil {
+		if err = str.Init(options.Context(str.Options().Context)); err != nil {
 			return err
 		}
 	}
 
 	for _, srv := range s.opts.Servers {
-		if err = srv.Init(server.Context(srv.Options().Context)); err != nil {
+		if err = srv.Init(options.Context(srv.Options().Context)); err != nil {
 			return err
 		}
 	}
 
 	for _, cli := range s.opts.Clients {
-		if err = cli.Init(client.Context(cli.Options().Context)); err != nil {
+		if err = cli.Init(options.Context(cli.Options().Context)); err != nil {
 			return err
 		}
 	}

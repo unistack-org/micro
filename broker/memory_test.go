@@ -19,29 +19,35 @@ func TestMemoryBatchBroker(t *testing.T) {
 	topic := "test"
 	count := 10
 
-	fn := func(evts Events) error {
-		return evts.Ack()
+	fn := func(evts []Message) error {
+		var err error
+		for _, evt := range evts {
+			if err = evt.Ack(); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
-	sub, err := b.BatchSubscribe(ctx, topic, fn)
+	sub, err := b.Subscribe(ctx, topic, fn)
 	if err != nil {
 		t.Fatalf("Unexpected error subscribing %v", err)
 	}
 
-	msgs := make([]*Message, 0, count)
+	msgs := make([]Message, 0, count)
 	for i := 0; i < count; i++ {
-		message := &Message{
-			Header: map[string]string{
+		message := &memoryMessage{
+			header: map[string]string{
 				metadata.HeaderTopic: topic,
 				"foo":                "bar",
 				"id":                 fmt.Sprintf("%d", i),
 			},
-			Body: []byte(`"hello world"`),
+			body: []byte(`"hello world"`),
 		}
 		msgs = append(msgs, message)
 	}
 
-	if err := b.BatchPublish(ctx, msgs); err != nil {
+	if err := b.Publish(ctx, msgs); err != nil {
 		t.Fatalf("Unexpected error publishing %v", err)
 	}
 
@@ -65,8 +71,8 @@ func TestMemoryBroker(t *testing.T) {
 	topic := "test"
 	count := 10
 
-	fn := func(p Event) error {
-		return nil
+	fn := func(p Message) error {
+		return p.Ack()
 	}
 
 	sub, err := b.Subscribe(ctx, topic, fn)
@@ -74,24 +80,20 @@ func TestMemoryBroker(t *testing.T) {
 		t.Fatalf("Unexpected error subscribing %v", err)
 	}
 
-	msgs := make([]*Message, 0, count)
+	msgs := make([]Message, 0, count)
 	for i := 0; i < count; i++ {
-		message := &Message{
-			Header: map[string]string{
+		message := &memoryMessage{
+			header: map[string]string{
 				metadata.HeaderTopic: topic,
 				"foo":                "bar",
 				"id":                 fmt.Sprintf("%d", i),
 			},
-			Body: []byte(`"hello world"`),
+			body: []byte(`"hello world"`),
 		}
 		msgs = append(msgs, message)
-
-		if err := b.Publish(ctx, topic, message); err != nil {
-			t.Fatalf("Unexpected error publishing %d err: %v", i, err)
-		}
 	}
 
-	if err := b.BatchPublish(ctx, msgs); err != nil {
+	if err := b.Publish(ctx, msgs); err != nil {
 		t.Fatalf("Unexpected error publishing %v", err)
 	}
 

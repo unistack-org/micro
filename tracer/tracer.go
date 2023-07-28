@@ -3,6 +3,8 @@ package tracer // import "go.unistack.org/micro/v4/tracer"
 
 import (
 	"context"
+
+	"go.unistack.org/micro/v4/options"
 )
 
 // DefaultTracer is the global default tracer
@@ -13,9 +15,9 @@ type Tracer interface {
 	// Name return tracer name
 	Name() string
 	// Init tracer with options
-	Init(...Option) error
+	Init(...options.Option) error
 	// Start a trace
-	Start(ctx context.Context, name string, opts ...SpanOption) (context.Context, Span)
+	Start(ctx context.Context, name string, opts ...options.Option) (context.Context, Span)
 	// Flush flushes spans
 	Flush(ctx context.Context) error
 }
@@ -24,9 +26,9 @@ type Span interface {
 	// Tracer return underlining tracer
 	Tracer() Tracer
 	// Finish complete and send span
-	Finish(opts ...SpanOption)
+	Finish(opts ...options.Option)
 	// AddEvent add event to span
-	AddEvent(name string, opts ...EventOption)
+	AddEvent(name string, opts ...options.Option)
 	// Context return context with span
 	Context() context.Context
 	// SetName set the span name

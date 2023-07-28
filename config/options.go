@@ -7,6 +7,7 @@ import (
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/tracer"
 )
 
@@ -44,11 +45,8 @@ type Options struct {
 	AllowFail bool
 }
 
-// Option function signature
-type Option func(o *Options)
-
 // NewOptions new options struct with filed values
-func NewOptions(opts ...Option) Options {
+func NewOptions(opts ...options.Option) Options {
 	options := Options{
 		Logger:  logger.DefaultLogger,
 		Meter:   meter.DefaultMeter,
@@ -62,9 +60,6 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
-// LoadOption function signature
-type LoadOption func(o *LoadOptions)
-
 // LoadOptions struct
 type LoadOptions struct {
 	Struct   interface{}
@@ -74,7 +69,7 @@ type LoadOptions struct {
 }
 
 // NewLoadOptions create LoadOptions struct with provided opts
-func NewLoadOptions(opts ...LoadOption) LoadOptions {
+func NewLoadOptions(opts ...options.Option) LoadOptions {
 	options := LoadOptions{}
 	for _, o := range opts {
 		o(&options)
@@ -83,28 +78,18 @@ func NewLoadOptions(opts ...LoadOption) LoadOptions {
 }
 
 // LoadOverride override values when load
-func LoadOverride(b bool) LoadOption {
-	return func(o *LoadOptions) {
-		o.Override = b
+func LoadOverride(b bool) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, b, ".Override")
 	}
 }
 
 // LoadAppend override values when load
-func LoadAppend(b bool) LoadOption {
-	return func(o *LoadOptions) {
-		o.Append = b
+func LoadAppend(b bool) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, b, ".Append")
 	}
 }
-
-// LoadStruct override struct for loading
-func LoadStruct(src interface{}) LoadOption {
-	return func(o *LoadOptions) {
-		o.Struct = src
-	}
-}
-
-// SaveOption function signature
-type SaveOption func(o *SaveOptions)
 
 // SaveOptions struct
 type SaveOptions struct {
@@ -112,15 +97,8 @@ type SaveOptions struct {
 	Context context.Context
 }
 
-// SaveStruct override struct for save to config
-func SaveStruct(src interface{}) SaveOption {
-	return func(o *SaveOptions) {
-		o.Struct = src
-	}
-}
-
 // NewSaveOptions fill SaveOptions struct
-func NewSaveOptions(opts ...SaveOption) SaveOptions {
+func NewSaveOptions(opts ...options.Option) SaveOptions {
 	options := SaveOptions{}
 	for _, o := range opts {
 		o(&options)
@@ -129,100 +107,65 @@ func NewSaveOptions(opts ...SaveOption) SaveOptions {
 }
 
 // AllowFail allows config source to fail
-func AllowFail(b bool) Option {
-	return func(o *Options) {
-		o.AllowFail = b
+func AllowFail(b bool) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, b, ".AllowFail")
 	}
 }
 
 // BeforeInit run funcs before config Init
-func BeforeInit(fn ...func(context.Context, Config) error) Option {
-	return func(o *Options) {
-		o.BeforeInit = fn
+func BeforeInit(fn ...func(context.Context, Config) error) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fn, ".BeforeInit")
 	}
 }
 
 // AfterInit run funcs after config Init
-func AfterInit(fn ...func(context.Context, Config) error) Option {
-	return func(o *Options) {
-		o.AfterInit = fn
+func AfterInit(fn ...func(context.Context, Config) error) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fn, ".AfterInit")
 	}
 }
 
 // BeforeLoad run funcs before config load
-func BeforeLoad(fn ...func(context.Context, Config) error) Option {
-	return func(o *Options) {
-		o.BeforeLoad = fn
+func BeforeLoad(fn ...func(context.Context, Config) error) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fn, ".BeforeLoad")
 	}
 }
 
 // AfterLoad run funcs after config load
-func AfterLoad(fn ...func(context.Context, Config) error) Option {
-	return func(o *Options) {
-		o.AfterLoad = fn
+func AfterLoad(fn ...func(context.Context, Config) error) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fn, ".AfterLoad")
 	}
 }
 
 // BeforeSave run funcs before save
-func BeforeSave(fn ...func(context.Context, Config) error) Option {
-	return func(o *Options) {
-		o.BeforeSave = fn
+func BeforeSave(fn ...func(context.Context, Config) error) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fn, ".BeforeSave")
 	}
 }
 
 // AfterSave run fncs after save
-func AfterSave(fn ...func(context.Context, Config) error) Option {
-	return func(o *Options) {
-		o.AfterSave = fn
-	}
-}
-
-// Context pass context
-func Context(ctx context.Context) Option {
-	return func(o *Options) {
-		o.Context = ctx
-	}
-}
-
-// Codec sets the source codec
-func Codec(c codec.Codec) Option {
-	return func(o *Options) {
-		o.Codec = c
-	}
-}
-
-// Logger sets the logger
-func Logger(l logger.Logger) Option {
-	return func(o *Options) {
-		o.Logger = l
-	}
-}
-
-// Tracer to be used for tracing
-func Tracer(t tracer.Tracer) Option {
-	return func(o *Options) {
-		o.Tracer = t
+func AfterSave(fn ...func(context.Context, Config) error) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fn, ".AfterSave")
 	}
 }
 
 // Struct used as config
-func Struct(v interface{}) Option {
-	return func(o *Options) {
-		o.Struct = v
+func Struct(v interface{}) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, v, ".Struct")
 	}
 }
 
 // StructTag sets the struct tag that used for filling
-func StructTag(name string) Option {
-	return func(o *Options) {
-		o.StructTag = name
-	}
-}
-
-// Name sets the name
-func Name(n string) Option {
-	return func(o *Options) {
-		o.Name = n
+func StructTag(name string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, name, ".StructTag")
 	}
 }
 
@@ -240,11 +183,8 @@ type WatchOptions struct {
 	Coalesce bool
 }
 
-// WatchOption func signature
-type WatchOption func(*WatchOptions)
-
 // NewWatchOptions create WatchOptions struct with provided opts
-func NewWatchOptions(opts ...WatchOption) WatchOptions {
+func NewWatchOptions(opts ...options.Option) WatchOptions {
 	options := WatchOptions{
 		Context:     context.Background(),
 		MinInterval: DefaultWatcherMinInterval,
@@ -256,31 +196,20 @@ func NewWatchOptions(opts ...WatchOption) WatchOptions {
 	return options
 }
 
-// WatchContext pass context
-func WatchContext(ctx context.Context) WatchOption {
-	return func(o *WatchOptions) {
-		o.Context = ctx
-	}
-}
-
-// WatchCoalesce controls watch event combining
-func WatchCoalesce(b bool) WatchOption {
-	return func(o *WatchOptions) {
-		o.Coalesce = b
+// Coalesce controls watch event combining
+func Coalesce(b bool) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, b, ".Coalesce")
 	}
 }
 
 // WatchInterval specifies min and max time.Duration for pulling changes
-func WatchInterval(min, max time.Duration) WatchOption {
-	return func(o *WatchOptions) {
-		o.MinInterval = min
-		o.MaxInterval = max
-	}
-}
-
-// WatchStruct overrides struct for fill
-func WatchStruct(src interface{}) WatchOption {
-	return func(o *WatchOptions) {
-		o.Struct = src
+func WatchInterval(min, max time.Duration) options.Option {
+	return func(src interface{}) error {
+		var err error
+		if err = options.Set(src, min, ".MinInterval"); err == nil {
+			err = options.Set(src, max, ".MaxInterval")
+		}
+		return err
 	}
 }

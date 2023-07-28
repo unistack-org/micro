@@ -76,6 +76,9 @@ func ZeroFieldByPath(src interface{}, path string) error {
 	val := reflect.ValueOf(src)
 
 	for _, p := range strings.Split(path, ".") {
+		if p == "" {
+			continue
+		}
 		val, err = structValueByName(val, p)
 		if err != nil {
 			return err
@@ -101,6 +104,9 @@ func SetFieldByPath(src interface{}, dst interface{}, path string) error {
 	val := reflect.ValueOf(src)
 
 	for _, p := range strings.Split(path, ".") {
+		if p == "" {
+			continue
+		}
 		val, err = structValueByName(val, p)
 		if err != nil {
 			return err
@@ -111,7 +117,20 @@ func SetFieldByPath(src interface{}, dst interface{}, path string) error {
 		return ErrInvalidStruct
 	}
 
-	val.Set(reflect.ValueOf(dst))
+	nv := reflect.ValueOf(dst)
+	if val.Kind() != nv.Kind() {
+		switch {
+		default:
+			val.Set(nv)
+		case nv.Kind() == reflect.Slice:
+			val.Set(nv.Index(0))
+		case val.Kind() == reflect.Slice:
+			val.Set(reflect.MakeSlice(val.Type(), 1, 1))
+			val.Index(0).Set(nv)
+		}
+	} else {
+		val.Set(nv)
+	}
 
 	return nil
 }
@@ -157,6 +176,9 @@ func structValueByName(sv reflect.Value, tkey string) (reflect.Value, error) {
 func StructFieldByPath(src interface{}, path string) (interface{}, error) {
 	var err error
 	for _, p := range strings.Split(path, ".") {
+		if p == "" {
+			continue
+		}
 		src, err = StructFieldByName(src, p)
 		if err != nil {
 			return nil, err
