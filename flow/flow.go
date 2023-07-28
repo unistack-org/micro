@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/options"
 )
 
 var (
@@ -51,7 +52,7 @@ type Step interface {
 	// Endpoint returns rpc endpoint service_name.service_method or broker topic
 	Endpoint() string
 	// Execute step run
-	Execute(ctx context.Context, req *Message, opts ...ExecuteOption) (*Message, error)
+	Execute(ctx context.Context, req *Message, opts ...options.Option) (*Message, error)
 	// Requires returns dependent steps
 	Requires() []string
 	// Options returns step options
@@ -118,7 +119,7 @@ type Workflow interface {
 	// ID returns id of the workflow
 	ID() string
 	// Execute workflow with args, return execution id and error
-	Execute(ctx context.Context, req *Message, opts ...ExecuteOption) (string, error)
+	Execute(ctx context.Context, req *Message, opts ...options.Option) (string, error)
 	// RemoveSteps remove steps from workflow
 	RemoveSteps(steps ...Step) error
 	// AppendSteps append steps to workflow
@@ -140,7 +141,7 @@ type Flow interface {
 	// Options returns options
 	Options() Options
 	// Init initialize
-	Init(...Option) error
+	Init(...options.Option) error
 	// WorkflowCreate creates new workflow with specific id and steps
 	WorkflowCreate(ctx context.Context, id string, steps ...Step) (Workflow, error)
 	// WorkflowSave saves workflow

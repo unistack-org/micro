@@ -9,6 +9,7 @@ import (
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/metadata"
 	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/tracer"
 )
 
@@ -32,16 +33,14 @@ type Options struct {
 	Namespace string
 	// Separator used as key parts separator
 	Separator string
-	// Addrs contains store address
-	Addrs []string
-	// Wrappers store wrapper that called before actual functions
-	// Wrappers []Wrapper
+	// Address contains store address
+	Address []string
 	// Timeout specifies timeout duration for all operations
 	Timeout time.Duration
 }
 
 // NewOptions creates options struct
-func NewOptions(opts ...Option) Options {
+func NewOptions(opts ...options.Option) Options {
 	options := Options{
 		Logger:    logger.DefaultLogger,
 		Context:   context.Background(),
@@ -56,85 +55,17 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
-// Option sets values in Options
-type Option func(o *Options)
-
-// TLSConfig specifies a *tls.Config
-func TLSConfig(t *tls.Config) Option {
-	return func(o *Options) {
-		o.TLSConfig = t
-	}
-}
-
-// Context pass context to store
-func Context(ctx context.Context) Option {
-	return func(o *Options) {
-		o.Context = ctx
-	}
-}
-
-// Codec sets the codec
-func Codec(c codec.Codec) Option {
-	return func(o *Options) {
-		o.Codec = c
-	}
-}
-
-// Logger sets the logger
-func Logger(l logger.Logger) Option {
-	return func(o *Options) {
-		o.Logger = l
-	}
-}
-
-// Meter sets the meter
-func Meter(m meter.Meter) Option {
-	return func(o *Options) {
-		o.Meter = m
-	}
-}
-
-// Name the name of the store
-func Name(n string) Option {
-	return func(o *Options) {
-		o.Name = n
-	}
-}
-
 // Separator the value used as key parts separator
-func Separator(s string) Option {
-	return func(o *Options) {
-		o.Separator = s
-	}
-}
-
-// Namespace sets namespace of the store
-func Namespace(ns string) Option {
-	return func(o *Options) {
-		o.Namespace = ns
-	}
-}
-
-// Tracer sets the tracer
-func Tracer(t tracer.Tracer) Option {
-	return func(o *Options) {
-		o.Tracer = t
+func Separator(s string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, s, "Separator")
 	}
 }
 
 // Timeout sets the timeout
-func Timeout(td time.Duration) Option {
-	return func(o *Options) {
-		o.Timeout = td
-	}
-}
-
-// Addrs contains the addresses or other connection information of the backing storage.
-// For example, an etcd implementation would contain the nodes of the cluster.
-// A SQL implementation could contain one or more connection strings.
-func Addrs(addrs ...string) Option {
-	return func(o *Options) {
-		o.Addrs = addrs
+func Timeout(td time.Duration) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, td, ".Timeout")
 	}
 }
 
@@ -147,29 +78,12 @@ type ReadOptions struct {
 }
 
 // NewReadOptions fills ReadOptions struct with opts slice
-func NewReadOptions(opts ...ReadOption) ReadOptions {
+func NewReadOptions(opts ...options.Option) ReadOptions {
 	options := ReadOptions{}
 	for _, o := range opts {
 		o(&options)
 	}
 	return options
-}
-
-// ReadOption sets values in ReadOptions
-type ReadOption func(r *ReadOptions)
-
-// ReadContext pass context.Context to ReadOptions
-func ReadContext(ctx context.Context) ReadOption {
-	return func(o *ReadOptions) {
-		o.Context = ctx
-	}
-}
-
-// ReadNamespace pass namespace to ReadOptions
-func ReadNamespace(ns string) ReadOption {
-	return func(o *ReadOptions) {
-		o.Namespace = ns
-	}
 }
 
 // WriteOptions configures an individual Write operation
@@ -185,7 +99,7 @@ type WriteOptions struct {
 }
 
 // NewWriteOptions fills WriteOptions struct with opts slice
-func NewWriteOptions(opts ...WriteOption) WriteOptions {
+func NewWriteOptions(opts ...options.Option) WriteOptions {
 	options := WriteOptions{}
 	for _, o := range opts {
 		o(&options)
@@ -193,34 +107,17 @@ func NewWriteOptions(opts ...WriteOption) WriteOptions {
 	return options
 }
 
-// WriteOption sets values in WriteOptions
-type WriteOption func(w *WriteOptions)
-
-// WriteContext pass context.Context to wirte options
-func WriteContext(ctx context.Context) WriteOption {
-	return func(o *WriteOptions) {
-		o.Context = ctx
-	}
-}
-
 // WriteMetadata add metadata.Metadata
-func WriteMetadata(md metadata.Metadata) WriteOption {
-	return func(o *WriteOptions) {
-		o.Metadata = metadata.Copy(md)
+func WriteMetadata(md metadata.Metadata) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, metadata.Copy(md), ".Metadata")
 	}
 }
 
 // WriteTTL is the time the record expires
-func WriteTTL(d time.Duration) WriteOption {
-	return func(o *WriteOptions) {
-		o.TTL = d
-	}
-}
-
-// WriteNamespace pass namespace to write options
-func WriteNamespace(ns string) WriteOption {
-	return func(o *WriteOptions) {
-		o.Namespace = ns
+func WriteTTL(td time.Duration) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, td, ".TTL")
 	}
 }
 
@@ -233,29 +130,12 @@ type DeleteOptions struct {
 }
 
 // NewDeleteOptions fills DeleteOptions struct with opts slice
-func NewDeleteOptions(opts ...DeleteOption) DeleteOptions {
+func NewDeleteOptions(opts ...options.Option) DeleteOptions {
 	options := DeleteOptions{}
 	for _, o := range opts {
 		o(&options)
 	}
 	return options
-}
-
-// DeleteOption sets values in DeleteOptions
-type DeleteOption func(d *DeleteOptions)
-
-// DeleteContext pass context.Context to delete options
-func DeleteContext(ctx context.Context) DeleteOption {
-	return func(o *DeleteOptions) {
-		o.Context = ctx
-	}
-}
-
-// DeleteNamespace pass namespace to delete options
-func DeleteNamespace(ns string) DeleteOption {
-	return func(o *DeleteOptions) {
-		o.Namespace = ns
-	}
 }
 
 // ListOptions configures an individual List operation
@@ -269,7 +149,7 @@ type ListOptions struct {
 }
 
 // NewListOptions fills ListOptions struct with opts slice
-func NewListOptions(opts ...ListOption) ListOptions {
+func NewListOptions(opts ...options.Option) ListOptions {
 	options := ListOptions{}
 	for _, o := range opts {
 		o(&options)
@@ -277,48 +157,31 @@ func NewListOptions(opts ...ListOption) ListOptions {
 	return options
 }
 
-// ListOption sets values in ListOptions
-type ListOption func(l *ListOptions)
-
-// ListContext pass context.Context to list options
-func ListContext(ctx context.Context) ListOption {
-	return func(o *ListOptions) {
-		o.Context = ctx
-	}
-}
-
 // ListPrefix returns all keys that are prefixed with key
-func ListPrefix(s string) ListOption {
-	return func(o *ListOptions) {
-		o.Prefix = s
+func ListPrefix(s string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, s, ".Prefix")
 	}
 }
 
 // ListSuffix returns all keys that end with key
-func ListSuffix(s string) ListOption {
-	return func(o *ListOptions) {
-		o.Suffix = s
+func ListSuffix(s string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, s, ".Prefix")
 	}
 }
 
 // ListLimit limits the number of returned keys
-func ListLimit(n uint) ListOption {
-	return func(o *ListOptions) {
-		o.Limit = n
+func ListLimit(n uint) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, n, ".Limit")
 	}
 }
 
 // ListOffset use with Limit for pagination
-func ListOffset(n uint) ListOption {
-	return func(o *ListOptions) {
-		o.Offset = n
-	}
-}
-
-// ListNamespace pass namespace to list options
-func ListNamespace(ns string) ListOption {
-	return func(o *ListOptions) {
-		o.Namespace = ns
+func ListOffset(n uint) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, n, ".Offset")
 	}
 }
 
@@ -330,11 +193,8 @@ type ExistsOptions struct {
 	Namespace string
 }
 
-// ExistsOption specifies Exists call options
-type ExistsOption func(*ExistsOptions)
-
 // NewExistsOptions helper for Exists method
-func NewExistsOptions(opts ...ExistsOption) ExistsOptions {
+func NewExistsOptions(opts ...options.Option) ExistsOptions {
 	options := ExistsOptions{
 		Context: context.Background(),
 	}
@@ -343,26 +203,3 @@ func NewExistsOptions(opts ...ExistsOption) ExistsOptions {
 	}
 	return options
 }
-
-// ExistsContext pass context.Context to exist options
-func ExistsContext(ctx context.Context) ExistsOption {
-	return func(o *ExistsOptions) {
-		o.Context = ctx
-	}
-}
-
-// ExistsNamespace pass namespace to exist options
-func ExistsNamespace(ns string) ExistsOption {
-	return func(o *ExistsOptions) {
-		o.Namespace = ns
-	}
-}
-
-/*
-// WrapStore adds a store Wrapper to a list of options passed into the store
-func WrapStore(w Wrapper) Option {
-	return func(o *Options) {
-		o.Wrappers = append(o.Wrappers, w)
-	}
-}
-*/

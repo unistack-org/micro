@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"go.unistack.org/micro/v4/options"
 )
 
 var (
@@ -31,9 +33,9 @@ type Meter interface {
 	// Name returns meter name
 	Name() string
 	// Init initialize meter
-	Init(opts ...Option) error
+	Init(opts ...options.Option) error
 	// Clone create meter copy with new options
-	Clone(opts ...Option) Meter
+	Clone(opts ...options.Option) Meter
 	// Counter get or create counter
 	Counter(name string, labels ...string) Counter
 	// FloatCounter get or create float counter
@@ -41,7 +43,7 @@ type Meter interface {
 	// Gauge get or create gauge
 	Gauge(name string, fn func() float64, labels ...string) Gauge
 	// Set create new meter metrics set
-	Set(opts ...Option) Meter
+	Set(opts ...options.Option) Meter
 	// Histogram get or create histogram
 	Histogram(name string, labels ...string) Histogram
 	// Summary get or create summary
@@ -49,7 +51,7 @@ type Meter interface {
 	// SummaryExt get or create summary with spcified quantiles and window time
 	SummaryExt(name string, window time.Duration, quantiles []float64, labels ...string) Summary
 	// Write writes metrics to io.Writer
-	Write(w io.Writer, opts ...Option) error
+	Write(w io.Writer, opts ...options.Option) error
 	// Options returns meter options
 	Options() Options
 	// String return meter type

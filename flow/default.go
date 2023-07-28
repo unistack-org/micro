@@ -10,6 +10,8 @@ import (
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/options"
+	moptions "go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/store"
 	"go.unistack.org/micro/v4/util/id"
 )
@@ -163,7 +165,7 @@ func (w *microWorkflow) Resume(ctx context.Context, id string) error {
 	return workflowStore.Write(ctx, "status", &codec.Frame{Data: []byte(StatusRunning.String())})
 }
 
-func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...ExecuteOption) (string, error) {
+func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...options.Option) (string, error) {
 	w.Lock()
 	if !w.init {
 		if err := w.g.Validate(); err != nil {
@@ -200,13 +202,13 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 	nctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	nopts := make([]ExecuteOption, 0, len(opts)+5)
+	nopts := make([]moptions.Option, 0, len(opts)+5)
 
 	nopts = append(nopts,
-		ExecuteClient(w.opts.Client),
-		ExecuteTracer(w.opts.Tracer),
-		ExecuteLogger(w.opts.Logger),
-		ExecuteMeter(w.opts.Meter),
+		moptions.Client(w.opts.Client),
+		moptions.Tracer(w.opts.Tracer),
+		moptions.Logger(w.opts.Logger),
+		moptions.Meter(w.opts.Meter),
 	)
 	nopts = append(nopts, opts...)
 	done := make(chan struct{})
@@ -349,7 +351,7 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 }
 
 // NewFlow create new flow
-func NewFlow(opts ...Option) Flow {
+func NewFlow(opts ...options.Option) Flow {
 	options := NewOptions(opts...)
 	return &microFlow{opts: options}
 }
@@ -358,7 +360,7 @@ func (f *microFlow) Options() Options {
 	return f.opts
 }
 
-func (f *microFlow) Init(opts ...Option) error {
+func (f *microFlow) Init(opts ...options.Option) error {
 	for _, o := range opts {
 		o(&f.opts)
 	}
@@ -487,17 +489,17 @@ func (s *microCallStep) SetStatus(status Status) {
 	s.status = status
 }
 
-func (s *microCallStep) Execute(ctx context.Context, req *Message, opts ...ExecuteOption) (*Message, error) {
+func (s *microCallStep) Execute(ctx context.Context, req *Message, opts ...options.Option) (*Message, error) {
 	options := NewExecuteOptions(opts...)
 	if options.Client == nil {
 		return nil, ErrMissingClient
 	}
 	rsp := &codec.Frame{}
-	copts := []client.CallOption{client.WithRetries(0)}
+	copts := []moptions.Option{client.Retries(0)}
 	if options.Timeout > 0 {
 		copts = append(copts,
-			client.WithRequestTimeout(options.Timeout),
-			client.WithDialTimeout(options.Timeout))
+			client.RequestTimeout(options.Timeout),
+			client.DialTimeout(options.Timeout))
 	}
 	nctx := metadata.NewOutgoingContext(ctx, req.Header)
 	err := options.Client.Call(nctx, options.Client.NewRequest(s.service, s.method, &codec.Frame{Data: req.Body}), rsp, copts...)
@@ -570,18 +572,18 @@ func (s *microPublishStep) SetStatus(status Status) {
 	s.status = status
 }
 
-func (s *microPublishStep) Execute(ctx context.Context, req *Message, opts ...ExecuteOption) (*Message, error) {
+func (s *microPublishStep) Execute(ctx context.Context, req *Message, opts ...options.Option) (*Message, error) {
 	return nil, nil
 }
 
 // NewCallStep create new step with client.Call
-func NewCallStep(service string, name string, method string, opts ...StepOption) Step {
+func NewCallStep(service string, name string, method string, opts ...options.Option) Step {
 	options := NewStepOptions(opts...)
 	return &microCallStep{service: service, method: name + "." + method, opts: options}
 }
 
 // NewPublishStep create new step with client.Publish
-func NewPublishStep(topic string, opts ...StepOption) Step {
+func NewPublishStep(topic string, opts ...options.Option) Step {
 	options := NewStepOptions(opts...)
 	return &microPublishStep{topic: topic, opts: options}
 }

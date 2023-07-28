@@ -4,10 +4,9 @@ import (
 	"context"
 	"io"
 	"os"
-)
 
-// Option func
-type Option func(*Options)
+	"go.unistack.org/micro/v4/options"
+)
 
 // Options holds logger options
 type Options struct {
@@ -26,7 +25,7 @@ type Options struct {
 }
 
 // NewOptions creates new options struct
-func NewOptions(opts ...Option) Options {
+func NewOptions(opts ...options.Option) Options {
 	options := Options{
 		Level:           DefaultLevel,
 		Fields:          make([]interface{}, 0, 6),
@@ -41,43 +40,29 @@ func NewOptions(opts ...Option) Options {
 }
 
 // WithFields set default fields for the logger
-func WithFields(fields ...interface{}) Option {
-	return func(o *Options) {
-		o.Fields = fields
+func WithFields(fields ...interface{}) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fields, ".Fields")
 	}
 }
 
 // WithLevel set default level for the logger
-func WithLevel(level Level) Option {
-	return func(o *Options) {
-		o.Level = level
+func WithLevel(lvl Level) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, lvl, ".Level")
 	}
 }
 
 // WithOutput set default output writer for the logger
-func WithOutput(out io.Writer) Option {
-	return func(o *Options) {
-		o.Out = out
+func WithOutput(out io.Writer) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, out, ".Out")
 	}
 }
 
 // WithCallerSkipCount set frame count to skip
-func WithCallerSkipCount(c int) Option {
-	return func(o *Options) {
-		o.CallerSkipCount = c
-	}
-}
-
-// WithContext set context
-func WithContext(ctx context.Context) Option {
-	return func(o *Options) {
-		o.Context = ctx
-	}
-}
-
-// WithName sets the name
-func WithName(n string) Option {
-	return func(o *Options) {
-		o.Name = n
+func WithCallerSkipCount(c int) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, c, ".CallerSkipCount")
 	}
 }

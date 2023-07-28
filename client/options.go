@@ -10,29 +10,15 @@ import (
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/metadata"
 	"go.unistack.org/micro/v4/meter"
-	"go.unistack.org/micro/v4/network/transport"
-	"go.unistack.org/micro/v4/register"
+	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/router"
 	"go.unistack.org/micro/v4/selector"
 	"go.unistack.org/micro/v4/selector/random"
 	"go.unistack.org/micro/v4/tracer"
 )
 
-var (
-	// ClientRequestDurationSeconds specifies meter metric name
-	ClientRequestDurationSeconds = "client_request_duration_seconds"
-	// ClientRequestLatencyMicroseconds specifies meter metric name
-	ClientRequestLatencyMicroseconds = "client_request_latency_microseconds"
-	// ClientRequestTotal specifies meter metric name
-	ClientRequestTotal = "client_request_total"
-	// ClientRequestInflight specifies meter metric name
-	ClientRequestInflight = "client_request_inflight"
-)
-
 // Options holds client options
 type Options struct {
-	// Transport used for transfer messages
-	Transport transport.Transport
 	// Selector used to select needed address
 	Selector selector.Selector
 	// Logger used to log messages
@@ -57,8 +43,6 @@ type Options struct {
 	ContentType string
 	// Name is the client name
 	Name string
-	// Wrappers contains wrappers
-	Wrappers []Wrapper
 	// CallOptions contains default CallOptions
 	CallOptions CallOptions
 	// PoolSize connection pool size
@@ -67,10 +51,12 @@ type Options struct {
 	PoolTTL time.Duration
 	// ContextDialer used to connect
 	ContextDialer func(context.Context, string) (net.Conn, error)
+	// Hooks may contains Client func wrapper
+	Hooks options.Hooks
 }
 
 // NewCallOptions creates new call options struct
-func NewCallOptions(opts ...CallOption) CallOptions {
+func NewCallOptions(opts ...options.Option) CallOptions {
 	options := CallOptions{}
 	for _, o := range opts {
 		o(&options)
@@ -119,58 +105,14 @@ type CallOptions struct {
 }
 
 // ContextDialer pass ContextDialer to client
-func ContextDialer(fn func(context.Context, string) (net.Conn, error)) Option {
-	return func(o *Options) {
-		o.ContextDialer = fn
+func ContextDialer(fn func(context.Context, string) (net.Conn, error)) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fn, ".ContextDialer")
 	}
-}
-
-// Context pass context to client
-func Context(ctx context.Context) Option {
-	return func(o *Options) {
-		o.Context = ctx
-	}
-}
-
-// NewPublishOptions create new PublishOptions struct from option
-func NewPublishOptions(opts ...PublishOption) PublishOptions {
-	options := PublishOptions{}
-	for _, o := range opts {
-		o(&options)
-	}
-	return options
-}
-
-// PublishOptions holds publish options
-type PublishOptions struct {
-	// Context used for external options
-	Context context.Context
-	// Exchange topic exchange name
-	Exchange string
-	// BodyOnly will publish only message body
-	BodyOnly bool
-}
-
-// NewMessageOptions creates message options struct
-func NewMessageOptions(opts ...MessageOption) MessageOptions {
-	options := MessageOptions{Metadata: metadata.New(1)}
-	for _, o := range opts {
-		o(&options)
-	}
-	return options
-}
-
-// MessageOptions holds client message options
-type MessageOptions struct {
-	// Metadata additional metadata
-	Metadata metadata.Metadata
-	// ContentType specify content-type of message
-	// deprecated
-	ContentType string
 }
 
 // NewRequestOptions creates new RequestOptions struct
-func NewRequestOptions(opts ...RequestOption) RequestOptions {
+func NewRequestOptions(opts ...options.Option) RequestOptions {
 	options := RequestOptions{}
 	for _, o := range opts {
 		o(&options)
@@ -189,7 +131,7 @@ type RequestOptions struct {
 }
 
 // NewOptions creates new options struct
-func NewOptions(opts ...Option) Options {
+func NewOptions(opts ...options.Option) Options {
 	options := Options{
 		Context:     context.Background(),
 		ContentType: DefaultContentType,
@@ -200,17 +142,16 @@ func NewOptions(opts ...Option) Options {
 			Retry:          DefaultRetry,
 			Retries:        DefaultRetries,
 			RequestTimeout: DefaultRequestTimeout,
-			DialTimeout:    transport.DefaultDialTimeout,
+			DialTimeout:    DefaultDialTimeout,
 		},
-		Lookup:    LookupRoute,
-		PoolSize:  DefaultPoolSize,
-		PoolTTL:   DefaultPoolTTL,
-		Selector:  random.NewSelector(),
-		Logger:    logger.DefaultLogger,
-		Meter:     meter.DefaultMeter,
-		Tracer:    tracer.DefaultTracer,
-		Router:    router.DefaultRouter,
-		Transport: transport.DefaultTransport,
+		Lookup:   LookupRoute,
+		PoolSize: DefaultPoolSize,
+		PoolTTL:  DefaultPoolTTL,
+		Selector: random.NewSelector(),
+		Logger:   logger.DefaultLogger,
+		Meter:    meter.DefaultMeter,
+		Tracer:   tracer.DefaultTracer,
+		Router:   router.DefaultRouter,
 	}
 
 	for _, o := range opts {
@@ -220,374 +161,131 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
-// Tracer to be used for tracing
-func Tracer(t tracer.Tracer) Option {
-	return func(o *Options) {
-		o.Tracer = t
-	}
-}
-
-// Logger to be used for log mesages
-func Logger(l logger.Logger) Option {
-	return func(o *Options) {
-		o.Logger = l
-	}
-}
-
-// Meter to be used for metrics
-func Meter(m meter.Meter) Option {
-	return func(o *Options) {
-		o.Meter = m
-	}
-}
-
-// Codec to be used to encode/decode requests for a given content type
-func Codec(contentType string, c codec.Codec) Option {
-	return func(o *Options) {
-		o.Codecs[contentType] = c
-	}
-}
-
-// ContentType used by default if not specified
-func ContentType(ct string) Option {
-	return func(o *Options) {
-		o.ContentType = ct
-	}
-}
-
 // Proxy sets the proxy address
-func Proxy(addr string) Option {
-	return func(o *Options) {
-		o.Proxy = addr
+func Proxy(addr string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, addr, ".Proxy")
 	}
 }
 
 // PoolSize sets the connection pool size
-func PoolSize(d int) Option {
-	return func(o *Options) {
-		o.PoolSize = d
+func PoolSize(d int) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, d, ".PoolSize")
 	}
 }
 
 // PoolTTL sets the connection pool ttl
-func PoolTTL(d time.Duration) Option {
-	return func(o *Options) {
-		o.PoolTTL = d
-	}
-}
-
-// Transport to use for communication e.g http, rabbitmq, etc
-func Transport(t transport.Transport) Option {
-	return func(o *Options) {
-		o.Transport = t
-	}
-}
-
-// Register sets the routers register
-func Register(r register.Register) Option {
-	return func(o *Options) {
-		if o.Router != nil {
-			_ = o.Router.Init(router.Register(r))
-		}
-	}
-}
-
-// Router is used to lookup routes for a service
-func Router(r router.Router) Option {
-	return func(o *Options) {
-		o.Router = r
+func PoolTTL(td time.Duration) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, td, ".PoolTTL")
 	}
 }
 
 // Selector is used to select a route
-func Selector(s selector.Selector) Option {
-	return func(o *Options) {
-		o.Selector = s
-	}
-}
-
-// Wrap adds a wrapper to the list of options passed into the client
-func Wrap(w Wrapper) Option {
-	return func(o *Options) {
-		o.Wrappers = append(o.Wrappers, w)
-	}
-}
-
-// WrapCall adds a wrapper to the list of CallFunc wrappers
-func WrapCall(cw ...CallWrapper) Option {
-	return func(o *Options) {
-		o.CallOptions.CallWrappers = append(o.CallOptions.CallWrappers, cw...)
+func Selector(s selector.Selector) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, s, ".Selector")
 	}
 }
 
 // Backoff is used to set the backoff function used when retrying Calls
-func Backoff(fn BackoffFunc) Option {
-	return func(o *Options) {
-		o.CallOptions.Backoff = fn
-	}
-}
-
-// Name sets the client name
-func Name(n string) Option {
-	return func(o *Options) {
-		o.Name = n
+func Backoff(fn BackoffFunc) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fn, ".Backoff")
 	}
 }
 
 // Lookup sets the lookup function to use for resolving service names
-func Lookup(l LookupFunc) Option {
-	return func(o *Options) {
-		o.Lookup = l
+func Lookup(fn LookupFunc) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fn, ".Lookup")
 	}
 }
 
-// TLSConfig specifies a *tls.Config
-func TLSConfig(t *tls.Config) Option {
-	return func(o *Options) {
-		// set the internal tls
-		o.TLSConfig = t
-
-		// set the default transport if one is not
-		// already set. Required for Init call below.
-
-		// set the transport tls
-		_ = o.Transport.Init(
-			transport.TLSConfig(t),
-		)
+// WithCallWrapper sets the retry function to be used when re-trying.
+func WithCallWrapper(fn CallWrapper) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fn, ".CallWrappers")
 	}
 }
 
 // Retries sets the retry count when making the request.
-func Retries(i int) Option {
-	return func(o *Options) {
-		o.CallOptions.Retries = i
+func Retries(n int) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, n, ".Retries")
 	}
 }
 
 // Retry sets the retry function to be used when re-trying.
-func Retry(fn RetryFunc) Option {
-	return func(o *Options) {
-		o.CallOptions.Retry = fn
+func Retry(fn RetryFunc) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, fn, ".Retry")
 	}
 }
 
 // RequestTimeout is the request timeout.
-func RequestTimeout(d time.Duration) Option {
-	return func(o *Options) {
-		o.CallOptions.RequestTimeout = d
+func RequestTimeout(td time.Duration) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, td, ".RequestTimeout")
 	}
 }
 
 // StreamTimeout sets the stream timeout
-func StreamTimeout(d time.Duration) Option {
-	return func(o *Options) {
-		o.CallOptions.StreamTimeout = d
+func StreamTimeout(td time.Duration) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, td, ".StreamTimeout")
 	}
 }
 
 // DialTimeout sets the dial timeout
-func DialTimeout(d time.Duration) Option {
-	return func(o *Options) {
-		o.CallOptions.DialTimeout = d
-	}
-}
-
-// WithExchange sets the exchange to route a message through
-// Deprecated
-func WithExchange(e string) PublishOption {
-	return func(o *PublishOptions) {
-		o.Exchange = e
-	}
-}
-
-// PublishExchange sets the exchange to route a message through
-func PublishExchange(e string) PublishOption {
-	return func(o *PublishOptions) {
-		o.Exchange = e
-	}
-}
-
-// WithBodyOnly publish only message body
-// DERECATED
-func WithBodyOnly(b bool) PublishOption {
-	return func(o *PublishOptions) {
-		o.BodyOnly = b
-	}
-}
-
-// PublishBodyOnly publish only message body
-func PublishBodyOnly(b bool) PublishOption {
-	return func(o *PublishOptions) {
-		o.BodyOnly = b
-	}
-}
-
-// PublishContext sets the context in publish options
-func PublishContext(ctx context.Context) PublishOption {
-	return func(o *PublishOptions) {
-		o.Context = ctx
-	}
-}
-
-// WithContextDialer pass ContextDialer to client call
-func WithContextDialer(fn func(context.Context, string) (net.Conn, error)) CallOption {
-	return func(o *CallOptions) {
-		o.ContextDialer = fn
-	}
-}
-
-// WithContentType specifies call content type
-func WithContentType(ct string) CallOption {
-	return func(o *CallOptions) {
-		o.ContentType = ct
-	}
-}
-
-// WithAddress sets the remote addresses to use rather than using service discovery
-func WithAddress(a ...string) CallOption {
-	return func(o *CallOptions) {
-		o.Address = a
-	}
-}
-
-// WithCallWrapper is a CallOption which adds to the existing CallFunc wrappers
-func WithCallWrapper(cw ...CallWrapper) CallOption {
-	return func(o *CallOptions) {
-		o.CallWrappers = append(o.CallWrappers, cw...)
-	}
-}
-
-// WithBackoff is a CallOption which overrides that which
-// set in Options.CallOptions
-func WithBackoff(fn BackoffFunc) CallOption {
-	return func(o *CallOptions) {
-		o.Backoff = fn
-	}
-}
-
-// WithRetry is a CallOption which overrides that which
-// set in Options.CallOptions
-func WithRetry(fn RetryFunc) CallOption {
-	return func(o *CallOptions) {
-		o.Retry = fn
-	}
-}
-
-// WithRetries is a CallOption which overrides that which
-// set in Options.CallOptions
-func WithRetries(i int) CallOption {
-	return func(o *CallOptions) {
-		o.Retries = i
+func DialTimeout(td time.Duration) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, td, ".DialTimeout")
 	}
 }
 
 // WithResponseMetadata is a CallOption which adds metadata.Metadata to Options.CallOptions
-func WithResponseMetadata(md *metadata.Metadata) CallOption {
-	return func(o *CallOptions) {
-		o.ResponseMetadata = md
+func ResponseMetadata(md *metadata.Metadata) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, md, ".ResponseMetadata")
 	}
 }
 
 // WithRequestMetadata is a CallOption which adds metadata.Metadata to Options.CallOptions
-func WithRequestMetadata(md metadata.Metadata) CallOption {
-	return func(o *CallOptions) {
-		o.RequestMetadata = md
+func RequestMetadata(md metadata.Metadata) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, metadata.Copy(md), ".RequestMetadata")
 	}
 }
 
-// WithRequestTimeout is a CallOption which overrides that which
-// set in Options.CallOptions
-func WithRequestTimeout(d time.Duration) CallOption {
-	return func(o *CallOptions) {
-		o.RequestTimeout = d
-	}
-}
-
-// WithStreamTimeout sets the stream timeout
-func WithStreamTimeout(d time.Duration) CallOption {
-	return func(o *CallOptions) {
-		o.StreamTimeout = d
-	}
-}
-
-// WithDialTimeout is a CallOption which overrides that which
-// set in Options.CallOptions
-func WithDialTimeout(d time.Duration) CallOption {
-	return func(o *CallOptions) {
-		o.DialTimeout = d
-	}
-}
-
-// WithAuthToken is a CallOption which overrides the
+// AuthToken is a CallOption which overrides the
 // authorization header with the services own auth token
-func WithAuthToken(t string) CallOption {
-	return func(o *CallOptions) {
-		o.AuthToken = t
+func AuthToken(t string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, t, ".AuthToken")
 	}
 }
 
-// WithNetwork is a CallOption which sets the network attribute
-func WithNetwork(n string) CallOption {
-	return func(o *CallOptions) {
-		o.Network = n
+// Network is a CallOption which sets the network attribute
+func Network(n string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, n, ".Network")
 	}
 }
 
-// WithRouter sets the router to use for this call
-func WithRouter(r router.Router) CallOption {
-	return func(o *CallOptions) {
-		o.Router = r
-	}
-}
-
-// WithSelector sets the selector to use for this call
-func WithSelector(s selector.Selector) CallOption {
-	return func(o *CallOptions) {
-		o.Selector = s
-	}
-}
-
+/*
 // WithSelectOptions sets the options to pass to the selector for this call
-func WithSelectOptions(sops ...selector.SelectOption) CallOption {
+func WithSelectOptions(sops ...selector.SelectOption) options.Option {
 	return func(o *CallOptions) {
 		o.SelectOptions = sops
 	}
 }
-
-// WithMessageContentType sets the message content type
-// Deprecated
-func WithMessageContentType(ct string) MessageOption {
-	return func(o *MessageOptions) {
-		o.Metadata.Set(metadata.HeaderContentType, ct)
-		o.ContentType = ct
-	}
-}
-
-// MessageContentType sets the message content type
-func MessageContentType(ct string) MessageOption {
-	return func(o *MessageOptions) {
-		o.Metadata.Set(metadata.HeaderContentType, ct)
-		o.ContentType = ct
-	}
-}
-
-// MessageMetadata sets the message metadata
-func MessageMetadata(k, v string) MessageOption {
-	return func(o *MessageOptions) {
-		o.Metadata.Set(k, v)
-	}
-}
+*/
 
 // StreamingRequest specifies that request is streaming
-func StreamingRequest(b bool) RequestOption {
-	return func(o *RequestOptions) {
-		o.Stream = b
-	}
-}
-
-// RequestContentType specifies request content type
-func RequestContentType(ct string) RequestOption {
-	return func(o *RequestOptions) {
-		o.ContentType = ct
+func StreamingRequest(b bool) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, b, ".Stream")
 	}
 }

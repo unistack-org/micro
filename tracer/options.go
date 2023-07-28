@@ -2,8 +2,11 @@ package tracer
 
 import (
 	"context"
+	"reflect"
 
 	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/options"
+	rutil "go.unistack.org/micro/v4/util/reflect"
 )
 
 type SpanStatus int
@@ -87,24 +90,29 @@ type SpanOptions struct {
 	Kind   SpanKind
 }
 
-// SpanOption func signature
-type SpanOption func(o *SpanOptions)
-
 // EventOptions contains event options
 type EventOptions struct{}
 
-// EventOption func signature
-type EventOption func(o *EventOptions)
-
-func WithSpanLabels(labels ...interface{}) SpanOption {
-	return func(o *SpanOptions) {
-		o.Labels = labels
+func WithSpanLabels(ls ...interface{}) options.Option {
+	return func(src interface{}) error {
+		v, err := options.Get(src, ".Labels")
+		if err != nil {
+			return err
+		} else if rutil.IsZero(v) {
+			v = reflect.MakeSlice(reflect.TypeOf(v), 0, len(ls)).Interface()
+		}
+		cv := reflect.ValueOf(v)
+		for _, l := range ls {
+			reflect.Append(cv, reflect.ValueOf(l))
+		}
+		err = options.Set(src, cv, ".Labels")
+		return err
 	}
 }
 
-func WithSpanKind(k SpanKind) SpanOption {
-	return func(o *SpanOptions) {
-		o.Kind = k
+func WithSpanKind(k SpanKind) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, k, ".Kind")
 	}
 }
 
@@ -118,18 +126,8 @@ type Options struct {
 	Name string
 }
 
-// Option func signature
-type Option func(o *Options)
-
-// Logger sets the logger
-func Logger(l logger.Logger) Option {
-	return func(o *Options) {
-		o.Logger = l
-	}
-}
-
 // NewSpanOptions returns default SpanOptions
-func NewSpanOptions(opts ...SpanOption) SpanOptions {
+func NewSpanOptions(opts ...options.Option) SpanOptions {
 	options := SpanOptions{
 		Kind: SpanKindInternal,
 	}
@@ -140,7 +138,7 @@ func NewSpanOptions(opts ...SpanOption) SpanOptions {
 }
 
 // NewOptions returns default options
-func NewOptions(opts ...Option) Options {
+func NewOptions(opts ...options.Option) Options {
 	options := Options{
 		Logger: logger.DefaultLogger,
 	}
@@ -148,11 +146,4 @@ func NewOptions(opts ...Option) Options {
 		o(&options)
 	}
 	return options
-}
-
-// Name sets the name
-func Name(n string) Option {
-	return func(o *Options) {
-		o.Name = n
-	}
 }

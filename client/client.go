@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.unistack.org/micro/v4/codec"
+	"go.unistack.org/micro/v4/options"
 )
 
 var (
@@ -21,6 +22,8 @@ var (
 	DefaultRetries = 0
 	// DefaultRequestTimeout is the default request timeout
 	DefaultRequestTimeout = time.Second * 5
+	// DefaultDialTimeout the default dial timeout
+	DefaultDialTimeout = time.Second * 5
 	// DefaultPoolSize sets the connection pool size
 	DefaultPoolSize = 100
 	// DefaultPoolTTL sets the connection pool ttl
@@ -32,11 +35,11 @@ var (
 // It also supports bidirectional streaming of requests.
 type Client interface {
 	Name() string
-	Init(opts ...Option) error
+	Init(opts ...options.Option) error
 	Options() Options
-	NewRequest(service string, endpoint string, req interface{}, opts ...RequestOption) Request
-	Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error
-	Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error)
+	NewRequest(service string, endpoint string, req interface{}, opts ...options.Option) Request
+	Call(ctx context.Context, req Request, rsp interface{}, opts ...options.Option) error
+	Stream(ctx context.Context, req Request, opts ...options.Option) (Stream, error)
 	String() string
 }
 
@@ -97,18 +100,3 @@ type Stream interface {
 	// CloseSend closes the send direction of the stream
 	CloseSend() error
 }
-
-// Option used by the Client
-type Option func(*Options)
-
-// CallOption used by Call or Stream
-type CallOption func(*CallOptions)
-
-// PublishOption used by Publish
-type PublishOption func(*PublishOptions)
-
-// MessageOption used by NewMessage
-type MessageOption func(*MessageOptions)
-
-// RequestOption used by NewRequest
-type RequestOption func(*RequestOptions)

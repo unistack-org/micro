@@ -8,6 +8,7 @@ import (
 
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/register"
 	maddr "go.unistack.org/micro/v4/util/addr"
 	mnet "go.unistack.org/micro/v4/util/net"
@@ -19,15 +20,11 @@ var DefaultCodecs = map[string]codec.Codec{
 	"application/octet-stream": codec.NewCodec(),
 }
 
-const (
-	defaultContentType = "application/json"
-)
-
 type noopServer struct {
-	h        Handler
+	h        *rpcHandler
 	wg       *sync.WaitGroup
 	rsvc     *register.Service
-	handlers map[string]Handler
+	handlers map[string]*rpcHandler
 	exit     chan chan error
 	opts     Options
 	sync.RWMutex
@@ -36,10 +33,10 @@ type noopServer struct {
 }
 
 // NewServer returns new noop server
-func NewServer(opts ...Option) Server {
+func NewServer(opts ...options.Option) Server {
 	n := &noopServer{opts: NewOptions(opts...)}
 	if n.handlers == nil {
-		n.handlers = make(map[string]Handler)
+		n.handlers = make(map[string]*rpcHandler)
 	}
 	if n.exit == nil {
 		n.exit = make(chan chan error)
@@ -47,18 +44,8 @@ func NewServer(opts ...Option) Server {
 	return n
 }
 
-func (n *noopServer) newCodec(contentType string) (codec.Codec, error) {
-	if cf, ok := n.opts.Codecs[contentType]; ok {
-		return cf, nil
-	}
-	if cf, ok := DefaultCodecs[contentType]; ok {
-		return cf, nil
-	}
-	return nil, codec.ErrUnknownContentType
-}
-
-func (n *noopServer) Handle(handler Handler) error {
-	n.h = handler
+func (n *noopServer) Handle(h interface{}, opts ...options.Option) error {
+	n.h = newRPCHandler(h, opts...)
 	return nil
 }
 
@@ -66,17 +53,13 @@ func (n *noopServer) Name() string {
 	return n.opts.Name
 }
 
-func (n *noopServer) NewHandler(h interface{}, opts ...HandlerOption) Handler {
-	return newRPCHandler(h, opts...)
-}
-
-func (n *noopServer) Init(opts ...Option) error {
+func (n *noopServer) Init(opts ...options.Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
 
 	if n.handlers == nil {
-		n.handlers = make(map[string]Handler, 1)
+		n.handlers = make(map[string]*rpcHandler, 1)
 	}
 
 	if n.exit == nil {
@@ -339,14 +322,14 @@ func (n *noopServer) Stop() error {
 }
 
 type rpcHandler struct {
-	opts      HandlerOptions
+	opts      HandleOptions
 	handler   interface{}
 	name      string
 	endpoints []*register.Endpoint
 }
 
-func newRPCHandler(handler interface{}, opts ...HandlerOption) Handler {
-	options := NewHandlerOptions(opts...)
+func newRPCHandler(handler interface{}, opts ...options.Option) *rpcHandler {
+	options := NewHandleOptions(opts...)
 
 	typ := reflect.TypeOf(handler)
 	hdlr := reflect.ValueOf(handler)
@@ -386,6 +369,6 @@ func (r *rpcHandler) Endpoints() []*register.Endpoint {
 	return r.endpoints
 }
 
-func (r *rpcHandler) Options() HandlerOptions {
+func (r *rpcHandler) Options() HandleOptions {
 	return r.opts
 }

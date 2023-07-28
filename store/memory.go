@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/patrickmn/go-cache"
+	"go.unistack.org/micro/v4/options"
 )
 
 // NewStore returns a memory store
-func NewStore(opts ...Option) Store {
+func NewStore(opts ...options.Option) Store {
 	return &memoryStore{
 		opts:  NewOptions(opts...),
 		store: cache.New(cache.NoExpiration, 5*time.Minute),
@@ -100,7 +101,7 @@ func (m *memoryStore) list(prefix string, limit, offset uint) []string {
 	return allKeys
 }
 
-func (m *memoryStore) Init(opts ...Option) error {
+func (m *memoryStore) Init(opts ...options.Option) error {
 	for _, o := range opts {
 		o(&m.opts)
 	}
@@ -115,7 +116,7 @@ func (m *memoryStore) Name() string {
 	return m.opts.Name
 }
 
-func (m *memoryStore) Exists(ctx context.Context, key string, opts ...ExistsOption) error {
+func (m *memoryStore) Exists(ctx context.Context, key string, opts ...options.Option) error {
 	options := NewExistsOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace
@@ -123,7 +124,7 @@ func (m *memoryStore) Exists(ctx context.Context, key string, opts ...ExistsOpti
 	return m.exists(options.Namespace, key)
 }
 
-func (m *memoryStore) Read(ctx context.Context, key string, val interface{}, opts ...ReadOption) error {
+func (m *memoryStore) Read(ctx context.Context, key string, val interface{}, opts ...options.Option) error {
 	options := NewReadOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace
@@ -131,7 +132,7 @@ func (m *memoryStore) Read(ctx context.Context, key string, val interface{}, opt
 	return m.get(options.Namespace, key, val)
 }
 
-func (m *memoryStore) Write(ctx context.Context, key string, val interface{}, opts ...WriteOption) error {
+func (m *memoryStore) Write(ctx context.Context, key string, val interface{}, opts ...options.Option) error {
 	options := NewWriteOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace
@@ -151,7 +152,7 @@ func (m *memoryStore) Write(ctx context.Context, key string, val interface{}, op
 	return nil
 }
 
-func (m *memoryStore) Delete(ctx context.Context, key string, opts ...DeleteOption) error {
+func (m *memoryStore) Delete(ctx context.Context, key string, opts ...options.Option) error {
 	options := NewDeleteOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace
@@ -165,7 +166,7 @@ func (m *memoryStore) Options() Options {
 	return m.opts
 }
 
-func (m *memoryStore) List(ctx context.Context, opts ...ListOption) ([]string, error) {
+func (m *memoryStore) List(ctx context.Context, opts ...options.Option) ([]string, error) {
 	options := NewListOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace

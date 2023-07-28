@@ -8,7 +8,9 @@ import (
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/errors"
 	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/selector"
+	"go.unistack.org/micro/v4/semconv"
 )
 
 // DefaultCodecs will be used to encode/decode data
@@ -18,12 +20,6 @@ var DefaultCodecs = map[string]codec.Codec{
 
 type noopClient struct {
 	opts Options
-}
-
-type noopMessage struct {
-	topic   string
-	payload interface{}
-	opts    MessageOptions
 }
 
 type noopRequest struct {
@@ -37,15 +33,11 @@ type noopRequest struct {
 }
 
 // NewClient returns new noop client
-func NewClient(opts ...Option) Client {
+func NewClient(opts ...options.Option) Client {
 	nc := &noopClient{opts: NewOptions(opts...)}
 	// wrap in reverse
 
 	c := Client(nc)
-
-	for i := len(nc.opts.Wrappers); i > 0; i-- {
-		c = nc.opts.Wrappers[i-1](c)
-	}
 
 	return c
 }
@@ -141,22 +133,6 @@ func (n *noopStream) CloseSend() error {
 	return nil
 }
 
-func (n *noopMessage) Topic() string {
-	return n.topic
-}
-
-func (n *noopMessage) Payload() interface{} {
-	return n.payload
-}
-
-func (n *noopMessage) ContentType() string {
-	return n.opts.ContentType
-}
-
-func (n *noopMessage) Metadata() metadata.Metadata {
-	return n.opts.Metadata
-}
-
 func (n *noopClient) newCodec(contentType string) (codec.Codec, error) {
 	if cf, ok := n.opts.Codecs[contentType]; ok {
 		return cf, nil
@@ -167,7 +143,7 @@ func (n *noopClient) newCodec(contentType string) (codec.Codec, error) {
 	return nil, codec.ErrUnknownContentType
 }
 
-func (n *noopClient) Init(opts ...Option) error {
+func (n *noopClient) Init(opts ...options.Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
@@ -182,7 +158,7 @@ func (n *noopClient) String() string {
 	return "noop"
 }
 
-func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error {
+func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opts ...options.Option) error {
 	// make a copy of call opts
 	callOpts := n.opts.CallOptions
 	for _, opt := range opts {
@@ -199,7 +175,7 @@ func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opt
 	} else {
 		// got a deadline so no need to setup context
 		// but we need to set the timeout we pass along
-		opt := WithRequestTimeout(time.Until(d))
+		opt := RequestTimeout(time.Until(d))
 		opt(&callOpts)
 	}
 
@@ -286,7 +262,7 @@ func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opt
 
 	ts := time.Now()
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
-	n.opts.Meter.Counter(ClientRequestInflight, "endpoint", endpoint).Inc()
+	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", endpoint).Inc()
 	for i := 0; i <= callOpts.Retries; i++ {
 		go func() {
 			ch <- call(i)
@@ -315,14 +291,14 @@ func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opt
 	}
 
 	if gerr != nil {
-		n.opts.Meter.Counter(ClientRequestTotal, "endpoint", endpoint, "status", "failure").Inc()
+		n.opts.Meter.Counter(semconv.ClientRequestTotal, "endpoint", endpoint, "status", "failure").Inc()
 	} else {
-		n.opts.Meter.Counter(ClientRequestTotal, "endpoint", endpoint, "status", "success").Inc()
+		n.opts.Meter.Counter(semconv.ClientRequestTotal, "endpoint", endpoint, "status", "success").Inc()
 	}
-	n.opts.Meter.Counter(ClientRequestInflight, "endpoint", endpoint).Dec()
+	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", endpoint).Dec()
 	te := time.Since(ts)
-	n.opts.Meter.Summary(ClientRequestLatencyMicroseconds, "endpoint", endpoint).Update(te.Seconds())
-	n.opts.Meter.Histogram(ClientRequestDurationSeconds, "endpoint", endpoint).Update(te.Seconds())
+	n.opts.Meter.Summary(semconv.ClientRequestLatencyMicroseconds, "endpoint", endpoint).Update(te.Seconds())
+	n.opts.Meter.Histogram(semconv.ClientRequestDurationSeconds, "endpoint", endpoint).Update(te.Seconds())
 
 	return gerr
 }
@@ -331,11 +307,11 @@ func (n *noopClient) call(ctx context.Context, addr string, req Request, rsp int
 	return nil
 }
 
-func (n *noopClient) NewRequest(service, endpoint string, req interface{}, opts ...RequestOption) Request {
+func (n *noopClient) NewRequest(service, endpoint string, req interface{}, opts ...options.Option) Request {
 	return &noopRequest{service: service, endpoint: endpoint}
 }
 
-func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error) {
+func (n *noopClient) Stream(ctx context.Context, req Request, opts ...options.Option) (Stream, error) {
 	var err error
 
 	// make a copy of call opts
@@ -354,7 +330,7 @@ func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption
 	} else {
 		// got a deadline so no need to setup context
 		// but we need to set the timeout we pass along
-		o := WithStreamTimeout(time.Until(d))
+		o := StreamTimeout(time.Until(d))
 		o(&callOpts)
 	}
 
@@ -423,12 +399,12 @@ func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption
 
 		// ts := time.Now()
 		endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
-		n.opts.Meter.Counter(ClientRequestInflight, "endpoint", endpoint).Inc()
+		n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", endpoint).Inc()
 		stream, cerr := n.stream(ctx, node, req, callOpts)
 		if cerr != nil {
-			n.opts.Meter.Counter(ClientRequestTotal, "endpoint", endpoint, "status", "failure").Inc()
+			n.opts.Meter.Counter(semconv.ClientRequestTotal, "endpoint", endpoint, "status", "failure").Inc()
 		} else {
-			n.opts.Meter.Counter(ClientRequestTotal, "endpoint", endpoint, "status", "success").Inc()
+			n.opts.Meter.Counter(semconv.ClientRequestTotal, "endpoint", endpoint, "status", "success").Inc()
 		}
 
 		// record the result of the call to inform future routing decisions

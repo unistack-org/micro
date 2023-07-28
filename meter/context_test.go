@@ -40,14 +40,3 @@ func TestNewContext(t *testing.T) {
 		t.Fatal("NewContext not works")
 	}
 }
-
-func TestSetOption(t *testing.T) {
-	type key struct{}
-	o := SetOption(key{}, "test")
-	opts := &Options{}
-	o(opts)
-
-	if v, ok := opts.Context.Value(key{}).(string); !ok || v == "" {
-		t.Fatal("SetOption not works")
-	}
-}

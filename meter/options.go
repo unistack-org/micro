@@ -2,12 +2,12 @@ package meter
 
 import (
 	"context"
+	"reflect"
 
 	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/options"
+	rutil "go.unistack.org/micro/v4/util/reflect"
 )
-
-// Option powers the configuration for metrics implementations:
-type Option func(*Options)
 
 // Options for metrics implementations
 type Options struct {
@@ -34,7 +34,7 @@ type Options struct {
 }
 
 // NewOptions prepares a set of options:
-func NewOptions(opt ...Option) Options {
+func NewOptions(opt ...options.Option) Options {
 	opts := Options{
 		Address:      DefaultAddress,
 		Path:         DefaultPath,
@@ -52,37 +52,23 @@ func NewOptions(opt ...Option) Options {
 }
 
 // LabelPrefix sets the labels prefix
-func LabelPrefix(pref string) Option {
-	return func(o *Options) {
-		o.LabelPrefix = pref
+func LabelPrefix(pref string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, pref, ".LabelPrefix")
 	}
 }
 
 // MetricPrefix sets the metric prefix
-func MetricPrefix(pref string) Option {
-	return func(o *Options) {
-		o.MetricPrefix = pref
-	}
-}
-
-// Context sets the metrics context
-func Context(ctx context.Context) Option {
-	return func(o *Options) {
-		o.Context = ctx
+func MetricPrefix(pref string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, pref, ".MetricPrefix")
 	}
 }
 
 // Path used to serve metrics over HTTP
-func Path(value string) Option {
-	return func(o *Options) {
-		o.Path = value
-	}
-}
-
-// Address is the listen address to serve metrics
-func Address(value string) Option {
-	return func(o *Options) {
-		o.Address = value
+func Path(path string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, path, ".Path")
 	}
 }
 
@@ -95,37 +81,34 @@ func TimingObjectives(value map[float64]float64) Option {
 }
 */
 
-// Logger sets the logger
-func Logger(l logger.Logger) Option {
-	return func(o *Options) {
-		o.Logger = l
-	}
-}
-
 // Labels sets the meter labels
-func Labels(ls ...string) Option {
-	return func(o *Options) {
-		o.Labels = append(o.Labels, ls...)
-	}
-}
-
-// Name sets the name
-func Name(n string) Option {
-	return func(o *Options) {
-		o.Name = n
+func Labels(ls ...string) options.Option {
+	return func(src interface{}) error {
+		v, err := options.Get(src, ".Labels")
+		if err != nil {
+			return err
+		} else if rutil.IsZero(v) {
+			v = reflect.MakeSlice(reflect.TypeOf(v), 0, len(ls)).Interface()
+		}
+		cv := reflect.ValueOf(v)
+		for _, l := range ls {
+			reflect.Append(cv, reflect.ValueOf(l))
+		}
+		err = options.Set(src, cv, ".Labels")
+		return err
 	}
 }
 
 // WriteProcessMetrics enable process metrics output for write
-func WriteProcessMetrics(b bool) Option {
-	return func(o *Options) {
-		o.WriteProcessMetrics = b
+func WriteProcessMetrics(b bool) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, b, ".WriteProcessMetrics")
 	}
 }
 
 // WriteFDMetrics enable fd metrics output for write
-func WriteFDMetrics(b bool) Option {
-	return func(o *Options) {
-		o.WriteFDMetrics = b
+func WriteFDMetrics(b bool) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, b, ".WriteFDMetrics")
 	}
 }

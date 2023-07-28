@@ -7,6 +7,7 @@ import (
 
 	"go.unistack.org/micro/v4/client"
 	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/semconv"
 	"go.unistack.org/micro/v4/server"
 )
 
@@ -117,21 +118,21 @@ func (w *wrapper) CallFunc(ctx context.Context, addr string, req client.Request,
 	labels := make([]string, 0, 4)
 	labels = append(labels, labelEndpoint, endpoint)
 
-	w.opts.Meter.Counter(ClientRequestInflight, labels...).Inc()
+	w.opts.Meter.Counter(semconv.ClientRequestInflight, labels...).Inc()
 	ts := time.Now()
 	err := w.callFunc(ctx, addr, req, rsp, opts)
 	te := time.Since(ts)
-	w.opts.Meter.Counter(ClientRequestInflight, labels...).Dec()
+	w.opts.Meter.Counter(semconv.ClientRequestInflight, labels...).Dec()
 
-	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, labels...).Update(te.Seconds())
-	w.opts.Meter.Histogram(ClientRequestDurationSeconds, labels...).Update(te.Seconds())
+	w.opts.Meter.Summary(semconv.ClientRequestLatencyMicroseconds, labels...).Update(te.Seconds())
+	w.opts.Meter.Histogram(semconv.ClientRequestDurationSeconds, labels...).Update(te.Seconds())
 
 	if err == nil {
 		labels = append(labels, labelStatus, labelSuccess)
 	} else {
 		labels = append(labels, labelStatus, labelFailure)
 	}
-	w.opts.Meter.Counter(ClientRequestTotal, labels...).Inc()
+	w.opts.Meter.Counter(semconv.ClientRequestTotal, labels...).Inc()
 
 	return err
 }
@@ -147,21 +148,21 @@ func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{},
 	labels := make([]string, 0, 4)
 	labels = append(labels, labelEndpoint, endpoint)
 
-	w.opts.Meter.Counter(ClientRequestInflight, labels...).Inc()
+	w.opts.Meter.Counter(semconv.ClientRequestInflight, labels...).Inc()
 	ts := time.Now()
 	err := w.Client.Call(ctx, req, rsp, opts...)
 	te := time.Since(ts)
-	w.opts.Meter.Counter(ClientRequestInflight, labels...).Dec()
+	w.opts.Meter.Counter(semconv.ClientRequestInflight, labels...).Dec()
 
-	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, labels...).Update(te.Seconds())
-	w.opts.Meter.Histogram(ClientRequestDurationSeconds, labels...).Update(te.Seconds())
+	w.opts.Meter.Summary(semconv.ClientRequestLatencyMicroseconds, labels...).Update(te.Seconds())
+	w.opts.Meter.Histogram(semconv.ClientRequestDurationSeconds, labels...).Update(te.Seconds())
 
 	if err == nil {
 		labels = append(labels, labelStatus, labelSuccess)
 	} else {
 		labels = append(labels, labelStatus, labelFailure)
 	}
-	w.opts.Meter.Counter(ClientRequestTotal, labels...).Inc()
+	w.opts.Meter.Counter(semconv.ClientRequestTotal, labels...).Inc()
 
 	return err
 }
@@ -177,27 +178,23 @@ func (w *wrapper) Stream(ctx context.Context, req client.Request, opts ...client
 	labels := make([]string, 0, 4)
 	labels = append(labels, labelEndpoint, endpoint)
 
-	w.opts.Meter.Counter(ClientRequestInflight, labels...).Inc()
+	w.opts.Meter.Counter(semconv.ClientRequestInflight, labels...).Inc()
 	ts := time.Now()
 	stream, err := w.Client.Stream(ctx, req, opts...)
 	te := time.Since(ts)
-	w.opts.Meter.Counter(ClientRequestInflight, labels...).Dec()
+	w.opts.Meter.Counter(semconv.ClientRequestInflight, labels...).Dec()
 
-	w.opts.Meter.Summary(ClientRequestLatencyMicroseconds, labels...).Update(te.Seconds())
-	w.opts.Meter.Histogram(ClientRequestDurationSeconds, labels...).Update(te.Seconds())
+	w.opts.Meter.Summary(semconv.ClientRequestLatencyMicroseconds, labels...).Update(te.Seconds())
+	w.opts.Meter.Histogram(semconv.ClientRequestDurationSeconds, labels...).Update(te.Seconds())
 
 	if err == nil {
 		labels = append(labels, labelStatus, labelSuccess)
 	} else {
 		labels = append(labels, labelStatus, labelFailure)
 	}
-	w.opts.Meter.Counter(ClientRequestTotal, labels...).Inc()
+	w.opts.Meter.Counter(semconv.ClientRequestTotal, labels...).Inc()
 
 	return stream, err
-}
-
-func (w *wrapper) Publish(ctx context.Context, p client.Message, opts ...client.PublishOption) error {
-	return w.Client.Publish(ctx, p, opts...)
 }
 
 // NewServerHandlerWrapper create new server handler wrapper
@@ -220,21 +217,21 @@ func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 		labels := make([]string, 0, 4)
 		labels = append(labels, labelEndpoint, endpoint)
 
-		w.opts.Meter.Counter(ServerRequestInflight, labels...).Inc()
+		w.opts.Meter.Counter(semconv.ServerRequestInflight, labels...).Inc()
 		ts := time.Now()
 		err := fn(ctx, req, rsp)
 		te := time.Since(ts)
-		w.opts.Meter.Counter(ServerRequestInflight, labels...).Dec()
+		w.opts.Meter.Counter(semconv.ServerRequestInflight, labels...).Dec()
 
-		w.opts.Meter.Summary(ServerRequestLatencyMicroseconds, labels...).Update(te.Seconds())
-		w.opts.Meter.Histogram(ServerRequestDurationSeconds, labels...).Update(te.Seconds())
+		w.opts.Meter.Summary(semconv.ServerRequestLatencyMicroseconds, labels...).Update(te.Seconds())
+		w.opts.Meter.Histogram(semconv.ServerRequestDurationSeconds, labels...).Update(te.Seconds())
 
 		if err == nil {
 			labels = append(labels, labelStatus, labelSuccess)
 		} else {
 			labels = append(labels, labelStatus, labelFailure)
 		}
-		w.opts.Meter.Counter(ServerRequestTotal, labels...).Inc()
+		w.opts.Meter.Counter(semconv.ServerRequestTotal, labels...).Inc()
 
 		return err
 	}

@@ -11,6 +11,7 @@ import (
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/metadata"
 	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/register"
 	"go.unistack.org/micro/v4/router"
 	"go.unistack.org/micro/v4/server"
@@ -201,7 +202,7 @@ func Logger(l logger.Logger, opts ...LoggerOption) Option {
 		for _, srv := range o.Servers {
 			for _, os := range lopts.servers {
 				if srv.Name() == os || all {
-					if err = srv.Init(server.Logger(l)); err != nil {
+					if err = srv.Init(options.Logger(l)); err != nil {
 						return err
 					}
 				}
@@ -210,7 +211,7 @@ func Logger(l logger.Logger, opts ...LoggerOption) Option {
 		for _, cli := range o.Clients {
 			for _, oc := range lopts.clients {
 				if cli.Name() == oc || all {
-					if err = cli.Init(client.Logger(l)); err != nil {
+					if err = cli.Init(options.Logger(l)); err != nil {
 						return err
 					}
 				}
@@ -219,7 +220,7 @@ func Logger(l logger.Logger, opts ...LoggerOption) Option {
 		for _, brk := range o.Brokers {
 			for _, ob := range lopts.brokers {
 				if brk.Name() == ob || all {
-					if err = brk.Init(broker.Logger(l)); err != nil {
+					if err = brk.Init(options.Logger(l)); err != nil {
 						return err
 					}
 				}
@@ -237,7 +238,7 @@ func Logger(l logger.Logger, opts ...LoggerOption) Option {
 		for _, str := range o.Stores {
 			for _, or := range lopts.stores {
 				if str.Name() == or || all {
-					if err = str.Init(store.Logger(l)); err != nil {
+					if err = str.Init(options.Logger(l)); err != nil {
 						return err
 					}
 				}
@@ -246,7 +247,7 @@ func Logger(l logger.Logger, opts ...LoggerOption) Option {
 		for _, mtr := range o.Meters {
 			for _, or := range lopts.meters {
 				if mtr.Name() == or || all {
-					if err = mtr.Init(meter.Logger(l)); err != nil {
+					if err = mtr.Init(options.Logger(l)); err != nil {
 						return err
 					}
 				}
@@ -255,7 +256,7 @@ func Logger(l logger.Logger, opts ...LoggerOption) Option {
 		for _, trc := range o.Tracers {
 			for _, ot := range lopts.tracers {
 				if trc.Name() == ot || all {
-					if err = trc.Init(tracer.Logger(l)); err != nil {
+					if err = trc.Init(options.Logger(l)); err != nil {
 						return err
 					}
 				}
@@ -329,7 +330,7 @@ func Register(r register.Register, opts ...RegisterOption) Option {
 		for _, srv := range o.Servers {
 			for _, os := range ropts.servers {
 				if srv.Name() == os || all {
-					if err = srv.Init(server.Register(r)); err != nil {
+					if err = srv.Init(options.Register(r)); err != nil {
 						return err
 					}
 				}
@@ -338,7 +339,7 @@ func Register(r register.Register, opts ...RegisterOption) Option {
 		for _, brk := range o.Brokers {
 			for _, os := range ropts.brokers {
 				if brk.Name() == os || all {
-					if err = brk.Init(broker.Register(r)); err != nil {
+					if err = brk.Init(options.Register(r)); err != nil {
 						return err
 					}
 				}
@@ -395,7 +396,7 @@ func Tracer(t tracer.Tracer, opts ...TracerOption) Option {
 		for _, srv := range o.Servers {
 			for _, os := range topts.servers {
 				if srv.Name() == os || all {
-					if err = srv.Init(server.Tracer(t)); err != nil {
+					if err = srv.Init(options.Tracer(t)); err != nil {
 						return err
 					}
 				}
@@ -404,7 +405,7 @@ func Tracer(t tracer.Tracer, opts ...TracerOption) Option {
 		for _, cli := range o.Clients {
 			for _, os := range topts.clients {
 				if cli.Name() == os || all {
-					if err = cli.Init(client.Tracer(t)); err != nil {
+					if err = cli.Init(options.Tracer(t)); err != nil {
 						return err
 					}
 				}
@@ -413,7 +414,7 @@ func Tracer(t tracer.Tracer, opts ...TracerOption) Option {
 		for _, str := range o.Stores {
 			for _, os := range topts.stores {
 				if str.Name() == os || all {
-					if err = str.Init(store.Tracer(t)); err != nil {
+					if err = str.Init(options.Tracer(t)); err != nil {
 						return err
 					}
 				}
@@ -422,7 +423,7 @@ func Tracer(t tracer.Tracer, opts ...TracerOption) Option {
 		for _, brk := range o.Brokers {
 			for _, os := range topts.brokers {
 				if brk.Name() == os || all {
-					if err = brk.Init(broker.Tracer(t)); err != nil {
+					if err = brk.Init(options.Tracer(t)); err != nil {
 						return err
 					}
 				}
@@ -521,7 +522,7 @@ func Router(r router.Router, opts ...RouterOption) Option {
 		for _, cli := range o.Clients {
 			for _, os := range ropts.clients {
 				if cli.Name() == os || all {
-					if err = cli.Init(client.Router(r)); err != nil {
+					if err = cli.Init(options.Router(r)); err != nil {
 						return err
 					}
 				}
@@ -556,7 +557,7 @@ func Address(addr string) Option {
 		default:
 			return fmt.Errorf("cant set same address for multiple servers")
 		}
-		return o.Servers[0].Init(server.Address(addr))
+		return o.Servers[0].Init(options.Address(addr))
 	}
 }
 

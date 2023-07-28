@@ -7,7 +7,7 @@ import (
 
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/register"
+	"go.unistack.org/micro/v4/options"
 )
 
 // DefaultServer default server
@@ -26,9 +26,7 @@ var (
 	DefaultRegisterInterval = time.Second * 30
 	// DefaultRegisterTTL holds register record ttl, must be multiple of DefaultRegisterInterval
 	DefaultRegisterTTL = time.Second * 90
-	// DefaultNamespace will be used if no namespace passed
-	DefaultNamespace = "micro"
-	// DefaultMaxMsgSize holds default max msg ssize
+	// DefaultMaxMsgSize holds default max msg size
 	DefaultMaxMsgSize = 1024 * 1024 * 4 // 4Mb
 	// DefaultMaxMsgRecvSize holds default max recv size
 	DefaultMaxMsgRecvSize = 1024 * 1024 * 4 // 4Mb
@@ -41,13 +39,11 @@ type Server interface {
 	// Name returns server name
 	Name() string
 	// Initialise options
-	Init(...Option) error
+	Init(...options.Option) error
 	// Retrieve the options
 	Options() Options
-	// Register a handler
-	Handle(h Handler) error
-	// Create a new handler
-	NewHandler(h interface{}, opts ...HandlerOption) Handler
+	// Create and register new handler
+	Handle(h interface{}, opts ...options.Option) error
 	// Start the server
 	Start() error
 	// Stop the server
@@ -109,22 +105,4 @@ type Stream interface {
 	Error() error
 	// Close closes the stream
 	Close() error
-}
-
-// Handler interface represents a request handler. It's generated
-// by passing any type of public concrete object with endpoints into server.NewHandler.
-// Most will pass in a struct.
-//
-// Example:
-//
-//	type Greeter struct {}
-//
-//	func (g *Greeter) Hello(context, request, response) error {
-//	        return nil
-//	}
-type Handler interface {
-	Name() string
-	Handler() interface{}
-	Endpoints() []*register.Endpoint
-	Options() HandlerOptions
 }

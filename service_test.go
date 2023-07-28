@@ -9,6 +9,7 @@ import (
 	"go.unistack.org/micro/v4/config"
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/register"
 	"go.unistack.org/micro/v4/router"
 	"go.unistack.org/micro/v4/server"
@@ -37,7 +38,7 @@ func TestRegisterHandler(t *testing.T) {
 	type args struct {
 		s    server.Server
 		h    interface{}
-		opts []server.HandlerOption
+		opts []options.Option
 	}
 	h := struct{}{}
 	tests := []struct {

@@ -3,6 +3,8 @@ package store
 import (
 	"context"
 	"testing"
+
+	"go.unistack.org/micro/v4/options"
 )
 
 func TestFromNilContext(t *testing.T) {
@@ -43,10 +45,7 @@ func TestNewContext(t *testing.T) {
 
 func TestSetOption(t *testing.T) {
 	type key struct{}
-	o := SetOption(key{}, "test")
-	opts := &Options{}
-	o(opts)
-
+	opts := NewOptions(options.ContextOption(key{}, "test"))
 	if v, ok := opts.Context.Value(key{}).(string); !ok || v == "" {
 		t.Fatal("SetOption not works")
 	}

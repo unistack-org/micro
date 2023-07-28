@@ -5,12 +5,12 @@ import (
 	"context"
 	"errors"
 
-	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/options"
 )
 
 // DefaultBroker default memory broker
-var DefaultBroker Broker // =  NewBroker()
+var DefaultBroker Broker = NewBroker()
 
 var (
 	// ErrNotConnected returns when broker used but not connected yet
@@ -26,7 +26,7 @@ type Broker interface {
 	// Name returns broker instance name
 	Name() string
 	// Init initilize broker
-	Init(opts ...Option) error
+	Init(opts ...options.Option) error
 	// Options returns broker options
 	Options() Options
 	// Address return configured address
@@ -35,12 +35,10 @@ type Broker interface {
 	Connect(ctx context.Context) error
 	// Disconnect disconnect from broker
 	Disconnect(ctx context.Context) error
-	// NewMessage creates new broker message
-	NewMessage(endpoint string, req interface{}, opts ...MessageOption) Message
-	// Publish message to broker topic
-	Publish(ctx context.Context, msg interface{}, opts ...PublishOption) error
+	// Publish message, msg can be single broker.Message or []broker.Message
+	Publish(ctx context.Context, msg interface{}, opts ...options.Option) error
 	// Subscribe subscribes to topic message via handler
-	Subscribe(ctx context.Context, topic string, handler interface{}, opts ...SubscribeOption) (Subscriber, error)
+	Subscribe(ctx context.Context, topic string, handler interface{}, opts ...options.Option) (Subscriber, error)
 	// String type of broker
 	String() string
 }
@@ -49,30 +47,17 @@ type Broker interface {
 type Message interface {
 	// Context for the message
 	Context() context.Context
-	// Topic returns event topic
+	// Topic
 	Topic() string
-	// Body returns broker message
+	// Header returns message headers
+	Header() metadata.Metadata
+	// Body returns broker message may be []byte slice or some go struct
 	Body() interface{}
 	// Ack acknowledge message
 	Ack() error
 	// Error returns message error (like decoding errors or some other)
 	// In this case Body contains raw []byte from broker
 	Error() error
-}
-
-// RawMessage is used to transfer data
-type RawMessage struct {
-	// Header contains message metadata
-	Header metadata.Metadata
-	// Body contains message body
-	Body codec.RawMessage
-}
-
-// NewMessage create broker message with topic filled
-func NewRawMessage(topic string) *RawMessage {
-	m := &RawMessage{Header: metadata.New(2)}
-	m.Header.Set(metadata.HeaderTopic, topic)
-	return m
 }
 
 // Subscriber is a convenience return type for the Subscribe method
@@ -84,3 +69,9 @@ type Subscriber interface {
 	// Unsubscribe from topic
 	Unsubscribe(ctx context.Context) error
 }
+
+// MessageHandler func signature for single message processing
+type MessageHandler func(Message) error
+
+// MessagesHandler func signature for batch message processing
+type MessagesHandler func([]Message) error

@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"go.unistack.org/micro/v4/options"
 )
 
 func TestNewClientCallOptions(t *testing.T) {
@@ -13,11 +15,11 @@ func TestNewClientCallOptions(t *testing.T) {
 		return fn
 	}
 	c := NewClientCallOptions(NewClient(),
-		WithAddress("127.0.0.1"),
+		options.Address("127.0.0.1"),
 		WithCallWrapper(w),
-		WithRequestTimeout(1*time.Millisecond),
-		WithRetries(0),
-		WithBackoff(BackoffInterval(10*time.Millisecond, 100*time.Millisecond)),
+		RequestTimeout(1*time.Millisecond),
+		Retries(0),
+		Backoff(BackoffInterval(10*time.Millisecond, 100*time.Millisecond)),
 	)
 	_ = c.Call(context.TODO(), c.NewRequest("service", "endpoint", nil), nil)
 	if !flag {
