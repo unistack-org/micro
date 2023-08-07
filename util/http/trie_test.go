@@ -5,8 +5,32 @@ import (
 	"testing"
 )
 
-func TestTrieBackwards(t *testing.T) {
-	_ = &Trie{}
+func TestTrieRPC(t *testing.T) {
+	var err error
+	type handler struct {
+		name string
+	}
+	tr := NewTrie()
+	if err = tr.Insert([]string{"helloworld"}, "Call", &handler{name: "helloworld.Call"}); err != nil {
+		t.Fatal(err)
+	}
+	if err = tr.Insert([]string{"helloworld"}, "Stream", &handler{name: "helloworld.Stream"}); err != nil {
+		t.Fatal(err)
+	}
+	h, _, err := tr.Search("helloworld", "Call")
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+	if h.(*handler).name != "helloworld.Call" {
+		t.Fatalf("invalid handler %v", h)
+	}
+	h, _, err = tr.Search("helloworld", "Stream")
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+	if h.(*handler).name != "helloworld.Stream" {
+		t.Fatalf("invalid handler %v", h)
+	}
 }
 
 func TestTrieWildcardPathPrefix(t *testing.T) {
