@@ -197,7 +197,7 @@ func NewWatchOptions(opts ...options.Option) WatchOptions {
 }
 
 // Coalesce controls watch event combining
-func Coalesce(b bool) options.Option {
+func WatchCoalesce(b bool) options.Option {
 	return func(src interface{}) error {
 		return options.Set(src, b, ".Coalesce")
 	}
