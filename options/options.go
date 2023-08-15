@@ -187,10 +187,3 @@ func Timeout(td time.Duration) Option {
 		return Set(src, td, ".Timeout")
 	}
 }
-
-// ID sets the step ID
-func StepID(id string) Option {
-	return func(src interface{}) error {
-		return Set(src, id, ".ID")
-	}
-}

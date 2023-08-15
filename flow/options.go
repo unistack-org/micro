@@ -134,3 +134,10 @@ func Fallback(step string) options.Option {
 		return options.Set(src, step, ".Fallback")
 	}
 }
+
+// ID sets the step ID
+func StepID(id string) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, id, ".ID")
+	}
+}
