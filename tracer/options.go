@@ -91,10 +91,18 @@ type SpanOptions struct {
 type SpanOption func(o *SpanOptions)
 
 // EventOptions contains event options
-type EventOptions struct{}
+type EventOptions struct {
+	Labels []interface{}
+}
 
 // EventOption func signature
 type EventOption func(o *EventOptions)
+
+func WithEventLabels(labels ...interface{}) EventOption {
+	return func(o *EventOptions) {
+		o.Labels = labels
+	}
+}
 
 func WithSpanLabels(labels ...interface{}) SpanOption {
 	return func(o *SpanOptions) {

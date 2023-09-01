@@ -19,6 +19,8 @@ var (
 	HeaderTimeout = "Micro-Timeout"
 	// HeaderAuthorization specifies Authorization header
 	HeaderAuthorization = "Authorization"
+	// HeaderXRequestID specifies request id
+	HeaderXRequestID = "X-Request-Id"
 )
 
 // Metadata is our way of representing request headers internally.
