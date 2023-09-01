@@ -2,11 +2,9 @@ package tracer
 
 import (
 	"context"
-	"reflect"
 
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/options"
-	rutil "go.unistack.org/micro/v4/util/reflect"
 )
 
 type SpanStatus int
@@ -95,41 +93,12 @@ type EventOptions struct {
 	Labels []interface{}
 }
 
-func WithSpanLabels(ls ...interface{}) options.Option {
-	return func(src interface{}) error {
-		v, err := options.Get(src, ".Labels")
-		if err != nil {
-			return err
-		} else if rutil.IsZero(v) {
-			v = reflect.MakeSlice(reflect.TypeOf(v), 0, len(ls)).Interface()
-		}
-		cv := reflect.ValueOf(v)
-		for _, l := range ls {
-			reflect.Append(cv, reflect.ValueOf(l))
-		}
-		err = options.Set(src, cv, ".Labels")
-		return err
-	}
+func WithEventLabels(labels ...interface{}) options.Option {
+	return options.Labels(labels...)
 }
 
-// EventOption func signature
-type EventOption func(o *EventOptions)
-
-func WithEventLabels(ls ...interface{}) options.Option {
-	return func(src interface{}) error {
-		v, err := options.Get(src, ".Labels")
-		if err != nil {
-			return err
-		} else if rutil.IsZero(v) {
-			v = reflect.MakeSlice(reflect.TypeOf(v), 0, len(ls)).Interface()
-		}
-		cv := reflect.ValueOf(v)
-		for _, l := range ls {
-			reflect.Append(cv, reflect.ValueOf(l))
-		}
-		err = options.Set(src, cv, ".Labels")
-		return err
-	}
+func WithSpanLabels(labels ...interface{}) options.Option {
+	return options.Labels(labels...)
 }
 
 func WithSpanKind(k SpanKind) options.Option {
