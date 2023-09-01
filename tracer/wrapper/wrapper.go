@@ -7,77 +7,70 @@ import (
 
 	"go.unistack.org/micro/v4/client"
 	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/server"
 	"go.unistack.org/micro/v4/tracer"
 )
 
+var DefaultHeadersExctract = []string{metadata.HeaderTopic, metadata.HeaderEndpoint, metadata.HeaderService, metadata.HeaderXRequestID}
+
+func extractLabels(md metadata.Metadata) []string {
+	labels := make([]string, 0, 5)
+	for _, k := range DefaultHeadersExctract {
+		if v, ok := md.Get(k); ok {
+			labels = append(labels, k, v)
+		}
+	}
+	return labels
+}
+
 var (
-	DefaultClientCallObserver = func(ctx context.Context, req client.Request, rsp interface{}, opts []client.CallOption, sp tracer.Span, err error) {
+	DefaultClientCallObserver = func(ctx context.Context, req client.Request, rsp interface{}, opts []options.Option, sp tracer.Span, err error) {
 		sp.SetName(fmt.Sprintf("Call %s.%s", req.Service(), req.Method()))
 		var labels []interface{}
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
-			labels = make([]interface{}, 0, len(md)+1)
-			for k, v := range md {
-				labels = append(labels, k, v)
-			}
+			labels = append(labels, extractLabels(md))
 		}
 		if err != nil {
-			labels = append(labels, "error", err.Error())
 			sp.SetStatus(tracer.SpanStatusError, err.Error())
 		}
-		labels = append(labels, "kind", sp.Kind())
-		sp.SetLabels(labels...)
+		sp.AddLabels(labels...)
 	}
 
-	DefaultClientStreamObserver = func(ctx context.Context, req client.Request, opts []client.CallOption, stream client.Stream, sp tracer.Span, err error) {
+	DefaultClientStreamObserver = func(ctx context.Context, req client.Request, opts []options.Option, stream client.Stream, sp tracer.Span, err error) {
 		sp.SetName(fmt.Sprintf("Stream %s.%s", req.Service(), req.Method()))
 		var labels []interface{}
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
-			labels = make([]interface{}, 0, len(md))
-			for k, v := range md {
-				labels = append(labels, k, v)
-			}
+			labels = append(labels, extractLabels(md))
 		}
 		if err != nil {
-			labels = append(labels, "error", err.Error())
 			sp.SetStatus(tracer.SpanStatusError, err.Error())
 		}
-		labels = append(labels, "kind", sp.Kind())
-		sp.SetLabels(labels...)
+		sp.AddLabels(labels...)
 	}
 
 	DefaultServerHandlerObserver = func(ctx context.Context, req server.Request, rsp interface{}, sp tracer.Span, err error) {
 		sp.SetName(fmt.Sprintf("Handler %s.%s", req.Service(), req.Method()))
 		var labels []interface{}
 		if md, ok := metadata.FromIncomingContext(ctx); ok {
-			labels = make([]interface{}, 0, len(md))
-			for k, v := range md {
-				labels = append(labels, k, v)
-			}
+			labels = append(labels, extractLabels(md))
 		}
 		if err != nil {
-			labels = append(labels, "error", err.Error())
 			sp.SetStatus(tracer.SpanStatusError, err.Error())
 		}
-		labels = append(labels, "kind", sp.Kind())
-		sp.SetLabels(labels...)
+		sp.AddLabels(labels...)
 	}
 
 	DefaultClientCallFuncObserver = func(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions, sp tracer.Span, err error) {
 		sp.SetName(fmt.Sprintf("Call %s.%s", req.Service(), req.Method()))
 		var labels []interface{}
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
-			labels = make([]interface{}, 0, len(md))
-			for k, v := range md {
-				labels = append(labels, k, v)
-			}
+			labels = append(labels, extractLabels(md))
 		}
 		if err != nil {
-			labels = append(labels, "error", err.Error())
 			sp.SetStatus(tracer.SpanStatusError, err.Error())
 		}
-		labels = append(labels, "kind", sp.Kind())
-		sp.SetLabels(labels...)
+		sp.AddLabels(labels...)
 	}
 
 	DefaultSkipEndpoints = []string{"Meter.Metrics", "Health.Live", "Health.Ready", "Health.Version"}
@@ -91,8 +84,8 @@ type tWrapper struct {
 }
 
 type (
-	ClientCallObserver     func(context.Context, client.Request, interface{}, []client.CallOption, tracer.Span, error)
-	ClientStreamObserver   func(context.Context, client.Request, []client.CallOption, client.Stream, tracer.Span, error)
+	ClientCallObserver     func(context.Context, client.Request, interface{}, []options.Option, tracer.Span, error)
+	ClientStreamObserver   func(context.Context, client.Request, []options.Option, client.Stream, tracer.Span, error)
 	ClientCallFuncObserver func(context.Context, string, client.Request, interface{}, client.CallOptions, tracer.Span, error)
 	ServerHandlerObserver  func(context.Context, server.Request, interface{}, tracer.Span, error)
 )
@@ -176,7 +169,7 @@ func WithServerHandlerObservers(ob ...ServerHandlerObserver) Option {
 	}
 }
 
-func (ot *tWrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
+func (ot *tWrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...options.Option) error {
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
 	for _, ep := range ot.opts.SkipEndpoints {
 		if ep == endpoint {
@@ -186,7 +179,14 @@ func (ot *tWrapper) Call(ctx context.Context, req client.Request, rsp interface{
 
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, "", tracer.WithSpanKind(tracer.SpanKindClient))
+		ctx, sp = ot.opts.Tracer.Start(ctx, "rpc-client",
+			tracer.WithSpanKind(tracer.SpanKindClient),
+			tracer.WithSpanLabels(
+				"rpc.flavor", "rpc",
+				"rpc.call", "/"+req.Service()+"/"+req.Endpoint(),
+				"rpc.call_type", "unary",
+			),
+		)
 	}
 	defer sp.Finish()
 
@@ -199,7 +199,7 @@ func (ot *tWrapper) Call(ctx context.Context, req client.Request, rsp interface{
 	return err
 }
 
-func (ot *tWrapper) Stream(ctx context.Context, req client.Request, opts ...client.CallOption) (client.Stream, error) {
+func (ot *tWrapper) Stream(ctx context.Context, req client.Request, opts ...options.Option) (client.Stream, error) {
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
 	for _, ep := range ot.opts.SkipEndpoints {
 		if ep == endpoint {
@@ -209,7 +209,14 @@ func (ot *tWrapper) Stream(ctx context.Context, req client.Request, opts ...clie
 
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, "", tracer.WithSpanKind(tracer.SpanKindClient))
+		ctx, sp = ot.opts.Tracer.Start(ctx, "rpc-client",
+			tracer.WithSpanKind(tracer.SpanKindClient),
+			tracer.WithSpanLabels(
+				"rpc.flavor", "rpc",
+				"rpc.call", "/"+req.Service()+"/"+req.Endpoint(),
+				"rpc.call_type", "stream",
+			),
+		)
 	}
 	defer sp.Finish()
 
@@ -230,10 +237,23 @@ func (ot *tWrapper) ServerHandler(ctx context.Context, req server.Request, rsp i
 		}
 	}
 
+	callType := "unary"
+	if req.Stream() {
+		callType = "stream"
+	}
+
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, "", tracer.WithSpanKind(tracer.SpanKindServer))
+		ctx, sp = ot.opts.Tracer.Start(ctx, "rpc-server",
+			tracer.WithSpanKind(tracer.SpanKindServer),
+			tracer.WithSpanLabels(
+				"rpc.flavor", "rpc",
+				"rpc.call", "/"+req.Service()+"/"+req.Endpoint(),
+				"rpc.call_type", callType,
+			),
+		)
 	}
+
 	defer sp.Finish()
 
 	err := ot.serverHandler(ctx, req, rsp)
@@ -279,7 +299,14 @@ func (ot *tWrapper) ClientCallFunc(ctx context.Context, addr string, req client.
 
 	sp, ok := tracer.SpanFromContext(ctx)
 	if !ok {
-		ctx, sp = ot.opts.Tracer.Start(ctx, "", tracer.WithSpanKind(tracer.SpanKindClient))
+		ctx, sp = ot.opts.Tracer.Start(ctx, "rpc-client",
+			tracer.WithSpanKind(tracer.SpanKindClient),
+			tracer.WithSpanLabels(
+				"rpc.flavor", "rpc",
+				"rpc.call", "/"+req.Service()+"/"+req.Endpoint(),
+				"rpc.call_type", "unary",
+			),
+		)
 	}
 	defer sp.Finish()
 
