@@ -98,15 +98,15 @@ type EventOptions struct {
 // EventOption func signature
 type EventOption func(o *EventOptions)
 
-func WithEventLabels(labels ...interface{}) EventOption {
+func WithEventLabels(kv ...interface{}) EventOption {
 	return func(o *EventOptions) {
-		o.Labels = labels
+		o.Labels = kv
 	}
 }
 
-func WithSpanLabels(labels ...interface{}) SpanOption {
+func WithSpanLabels(kv ...interface{}) SpanOption {
 	return func(o *SpanOptions) {
-		o.Labels = labels
+		o.Labels = kv
 	}
 }
 
@@ -134,6 +134,15 @@ func Logger(l logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = l
 	}
+}
+
+// NewEventOptions returns default EventOptions
+func NewEventOptions(opts ...EventOption) EventOptions {
+	options := EventOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
 }
 
 // NewSpanOptions returns default SpanOptions
