@@ -29,8 +29,6 @@ type Span interface {
 	Tracer() Tracer
 	// Finish complete and send span
 	Finish(opts ...options.Option)
-	// AddEvent add event to span
-	AddEvent(name string, opts ...options.Option)
 	// Context return context with span
 	Context() context.Context
 	// SetName set the span name
@@ -39,10 +37,12 @@ type Span interface {
 	SetStatus(status SpanStatus, msg string)
 	// Status returns span status and msg
 	Status() (SpanStatus, string)
-	// SetLabels set the span labels
-	SetLabels(labels ...interface{})
-	// AddLabels append the span labels
-	AddLabels(labels ...interface{})
+	// AddLabels append labels to span
+	AddLabels(kv ...interface{})
+	// AddEvent append event to span
+	AddEvent(name string, opts ...options.Option)
+	// AddLogs append logs to span
+	AddLogs(kv ...interface{})
 	// Kind returns span kind
 	Kind() SpanKind
 }

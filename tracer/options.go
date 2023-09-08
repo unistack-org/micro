@@ -93,14 +93,6 @@ type EventOptions struct {
 	Labels []interface{}
 }
 
-func WithEventLabels(labels ...interface{}) options.Option {
-	return options.Labels(labels...)
-}
-
-func WithSpanLabels(labels ...interface{}) options.Option {
-	return options.Labels(labels...)
-}
-
 func WithSpanKind(k SpanKind) options.Option {
 	return func(src interface{}) error {
 		return options.Set(src, k, ".Kind")
@@ -122,6 +114,15 @@ func NewSpanOptions(opts ...options.Option) SpanOptions {
 	options := SpanOptions{
 		Kind: SpanKindInternal,
 	}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
+// NewEventOptions returns default EventOptions
+func NewEventOptions(opts ...options.Option) EventOptions {
+	options := EventOptions{}
 	for _, o := range opts {
 		o(&options)
 	}

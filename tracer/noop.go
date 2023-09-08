@@ -9,19 +9,27 @@ import (
 var _ Tracer = (*noopTracer)(nil)
 
 type noopTracer struct {
-	opts Options
+	opts  Options
+	spans []Span
+}
+
+func (t *noopTracer) Spans() []Span {
+	return t.spans
 }
 
 func (t *noopTracer) Start(ctx context.Context, name string, opts ...options.Option) (context.Context, Span) {
+	options := NewSpanOptions(opts...)
 	span := &noopSpan{
 		name:   name,
 		ctx:    ctx,
 		tracer: t,
-		opts:   NewSpanOptions(opts...),
+		labels: options.Labels,
+		kind:   options.Kind,
 	}
 	if span.ctx == nil {
 		span.ctx = context.Background()
 	}
+	t.spans = append(t.spans, span)
 	return NewSpanContext(ctx, span), span
 }
 
@@ -40,13 +48,21 @@ func (t *noopTracer) Name() string {
 	return t.opts.Name
 }
 
+type noopEvent struct {
+	name   string
+	labels []interface{}
+}
+
 type noopSpan struct {
 	ctx       context.Context
 	tracer    Tracer
 	name      string
-	opts      SpanOptions
-	status    SpanStatus
 	statusMsg string
+	events    []*noopEvent
+	labels    []interface{}
+	logs      []interface{}
+	kind      SpanKind
+	status    SpanStatus
 }
 
 func (s *noopSpan) Finish(opts ...options.Option) {
@@ -61,22 +77,24 @@ func (s *noopSpan) Tracer() Tracer {
 }
 
 func (s *noopSpan) AddEvent(name string, opts ...options.Option) {
+	options := NewEventOptions(opts...)
+	s.events = append(s.events, &noopEvent{name: name, labels: options.Labels})
 }
 
 func (s *noopSpan) SetName(name string) {
 	s.name = name
 }
 
-func (s *noopSpan) SetLabels(labels ...interface{}) {
-	s.opts.Labels = labels
+func (s *noopSpan) AddLogs(kv ...interface{}) {
+	s.logs = append(s.logs, kv...)
 }
 
-func (s *noopSpan) AddLabels(labels ...interface{}) {
-	s.opts.Labels = append(s.opts.Labels, labels...)
+func (s *noopSpan) AddLabels(kv ...interface{}) {
+	s.labels = append(s.labels, kv...)
 }
 
 func (s *noopSpan) Kind() SpanKind {
-	return s.opts.Kind
+	return s.kind
 }
 
 func (s *noopSpan) Status() (SpanStatus, string) {
