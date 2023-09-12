@@ -133,3 +133,16 @@ func TestMergeNested(t *testing.T) {
 		t.Fatalf("merge error: %#+v", dst.Nested)
 	}
 }
+
+func TestEqual(t *testing.T) {
+	type tstr struct {
+		Key1 string
+		Key2 string
+	}
+
+	src := &tstr{Key1: "val1", Key2: "micro:generate"}
+	dst := &tstr{Key1: "val1", Key2: "val2"}
+	if !Equal(src, dst, "Key2") {
+		t.Fatal("invalid Equal test")
+	}
+}
