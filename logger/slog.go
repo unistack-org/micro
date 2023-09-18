@@ -103,12 +103,6 @@ func (s *slogLogger) Log(ctx context.Context, lvl Level, args ...any) {
 		log.Fatalln(msg, attr)
 	}
 
-	if slvl == slog.LevelError {
-		l := s.slog.With(slog.Any("ProcStatus", "ERROR"), slog.Any("ErrorText", msg))
-		l.LogAttrs(ctx, slvl, "", attr...)
-		return
-	}
-
 	s.slog.LogAttrs(ctx, slvl, msg, attr...)
 }
 
@@ -123,12 +117,6 @@ func (s *slogLogger) Logf(ctx context.Context, lvl Level, format string, args ..
 
 	if lvl == FatalLevel {
 		log.Fatalln(msg, attr)
-	}
-
-	if slvl == slog.LevelError {
-		l := s.slog.With(slog.Any("ProcStatus", "ERROR"), slog.Any("ErrorText", msg))
-		l.LogAttrs(ctx, slvl, "", attr...)
-		return
 	}
 
 	s.slog.LogAttrs(ctx, slvl, msg, attr...)
@@ -228,9 +216,6 @@ func NewSlogLogger(opts ...options.Option) (Logger, error) {
 func renameTime(groups []string, a slog.Attr) slog.Attr {
 	if a.Key == slog.TimeKey {
 		a.Key = "@timestamp"
-	}
-	if a.Key == slog.MessageKey {
-		a.Key = "message"
 	}
 
 	return a
