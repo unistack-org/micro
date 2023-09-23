@@ -4,8 +4,10 @@ on:
     - cron: '@hourly'
 
 jobs:
-  test_schedule:
+  autoupdate:
     runs-on: ubuntu-latest
     steps:
-      - name: autoupdate
-        run: echo "autoupdate"
+    - name: checkout
+      uses: https://gitea.com/actions/checkout@v3
+    - name: autoupdate
+      run: echo "autoupdate"
