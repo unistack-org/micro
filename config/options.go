@@ -63,9 +63,9 @@ func NewOptions(opts ...options.Option) Options {
 // LoadOptions struct
 type LoadOptions struct {
 	Struct   interface{}
+	Context  context.Context
 	Override bool
 	Append   bool
-	Context  context.Context
 }
 
 // NewLoadOptions create LoadOptions struct with provided opts
