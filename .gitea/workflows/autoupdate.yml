@@ -8,4 +8,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: autoupdate
-        run: echo "This step will always run"
+        run: echo "autoupdate"
