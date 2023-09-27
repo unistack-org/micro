@@ -16,4 +16,4 @@ jobs:
     - name: checkout
       uses: https://gitea.com/actions/checkout@v3
     - name: get
-      run: GOBIN=/bin go get git.unistack.org/unistack-org/cmd/pkgdashcli@latest
+      run: GOBIN=/bin go get git.unistack.org/unistack-org/pkgdash/cmd/pkgdashcli@latest
