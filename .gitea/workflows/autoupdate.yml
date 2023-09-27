@@ -1,7 +1,7 @@
 on:
   schedule:
-    - cron: '* * * * *'
-    - cron: '@hourly'
+    #- cron: '* * * * *'
+    #- cron: '@hourly'
 
 jobs:
   autoupdate:
@@ -17,3 +17,5 @@ jobs:
       uses: https://gitea.com/actions/checkout@v3
     - name: get
       run: GOBIN=/bin go get git.unistack.org/unistack-org/pkgdash/cmd/pkgdashcli@latest
+    - name: check
+      run: /bin/pkgdashcli check
