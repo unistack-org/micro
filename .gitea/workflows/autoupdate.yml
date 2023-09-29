@@ -1,6 +1,6 @@
 on:
   schedule:
-    #- cron: '* * * * *'
+    - cron: '* * * * *'
     #- cron: '@hourly'
 
 jobs:
