@@ -7,15 +7,13 @@ jobs:
   autoupdate:
     runs-on: ubuntu-latest
     steps:
-    - name: env
-      run: export
     - name: setup-go
       uses: https://gitea.com/actions/setup-go@v3
       with:
         go-version: 1.21
     - name: checkout
       uses: https://gitea.com/actions/checkout@v3
-    - name: get
+    - name: get pkgdashcli
       run: GOBIN=/bin go get git.unistack.org/unistack-org/pkgdash/cmd/pkgdashcli@latest
-    - name: check
+    - name: pkgdashcli check
       run: /bin/pkgdashcli check
