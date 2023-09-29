@@ -14,6 +14,6 @@ jobs:
     - name: checkout
       uses: https://gitea.com/actions/checkout@v3
     - name: get pkgdashcli
-      run: GOBIN=/bin go install git.unistack.org/unistack-org/pkgdash/cmd/pkgdashcli@latest
+      run: GOPROXY=direct GONOSUMDB="git.unistack.org/*" GONOPROXY="git.unistack.org/* GOBIN=/bin go install git.unistack.org/unistack-org/pkgdash/cmd/pkgdashcli@latest
     - name: pkgdashcli check
       run: /bin/pkgdashcli check
