@@ -4,7 +4,7 @@ on:
     - v3
     - v4
   schedule:
-    - cron: '* * * * *'
+    - cron: '* * * * 10'
     #- cron: '@hourly'
 
 jobs:
