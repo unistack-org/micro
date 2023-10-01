@@ -16,4 +16,4 @@ jobs:
     - name: get pkgdashcli
       run: GOPROXY=direct GONOSUMDB="git.unistack.org/*" GONOPROXY="git.unistack.org/*" GOBIN=/bin go install git.unistack.org/unistack-org/pkgdash/cmd/pkgdashcli@latest
     - name: pkgdashcli check
-      run: /bin/pkgdashcli check
+      run: echo /bin/pkgdashcli check
