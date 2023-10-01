@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 	"go.unistack.org/micro/v4/options"
 	mid "go.unistack.org/micro/v4/util/id"
 	rutil "go.unistack.org/micro/v4/util/reflect"

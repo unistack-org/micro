@@ -7,12 +7,13 @@ import (
 
 	"go.unistack.org/micro/v4/client"
 	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/server"
 )
 
 var (
 	// DefaultClientCallObserver called by wrapper in client Call
-	DefaultClientCallObserver = func(ctx context.Context, req client.Request, rsp interface{}, opts []client.CallOption, err error) []string {
+	DefaultClientCallObserver = func(ctx context.Context, req client.Request, rsp interface{}, opts []options.Option, err error) []string {
 		labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
 		if err != nil {
 			labels = append(labels, "error", err.Error())
@@ -21,7 +22,7 @@ var (
 	}
 
 	// DefaultClientStreamObserver called by wrapper in client Stream
-	DefaultClientStreamObserver = func(ctx context.Context, req client.Request, opts []client.CallOption, stream client.Stream, err error) []string {
+	DefaultClientStreamObserver = func(ctx context.Context, req client.Request, opts []options.Option, stream client.Stream, err error) []string {
 		labels := []string{"service", req.Service(), "endpoint", req.Endpoint()}
 		if err != nil {
 			labels = append(labels, "error", err.Error())
@@ -60,9 +61,9 @@ type lWrapper struct {
 
 type (
 	// ClientCallObserver func signature
-	ClientCallObserver func(context.Context, client.Request, interface{}, []client.CallOption, error) []string
+	ClientCallObserver func(context.Context, client.Request, interface{}, []options.Option, error) []string
 	// ClientStreamObserver func signature
-	ClientStreamObserver func(context.Context, client.Request, []client.CallOption, client.Stream, error) []string
+	ClientStreamObserver func(context.Context, client.Request, []options.Option, client.Stream, error) []string
 	// ClientCallFuncObserver func signature
 	ClientCallFuncObserver func(context.Context, string, client.Request, interface{}, client.CallOptions, error) []string
 	// ServerHandlerObserver func signature
@@ -167,7 +168,7 @@ func SkipEndpoints(eps ...string) Option {
 	}
 }
 
-func (l *lWrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
+func (l *lWrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...options.Option) error {
 	err := l.Client.Call(ctx, req, rsp, opts...)
 
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
@@ -190,7 +191,7 @@ func (l *lWrapper) Call(ctx context.Context, req client.Request, rsp interface{}
 	return err
 }
 
-func (l *lWrapper) Stream(ctx context.Context, req client.Request, opts ...client.CallOption) (client.Stream, error) {
+func (l *lWrapper) Stream(ctx context.Context, req client.Request, opts ...options.Option) (client.Stream, error) {
 	stream, err := l.Client.Stream(ctx, req, opts...)
 
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())

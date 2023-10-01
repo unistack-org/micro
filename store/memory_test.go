@@ -5,12 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/store"
 )
 
 func TestMemoryReInit(t *testing.T) {
-	s := store.NewStore(store.Namespace("aaa"))
-	if err := s.Init(store.Namespace("")); err != nil {
+	s := store.NewStore(options.Namespace("aaa"))
+	if err := s.Init(options.Namespace("")); err != nil {
 		t.Fatal(err)
 	}
 	if len(s.Options().Namespace) > 0 {
@@ -28,7 +29,7 @@ func TestMemoryBasic(t *testing.T) {
 
 func TestMemoryPrefix(t *testing.T) {
 	s := store.NewStore()
-	if err := s.Init(store.Namespace("some-prefix")); err != nil {
+	if err := s.Init(options.Namespace("some-prefix")); err != nil {
 		t.Fatal(err)
 	}
 	basictest(s, t)
@@ -36,7 +37,7 @@ func TestMemoryPrefix(t *testing.T) {
 
 func TestMemoryNamespace(t *testing.T) {
 	s := store.NewStore()
-	if err := s.Init(store.Namespace("some-namespace")); err != nil {
+	if err := s.Init(options.Namespace("some-namespace")); err != nil {
 		t.Fatal(err)
 	}
 	basictest(s, t)
@@ -44,7 +45,7 @@ func TestMemoryNamespace(t *testing.T) {
 
 func TestMemoryNamespacePrefix(t *testing.T) {
 	s := store.NewStore()
-	if err := s.Init(store.Namespace("some-namespace")); err != nil {
+	if err := s.Init(options.Namespace("some-namespace")); err != nil {
 		t.Fatal(err)
 	}
 	basictest(s, t)

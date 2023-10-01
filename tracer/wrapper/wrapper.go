@@ -177,7 +177,7 @@ func (ot *tWrapper) Call(ctx context.Context, req client.Request, rsp interface{
 
 	nctx, sp := ot.opts.Tracer.Start(ctx, fmt.Sprintf("%s.%s rpc-client", req.Service(), req.Method()),
 		tracer.WithSpanKind(tracer.SpanKindClient),
-		tracer.WithSpanLabels(
+		options.Labels(
 			"rpc.service", req.Service(),
 			"rpc.method", req.Method(),
 			"rpc.flavor", "rpc",
@@ -206,7 +206,7 @@ func (ot *tWrapper) Stream(ctx context.Context, req client.Request, opts ...opti
 
 	nctx, sp := ot.opts.Tracer.Start(ctx, fmt.Sprintf("%s.%s rpc-client", req.Service(), req.Method()),
 		tracer.WithSpanKind(tracer.SpanKindClient),
-		tracer.WithSpanLabels(
+		options.Labels(
 			"rpc.service", req.Service(),
 			"rpc.method", req.Method(),
 			"rpc.flavor", "rpc",
@@ -240,7 +240,7 @@ func (ot *tWrapper) ServerHandler(ctx context.Context, req server.Request, rsp i
 
 	nctx, sp := ot.opts.Tracer.Start(ctx, fmt.Sprintf("%s.%s rpc-server", req.Service(), req.Method()),
 		tracer.WithSpanKind(tracer.SpanKindServer),
-		tracer.WithSpanLabels(
+		options.Labels(
 			"rpc.service", req.Service(),
 			"rpc.method", req.Method(),
 			"rpc.flavor", "rpc",
@@ -293,7 +293,7 @@ func (ot *tWrapper) ClientCallFunc(ctx context.Context, addr string, req client.
 
 	nctx, sp := ot.opts.Tracer.Start(ctx, fmt.Sprintf("%s.%s rpc-client", req.Service(), req.Method()),
 		tracer.WithSpanKind(tracer.SpanKindClient),
-		tracer.WithSpanLabels(
+		options.Labels(
 			"rpc.service", req.Service(),
 			"rpc.method", req.Method(),
 			"rpc.flavor", "rpc",
