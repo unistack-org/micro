@@ -1,8 +1,8 @@
 on:
-  branch:
-    - master
-    - v3
-    - v4
+  #branch:
+  #  - master
+  #  - v3
+  #  - v4
   schedule:
     - cron: '* * * * 10'
     #- cron: '@hourly'
