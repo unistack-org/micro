@@ -5,7 +5,7 @@ go 1.20
 require (
 	dario.cat/mergo v1.0.0
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/silas/dag v0.0.0-20220518035006-a7e85ada93c5
 	golang.org/x/sync v0.3.0
