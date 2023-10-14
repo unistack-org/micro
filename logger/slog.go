@@ -3,65 +3,110 @@ package logger
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"go.unistack.org/micro/v4/options"
-	"log"
-	"sync"
 
 	"golang.org/x/exp/slog"
 )
 
-const (
-	slogName = "slog"
+var (
+	traceValue = slog.StringValue("trace")
+	debugValue = slog.StringValue("debug")
+	infoValue  = slog.StringValue("info")
+	warnValue  = slog.StringValue("warn")
+	errorValue = slog.StringValue("error")
+	fatalValue = slog.StringValue("fatal")
 )
 
-type slogLogger struct {
-	slog   *slog.Logger
-	fields map[string]interface{}
-	opts   Options
+var renameAttr = func(_ []string, a slog.Attr) slog.Attr {
+	switch a.Key {
+	case slog.TimeKey:
+		a.Key = "timestamp"
+	case slog.LevelKey:
+		level := a.Value.Any().(slog.Level)
+		lvl := slogToLoggerLevel(level)
+		switch {
+		case lvl < DebugLevel:
+			a.Value = traceValue
+		case lvl < InfoLevel:
+			a.Value = debugValue
+		case lvl < WarnLevel:
+			a.Value = infoValue
+		case lvl < ErrorLevel:
+			a.Value = warnValue
+		case lvl < FatalLevel:
+			a.Value = errorValue
+		case lvl >= FatalLevel:
+			a.Value = fatalValue
+		default:
+			a.Value = infoValue
+		}
+	}
 
-	sync.RWMutex
+	return a
 }
 
-//TODO:!!!!
+type slogLogger struct {
+	slog    *slog.Logger
+	leveler *slog.LevelVar
+	opts    Options
+}
 
 func (s *slogLogger) Clone(opts ...options.Option) Logger {
-	//TODO implement me
-	panic("implement me")
+	options := s.opts
+
+	for _, o := range opts {
+		o(&options)
+	}
+
+	l := &slogLogger{
+		opts: options,
+	}
+
+	if slog, ok := s.opts.Context.Value(loggerKey{}).(*slog.Logger); ok {
+		l.slog = slog
+		return nil
+	}
+
+	l.leveler = new(slog.LevelVar)
+	handleOpt := &slog.HandlerOptions{
+		ReplaceAttr: renameAttr,
+		Level:       l.leveler,
+	}
+	l.leveler.Set(loggerToSlogLevel(l.opts.Level))
+	handler := slog.NewJSONHandler(options.Out, handleOpt)
+	l.slog = slog.New(handler).With(options.Fields...)
+
+	return l
 }
 
 func (s *slogLogger) V(level Level) bool {
-	//TODO implement me
-	panic("implement me")
+	return s.opts.Level.Enabled(level)
 }
 
 func (s *slogLogger) Level(level Level) {
-	//TODO implement me
-	panic("implement me")
+	s.leveler.Set(loggerToSlogLevel(level))
 }
 
 func (s *slogLogger) Options() Options {
-	//TODO implement me
-	panic("implement me")
+	return s.opts
 }
 
 func (s *slogLogger) Fields(fields ...interface{}) Logger {
-	//TODO implement me
-	panic("implement me")
-}
+	nl := &slogLogger{opts: s.opts}
+	nl.leveler = new(slog.LevelVar)
+	nl.leveler.Set(s.leveler.Level())
 
-func (s *slogLogger) Trace(ctx context.Context, args ...interface{}) {
-	//TODO implement me
-	panic("implement me")
-}
+	handleOpt := &slog.HandlerOptions{
+		ReplaceAttr: renameAttr,
+		Level:       s.leveler,
+	}
 
-func (s *slogLogger) Tracef(ctx context.Context, msg string, args ...interface{}) {
-	//TODO implement me
-	panic("implement me")
-}
+	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
+	nl.slog = slog.New(handler).With(fields...)
 
-func (s *slogLogger) Fatalf(ctx context.Context, msg string, args ...interface{}) {
-	//TODO implement me
-	panic("implement me")
+	return nl
 }
 
 func (s *slogLogger) Init(opts ...options.Option) error {
@@ -76,50 +121,33 @@ func (s *slogLogger) Init(opts ...options.Option) error {
 		return nil
 	}
 
+	s.leveler = new(slog.LevelVar)
 	handleOpt := &slog.HandlerOptions{
-		ReplaceAttr: renameTime,
-		Level:       loggerToSlogLevel(s.opts.Level),
+		ReplaceAttr: renameAttr,
+		Level:       s.leveler,
 	}
-
-	attr := fieldsToAttr(s.fields)
-
-	handler := slog.NewJSONHandler(s.opts.Out, handleOpt).WithAttrs(attr)
-
-	s.slog = slog.New(handler)
+	s.leveler.Set(loggerToSlogLevel(s.opts.Level))
+	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
+	s.slog = slog.New(handler).With(s.opts.Fields...)
 
 	return nil
 }
 
 func (s *slogLogger) Log(ctx context.Context, lvl Level, args ...any) {
-	slvl := loggerToSlogLevel(lvl)
-
-	s.RLock()
-	attr := fieldsToAttr(s.fields)
-	s.RUnlock()
-
-	msg := fmt.Sprint(args...)
-
-	if lvl == FatalLevel {
-		log.Fatalln(msg, attr)
+	if !s.V(lvl) {
+		return
 	}
-
-	s.slog.LogAttrs(ctx, slvl, msg, attr...)
+	slvl := loggerToSlogLevel(lvl)
+	msg := fmt.Sprint(args...)
+	s.slog.Log(ctx, slvl, msg)
 }
 
 func (s *slogLogger) Logf(ctx context.Context, lvl Level, format string, args ...any) {
-	slvl := loggerToSlogLevel(lvl)
-
-	s.RLock()
-	attr := fieldsToAttr(s.fields)
-	s.RUnlock()
-
-	msg := fmt.Sprintf(format, args...)
-
-	if lvl == FatalLevel {
-		log.Fatalln(msg, attr)
+	if !s.V(lvl) {
+		return
 	}
-
-	s.slog.LogAttrs(ctx, slvl, msg, attr...)
+	slvl := loggerToSlogLevel(lvl)
+	s.slog.Log(ctx, slvl, format, args...)
 }
 
 func (s *slogLogger) Info(ctx context.Context, args ...any) {
@@ -142,12 +170,25 @@ func (s *slogLogger) Error(ctx context.Context, args ...any) {
 	s.Log(ctx, ErrorLevel, args...)
 }
 
+func (s *slogLogger) Trace(ctx context.Context, args ...interface{}) {
+	s.Log(ctx, TraceLevel, args...)
+}
+
+func (s *slogLogger) Tracef(ctx context.Context, msg string, args ...interface{}) {
+	s.Logf(ctx, TraceLevel, msg, args...)
+}
+
 func (s *slogLogger) Errorf(ctx context.Context, format string, args ...any) {
 	s.Logf(ctx, ErrorLevel, format, args...)
 }
 
 func (s *slogLogger) Fatal(ctx context.Context, args ...any) {
 	s.Log(ctx, FatalLevel, args...)
+}
+
+func (s *slogLogger) Fatalf(ctx context.Context, msg string, args ...interface{}) {
+	s.Logf(ctx, FatalLevel, msg, args...)
+	os.Exit(1)
 }
 
 func (s *slogLogger) Warn(ctx context.Context, args ...any) {
@@ -159,86 +200,46 @@ func (s *slogLogger) Warnf(ctx context.Context, format string, args ...any) {
 }
 
 func (s *slogLogger) String() string {
-	return slogName
+	return "slog"
 }
 
-/*
-func (s *slogLogger) Fields(fields map[string]interface{}) Logger {
-	nfields := make(map[string]interface{}, len(s.fields))
-
-	s.Lock()
-	for k, v := range s.fields {
-		nfields[k] = v
-	}
-	s.Unlock()
-
-	for k, v := range fields {
-		nfields[k] = v
-	}
-
-	keys := make([]string, 0, len(nfields))
-	for k := range nfields {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	attr := make([]slog.Attr, 0, len(nfields))
-	for _, k := range keys {
-		attr = append(attr, slog.Any(k, fields[k]))
-	}
-
-	handleOpt := &slog.HandlerOptions{
-		ReplaceAttr: renameTime,
-		Level:       loggerToSlogLevel(s.opts.Level),
-	}
-
-	handler := slog.NewJSONHandler(s.opts.Out, handleOpt).WithAttrs(attr)
-
-	zl := &slogLogger{
-		slog:   slog.New(handler),
-		opts:   s.opts,
-		fields: make(map[string]interface{}),
-	}
-
-	return zl
-}
-
-*/
-
-func NewSlogLogger(opts ...options.Option) (Logger, error) {
+func NewLogger(opts ...options.Option) Logger {
 	l := &slogLogger{
 		opts: NewOptions(opts...),
 	}
-	err := l.Init()
-	return l, err
-}
-
-func renameTime(groups []string, a slog.Attr) slog.Attr {
-	if a.Key == slog.TimeKey {
-		a.Key = "@timestamp"
-	}
-
-	return a
+	return l
 }
 
 func loggerToSlogLevel(level Level) slog.Level {
 	switch level {
-	case TraceLevel, DebugLevel:
+	case DebugLevel:
 		return slog.LevelDebug
 	case WarnLevel:
 		return slog.LevelWarn
-	case ErrorLevel, FatalLevel:
+	case ErrorLevel:
 		return slog.LevelError
+	case TraceLevel:
+		return slog.LevelDebug - 1
+	case FatalLevel:
+		return slog.LevelError + 1
 	default:
 		return slog.LevelInfo
 	}
 }
 
-func fieldsToAttr(m map[string]any) []slog.Attr {
-	data := make([]slog.Attr, 0, len(m))
-	for k, v := range m {
-		data = append(data, slog.Any(k, v))
+func slogToLoggerLevel(level slog.Level) Level {
+	switch level {
+	case slog.LevelDebug:
+		return DebugLevel
+	case slog.LevelWarn:
+		return WarnLevel
+	case slog.LevelError:
+		return ErrorLevel
+	case slog.LevelDebug - 1:
+		return TraceLevel
+	case slog.LevelError + 1:
+		return FatalLevel
+	default:
+		return InfoLevel
 	}
-
-	return data
 }
