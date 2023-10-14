@@ -13,7 +13,7 @@ import (
 	"go.unistack.org/micro/v4/tracer"
 )
 
-var DefaultHeadersExctract = []string{metadata.HeaderXRequestID}
+var DefaultHeadersExctract = []string{metadata.HeaderTopic, metadata.HeaderEndpoint, metadata.HeaderService, metadata.HeaderXRequestID}
 
 func ExtractDefaultLabels(md metadata.Metadata) []interface{} {
 	labels := make([]interface{}, 0, len(DefaultHeadersExctract))
@@ -27,6 +27,7 @@ func ExtractDefaultLabels(md metadata.Metadata) []interface{} {
 
 var (
 	DefaultClientCallObserver = func(ctx context.Context, req client.Request, rsp interface{}, opts []options.Option, sp tracer.Span, err error) {
+		sp.SetName(fmt.Sprintf("Call %s.%s", req.Service(), req.Method()))
 		var labels []interface{}
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
 			labels = append(labels, ExtractDefaultLabels(md)...)
