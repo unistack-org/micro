@@ -71,7 +71,7 @@ func New(opts ...Option) (string, error) {
 func Must(opts ...Option) string {
 	id, err := New(opts...)
 	if err != nil {
-		logger.Fatal(context.TODO(), err)
+		logger.Fatal(context.TODO(), err.Error())
 	}
 	return id
 }

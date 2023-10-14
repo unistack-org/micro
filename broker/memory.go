@@ -190,7 +190,7 @@ func (m *MemoryBroker) Publish(ctx context.Context, message interface{}, opts ..
 						} else {
 							if sub.opts.AutoAck {
 								if err = p.Ack(); err != nil {
-									m.opts.Logger.Errorf(m.opts.Context, "ack failed: %v", err)
+									m.opts.Logger.Error(m.opts.Context, "ack failed: "+err.Error())
 									m.opts.Meter.Counter(semconv.SubscribeMessageTotal, "endpoint", t, "status", "failure").Inc()
 								} else {
 									m.opts.Meter.Counter(semconv.SubscribeMessageTotal, "endpoint", t, "status", "success").Inc()

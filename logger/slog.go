@@ -2,12 +2,13 @@ package logger
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"os"
+	"runtime"
+	"strconv"
+	"time"
 
 	"go.unistack.org/micro/v4/options"
-
-	"golang.org/x/exp/slog"
 )
 
 var (
@@ -21,6 +22,13 @@ var (
 
 var renameAttr = func(_ []string, a slog.Attr) slog.Attr {
 	switch a.Key {
+	case slog.SourceKey:
+		source := a.Value.Any().(*slog.Source)
+		a.Value = slog.StringValue(source.File + ":" + strconv.Itoa(source.Line))
+		a.Key = "caller"
+		// add func?
+		// "trace": "<traceid>",
+		// "span": "<spanid>",
 	case slog.TimeKey:
 		a.Key = "timestamp"
 	case slog.LevelKey:
@@ -73,6 +81,7 @@ func (s *slogLogger) Clone(opts ...options.Option) Logger {
 	handleOpt := &slog.HandlerOptions{
 		ReplaceAttr: renameAttr,
 		Level:       l.leveler,
+		AddSource:   true,
 	}
 	l.leveler.Set(loggerToSlogLevel(l.opts.Level))
 	handler := slog.NewJSONHandler(options.Out, handleOpt)
@@ -101,6 +110,7 @@ func (s *slogLogger) Fields(fields ...interface{}) Logger {
 	handleOpt := &slog.HandlerOptions{
 		ReplaceAttr: renameAttr,
 		Level:       s.leveler,
+		AddSource:   true,
 	}
 
 	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
@@ -125,6 +135,7 @@ func (s *slogLogger) Init(opts ...options.Option) error {
 	handleOpt := &slog.HandlerOptions{
 		ReplaceAttr: renameAttr,
 		Level:       s.leveler,
+		AddSource:   true,
 	}
 	s.leveler.Set(loggerToSlogLevel(s.opts.Level))
 	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
@@ -133,70 +144,82 @@ func (s *slogLogger) Init(opts ...options.Option) error {
 	return nil
 }
 
-func (s *slogLogger) Log(ctx context.Context, lvl Level, args ...any) {
+func (s *slogLogger) Log(ctx context.Context, lvl Level, msg string, args ...any) {
 	if !s.V(lvl) {
 		return
 	}
-	slvl := loggerToSlogLevel(lvl)
-	msg := fmt.Sprint(args...)
-	s.slog.Log(ctx, slvl, msg)
+	var pcs [1]uintptr
+	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
+	r := slog.NewRecord(time.Now(), loggerToSlogLevel(lvl), msg, pcs[0])
+	r.Add(args...)
+	_ = s.slog.Handler().Handle(ctx, r)
 }
 
-func (s *slogLogger) Logf(ctx context.Context, lvl Level, format string, args ...any) {
-	if !s.V(lvl) {
+func (s *slogLogger) Info(ctx context.Context, msg string, args ...interface{}) {
+	if !s.V(InfoLevel) {
 		return
 	}
-	slvl := loggerToSlogLevel(lvl)
-	s.slog.Log(ctx, slvl, format, args...)
+	var pcs [1]uintptr
+	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
+	r := slog.NewRecord(time.Now(), slog.LevelInfo, msg, pcs[0])
+	r.Add(args...)
+	_ = s.slog.Handler().Handle(ctx, r)
 }
 
-func (s *slogLogger) Info(ctx context.Context, args ...any) {
-	s.Log(ctx, InfoLevel, args...)
+func (s *slogLogger) Debug(ctx context.Context, msg string, args ...any) {
+	if !s.V(InfoLevel) {
+		return
+	}
+	var pcs [1]uintptr
+	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
+	r := slog.NewRecord(time.Now(), slog.LevelDebug, msg, pcs[0])
+	r.Add(args...)
+	_ = s.slog.Handler().Handle(ctx, r)
 }
 
-func (s *slogLogger) Infof(ctx context.Context, format string, args ...interface{}) {
-	s.Logf(ctx, InfoLevel, format, args...)
+func (s *slogLogger) Trace(ctx context.Context, msg string, args ...interface{}) {
+	if !s.V(InfoLevel) {
+		return
+	}
+	var pcs [1]uintptr
+	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
+	r := slog.NewRecord(time.Now(), slog.LevelDebug-1, msg, pcs[0])
+	r.Add(args...)
+	_ = s.slog.Handler().Handle(ctx, r)
 }
 
-func (s *slogLogger) Debug(ctx context.Context, args ...any) {
-	s.Log(ctx, DebugLevel, args...)
+func (s *slogLogger) Error(ctx context.Context, msg string, args ...any) {
+	if !s.V(InfoLevel) {
+		return
+	}
+	var pcs [1]uintptr
+	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
+	r := slog.NewRecord(time.Now(), slog.LevelError, msg, pcs[0])
+	r.Add(args...)
+	_ = s.slog.Handler().Handle(ctx, r)
 }
 
-func (s *slogLogger) Debugf(ctx context.Context, format string, args ...any) {
-	s.Logf(ctx, DebugLevel, format, args...)
-}
-
-func (s *slogLogger) Error(ctx context.Context, args ...any) {
-	s.Log(ctx, ErrorLevel, args...)
-}
-
-func (s *slogLogger) Trace(ctx context.Context, args ...interface{}) {
-	s.Log(ctx, TraceLevel, args...)
-}
-
-func (s *slogLogger) Tracef(ctx context.Context, msg string, args ...interface{}) {
-	s.Logf(ctx, TraceLevel, msg, args...)
-}
-
-func (s *slogLogger) Errorf(ctx context.Context, format string, args ...any) {
-	s.Logf(ctx, ErrorLevel, format, args...)
-}
-
-func (s *slogLogger) Fatal(ctx context.Context, args ...any) {
-	s.Log(ctx, FatalLevel, args...)
-}
-
-func (s *slogLogger) Fatalf(ctx context.Context, msg string, args ...interface{}) {
-	s.Logf(ctx, FatalLevel, msg, args...)
+func (s *slogLogger) Fatal(ctx context.Context, msg string, args ...interface{}) {
+	if !s.V(InfoLevel) {
+		return
+	}
+	var pcs [1]uintptr
+	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
+	r := slog.NewRecord(time.Now(), slog.LevelError+1, msg, pcs[0])
+	r.Add(args...)
+	_ = s.slog.Handler().Handle(ctx, r)
 	os.Exit(1)
 }
 
-func (s *slogLogger) Warn(ctx context.Context, args ...any) {
-	s.Log(ctx, WarnLevel, args...)
-}
-
-func (s *slogLogger) Warnf(ctx context.Context, format string, args ...any) {
-	s.Logf(ctx, WarnLevel, format, args...)
+func (s *slogLogger) Warn(ctx context.Context, msg string, args ...any) {
+	if !s.V(InfoLevel) {
+		return
+	}
+	var pcs [1]uintptr
+	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
+	r := slog.NewRecord(time.Now(), slog.LevelWarn, msg, pcs[0])
+	r.Add(args...)
+	_ = s.slog.Handler().Handle(ctx, r)
 }
 
 func (s *slogLogger) String() string {

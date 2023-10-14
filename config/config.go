@@ -133,7 +133,7 @@ var (
 				return nil
 			}
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s BeforeLoad err: %v", c.String(), err)
+				c.Options().Logger.Error(ctx, c.String()+" BeforeLoad error "+err.Error())
 				if !c.Options().AllowFail {
 					return err
 				}
@@ -148,7 +148,7 @@ var (
 				return nil
 			}
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s AfterLoad err: %v", c.String(), err)
+				c.Options().Logger.Error(ctx, c.String()+" AfterLoad error "+err.Error())
 				if !c.Options().AllowFail {
 					return err
 				}
@@ -163,7 +163,7 @@ var (
 				return nil
 			}
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s BeforeSave err: %v", c.String(), err)
+				c.Options().Logger.Error(ctx, c.String()+" BeforeSave error "+err.Error())
 				if !c.Options().AllowFail {
 					return err
 				}
@@ -178,7 +178,7 @@ var (
 				return nil
 			}
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s AfterSave err: %v", c.String(), err)
+				c.Options().Logger.Error(ctx, c.String()+" AfterSave error "+err.Error())
 				if !c.Options().AllowFail {
 					return err
 				}
@@ -193,7 +193,7 @@ var (
 				return nil
 			}
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s BeforeInit err: %v", c.String(), err)
+				c.Options().Logger.Error(ctx, c.String()+" BeforeInit error "+err.Error())
 				if !c.Options().AllowFail {
 					return err
 				}
@@ -208,7 +208,7 @@ var (
 				return nil
 			}
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s AfterInit err: %v", c.String(), err)
+				c.Options().Logger.Error(ctx, c.String()+" AfterInit error "+err.Error())
 				if !c.Options().AllowFail {
 					return err
 				}

@@ -122,7 +122,7 @@ func (n *noopServer) Register() error {
 
 	if !registered {
 		if config.Logger.V(logger.InfoLevel) {
-			config.Logger.Infof(n.opts.Context, "register [%s] Registering node: %s", config.Register.String(), service.Nodes[0].ID)
+			config.Logger.Info(n.opts.Context, "register ["+config.Register.String()+"] Registering node: "+service.Nodes[0].ID)
 		}
 	}
 
@@ -160,7 +160,7 @@ func (n *noopServer) Deregister() error {
 	}
 
 	if config.Logger.V(logger.InfoLevel) {
-		config.Logger.Infof(n.opts.Context, "deregistering node: %s", service.Nodes[0].ID)
+		config.Logger.Info(n.opts.Context, "deregistering node: "+service.Nodes[0].ID)
 	}
 
 	if err := DefaultDeregisterFunc(service, config); err != nil {
@@ -204,7 +204,7 @@ func (n *noopServer) Start() error {
 	config.Address = addr
 
 	if config.Logger.V(logger.InfoLevel) {
-		config.Logger.Infof(n.opts.Context, "server [noop] Listening on %s", config.Address)
+		config.Logger.Info(n.opts.Context, "server [noop] Listening on "+config.Address)
 	}
 
 	n.Lock()
@@ -217,13 +217,13 @@ func (n *noopServer) Start() error {
 	// nolint: nestif
 	if err := config.RegisterCheck(config.Context); err != nil {
 		if config.Logger.V(logger.ErrorLevel) {
-			config.Logger.Errorf(n.opts.Context, "server %s-%s register check error: %s", config.Name, config.ID, err)
+			config.Logger.Error(n.opts.Context, "server "+config.Name+"-"+config.ID+" register check error: "+err.Error())
 		}
 	} else {
 		// announce self to the world
 		if err := n.Register(); err != nil {
 			if config.Logger.V(logger.ErrorLevel) {
-				config.Logger.Errorf(n.opts.Context, "server register error: %v", err)
+				config.Logger.Error(n.opts.Context, "server register error: "+err.Error())
 			}
 		}
 	}
@@ -252,23 +252,23 @@ func (n *noopServer) Start() error {
 				// nolint: nestif
 				if rerr != nil && registered {
 					if config.Logger.V(logger.ErrorLevel) {
-						config.Logger.Errorf(n.opts.Context, "server %s-%s register check error: %s, deregister it", config.Name, config.ID, rerr)
+						config.Logger.Error(n.opts.Context, "server "+config.Name+"-"+config.ID+" register check error: ", rerr.Error())
 					}
 					// deregister self in case of error
 					if err := n.Deregister(); err != nil {
 						if config.Logger.V(logger.ErrorLevel) {
-							config.Logger.Errorf(n.opts.Context, "server %s-%s deregister error: %s", config.Name, config.ID, err)
+							config.Logger.Error(n.opts.Context, "server "+config.Name+"-"+config.ID+" deregister error: ", err.Error())
 						}
 					}
 				} else if rerr != nil && !registered {
 					if config.Logger.V(logger.ErrorLevel) {
-						config.Logger.Errorf(n.opts.Context, "server %s-%s register check error: %s", config.Name, config.ID, rerr)
+						config.Logger.Error(n.opts.Context, "server "+config.Name+"-"+config.ID+" register check error: ", rerr.Error())
 					}
 					continue
 				}
 				if err := n.Register(); err != nil {
 					if config.Logger.V(logger.ErrorLevel) {
-						config.Logger.Errorf(n.opts.Context, "server %s-%s register error: %s", config.Name, config.ID, err)
+						config.Logger.Error(n.opts.Context, "server "+config.Name+"-"+config.ID+" register error: ", err.Error())
 					}
 				}
 			// wait for exit
@@ -280,7 +280,7 @@ func (n *noopServer) Start() error {
 		// deregister self
 		if err := n.Deregister(); err != nil {
 			if config.Logger.V(logger.ErrorLevel) {
-				config.Logger.Errorf(n.opts.Context, "server deregister error: ", err)
+				config.Logger.Error(n.opts.Context, "server deregister error: "+err.Error())
 			}
 		}
 

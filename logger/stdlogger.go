@@ -12,7 +12,7 @@ type stdLogger struct {
 
 // NewStdLogger returns new *log.Logger baked by logger.Logger implementation
 func NewStdLogger(l Logger, level Level) *log.Logger {
-	return log.New(&stdLogger{l: l, level: level}, "" /* prefix */, 0 /* flags */)
+	return log.New(&stdLogger{l: l.Clone(WithCallerSkipCount(l.Options().CallerSkipCount + 1)), level: level}, "" /* prefix */, 0 /* flags */)
 }
 
 func (sl *stdLogger) Write(p []byte) (int, error) {
