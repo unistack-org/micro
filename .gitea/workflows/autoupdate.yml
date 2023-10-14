@@ -1,0 +1,24 @@
+on:
+  push:
+    branches:
+    - 'main'
+    - 'master'
+    - 'v3'
+  schedule:
+    - cron: '* * * * *'
+    #- cron: '@hourly'
+
+jobs:
+  autoupdate:
+    runs-on: ubuntu-latest
+    steps:
+    - name: setup-go
+      uses: https://gitea.com/actions/setup-go@v3
+      with:
+        go-version: 1.21
+    - name: checkout
+      uses: https://gitea.com/actions/checkout@v3
+    - name: get pkgdashcli
+      run: GOPROXY=direct GONOSUMDB="git.unistack.org/*" GONOPROXY="git.unistack.org/*" GOBIN=/bin go install git.unistack.org/unistack-org/pkgdash/cmd/pkgdashcli@latest
+    - name: pkgdashcli check
+      run: /bin/pkgdashcli check

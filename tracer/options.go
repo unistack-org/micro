@@ -159,6 +159,15 @@ func NewSpanOptions(opts ...options.Option) SpanOptions {
 	return options
 }
 
+// NewEventOptions returns default EventOptions
+func NewEventOptions(opts ...options.Option) EventOptions {
+	options := EventOptions{}
+	for _, o := range opts {
+		o(&options)
+	}
+	return options
+}
+
 // NewOptions returns default options
 func NewOptions(opts ...options.Option) Options {
 	options := Options{

@@ -14,7 +14,7 @@ jobs:
     - name: setup-go
       uses: https://gitea.com/actions/setup-go@v3
       with:
-        go-version: 1.18
+        go-version: 1.21
     - name: deps
       run: go get -v -t -d ./...
     - name: test

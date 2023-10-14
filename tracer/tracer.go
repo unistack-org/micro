@@ -3,6 +3,8 @@ package tracer // import "go.unistack.org/micro/v4/tracer"
 
 import (
 	"context"
+	"fmt"
+	"sort"
 
 	"go.unistack.org/micro/v4/options"
 )
@@ -27,8 +29,6 @@ type Span interface {
 	Tracer() Tracer
 	// Finish complete and send span
 	Finish(opts ...options.Option)
-	// AddEvent add event to span
-	AddEvent(name string, opts ...options.Option)
 	// Context return context with span
 	Context() context.Context
 	// SetName set the span name
@@ -37,10 +37,45 @@ type Span interface {
 	SetStatus(status SpanStatus, msg string)
 	// Status returns span status and msg
 	Status() (SpanStatus, string)
-	// SetLabels set the span labels
-	SetLabels(labels ...interface{})
-	// AddLabels append the span labels
-	AddLabels(labels ...interface{})
+	// AddLabels append labels to span
+	AddLabels(kv ...interface{})
+	// AddEvent append event to span
+	AddEvent(name string, opts ...options.Option)
+	// AddLogs append logs to span
+	AddLogs(kv ...interface{})
 	// Kind returns span kind
 	Kind() SpanKind
+}
+
+// sort labels alphabeticaly by label name
+type byKey []interface{}
+
+func (k byKey) Len() int           { return len(k) / 2 }
+func (k byKey) Less(i, j int) bool { return fmt.Sprintf("%s", k[i*2]) < fmt.Sprintf("%s", k[j*2]) }
+func (k byKey) Swap(i, j int) {
+	k[i*2], k[j*2] = k[j*2], k[i*2]
+	k[i*2+1], k[j*2+1] = k[j*2+1], k[i*2+1]
+}
+
+func UniqLabels(labels []interface{}) []interface{} {
+	if len(labels)%2 == 1 {
+		labels = labels[:len(labels)-1]
+	}
+	if len(labels) > 2 {
+		sort.Sort(byKey(labels))
+
+		idx := 0
+		for {
+			if labels[idx] == labels[idx+2] {
+				copy(labels[idx:], labels[idx+2:])
+				labels = labels[:len(labels)-2]
+			} else {
+				idx += 2
+			}
+			if idx+2 >= len(labels) {
+				break
+			}
+		}
+	}
+	return labels
 }

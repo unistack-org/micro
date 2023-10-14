@@ -20,6 +20,7 @@ import (
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/errors"
 	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/options"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -226,7 +227,7 @@ func NewRequestFromFile(c client.Client, reqfile string) (client.Request, error)
 		return nil, err
 	}
 
-	req := c.NewRequest("test", endpoint, &codec.Frame{Data: reqbuf}, client.RequestContentType(ct))
+	req := c.NewRequest("test", endpoint, &codec.Frame{Data: reqbuf}, options.ContentType(ct))
 
 	return req, nil
 }
@@ -373,7 +374,7 @@ func Run(ctx context.Context, c client.Client, m sqlmock.Sqlmock, dir string, ex
 			data := &codec.Frame{}
 			md := metadata.New(1)
 			md.Set("X-Request-Id", xrid)
-			cerr := c.Call(metadata.NewOutgoingContext(gctx, md), treq, data, client.WithContentType(treq.ContentType()))
+			cerr := c.Call(metadata.NewOutgoingContext(gctx, md), treq, data, options.ContentType(treq.ContentType()))
 
 			var rspfile string
 

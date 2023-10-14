@@ -1,4 +1,4 @@
-package wrapper // import "go.unistack.org/micro/v4/meter/wrapper"
+package wrapper
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"go.unistack.org/micro/v4/client"
 	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/semconv"
 	"go.unistack.org/micro/v4/server"
 )
@@ -24,7 +25,7 @@ var (
 // Options struct
 type Options struct {
 	Meter         meter.Meter
-	lopts         []meter.Option
+	lopts         []options.Option
 	SkipEndpoints []string
 }
 
@@ -35,7 +36,7 @@ type Option func(*Options)
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Meter:         meter.DefaultMeter,
-		lopts:         make([]meter.Option, 0, 5),
+		lopts:         make([]options.Option, 0, 5),
 		SkipEndpoints: DefaultSkipEndpoints,
 	}
 	for _, o := range opts {
@@ -137,7 +138,7 @@ func (w *wrapper) CallFunc(ctx context.Context, addr string, req client.Request,
 	return err
 }
 
-func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
+func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...options.Option) error {
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
 	for _, ep := range w.opts.SkipEndpoints {
 		if ep == endpoint {
@@ -167,7 +168,7 @@ func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{},
 	return err
 }
 
-func (w *wrapper) Stream(ctx context.Context, req client.Request, opts ...client.CallOption) (client.Stream, error) {
+func (w *wrapper) Stream(ctx context.Context, req client.Request, opts ...options.Option) (client.Stream, error) {
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
 	for _, ep := range w.opts.SkipEndpoints {
 		if ep == endpoint {
