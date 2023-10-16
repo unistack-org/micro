@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"reflect"
 
 	"go.unistack.org/micro/v4/options"
 	rutil "go.unistack.org/micro/v4/util/reflect"
-	"golang.org/x/exp/slog"
 )
 
 // Options holds logger options
