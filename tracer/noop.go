@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go.unistack.org/micro/v4/options"
+	"go.unistack.org/micro/v4/util/id"
 )
 
 var _ Tracer = (*noopTracer)(nil)
@@ -26,6 +27,8 @@ func (t *noopTracer) Start(ctx context.Context, name string, opts ...options.Opt
 		labels: options.Labels,
 		kind:   options.Kind,
 	}
+	span.spanID, _ = id.New()
+	span.traceID, _ = id.New()
 	if span.ctx == nil {
 		span.ctx = context.Background()
 	}
@@ -63,6 +66,8 @@ type noopSpan struct {
 	logs      []interface{}
 	kind      SpanKind
 	status    SpanStatus
+	traceID   string
+	spanID    string
 }
 
 func (s *noopSpan) Finish(opts ...options.Option) {
@@ -95,6 +100,14 @@ func (s *noopSpan) AddLabels(kv ...interface{}) {
 
 func (s *noopSpan) Kind() SpanKind {
 	return s.kind
+}
+
+func (s *noopSpan) TraceID() string {
+	return s.traceID
+}
+
+func (s *noopSpan) SpanID() string {
+	return s.spanID
 }
 
 func (s *noopSpan) Status() (SpanStatus, string) {

@@ -17,6 +17,10 @@ var (
 	DefaultCallerSkipCount = 2
 )
 
+type ContextAttrFunc func(ctx context.Context) []interface{}
+
+var DefaultContextAttrFuncs []ContextAttrFunc
+
 // Logger is a generic logging interface
 type Logger interface {
 	// Init initialises options
@@ -29,57 +33,54 @@ type Logger interface {
 	Level(level Level)
 	// The Logger options
 	Options() Options
-	// Fields set fields to always be logged with keyval pairs
-	Fields(fields ...interface{}) Logger
+	// Attrs set attrs to always be logged with keyval pairs
+	Attrs(attrs ...interface{}) Logger
 	// Info level message
-	Info(ctx context.Context, msg string, args ...interface{})
+	Info(ctx context.Context, msg string, attrs ...interface{})
 	// Tracef level message
-	Trace(ctx context.Context, msg string, args ...interface{})
+	Trace(ctx context.Context, msg string, attrs ...interface{})
 	// Debug level message
-	Debug(ctx context.Context, msg string, args ...interface{})
+	Debug(ctx context.Context, msg string, attrs ...interface{})
 	// Warn level message
-	Warn(ctx context.Context, msg string, args ...interface{})
+	Warn(ctx context.Context, msg string, attrs ...interface{})
 	// Error level message
-	Error(ctx context.Context, msg string, args ...interface{})
+	Error(ctx context.Context, msg string, attrs ...interface{})
 	// Fatal level message
-	Fatal(ctx context.Context, msg string, args ...interface{})
+	Fatal(ctx context.Context, msg string, attrs ...interface{})
 	// Log logs message with needed level
-	Log(ctx context.Context, level Level, msg string, args ...interface{})
+	Log(ctx context.Context, level Level, msg string, attrs ...interface{})
 	// String returns the name of logger
 	String() string
 }
 
-// Field contains keyval pair
-type Field interface{}
-
 // Info writes formatted msg to default logger on info level
-func Info(ctx context.Context, msg string, args ...interface{}) {
-	DefaultLogger.Info(ctx, msg, args...)
+func Info(ctx context.Context, msg string, attrs ...interface{}) {
+	DefaultLogger.Info(ctx, msg, attrs...)
 }
 
 // Error writes formatted msg to default logger on error level
-func Error(ctx context.Context, msg string, args ...interface{}) {
-	DefaultLogger.Error(ctx, msg, args...)
+func Error(ctx context.Context, msg string, attrs ...interface{}) {
+	DefaultLogger.Error(ctx, msg, attrs...)
 }
 
 // Debugf writes formatted msg to default logger on debug level
-func Debugf(ctx context.Context, msg string, args ...interface{}) {
-	DefaultLogger.Debug(ctx, msg, args...)
+func Debugf(ctx context.Context, msg string, attrs ...interface{}) {
+	DefaultLogger.Debug(ctx, msg, attrs...)
 }
 
 // Warn writes formatted msg to default logger on warn level
-func Warn(ctx context.Context, msg string, args ...interface{}) {
-	DefaultLogger.Warn(ctx, msg, args...)
+func Warn(ctx context.Context, msg string, attrs ...interface{}) {
+	DefaultLogger.Warn(ctx, msg, attrs...)
 }
 
 // Trace writes formatted msg to default logger on trace level
-func Trace(ctx context.Context, msg string, args ...interface{}) {
-	DefaultLogger.Trace(ctx, msg, args...)
+func Trace(ctx context.Context, msg string, attrs ...interface{}) {
+	DefaultLogger.Trace(ctx, msg, attrs...)
 }
 
 // Fatal writes formatted msg to default logger on fatal level
-func Fatal(ctx context.Context, msg string, args ...interface{}) {
-	DefaultLogger.Fatal(ctx, msg, args...)
+func Fatal(ctx context.Context, msg string, attrs ...interface{}) {
+	DefaultLogger.Fatal(ctx, msg, attrs...)
 }
 
 // V returns true if passed level enabled in default logger
@@ -87,12 +88,12 @@ func V(level Level) bool {
 	return DefaultLogger.V(level)
 }
 
-// Init initialize logger
+// Init initialize default logger
 func Init(opts ...options.Option) error {
 	return DefaultLogger.Init(opts...)
 }
 
-// Fields create logger with specific fields
-func Fields(fields ...interface{}) Logger {
-	return DefaultLogger.Fields(fields...)
+// Attrs create default logger with specific attrs
+func Attrs(attrs ...interface{}) Logger {
+	return DefaultLogger.Attrs(attrs...)
 }

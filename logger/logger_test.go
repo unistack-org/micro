@@ -15,7 +15,7 @@ func TestContext(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	nl, ok := FromContext(NewContext(ctx, l.Fields("key", "val")))
+	nl, ok := FromContext(NewContext(ctx, l.Attrs("key", "val")))
 	if !ok {
 		t.Fatal("context without logger")
 	}
@@ -25,7 +25,7 @@ func TestContext(t *testing.T) {
 	}
 }
 
-func TestFields(t *testing.T) {
+func TestAttrs(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
@@ -33,7 +33,7 @@ func TestFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	nl := l.Fields("key", "val")
+	nl := l.Attrs("key", "val")
 
 	nl.Info(ctx, "message")
 	if !bytes.Contains(buf.Bytes(), []byte(`"key":"val"`)) {
@@ -49,7 +49,7 @@ func TestFromContextWithFields(t *testing.T) {
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
-	nl := l.Fields("key", "val")
+	nl := l.Attrs("key", "val")
 
 	ctx = NewContext(ctx, nl)
 
@@ -121,7 +121,7 @@ func TestLogger(t *testing.T) {
 	}
 	l.Trace(ctx, "trace_msg1")
 	l.Warn(ctx, "warn_msg1")
-	l.Fields("error", "test").Info(ctx, "error message")
+	l.Attrs("error", "test").Info(ctx, "error message")
 	l.Warn(ctx, "first second")
 
 	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"trace"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"trace_msg1"`))) {

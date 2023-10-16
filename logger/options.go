@@ -4,8 +4,10 @@ import (
 	"context"
 	"io"
 	"os"
+	"reflect"
 
 	"go.unistack.org/micro/v4/options"
+	rutil "go.unistack.org/micro/v4/util/reflect"
 )
 
 // Options holds logger options
@@ -14,24 +16,27 @@ type Options struct {
 	Out io.Writer
 	// Context holds exernal options
 	Context context.Context
-	// Fields holds additional metadata
-	Fields []interface{}
+	// Attrs holds additional attributes
+	Attrs []interface{}
 	// Name holds the logger name
 	Name string
 	// The logging level the logger should log
 	Level Level
 	// CallerSkipCount number of frmaes to skip
 	CallerSkipCount int
+	// ContextAttrFuncs contains funcs that executed before log func on context
+	ContextAttrFuncs []ContextAttrFunc
 }
 
 // NewOptions creates new options struct
 func NewOptions(opts ...options.Option) Options {
 	options := Options{
-		Level:           DefaultLevel,
-		Fields:          make([]interface{}, 0, 6),
-		Out:             os.Stderr,
-		CallerSkipCount: DefaultCallerSkipCount,
-		Context:         context.Background(),
+		Level:            DefaultLevel,
+		Attrs:            make([]interface{}, 0, 6),
+		Out:              os.Stderr,
+		CallerSkipCount:  DefaultCallerSkipCount,
+		Context:          context.Background(),
+		ContextAttrFuncs: DefaultContextAttrFuncs,
 	}
 	for _, o := range opts {
 		o(&options)
@@ -39,10 +44,27 @@ func NewOptions(opts ...options.Option) Options {
 	return options
 }
 
-// WithFields set default fields for the logger
-func WithFields(fields ...interface{}) options.Option {
+// WithContextAttrFuncs appends default funcs for the context arrts filler
+func WithContextAttrFuncs(attrs ...interface{}) options.Option {
 	return func(src interface{}) error {
-		return options.Set(src, fields, ".Fields")
+		v, err := options.Get(src, ".ContextAttrFuncs")
+		if err != nil {
+			return err
+		} else if rutil.IsZero(v) {
+			v = reflect.MakeSlice(reflect.TypeOf(v), 0, len(attrs)).Interface()
+		}
+		cv := reflect.ValueOf(v)
+		for _, l := range attrs {
+			cv = reflect.Append(cv, reflect.ValueOf(l))
+		}
+		return options.Set(src, cv.Interface(), ".ContextAttrFuncs")
+	}
+}
+
+// WithAttrs set default fields for the logger
+func WithAttrs(attrs ...interface{}) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, attrs, ".Attrs")
 	}
 }
 
