@@ -1,5 +1,5 @@
 // Package logger provides a log interface
-package logger // import "go.unistack.org/micro/v4/logger"
+package logger
 
 import (
 	"context"
@@ -8,18 +8,21 @@ import (
 	"go.unistack.org/micro/v4/options"
 )
 
+type ContextAttrFunc func(ctx context.Context) []interface{}
+
+var DefaultContextAttrFuncs []ContextAttrFunc
+
 var (
 	// DefaultLogger variable
-	DefaultLogger = NewLogger(WithLevel(ParseLevel(os.Getenv("MICRO_LOG_LEVEL"))))
+	DefaultLogger = NewLogger(
+		WithLevel(ParseLevel(os.Getenv("MICRO_LOG_LEVEL"))),
+		WithContextAttrFuncs(DefaultContextAttrFuncs...),
+	)
 	// DefaultLevel used by logger
 	DefaultLevel = InfoLevel
 	// DefaultCallerSkipCount used by logger
 	DefaultCallerSkipCount = 2
 )
-
-type ContextAttrFunc func(ctx context.Context) []interface{}
-
-var DefaultContextAttrFuncs []ContextAttrFunc
 
 // Logger is a generic logging interface
 type Logger interface {
