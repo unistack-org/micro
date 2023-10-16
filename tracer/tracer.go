@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 
+	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/options"
 )
 
@@ -45,6 +46,20 @@ type Span interface {
 	AddLogs(kv ...interface{})
 	// Kind returns span kind
 	Kind() SpanKind
+	// TraceID returns trace id
+	TraceID() string
+	// SpanID returns span id
+	SpanID() string
+}
+
+func init() {
+	logger.DefaultContextAttrFuncs = append(logger.DefaultContextAttrFuncs, func(ctx context.Context) []interface{} {
+		span, ok := SpanFromContext(ctx)
+		if !ok || span == nil {
+			return nil
+		}
+		return []interface{}{"trace", span.TraceID(), "span", span.SpanID()}
+	})
 }
 
 // sort labels alphabeticaly by label name
