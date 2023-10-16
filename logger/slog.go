@@ -20,17 +20,20 @@ var (
 	fatalValue = slog.StringValue("fatal")
 )
 
-var renameAttr = func(_ []string, a slog.Attr) slog.Attr {
+func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 	switch a.Key {
 	case slog.SourceKey:
 		source := a.Value.Any().(*slog.Source)
 		a.Value = slog.StringValue(source.File + ":" + strconv.Itoa(source.Line))
-		a.Key = "caller"
+		a.Key = s.opts.SourceKey
 	case slog.TimeKey:
-		a.Key = "timestamp"
+		a.Key = s.opts.TimeKey
+	case slog.MessageKey:
+		a.Key = s.opts.MessageKey
 	case slog.LevelKey:
 		level := a.Value.Any().(slog.Level)
 		lvl := slogToLoggerLevel(level)
+		a.Key = s.opts.LevelKey
 		switch {
 		case lvl < DebugLevel:
 			a.Value = traceValue
@@ -76,7 +79,7 @@ func (s *slogLogger) Clone(opts ...options.Option) Logger {
 
 	l.leveler = new(slog.LevelVar)
 	handleOpt := &slog.HandlerOptions{
-		ReplaceAttr: renameAttr,
+		ReplaceAttr: s.renameAttr,
 		Level:       l.leveler,
 		AddSource:   true,
 	}
@@ -105,7 +108,7 @@ func (s *slogLogger) Attrs(attrs ...interface{}) Logger {
 	nl.leveler.Set(s.leveler.Level())
 
 	handleOpt := &slog.HandlerOptions{
-		ReplaceAttr: renameAttr,
+		ReplaceAttr: nl.renameAttr,
 		Level:       s.leveler,
 		AddSource:   true,
 	}
@@ -132,7 +135,7 @@ func (s *slogLogger) Init(opts ...options.Option) error {
 
 	s.leveler = new(slog.LevelVar)
 	handleOpt := &slog.HandlerOptions{
-		ReplaceAttr: renameAttr,
+		ReplaceAttr: s.renameAttr,
 		Level:       s.leveler,
 		AddSource:   true,
 	}
