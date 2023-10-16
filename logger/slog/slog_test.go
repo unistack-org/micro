@@ -1,21 +1,23 @@
-package logger
+package slog
 
 import (
 	"bytes"
 	"context"
 	"log"
 	"testing"
+
+	"go.unistack.org/micro/v4/logger"
 )
 
 func TestContext(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
+	l := NewLogger(logger.WithLevel(logger.TraceLevel), logger.WithOutput(buf))
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
 
-	nl, ok := FromContext(NewContext(ctx, l.Attrs("key", "val")))
+	nl, ok := logger.FromContext(logger.NewContext(ctx, l.Attrs("key", "val")))
 	if !ok {
 		t.Fatal("context without logger")
 	}
@@ -28,7 +30,7 @@ func TestContext(t *testing.T) {
 func TestAttrs(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
+	l := NewLogger(logger.WithLevel(logger.TraceLevel), logger.WithOutput(buf))
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -45,15 +47,15 @@ func TestFromContextWithFields(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
 	var ok bool
-	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
+	l := NewLogger(logger.WithLevel(logger.TraceLevel), logger.WithOutput(buf))
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
 	nl := l.Attrs("key", "val")
 
-	ctx = NewContext(ctx, nl)
+	ctx = logger.NewContext(ctx, nl)
 
-	l, ok = FromContext(ctx)
+	l, ok = logger.FromContext(ctx)
 	if !ok {
 		t.Fatalf("context does not have logger")
 	}
@@ -67,11 +69,11 @@ func TestFromContextWithFields(t *testing.T) {
 func TestClone(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
+	l := NewLogger(logger.WithLevel(logger.TraceLevel), logger.WithOutput(buf))
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
-	nl := l.Clone(WithLevel(ErrorLevel))
+	nl := l.Clone(logger.WithLevel(logger.ErrorLevel))
 	if err := nl.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -87,11 +89,11 @@ func TestClone(t *testing.T) {
 
 func TestRedirectStdLogger(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(WithLevel(ErrorLevel), WithOutput(buf))
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf))
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
-	fn := RedirectStdLogger(l, ErrorLevel)
+	fn := logger.RedirectStdLogger(l, logger.ErrorLevel)
 	defer fn()
 	log.Print("test")
 	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"error"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"test"`))) {
@@ -101,11 +103,11 @@ func TestRedirectStdLogger(t *testing.T) {
 
 func TestStdLogger(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
+	l := NewLogger(logger.WithLevel(logger.TraceLevel), logger.WithOutput(buf))
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
-	lg := NewStdLogger(l, ErrorLevel)
+	lg := logger.NewStdLogger(l, logger.ErrorLevel)
 	lg.Print("test")
 	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"error"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"test"`))) {
 		t.Fatalf("logger error, buf %s", buf.Bytes())
@@ -115,7 +117,7 @@ func TestStdLogger(t *testing.T) {
 func TestLogger(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(WithLevel(TraceLevel), WithOutput(buf))
+	l := NewLogger(logger.WithLevel(logger.TraceLevel), logger.WithOutput(buf))
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}

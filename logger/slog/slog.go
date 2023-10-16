@@ -1,4 +1,4 @@
-package logger
+package slog
 
 import (
 	"context"
@@ -8,7 +8,9 @@ import (
 	"strconv"
 	"time"
 
+	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/options"
+	"go.unistack.org/micro/v4/tracer"
 )
 
 var (
@@ -35,17 +37,17 @@ func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 		lvl := slogToLoggerLevel(level)
 		a.Key = s.opts.LevelKey
 		switch {
-		case lvl < DebugLevel:
+		case lvl < logger.DebugLevel:
 			a.Value = traceValue
-		case lvl < InfoLevel:
+		case lvl < logger.InfoLevel:
 			a.Value = debugValue
-		case lvl < WarnLevel:
+		case lvl < logger.WarnLevel:
 			a.Value = infoValue
-		case lvl < ErrorLevel:
+		case lvl < logger.ErrorLevel:
 			a.Value = warnValue
-		case lvl < FatalLevel:
+		case lvl < logger.FatalLevel:
 			a.Value = errorValue
-		case lvl >= FatalLevel:
+		case lvl >= logger.FatalLevel:
 			a.Value = fatalValue
 		default:
 			a.Value = infoValue
@@ -58,10 +60,10 @@ func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 type slogLogger struct {
 	slog    *slog.Logger
 	leveler *slog.LevelVar
-	opts    Options
+	opts    logger.Options
 }
 
-func (s *slogLogger) Clone(opts ...options.Option) Logger {
+func (s *slogLogger) Clone(opts ...options.Option) logger.Logger {
 	options := s.opts
 
 	for _, o := range opts {
@@ -72,10 +74,12 @@ func (s *slogLogger) Clone(opts ...options.Option) Logger {
 		opts: options,
 	}
 
-	if slog, ok := s.opts.Context.Value(loggerKey{}).(*slog.Logger); ok {
-		l.slog = slog
-		return nil
-	}
+	/*
+		if slog, ok := s.opts.Context.Value(loggerKey{}).(*slog.Logger); ok {
+			l.slog = slog
+			return nil
+		}
+	*/
 
 	l.leveler = new(slog.LevelVar)
 	handleOpt := &slog.HandlerOptions{
@@ -90,19 +94,19 @@ func (s *slogLogger) Clone(opts ...options.Option) Logger {
 	return l
 }
 
-func (s *slogLogger) V(level Level) bool {
+func (s *slogLogger) V(level logger.Level) bool {
 	return s.opts.Level.Enabled(level)
 }
 
-func (s *slogLogger) Level(level Level) {
+func (s *slogLogger) Level(level logger.Level) {
 	s.leveler.Set(loggerToSlogLevel(level))
 }
 
-func (s *slogLogger) Options() Options {
+func (s *slogLogger) Options() logger.Options {
 	return s.opts
 }
 
-func (s *slogLogger) Attrs(attrs ...interface{}) Logger {
+func (s *slogLogger) Attrs(attrs ...interface{}) logger.Logger {
 	nl := &slogLogger{opts: s.opts}
 	nl.leveler = new(slog.LevelVar)
 	nl.leveler.Set(s.leveler.Level())
@@ -121,17 +125,20 @@ func (s *slogLogger) Attrs(attrs ...interface{}) Logger {
 
 func (s *slogLogger) Init(opts ...options.Option) error {
 	if len(s.opts.ContextAttrFuncs) == 0 {
-		s.opts.ContextAttrFuncs = DefaultContextAttrFuncs
+		s.opts.ContextAttrFuncs = logger.DefaultContextAttrFuncs
 	}
 	for _, o := range opts {
 		if err := o(&s.opts); err != nil {
 			return err
 		}
 	}
-	if slog, ok := s.opts.Context.Value(loggerKey{}).(*slog.Logger); ok {
-		s.slog = slog
-		return nil
-	}
+
+	/*
+		if slog, ok := s.opts.Context.Value(loggerKey{}).(*slog.Logger); ok {
+			s.slog = slog
+			return nil
+		}
+	*/
 
 	s.leveler = new(slog.LevelVar)
 	handleOpt := &slog.HandlerOptions{
@@ -146,7 +153,7 @@ func (s *slogLogger) Init(opts ...options.Option) error {
 	return nil
 }
 
-func (s *slogLogger) Log(ctx context.Context, lvl Level, msg string, attrs ...interface{}) {
+func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, msg string, attrs ...interface{}) {
 	if !s.V(lvl) {
 		return
 	}
@@ -161,7 +168,7 @@ func (s *slogLogger) Log(ctx context.Context, lvl Level, msg string, attrs ...in
 }
 
 func (s *slogLogger) Info(ctx context.Context, msg string, attrs ...interface{}) {
-	if !s.V(InfoLevel) {
+	if !s.V(logger.InfoLevel) {
 		return
 	}
 	var pcs [1]uintptr
@@ -175,7 +182,7 @@ func (s *slogLogger) Info(ctx context.Context, msg string, attrs ...interface{})
 }
 
 func (s *slogLogger) Debug(ctx context.Context, msg string, attrs ...interface{}) {
-	if !s.V(InfoLevel) {
+	if !s.V(logger.DebugLevel) {
 		return
 	}
 	var pcs [1]uintptr
@@ -189,7 +196,7 @@ func (s *slogLogger) Debug(ctx context.Context, msg string, attrs ...interface{}
 }
 
 func (s *slogLogger) Trace(ctx context.Context, msg string, attrs ...interface{}) {
-	if !s.V(InfoLevel) {
+	if !s.V(logger.TraceLevel) {
 		return
 	}
 	var pcs [1]uintptr
@@ -203,7 +210,7 @@ func (s *slogLogger) Trace(ctx context.Context, msg string, attrs ...interface{}
 }
 
 func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}) {
-	if !s.V(InfoLevel) {
+	if !s.V(logger.ErrorLevel) {
 		return
 	}
 	var pcs [1]uintptr
@@ -213,11 +220,20 @@ func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}
 		attrs = append(attrs, fn(ctx)...)
 	}
 	r.Add(attrs...)
+	r.Attrs(func(a slog.Attr) bool {
+		if a.Key == "error" {
+			if span, ok := tracer.SpanFromContext(ctx); ok {
+				span.SetStatus(tracer.SpanStatusError, a.Value.String())
+				return false
+			}
+		}
+		return true
+	})
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
 func (s *slogLogger) Fatal(ctx context.Context, msg string, attrs ...interface{}) {
-	if !s.V(InfoLevel) {
+	if !s.V(logger.FatalLevel) {
 		return
 	}
 	var pcs [1]uintptr
@@ -232,7 +248,7 @@ func (s *slogLogger) Fatal(ctx context.Context, msg string, attrs ...interface{}
 }
 
 func (s *slogLogger) Warn(ctx context.Context, msg string, attrs ...interface{}) {
-	if !s.V(InfoLevel) {
+	if !s.V(logger.WarnLevel) {
 		return
 	}
 	var pcs [1]uintptr
@@ -249,43 +265,43 @@ func (s *slogLogger) String() string {
 	return "slog"
 }
 
-func NewLogger(opts ...options.Option) Logger {
+func NewLogger(opts ...options.Option) logger.Logger {
 	l := &slogLogger{
-		opts: NewOptions(opts...),
+		opts: logger.NewOptions(opts...),
 	}
 	return l
 }
 
-func loggerToSlogLevel(level Level) slog.Level {
+func loggerToSlogLevel(level logger.Level) slog.Level {
 	switch level {
-	case DebugLevel:
+	case logger.DebugLevel:
 		return slog.LevelDebug
-	case WarnLevel:
+	case logger.WarnLevel:
 		return slog.LevelWarn
-	case ErrorLevel:
+	case logger.ErrorLevel:
 		return slog.LevelError
-	case TraceLevel:
+	case logger.TraceLevel:
 		return slog.LevelDebug - 1
-	case FatalLevel:
+	case logger.FatalLevel:
 		return slog.LevelError + 1
 	default:
 		return slog.LevelInfo
 	}
 }
 
-func slogToLoggerLevel(level slog.Level) Level {
+func slogToLoggerLevel(level slog.Level) logger.Level {
 	switch level {
 	case slog.LevelDebug:
-		return DebugLevel
+		return logger.DebugLevel
 	case slog.LevelWarn:
-		return WarnLevel
+		return logger.WarnLevel
 	case slog.LevelError:
-		return ErrorLevel
+		return logger.ErrorLevel
 	case slog.LevelDebug - 1:
-		return TraceLevel
+		return logger.TraceLevel
 	case slog.LevelError + 1:
-		return FatalLevel
+		return logger.FatalLevel
 	default:
-		return InfoLevel
+		return logger.InfoLevel
 	}
 }
