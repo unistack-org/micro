@@ -117,12 +117,14 @@ func (s *slogLogger) Attrs(attrs ...interface{}) Logger {
 }
 
 func (s *slogLogger) Init(opts ...options.Option) error {
+	if len(s.opts.ContextAttrFuncs) == 0 {
+		s.opts.ContextAttrFuncs = DefaultContextAttrFuncs
+	}
 	for _, o := range opts {
 		if err := o(&s.opts); err != nil {
 			return err
 		}
 	}
-
 	if slog, ok := s.opts.Context.Value(loggerKey{}).(*slog.Logger); ok {
 		s.slog = slog
 		return nil
@@ -149,7 +151,7 @@ func (s *slogLogger) Log(ctx context.Context, lvl Level, msg string, attrs ...in
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), loggerToSlogLevel(lvl), msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx))
+		attrs = append(attrs, fn(ctx)...)
 	}
 	r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
@@ -163,7 +165,7 @@ func (s *slogLogger) Info(ctx context.Context, msg string, attrs ...interface{})
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelInfo, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx))
+		attrs = append(attrs, fn(ctx)...)
 	}
 	r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
@@ -177,7 +179,7 @@ func (s *slogLogger) Debug(ctx context.Context, msg string, attrs ...interface{}
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelDebug, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx))
+		attrs = append(attrs, fn(ctx)...)
 	}
 	r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
@@ -191,7 +193,7 @@ func (s *slogLogger) Trace(ctx context.Context, msg string, attrs ...interface{}
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelDebug-1, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx))
+		attrs = append(attrs, fn(ctx)...)
 	}
 	r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
@@ -205,7 +207,7 @@ func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelError, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx))
+		attrs = append(attrs, fn(ctx)...)
 	}
 	r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
@@ -219,7 +221,7 @@ func (s *slogLogger) Fatal(ctx context.Context, msg string, attrs ...interface{}
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelError+1, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx))
+		attrs = append(attrs, fn(ctx)...)
 	}
 	r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
@@ -234,7 +236,7 @@ func (s *slogLogger) Warn(ctx context.Context, msg string, attrs ...interface{})
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelWarn, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx))
+		attrs = append(attrs, fn(ctx)...)
 	}
 	r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)

@@ -27,8 +27,8 @@ func (t *noopTracer) Start(ctx context.Context, name string, opts ...options.Opt
 		labels: options.Labels,
 		kind:   options.Kind,
 	}
-	span.spanID, _ = id.New()
-	span.traceID, _ = id.New()
+	span.spanID.s, _ = id.New()
+	span.traceID.s, _ = id.New()
 	if span.ctx == nil {
 		span.ctx = context.Background()
 	}
@@ -56,18 +56,26 @@ type noopEvent struct {
 	labels []interface{}
 }
 
+type noopStringer struct {
+	s string
+}
+
+func (s noopStringer) String() string {
+	return s.s
+}
+
 type noopSpan struct {
 	ctx       context.Context
 	tracer    Tracer
 	name      string
 	statusMsg string
+	traceID   noopStringer
+	spanID    noopStringer
 	events    []*noopEvent
 	labels    []interface{}
 	logs      []interface{}
 	kind      SpanKind
 	status    SpanStatus
-	traceID   string
-	spanID    string
 }
 
 func (s *noopSpan) Finish(opts ...options.Option) {
@@ -103,11 +111,11 @@ func (s *noopSpan) Kind() SpanKind {
 }
 
 func (s *noopSpan) TraceID() string {
-	return s.traceID
+	return s.traceID.String()
 }
 
 func (s *noopSpan) SpanID() string {
-	return s.spanID
+	return s.spanID.String()
 }
 
 func (s *noopSpan) Status() (SpanStatus, string) {
