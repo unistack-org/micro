@@ -17,7 +17,7 @@ func TestFSMStart(t *testing.T) {
 
 	wrapper := func(next StateFunc) StateFunc {
 		return func(sctx context.Context, s State, opts ...StateOption) (State, error) {
-			sctx = logger.NewContext(sctx, logger.Fields("state", s.Name()))
+			sctx = logger.NewContext(sctx, logger.Attrs("state", s.Name()))
 			return next(sctx, s, opts...)
 		}
 	}
