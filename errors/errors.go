@@ -4,11 +4,17 @@ package errors // import "go.unistack.org/micro/v3/errors"
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -339,4 +345,102 @@ func addslashes(str string) string {
 		buf.WriteRune(char)
 	}
 	return buf.String()
+}
+
+type retryableError struct {
+	err error
+}
+
+// Retryable returns error that can be retried later
+func Retryable(err error) error {
+	return &retryableError{err: err}
+}
+
+// Unwrap provides error wrapping
+func (e *retryableError) Unwrap() error {
+	return e.err
+}
+
+// Error returns the error string
+func (e *retryableError) Error() string {
+	if e.err == nil {
+		return ""
+	}
+	return e.err.Error()
+}
+
+// IsRetryable checks error for ability to retry later
+func IsRetryable(err error) bool {
+	switch verr := err.(type) {
+	case *Error:
+		switch verr.Code {
+		case 401, 403, 408, 500, 501, 502, 503, 504:
+			return true
+		default:
+			return false
+		}
+	case *retryableError:
+		return true
+	case interface{ SafeToRetry() bool }:
+		return verr.SafeToRetry()
+	case interface{ Timeout() bool }:
+		return verr.Timeout()
+	}
+
+	switch {
+	case errors.Is(err, io.EOF), errors.Is(err, io.ErrUnexpectedEOF):
+		return true
+	case errors.Is(err, context.DeadlineExceeded):
+		return true
+	case errors.Is(err, io.ErrClosedPipe), errors.Is(err, io.ErrShortBuffer), errors.Is(err, io.ErrShortWrite):
+		return true
+	default:
+		st, ok := status.FromError(err)
+		if !ok {
+			errmsg := err.Error()
+			if strings.Contains(errmsg, `number of field descriptions must equal number of`) {
+				return true
+			}
+			if strings.Contains(errmsg, `not a pointer`) {
+				return true
+			}
+			if strings.Contains(errmsg, `values, but dst struct has only`) {
+				return true
+			}
+			if strings.Contains(errmsg, `struct doesn't have corresponding row field`) {
+				return true
+			}
+			if strings.Contains(errmsg, `cannot find field`) {
+				return true
+			}
+			if strings.Contains(errmsg, `cannot scan`) || strings.Contains(errmsg, `cannot convert`) {
+				return true
+			}
+			if strings.Contains(errmsg, `failed to connect to`) {
+				return true
+			}
+
+			return false
+		}
+		switch st.Code() {
+		case codes.Unavailable, codes.ResourceExhausted:
+			return true
+		case codes.DeadlineExceeded:
+			return true
+		case codes.Internal:
+			if strings.Contains(st.Message(), `transport: received the unexpected content-type "text/html; charset=UTF-8"`) {
+				return true
+			}
+			if strings.Contains(st.Message(), io.ErrUnexpectedEOF.Error()) {
+				return true
+			}
+			if strings.Contains(st.Message(), `stream terminated by RST_STREAM with error code: INTERNAL_ERROR`) {
+				return true
+			}
+		default:
+			return false
+		}
+	}
+
+	return false
 }
