@@ -8,6 +8,13 @@ import (
 	"testing"
 )
 
+func TestIsRetrayable(t *testing.T) {
+	err := fmt.Errorf("ORA-")
+	if !IsRetryable(err, RetrayableOracleErrors...) {
+		t.Fatalf("IsRetrayable not works")
+	}
+}
+
 func TestMarshalJSON(t *testing.T) {
 	e := InternalServerError("id", "err: %v", fmt.Errorf("err: %v", `xxx: "UNIX_TIMESTAMP": invalid identifier`))
 	_, err := json.Marshal(e)
