@@ -490,6 +490,13 @@ func (n *noopClient) publish(ctx context.Context, ps []Message, opts ...PublishO
 		if !ok {
 			md = metadata.New(0)
 		}
+
+		iter := p.Metadata().Iterator()
+		var k, v string
+		for iter.Next(&k, &v) {
+			md.Set(k, v)
+		}
+
 		md[metadata.HeaderContentType] = p.ContentType()
 
 		topic := p.Topic()
