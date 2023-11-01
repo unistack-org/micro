@@ -2,7 +2,6 @@ package logger
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -70,7 +69,6 @@ func WithContextAttrFuncs(fncs ...ContextAttrFunc) options.Option {
 		for _, l := range fncs {
 			cv = reflect.Append(cv, reflect.ValueOf(l))
 		}
-		fmt.Printf("EEEE %#+v\n", cv.Interface())
 		return options.Set(src, cv.Interface(), ".ContextAttrFuncs")
 	}
 }
