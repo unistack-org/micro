@@ -17,6 +17,21 @@ import (
 	"go.unistack.org/micro/v3/tracer"
 )
 
+func TestClient(t *testing.T) {
+	c1 := client.NewClient(client.Name("test1"))
+	c2 := client.NewClient(client.Name("test2"))
+
+	svc := NewService(Client(c1, c2))
+	if err := svc.Init(); err != nil {
+		t.Fatal(err)
+	}
+
+	x1 := svc.Client("test2")
+	if x1.Name() != "test2" {
+		t.Fatal("invalid client")
+	}
+}
+
 type testItem struct {
 	name string
 }
