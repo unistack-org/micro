@@ -18,8 +18,8 @@ import (
 )
 
 func TestClient(t *testing.T) {
-	c1 := client.NewClient(client.Name("test1"))
-	c2 := client.NewClient(client.Name("test2"))
+	c1 := client.NewClient(options.Name("test1"))
+	c2 := client.NewClient(options.Name("test2"))
 
 	svc := NewService(Client(c1, c2))
 	if err := svc.Init(); err != nil {
@@ -29,23 +29,6 @@ func TestClient(t *testing.T) {
 	x1 := svc.Client("test2")
 	if x1.Name() != "test2" {
 		t.Fatal("invalid client")
-	}
-}
-
-type testItem struct {
-	name string
-}
-
-func (ti *testItem) Name() string {
-	return ti.name
-}
-
-func TestGetNameIndex(t *testing.T) {
-	item1 := &testItem{name: "first"}
-	item2 := &testItem{name: "second"}
-	items := []interface{}{item1, item2}
-	if idx := getNameIndex("second", items); idx != 1 {
-		t.Fatalf("getNameIndex func error, item not found")
 	}
 }
 
