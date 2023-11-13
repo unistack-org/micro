@@ -372,19 +372,71 @@ func (s *service) Run() error {
 	return s.Stop()
 }
 
-type nameIface interface {
-	Name() string
-}
-
 func getNameIndex(n string, ifaces interface{}) int {
-	values, ok := ifaces.([]interface{})
-	if !ok {
-		return 0
-	}
-	for idx, iface := range values {
-		if ifc, ok := iface.(nameIface); ok && ifc.Name() == n {
-			return idx
+	switch values := ifaces.(type) {
+	case []router.Router:
+		for idx, iface := range values {
+			if iface.Name() == n {
+				return idx
+			}
 		}
+	case []register.Register:
+		for idx, iface := range values {
+			if iface.Name() == n {
+				return idx
+			}
+		}
+	case []store.Store:
+		for idx, iface := range values {
+			if iface.Name() == n {
+				return idx
+			}
+		}
+	case []tracer.Tracer:
+		for idx, iface := range values {
+			if iface.Name() == n {
+				return idx
+			}
+		}
+	case []server.Server:
+		for idx, iface := range values {
+			if iface.Name() == n {
+				return idx
+			}
+		}
+	case []config.Config:
+		for idx, iface := range values {
+			if iface.Name() == n {
+				return idx
+			}
+		}
+	case []meter.Meter:
+		for idx, iface := range values {
+			if iface.Name() == n {
+				return idx
+			}
+		}
+	case []broker.Broker:
+		for idx, iface := range values {
+			if iface.Name() == n {
+				return idx
+			}
+		}
+	case []client.Client:
+		for idx, iface := range values {
+			if iface.Name() == n {
+				return idx
+			}
+		}
+		/*
+			case []logger.Logger:
+					for idx, iface := range values {
+						if iface.Name() == n {
+							return idx
+						}
+					}
+		*/
 	}
+
 	return 0
 }
