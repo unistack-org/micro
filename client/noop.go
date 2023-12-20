@@ -486,11 +486,12 @@ func (n *noopClient) publish(ctx context.Context, ps []Message, opts ...PublishO
 	msgs := make([]*broker.Message, 0, len(ps))
 
 	for _, p := range ps {
-		md, ok := metadata.FromOutgoingContext(ctx)
+		omd, ok := metadata.FromOutgoingContext(ctx)
 		if !ok {
-			md = metadata.New(0)
+			omd = metadata.New(0)
 		}
 
+		md := metadata.Copy(omd)
 		iter := p.Metadata().Iterator()
 		var k, v string
 		for iter.Next(&k, &v) {
