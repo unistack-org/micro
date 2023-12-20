@@ -342,9 +342,6 @@ func (n *noopServer) createSubHandler(sb *subscriber, opts Options) broker.Handl
 
 		hdr := metadata.New(len(msg.Header))
 		for k, v := range msg.Header {
-			if k == "Content-Type" {
-				continue
-			}
 			hdr.Set(k, v)
 		}
 
