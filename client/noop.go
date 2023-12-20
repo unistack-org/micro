@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"go.unistack.org/micro/v3/broker"
@@ -485,29 +486,34 @@ func (n *noopClient) publish(ctx context.Context, ps []Message, opts ...PublishO
 
 	msgs := make([]*broker.Message, 0, len(ps))
 
-	for _, p := range ps {
-		omd, ok := metadata.FromOutgoingContext(ctx)
-		if !ok {
-			omd = metadata.New(0)
-		}
+	// get proxy
+	exchange := ""
+	if v, ok := os.LookupEnv("MICRO_PROXY"); ok {
+		exchange = v
+	}
+	// get the exchange
+	if len(options.Exchange) > 0 {
+		exchange = options.Exchange
+	}
 
+	omd, ok := metadata.FromOutgoingContext(ctx)
+	if !ok {
+		omd = metadata.New(0)
+	}
+
+	for _, p := range ps {
 		md := metadata.Copy(omd)
+		md[metadata.HeaderContentType] = p.ContentType()
+		topic := p.Topic()
+		if len(exchange) > 0 {
+			topic = exchange
+		}
+		md[metadata.HeaderTopic] = topic
 		iter := p.Metadata().Iterator()
 		var k, v string
 		for iter.Next(&k, &v) {
 			md.Set(k, v)
 		}
-
-		md[metadata.HeaderContentType] = p.ContentType()
-
-		topic := p.Topic()
-
-		// get the exchange
-		if len(options.Exchange) > 0 {
-			topic = options.Exchange
-		}
-
-		md[metadata.HeaderTopic] = topic
 
 		var body []byte
 
