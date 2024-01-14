@@ -42,6 +42,10 @@ type Options struct {
 	AfterInit []func(context.Context, Config) error
 	// AllowFail flag to allow fail in config source
 	AllowFail bool
+	// SkipLoad runs only if condition returns true
+	SkipLoad func(context.Context, Config) bool
+	// SkipSave runs only if condition returns true
+	SkipSave func(context.Context, Config) bool
 }
 
 // Option function signature

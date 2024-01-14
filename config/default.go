@@ -39,6 +39,10 @@ func (c *defaultConfig) Init(opts ...Option) error {
 }
 
 func (c *defaultConfig) Load(ctx context.Context, opts ...LoadOption) error {
+	if c.opts.SkipLoad != nil && c.opts.SkipLoad(ctx, c) {
+		return nil
+	}
+
 	if err := DefaultBeforeLoad(ctx, c); err != nil && !c.opts.AllowFail {
 		return err
 	}
@@ -291,7 +295,11 @@ func fillValues(valueOf reflect.Value, tname string) error {
 	return nil
 }
 
-func (c *defaultConfig) Save(ctx context.Context, opts ...SaveOption) error {
+func (c *defaultConfig) Save(ctx context.Context, _ ...SaveOption) error {
+	if c.opts.SkipSave != nil && c.opts.SkipSave(ctx, c) {
+		return nil
+	}
+
 	if err := DefaultBeforeSave(ctx, c); err != nil {
 		return err
 	}
