@@ -190,7 +190,7 @@ func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, attrs ...interfa
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), loggerToSlogLevel(lvl), fmt.Sprintf("%s", attrs[0]), pcs[0])
-	r.Add(attrs[1:]...)
+	// r.Add(attrs[1:]...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
@@ -200,8 +200,8 @@ func (s *slogLogger) Logf(ctx context.Context, lvl logger.Level, msg string, att
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), loggerToSlogLevel(lvl), msg, pcs[0])
-	r.Add(attrs...)
+	r := slog.NewRecord(time.Now(), loggerToSlogLevel(lvl), fmt.Sprintf(msg, attrs...), pcs[0])
+	// r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
@@ -212,7 +212,7 @@ func (s *slogLogger) Info(ctx context.Context, attrs ...interface{}) {
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelInfo, fmt.Sprintf("%s", attrs[0]), pcs[0])
-	r.Add(attrs[1:]...)
+	// r.Add(attrs[1:]...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
@@ -222,8 +222,8 @@ func (s *slogLogger) Infof(ctx context.Context, msg string, attrs ...interface{}
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelInfo, msg, pcs[0])
-	r.Add(attrs...)
+	r := slog.NewRecord(time.Now(), slog.LevelInfo, fmt.Sprintf(msg, attrs...), pcs[0])
+	// r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
@@ -234,7 +234,7 @@ func (s *slogLogger) Debug(ctx context.Context, attrs ...interface{}) {
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelDebug, fmt.Sprintf("%s", attrs[0]), pcs[0])
-	r.Add(attrs[1:]...)
+	// r.Add(attrs[1:]...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
@@ -244,8 +244,8 @@ func (s *slogLogger) Debugf(ctx context.Context, msg string, attrs ...interface{
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelDebug, msg, pcs[0])
-	r.Add(attrs...)
+	r := slog.NewRecord(time.Now(), slog.LevelDebug, fmt.Sprintf(msg, attrs...), pcs[0])
+	// r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
@@ -256,7 +256,7 @@ func (s *slogLogger) Trace(ctx context.Context, attrs ...interface{}) {
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelDebug-1, fmt.Sprintf("%s", attrs[0]), pcs[0])
-	r.Add(attrs[1:]...)
+	// r.Add(attrs[1:]...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
@@ -266,8 +266,8 @@ func (s *slogLogger) Tracef(ctx context.Context, msg string, attrs ...interface{
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelDebug-1, msg, pcs[0])
-	r.Add(attrs...)
+	r := slog.NewRecord(time.Now(), slog.LevelDebug-1, fmt.Sprintf(msg, attrs...), pcs[0])
+	// r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
@@ -278,7 +278,7 @@ func (s *slogLogger) Error(ctx context.Context, attrs ...interface{}) {
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelError, fmt.Sprintf("%s", attrs[0]), pcs[0])
-	r.Add(attrs[1:]...)
+	//	r.Add(attrs[1:]...)
 	r.Attrs(func(a slog.Attr) bool {
 		if a.Key == "error" {
 			if span, ok := tracer.SpanFromContext(ctx); ok {
@@ -297,8 +297,8 @@ func (s *slogLogger) Errorf(ctx context.Context, msg string, attrs ...interface{
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelError, msg, pcs[0])
-	r.Add(attrs...)
+	r := slog.NewRecord(time.Now(), slog.LevelError, fmt.Sprintf(msg, attrs...), pcs[0])
+	// r.Add(attrs...)
 	r.Attrs(func(a slog.Attr) bool {
 		if a.Key == "error" {
 			if span, ok := tracer.SpanFromContext(ctx); ok {
@@ -318,7 +318,7 @@ func (s *slogLogger) Fatal(ctx context.Context, attrs ...interface{}) {
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelError+1, fmt.Sprintf("%s", attrs[0]), pcs[0])
-	r.Add(attrs[1:]...)
+	// r.Add(attrs[1:]...)
 	_ = s.slog.Handler().Handle(ctx, r)
 	os.Exit(1)
 }
@@ -329,8 +329,8 @@ func (s *slogLogger) Fatalf(ctx context.Context, msg string, attrs ...interface{
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelError+1, msg, pcs[0])
-	r.Add(attrs...)
+	r := slog.NewRecord(time.Now(), slog.LevelError+1, fmt.Sprintf(msg, attrs...), pcs[0])
+	// r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
 	os.Exit(1)
 }
@@ -342,7 +342,7 @@ func (s *slogLogger) Warn(ctx context.Context, attrs ...interface{}) {
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelWarn, fmt.Sprintf("%s", attrs[0]), pcs[0])
-	r.Add(attrs[1:]...)
+	// r.Add(attrs[1:]...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
@@ -352,8 +352,8 @@ func (s *slogLogger) Warnf(ctx context.Context, msg string, attrs ...interface{}
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelWarn, msg, pcs[0])
-	r.Add(attrs...)
+	r := slog.NewRecord(time.Now(), slog.LevelWarn, fmt.Sprintf(msg, attrs...), pcs[0])
+	// r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
