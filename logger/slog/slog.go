@@ -140,7 +140,7 @@ func (s *slogLogger) Fields(attrs ...interface{}) logger.Logger {
 
 	handleOpt := &slog.HandlerOptions{
 		ReplaceAttr: nl.renameAttr,
-		Level:       s.leveler,
+		Level:       nl.leveler,
 		AddSource:   true,
 	}
 
