@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"sync"
 	"time"
 
 	"go.unistack.org/micro/v3/logger"
@@ -72,9 +73,11 @@ type slogLogger struct {
 	sourceKey  string
 	timeKey    string
 	opts       logger.Options
+	mu         sync.RWMutex
 }
 
 func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
+	s.mu.RLock()
 	options := s.opts
 
 	for _, o := range opts {
@@ -112,6 +115,8 @@ func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
 	handler := slog.NewJSONHandler(options.Out, handleOpt)
 	l.slog = slog.New(handler).With(options.Fields...)
 
+	s.mu.RUnlock()
+
 	return l
 }
 
@@ -128,6 +133,7 @@ func (s *slogLogger) Options() logger.Options {
 }
 
 func (s *slogLogger) Fields(attrs ...interface{}) logger.Logger {
+	s.mu.RLock()
 	nl := &slogLogger{
 		opts:       s.opts,
 		levelKey:   s.levelKey,
@@ -140,17 +146,20 @@ func (s *slogLogger) Fields(attrs ...interface{}) logger.Logger {
 
 	handleOpt := &slog.HandlerOptions{
 		ReplaceAttr: nl.renameAttr,
-		Level:       s.leveler,
+		Level:       nl.leveler,
 		AddSource:   true,
 	}
 
 	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
 	nl.slog = slog.New(handler).With(attrs...)
 
+	s.mu.RUnlock()
+
 	return nl
 }
 
 func (s *slogLogger) Init(opts ...logger.Option) error {
+	s.mu.Lock()
 	for _, o := range opts {
 		o(&s.opts)
 	}
@@ -179,6 +188,8 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 	s.slog = slog.New(handler).With(s.opts.Fields...)
 
 	slog.SetDefault(s.slog)
+
+	s.mu.Unlock()
 
 	return nil
 }
