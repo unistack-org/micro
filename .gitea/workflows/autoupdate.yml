@@ -5,8 +5,8 @@ on:
     - 'master'
     - 'v3'
   schedule:
-    - cron: '* * * * *'
-    #- cron: '@hourly'
+    #- cron: '* * * * *'
+    - cron: '@hourly'
 
 jobs:
   autoupdate:
