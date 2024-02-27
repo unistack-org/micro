@@ -33,24 +33,41 @@ func As(b any, target any) bool {
 		return false
 	}
 	targetType := typ.Elem()
-	if targetType.Kind() != reflect.Interface &&
-		!(targetType.Implements(brokerType) ||
-			targetType.Implements(loggerType) ||
-			targetType.Implements(clientType) ||
-			targetType.Implements(serverType) ||
-			targetType.Implements(codecType) ||
-			targetType.Implements(flowType) ||
-			targetType.Implements(fsmType) ||
-			targetType.Implements(meterType) ||
-			targetType.Implements(registerType) ||
-			targetType.Implements(resolverType) ||
-			targetType.Implements(selectorType) ||
-			targetType.Implements(storeType) ||
-			targetType.Implements(syncType) ||
-			targetType.Implements(tracerType) ||
-			targetType.Implements(serviceType) ||
-			targetType.Implements(routerType)) {
-		return false
+	if targetType.Kind() != reflect.Interface {
+		switch {
+		case targetType.Implements(brokerType):
+			break
+		case targetType.Implements(loggerType):
+			break
+		case targetType.Implements(clientType):
+			break
+		case targetType.Implements(serverType):
+			break
+		case targetType.Implements(codecType):
+			break
+		case targetType.Implements(flowType):
+			break
+		case targetType.Implements(fsmType):
+			break
+		case targetType.Implements(meterType):
+			break
+		case targetType.Implements(registerType):
+			break
+		case targetType.Implements(resolverType):
+			break
+		case targetType.Implements(selectorType):
+			break
+		case targetType.Implements(storeType):
+			break
+		case targetType.Implements(syncType):
+			break
+		case targetType.Implements(serviceType):
+			break
+		case targetType.Implements(routerType):
+			break
+		default:
+			return false
+		}
 	}
 	if reflect.TypeOf(b).AssignableTo(targetType) {
 		val.Elem().Set(reflect.ValueOf(b))
