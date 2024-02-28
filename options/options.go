@@ -157,6 +157,22 @@ func Metadata(md metadata.Metadata) Option {
 	}
 }
 
+func MetadataAny(md any) Option {
+	result := metadata.Metadata{}
+	switch vt := md.(type) {
+	case metadata.Metadata:
+		result = metadata.Copy(vt)
+	case []string:
+		for index := 0; index < len(vt); index += 2 {
+			result[vt[index]] = result[vt[index]]
+		}
+	}
+
+	return func(src interface{}) error {
+		return Set(src, result, ".Metadata")
+	}
+}
+
 // Namespace to use
 func Namespace(ns string) Option {
 	return func(src interface{}) error {
