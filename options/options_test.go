@@ -1,10 +1,13 @@
 package options_test
 
 import (
+	"fmt"
 	"testing"
 
 	"go.unistack.org/micro/v4/codec"
+	"go.unistack.org/micro/v4/metadata"
 	"go.unistack.org/micro/v4/options"
+	"go.unistack.org/micro/v4/util/reflect"
 )
 
 func TestAddress(t *testing.T) {
@@ -82,5 +85,71 @@ func TestLabels(t *testing.T) {
 	}
 	if x2.Labels[0] != "key" {
 		t.Fatal("failed to set labels")
+	}
+}
+
+func TestMetadataAny(t *testing.T) {
+	type s struct {
+		Metadata metadata.Metadata
+	}
+
+	testCases := []struct {
+		Name     string
+		Data     any
+		Expected metadata.Metadata
+	}{
+		{
+			"strings_even",
+			[]string{"key1", "val1", "key2", "val2"},
+			metadata.Metadata{
+				"Key1": "val1",
+				"Key2": "val2",
+			},
+		},
+		{
+			"strings_odd",
+			[]string{"key1", "val1", "key2"},
+			metadata.Metadata{
+				"Key1": "val1",
+			},
+		},
+		{
+			"map",
+			map[string]string{
+				"key1": "val1",
+				"key2": "val2",
+			},
+			metadata.Metadata{
+				"Key1": "val1",
+				"Key2": "val2",
+			},
+		},
+		{
+			"metadata.Metadata",
+			metadata.Metadata{
+				"key1": "val1",
+				"key2": "val2",
+			},
+			metadata.Metadata{
+				"Key1": "val1",
+				"Key2": "val2",
+			},
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.Name, func(t *testing.T) {
+			src := &s{}
+			var opts []options.Option
+			opts = append(opts, options.MetadataAny(tt.Data))
+			for _, o := range opts {
+				if err := o(src); err != nil {
+					t.Fatal(err)
+				}
+				if !reflect.Equal(tt.Expected, src.Metadata) {
+					t.Fatal(fmt.Sprintf("expected: %v, actual: %v", tt.Expected, src.Metadata))
+				}
+			}
+		})
 	}
 }
