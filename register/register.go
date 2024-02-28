@@ -4,6 +4,7 @@ package register // import "go.unistack.org/micro/v4/register"
 import (
 	"context"
 	"errors"
+	"go.unistack.org/micro/v4/register/memory"
 
 	"go.unistack.org/micro/v4/metadata"
 )
@@ -18,7 +19,7 @@ var DefaultDomain = "micro"
 
 var (
 	// DefaultRegister is the global default register
-	DefaultRegister = NewRegister()
+	DefaultRegister = memory.NewRegister()
 	// ErrNotFound returned when LookupService is called and no services found
 	ErrNotFound = errors.New("service not found")
 	// ErrWatcherStopped returned when when watcher is stopped

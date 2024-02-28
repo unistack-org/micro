@@ -1,6 +1,7 @@
 package micro
 
 import (
+	"go.unistack.org/micro/v4/register/memory"
 	"reflect"
 	"testing"
 
@@ -425,7 +426,7 @@ func Test_service_Store(t *testing.T) {
 }
 
 func Test_service_Register(t *testing.T) {
-	r := register.NewRegister()
+	r := memory.NewRegister()
 	type fields struct {
 		opts Options
 	}
