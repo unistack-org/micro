@@ -100,7 +100,7 @@ func TestMetadataAny(t *testing.T) {
 	}{
 		{
 			"strings_even",
-			[]string{"key1", "val1", "key2", "val2"},
+			[]any{"key1", "val1", "key2", "val2"},
 			metadata.Metadata{
 				"Key1": "val1",
 				"Key2": "val2",
@@ -108,18 +108,18 @@ func TestMetadataAny(t *testing.T) {
 		},
 		{
 			"strings_odd",
-			[]string{"key1", "val1", "key2"},
+			[]any{"key1", "val1", "key2"},
 			metadata.Metadata{
 				"Key1": "val1",
 			},
 		},
 		{
-			"map",
-			map[string]string{
+			Name: "map",
+			Data: map[string]string{
 				"key1": "val1",
 				"key2": "val2",
 			},
-			metadata.Metadata{
+			Expected: metadata.Metadata{
 				"Key1": "val1",
 				"Key2": "val2",
 			},
@@ -141,7 +141,13 @@ func TestMetadataAny(t *testing.T) {
 		t.Run(tt.Name, func(t *testing.T) {
 			src := &s{}
 			var opts []options.Option
-			opts = append(opts, options.Metadata(tt.Data))
+			switch valData := tt.Data.(type) {
+			case []any:
+				opts = append(opts, options.Metadata(valData...))
+			case map[string]string, metadata.Metadata:
+				opts = append(opts, options.Metadata(valData))
+			}
+
 			for _, o := range opts {
 				if err := o(src); err != nil {
 					t.Fatal(err)
