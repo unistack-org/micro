@@ -141,7 +141,7 @@ func TestMetadataAny(t *testing.T) {
 		t.Run(tt.Name, func(t *testing.T) {
 			src := &s{}
 			var opts []options.Option
-			opts = append(opts, options.MetadataAny(tt.Data))
+			opts = append(opts, options.Metadata(tt.Data))
 			for _, o := range opts {
 				if err := o(src); err != nil {
 					t.Fatal(err)

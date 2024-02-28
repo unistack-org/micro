@@ -151,13 +151,7 @@ func ContentType(ct string) Option {
 }
 
 // Metadata pass additional metadata
-func Metadata(md metadata.Metadata) Option {
-	return func(src interface{}) error {
-		return Set(src, metadata.Copy(md), ".Metadata")
-	}
-}
-
-func MetadataAny(md any) Option {
+func Metadata(md any) Option {
 	result := metadata.Metadata{}
 	switch vt := md.(type) {
 	case metadata.Metadata:
