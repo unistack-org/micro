@@ -165,9 +165,9 @@ func Listener(nl net.Listener) options.Option {
 	}
 }
 
-func GracefulTimeout(t time.Duration) options.Option {
+func GracefulTimeout(td time.Duration) options.Option {
 	return func(src interface{}) error {
-		return options.Set(src, t, ".GracefulTimeout")
+		return options.Set(src, td, ".GracefulTimeout")
 	}
 }
 
