@@ -151,9 +151,30 @@ func ContentType(ct string) Option {
 }
 
 // Metadata pass additional metadata
-func Metadata(md metadata.Metadata) Option {
+func Metadata(md ...any) Option {
+	var result metadata.Metadata
+	if len(md) == 1 {
+		switch vt := md[0].(type) {
+		case metadata.Metadata:
+			result = metadata.Copy(vt)
+		case map[string]string:
+			result = metadata.Copy(vt)
+		default:
+			result = metadata.New(0)
+		}
+	} else {
+		result = metadata.New(len(md) / 2)
+		for idx := 0; idx < len(md)/2; idx += 2 {
+			k, kok := md[idx].(string)
+			v, vok := md[idx+1].(string)
+			if kok && vok {
+				result.Set(k, v)
+			}
+		}
+	}
+
 	return func(src interface{}) error {
-		return Set(src, metadata.Copy(md), ".Metadata")
+		return Set(src, result, ".Metadata")
 	}
 }
 
