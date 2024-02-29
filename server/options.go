@@ -86,6 +86,8 @@ type Options struct {
 	DeregisterAttempts int
 	// Hooks may contains SubscriberWrapper, HandlerWrapper or Server func wrapper
 	Hooks options.Hooks
+	// GracefulTimeout timeout for graceful stop server
+	GracefulTimeout time.Duration
 }
 
 // NewOptions returns new options struct with default or passed values
@@ -108,6 +110,7 @@ func NewOptions(opts ...Option) Options {
 		Version:          DefaultVersion,
 		ID:               id.Must(),
 		Namespace:        DefaultNamespace,
+		GracefulTimeout:  DefaultGracefulTimeout,
 	}
 
 	for _, o := range opts {
@@ -320,6 +323,14 @@ func Listener(l net.Listener) Option {
 
 // HandlerOption func
 type HandlerOption func(*HandlerOptions)
+
+// GracefulTimeout duration
+func GracefulTimeout(td time.Duration) Option {
+	return func(o *Options) {
+		o.GracefulTimeout = td
+	}
+}
+
 
 // HandlerOptions struct
 type HandlerOptions struct {
