@@ -4,7 +4,6 @@ package register // import "go.unistack.org/micro/v4/register"
 import (
 	"context"
 	"errors"
-
 	"go.unistack.org/micro/v4/metadata"
 )
 

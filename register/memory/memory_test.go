@@ -1,19 +1,22 @@
-package register
+package memory
 
 import (
 	"context"
 	"fmt"
+	"go.unistack.org/micro/v4"
+	"go.unistack.org/micro/v4/register"
+	"reflect"
 	"sync"
 	"testing"
 	"time"
 )
 
-var testData = map[string][]*Service{
+var testData = map[string][]*register.Service{
 	"foo": {
 		{
 			Name:    "foo",
 			Version: "1.0.0",
-			Nodes: []*Node{
+			Nodes: []*register.Node{
 				{
 					ID:      "foo-1.0.0-123",
 					Address: "localhost:9999",
@@ -27,7 +30,7 @@ var testData = map[string][]*Service{
 		{
 			Name:    "foo",
 			Version: "1.0.1",
-			Nodes: []*Node{
+			Nodes: []*register.Node{
 				{
 					ID:      "foo-1.0.1-321",
 					Address: "localhost:6666",
@@ -37,7 +40,7 @@ var testData = map[string][]*Service{
 		{
 			Name:    "foo",
 			Version: "1.0.3",
-			Nodes: []*Node{
+			Nodes: []*register.Node{
 				{
 					ID:      "foo-1.0.3-345",
 					Address: "localhost:8888",
@@ -49,7 +52,7 @@ var testData = map[string][]*Service{
 		{
 			Name:    "bar",
 			Version: "default",
-			Nodes: []*Node{
+			Nodes: []*register.Node{
 				{
 					ID:      "bar-1.0.0-123",
 					Address: "localhost:9999",
@@ -63,7 +66,7 @@ var testData = map[string][]*Service{
 		{
 			Name:    "bar",
 			Version: "latest",
-			Nodes: []*Node{
+			Nodes: []*register.Node{
 				{
 					ID:      "bar-1.0.1-321",
 					Address: "localhost:6666",
@@ -78,7 +81,7 @@ func TestMemoryRegistry(t *testing.T) {
 	ctx := context.TODO()
 	m := NewRegister()
 
-	fn := func(k string, v []*Service) {
+	fn := func(k string, v []*register.Service) {
 		services, err := m.LookupService(ctx, k)
 		if err != nil {
 			t.Errorf("Unexpected error getting service %s: %v", k, err)
@@ -155,8 +158,8 @@ func TestMemoryRegistry(t *testing.T) {
 	for _, v := range testData {
 		for _, service := range v {
 			services, err := m.LookupService(ctx, service.Name)
-			if err != ErrNotFound {
-				t.Errorf("Expected error: %v, got: %v", ErrNotFound, err)
+			if err != register.ErrNotFound {
+				t.Errorf("Expected error: %v, got: %v", register.ErrNotFound, err)
 			}
 			if len(services) != 0 {
 				t.Errorf("Expected %d services for %s, got %d", 0, service.Name, len(services))
@@ -171,7 +174,7 @@ func TestMemoryRegistryTTL(t *testing.T) {
 
 	for _, v := range testData {
 		for _, service := range v {
-			if err := m.Register(ctx, service, RegisterTTL(time.Millisecond)); err != nil {
+			if err := m.Register(ctx, service, register.RegisterTTL(time.Millisecond)); err != nil {
 				t.Fatal(err)
 			}
 		}
@@ -200,7 +203,7 @@ func TestMemoryRegistryTTLConcurrent(t *testing.T) {
 	ctx := context.TODO()
 	for _, v := range testData {
 		for _, service := range v {
-			if err := m.Register(ctx, service, RegisterTTL(waitTime/2)); err != nil {
+			if err := m.Register(ctx, service, register.RegisterTTL(waitTime/2)); err != nil {
 				t.Fatal(err)
 			}
 		}
@@ -249,34 +252,34 @@ func TestMemoryWildcard(t *testing.T) {
 	m := NewRegister()
 	ctx := context.TODO()
 
-	testSrv := &Service{Name: "foo", Version: "1.0.0"}
+	testSrv := &register.Service{Name: "foo", Version: "1.0.0"}
 
-	if err := m.Register(ctx, testSrv, RegisterDomain("one")); err != nil {
+	if err := m.Register(ctx, testSrv, register.RegisterDomain("one")); err != nil {
 		t.Fatalf("Register err: %v", err)
 	}
-	if err := m.Register(ctx, testSrv, RegisterDomain("two")); err != nil {
+	if err := m.Register(ctx, testSrv, register.RegisterDomain("two")); err != nil {
 		t.Fatalf("Register err: %v", err)
 	}
 
-	if recs, err := m.ListServices(ctx, ListDomain("one")); err != nil {
+	if recs, err := m.ListServices(ctx, register.ListDomain("one")); err != nil {
 		t.Errorf("List err: %v", err)
 	} else if len(recs) != 1 {
 		t.Errorf("Expected 1 record, got %v", len(recs))
 	}
 
-	if recs, err := m.ListServices(ctx, ListDomain("*")); err != nil {
+	if recs, err := m.ListServices(ctx, register.ListDomain("*")); err != nil {
 		t.Errorf("List err: %v", err)
 	} else if len(recs) != 2 {
 		t.Errorf("Expected 2 records, got %v", len(recs))
 	}
 
-	if recs, err := m.LookupService(ctx, testSrv.Name, LookupDomain("one")); err != nil {
+	if recs, err := m.LookupService(ctx, testSrv.Name, register.LookupDomain("one")); err != nil {
 		t.Errorf("Lookup err: %v", err)
 	} else if len(recs) != 1 {
 		t.Errorf("Expected 1 record, got %v", len(recs))
 	}
 
-	if recs, err := m.LookupService(ctx, testSrv.Name, LookupDomain("*")); err != nil {
+	if recs, err := m.LookupService(ctx, testSrv.Name, register.LookupDomain("*")); err != nil {
 		t.Errorf("Lookup err: %v", err)
 	} else if len(recs) != 2 {
 		t.Errorf("Expected 2 records, got %v", len(recs))
@@ -284,7 +287,7 @@ func TestMemoryWildcard(t *testing.T) {
 }
 
 func TestWatcher(t *testing.T) {
-	testSrv := &Service{Name: "foo", Version: "1.0.0"}
+	testSrv := &register.Service{Name: "foo", Version: "1.0.0"}
 
 	ctx := context.TODO()
 	m := NewRegister()
@@ -318,5 +321,39 @@ func TestWatcher(t *testing.T) {
 	wg.Wait()
 	if _, err := wc.Next(); err == nil {
 		t.Fatal("expected error on Next()")
+	}
+}
+
+func Test_service_Register(t *testing.T) {
+	t.Skip()
+	r := NewRegister()
+
+	type args struct {
+		names []string
+	}
+	tests := []struct {
+		name string
+		opts []micro.Option
+		args args
+		want register.Register
+	}{
+		{
+			name: "service.Register",
+			opts: []micro.Option{micro.Register(r)},
+			args: args{
+				names: []string{"memory"},
+			},
+			want: r,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := micro.NewService(tt.opts...)
+
+			if got := s.Register(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("service.Register() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
