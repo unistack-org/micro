@@ -32,6 +32,8 @@ var (
 	DefaultMaxMsgRecvSize = 1024 * 1024 * 4 // 4Mb
 	// DefaultMaxMsgSendSize holds default max send size
 	DefaultMaxMsgSendSize = 1024 * 1024 * 4 // 4Mb
+	// DefaultGracefulTimeout default time for graceful stop
+	DefaultGracefulTimeout = 5 * time.Second
 )
 
 // Server is a simple micro server abstraction

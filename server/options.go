@@ -65,6 +65,8 @@ type Options struct {
 	DeregisterAttempts int
 	// Hooks may contains HandleWrapper or Server func wrapper
 	Hooks options.Hooks
+	// GracefulTimeout timeout for graceful stop server
+	GracefulTimeout time.Duration
 }
 
 // NewOptions returns new options struct with default or passed values
@@ -84,6 +86,7 @@ func NewOptions(opts ...options.Option) Options {
 		Name:             DefaultName,
 		Version:          DefaultVersion,
 		ID:               id.Must(),
+		GracefulTimeout:  DefaultGracefulTimeout,
 	}
 
 	for _, o := range opts {
@@ -159,6 +162,12 @@ func MaxConn(n int) options.Option {
 func Listener(nl net.Listener) options.Option {
 	return func(src interface{}) error {
 		return options.Set(src, nl, ".Listener")
+	}
+}
+
+func GracefulTimeout(t time.Duration) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, t, ".GracefulTimeout")
 	}
 }
 
