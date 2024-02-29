@@ -325,7 +325,7 @@ func Listener(l net.Listener) Option {
 type HandlerOption func(*HandlerOptions)
 
 // GracefulTimeout duration
-func GracefulTimeout(td time.Duration) options.Option {
+func GracefulTimeout(td time.Duration) Option {
 	return func(o *Options) {
 		o.GracefulTimeout = td
 	}
