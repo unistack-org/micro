@@ -4,12 +4,8 @@ package register // import "go.unistack.org/micro/v4/register"
 import (
 	"context"
 	"errors"
-	"go.unistack.org/micro/v4/register/memory"
-
 	"go.unistack.org/micro/v4/metadata"
 )
-
-// TODO we have cycle import!!!!!
 
 const (
 	// WildcardDomain indicates any domain
@@ -21,7 +17,7 @@ var DefaultDomain = "micro"
 
 var (
 	// DefaultRegister is the global default register
-	DefaultRegister = memory.NewRegister()
+	DefaultRegister = NewRegister()
 	// ErrNotFound returned when LookupService is called and no services found
 	ErrNotFound = errors.New("service not found")
 	// ErrWatcherStopped returned when when watcher is stopped

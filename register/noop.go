@@ -36,23 +36,19 @@ func (n *noop) Disconnect(ctx context.Context) error {
 }
 
 func (n *noop) Register(ctx context.Context, service *Service, option ...RegisterOption) error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func (n *noop) Deregister(ctx context.Context, service *Service, option ...DeregisterOption) error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func (n *noop) LookupService(ctx context.Context, s string, option ...LookupOption) ([]*Service, error) {
-	//TODO implement me
-	panic("implement me")
+	return nil, nil
 }
 
 func (n *noop) ListServices(ctx context.Context, option ...ListOption) ([]*Service, error) {
-	//TODO implement me
-	panic("implement me")
+	return nil, nil
 }
 
 func (n *noop) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
@@ -70,8 +66,7 @@ type watcher struct {
 }
 
 func (m *watcher) Next() (*Result, error) {
-	//TODO implement me
-	panic("implement me")
+	return nil, nil
 }
 
 func (m *watcher) Stop() {}

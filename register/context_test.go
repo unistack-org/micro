@@ -2,7 +2,6 @@ package register
 
 import (
 	"context"
-	"go.unistack.org/micro/v4/register/memory"
 	"testing"
 )
 
@@ -16,7 +15,7 @@ func TestFromNilContext(t *testing.T) {
 
 func TestNewNilContext(t *testing.T) {
 	// nolint: staticcheck
-	ctx := NewContext(nil, memory.NewRegister())
+	ctx := NewContext(nil, NewRegister())
 
 	c, ok := FromContext(ctx)
 	if c == nil || !ok {
@@ -25,7 +24,7 @@ func TestNewNilContext(t *testing.T) {
 }
 
 func TestFromContext(t *testing.T) {
-	ctx := context.WithValue(context.TODO(), registerKey{}, memory.NewRegister())
+	ctx := context.WithValue(context.TODO(), registerKey{}, NewRegister())
 
 	c, ok := FromContext(ctx)
 	if c == nil || !ok {
@@ -34,7 +33,7 @@ func TestFromContext(t *testing.T) {
 }
 
 func TestNewContext(t *testing.T) {
-	ctx := NewContext(context.TODO(), memory.NewRegister())
+	ctx := NewContext(context.TODO(), NewRegister())
 
 	c, ok := FromContext(ctx)
 	if c == nil || !ok {
