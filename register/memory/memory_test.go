@@ -3,7 +3,9 @@ package memory
 import (
 	"context"
 	"fmt"
+	"go.unistack.org/micro/v4"
 	"go.unistack.org/micro/v4/register"
+	"reflect"
 	"sync"
 	"testing"
 	"time"
@@ -319,5 +321,38 @@ func TestWatcher(t *testing.T) {
 	wg.Wait()
 	if _, err := wc.Next(); err == nil {
 		t.Fatal("expected error on Next()")
+	}
+}
+
+func Test_service_Register(t *testing.T) {
+	r := NewRegister()
+
+	type args struct {
+		names []string
+	}
+	tests := []struct {
+		name string
+		opts []micro.Option
+		args args
+		want register.Register
+	}{
+		{
+			name: "service.Register",
+			opts: []micro.Option{micro.Register(r)},
+			args: args{
+				names: []string{"memory"},
+			},
+			want: r,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := micro.NewService(tt.opts...)
+
+			if got := s.Register(tt.args.names...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("service.Register() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

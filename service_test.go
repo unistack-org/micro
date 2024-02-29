@@ -445,7 +445,7 @@ func Test_service_Register(t *testing.T) {
 				opts: Options{Registers: []register.Register{r}},
 			},
 			args: args{
-				names: []string{"noop"},
+				names: []string{"memory"},
 			},
 			want: r,
 		},
