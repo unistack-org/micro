@@ -321,22 +321,19 @@ func Listener(l net.Listener) Option {
 	}
 }
 
-<<<<<<< HEAD
 // HandlerOption func
 type HandlerOption func(*HandlerOptions)
 
-// HandlerOptions struct
-type HandlerOptions struct {
-=======
-func GracefulTimeout(t time.Duration) options.Option {
-	return func(src interface{}) error {
-		return options.Set(src, t, ".GracefulTimeout")
+// GracefulTimeout duration
+func GracefulTimeout(td time.Duration) options.Option {
+	return func(o *Options) {
+		o.GracefulTimeout = td
 	}
 }
 
-// HandleOptions struct
-type HandleOptions struct {
->>>>>>> bf0c3016cb09 (add gracefultimeout in server)
+
+// HandlerOptions struct
+type HandlerOptions struct {
 	// Context holds external options
 	Context context.Context
 	// Metadata for handler
