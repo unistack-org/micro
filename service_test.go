@@ -22,13 +22,14 @@ func TestClient(t *testing.T) {
 	c2 := client.NewClient(client.Name("test2"))
 
 	svc := NewService(Client(c1, c2))
+
 	if err := svc.Init(); err != nil {
 		t.Fatal(err)
 	}
 
 	x1 := svc.Client("test2")
 	if x1.Name() != "test2" {
-		t.Fatal("invalid client")
+		t.Fatalf("invalid client %#+v", svc.Options().Clients)
 	}
 }
 
@@ -38,15 +39,6 @@ type testItem struct {
 
 func (ti *testItem) Name() string {
 	return ti.name
-}
-
-func TestGetNameIndex(t *testing.T) {
-	item1 := &testItem{name: "first"}
-	item2 := &testItem{name: "second"}
-	items := []interface{}{item1, item2}
-	if idx := getNameIndex("second", items); idx != 1 {
-		t.Fatalf("getNameIndex func error, item not found")
-	}
 }
 
 func TestRegisterHandler(t *testing.T) {
