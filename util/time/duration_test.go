@@ -35,8 +35,8 @@ func TestUnmarshalJSON(t *testing.T) {
 	err = json.Unmarshal([]byte(`{"ttl":"1y"}`), v)
 	if err != nil {
 		t.Fatal(err)
-	} else if v.TTL != 31536000000000000 {
-		t.Fatalf("invalid duration %v != 31536000000000000", v.TTL)
+	} else if v.TTL != 31622400000000000 {
+		t.Fatalf("invalid duration %v != 31622400000000000", v.TTL)
 	}
 }
 
@@ -55,7 +55,7 @@ func TestParseDuration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ParseDuration error: %v", err)
 	}
-	if td.String() != "8760h0m0s" {
-		t.Fatalf("ParseDuration 1y != 8760h0m0s : %s", td.String())
+	if td.String() != "8784h0m0s" {
+		t.Fatalf("ParseDuration 1y != 8784h0m0s : %s", td.String())
 	}
 }

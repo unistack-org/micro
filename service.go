@@ -7,15 +7,11 @@ import (
 
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/client"
-	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/config"
-	"go.unistack.org/micro/v3/flow"
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/meter"
 	"go.unistack.org/micro/v3/register"
-	"go.unistack.org/micro/v3/resolver"
 	"go.unistack.org/micro/v3/router"
-	"go.unistack.org/micro/v3/selector"
 	"go.unistack.org/micro/v3/server"
 	"go.unistack.org/micro/v3/store"
 	"go.unistack.org/micro/v3/tracer"
@@ -380,97 +376,15 @@ func (s *service) Run() error {
 	return s.Stop()
 }
 
-func getNameIndex(n string, ifaces interface{}) int {
-	type namer interface {
-		Name() string
-	}
+type Namer interface {
+	Name() string
+}
 
-	switch vt := ifaces.(type) {
-	case []broker.Broker:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []client.Client:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []codec.Codec:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []config.Config:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []flow.Flow:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []logger.Logger:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []meter.Meter:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []register.Register:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []resolver.Resolver:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []router.Router:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []selector.Selector:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []server.Server:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []store.Store:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
-		}
-	case []tracer.Tracer:
-		for idx, iface := range vt {
-			if nm, ok := iface.(namer); ok && nm.Name() == n {
-				return idx
-			}
+func getNameIndex[T Namer](n string, ifaces []T) int {
+	for idx, iface := range ifaces {
+		if iface.Name() == n {
+			return idx
 		}
 	}
-
 	return 0
 }

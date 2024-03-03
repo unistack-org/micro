@@ -41,6 +41,14 @@ func (ti *testItem) Name() string {
 	return ti.name
 }
 
+func Test_getNameIndex(t *testing.T) {
+	items := []*testItem{{name: "test1"}, {name: "test2"}}
+	idx := getNameIndex("test2", items)
+	if items[idx].Name() != "test2" {
+		t.Fatal("getNameIndex wrong")
+	}
+}
+
 func TestRegisterHandler(t *testing.T) {
 	type args struct {
 		s    server.Server
