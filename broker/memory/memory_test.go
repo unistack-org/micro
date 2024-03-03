@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/metadata"
 )
 
@@ -19,7 +20,7 @@ func TestMemoryBatchBroker(t *testing.T) {
 	topic := "test"
 	count := 10
 
-	fn := func(evts Events) error {
+	fn := func(evts broker.Events) error {
 		return evts.Ack()
 	}
 
@@ -28,9 +29,9 @@ func TestMemoryBatchBroker(t *testing.T) {
 		t.Fatalf("Unexpected error subscribing %v", err)
 	}
 
-	msgs := make([]*Message, 0, count)
+	msgs := make([]*broker.Message, 0, count)
 	for i := 0; i < count; i++ {
-		message := &Message{
+		message := &broker.Message{
 			Header: map[string]string{
 				metadata.HeaderTopic: topic,
 				"foo":                "bar",
@@ -65,7 +66,7 @@ func TestMemoryBroker(t *testing.T) {
 	topic := "test"
 	count := 10
 
-	fn := func(p Event) error {
+	fn := func(p broker.Event) error {
 		return nil
 	}
 
@@ -74,9 +75,9 @@ func TestMemoryBroker(t *testing.T) {
 		t.Fatalf("Unexpected error subscribing %v", err)
 	}
 
-	msgs := make([]*Message, 0, count)
+	msgs := make([]*broker.Message, 0, count)
 	for i := 0; i < count; i++ {
-		message := &Message{
+		message := &broker.Message{
 			Header: map[string]string{
 				metadata.HeaderTopic: topic,
 				"foo":                "bar",

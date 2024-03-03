@@ -57,7 +57,9 @@ type Logger interface {
 	Log(ctx context.Context, level Level, args ...interface{})
 	// Logf logs message with needed level
 	Logf(ctx context.Context, level Level, msg string, args ...interface{})
-	// String returns the name of logger
+	// Name returns broker instance name
+	Name() string
+	// String returns the type of logger
 	String() string
 }
 

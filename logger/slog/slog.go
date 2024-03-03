@@ -368,6 +368,10 @@ func (s *slogLogger) Warnf(ctx context.Context, msg string, attrs ...interface{}
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
+func (s *slogLogger) Name() string {
+	return s.opts.Name
+}
+
 func (s *slogLogger) String() string {
 	return "slog"
 }

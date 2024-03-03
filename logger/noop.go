@@ -13,11 +13,15 @@ func NewLogger(opts ...Option) Logger {
 	return &noopLogger{opts: options}
 }
 
-func (l *noopLogger) V(lvl Level) bool {
+func (l *noopLogger) V(_ Level) bool {
 	return false
 }
 
-func (l *noopLogger) Level(lvl Level) {
+func (l *noopLogger) Level(_ Level) {
+}
+
+func (l *noopLogger) Name() string {
+	return l.opts.Name
 }
 
 func (l *noopLogger) Init(opts ...Option) error {
@@ -35,7 +39,7 @@ func (l *noopLogger) Clone(opts ...Option) Logger {
 	return nl
 }
 
-func (l *noopLogger) Fields(attrs ...interface{}) Logger {
+func (l *noopLogger) Fields(_ ...interface{}) Logger {
 	return l
 }
 
