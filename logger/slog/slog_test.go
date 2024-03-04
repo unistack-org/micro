@@ -3,6 +3,7 @@ package slog
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"log"
 	"testing"
 
@@ -16,7 +17,7 @@ func TestError(t *testing.T) {
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
-	l.Error(ctx, "message")
+	l.Error(ctx, "msg", fmt.Errorf("message"))
 	if !bytes.Contains(buf.Bytes(), []byte(`"stacktrace":"`)) {
 		t.Fatalf("logger stacktrace not works, buf contains: %s", buf.Bytes())
 	}

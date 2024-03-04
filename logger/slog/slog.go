@@ -174,6 +174,12 @@ func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, msg string, attr
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
+	for _, a := range attrs {
+		if ve, ok := a.(error); ok && ve != nil {
+			attrs = append(attrs, slog.String(s.opts.ErrorKey, ve.Error()))
+			break
+		}
+	}
 	if s.opts.Stacktrace && lvl == logger.ErrorLevel {
 		stackInfo := make([]byte, 1024*1024)
 		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
@@ -184,6 +190,15 @@ func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, msg string, attr
 		}
 	}
 	r.Add(attrs...)
+	r.Attrs(func(a slog.Attr) bool {
+		if a.Key == s.opts.ErrorKey {
+			if span, ok := tracer.SpanFromContext(ctx); ok {
+				span.SetStatus(tracer.SpanStatusError, a.Value.String())
+				return false
+			}
+		}
+		return true
+	})
 	_ = s.slog.Handler().Handle(ctx, r)
 }
 
@@ -239,6 +254,12 @@ func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
+	for _, a := range attrs {
+		if ve, ok := a.(error); ok && ve != nil {
+			attrs = append(attrs, slog.String(s.opts.ErrorKey, ve.Error()))
+			break
+		}
+	}
 	if s.opts.Stacktrace {
 		stackInfo := make([]byte, 1024*1024)
 		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
@@ -250,7 +271,7 @@ func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}
 	}
 	r.Add(attrs...)
 	r.Attrs(func(a slog.Attr) bool {
-		if a.Key == "error" {
+		if a.Key == s.opts.ErrorKey {
 			if span, ok := tracer.SpanFromContext(ctx); ok {
 				span.SetStatus(tracer.SpanStatusError, a.Value.String())
 				return false

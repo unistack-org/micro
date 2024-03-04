@@ -33,6 +33,8 @@ type Options struct {
 	LevelKey string
 	// MessageKey is the key used for the message of the log call
 	MessageKey string
+	// ErrorKey is the key used for the error info
+	ErrorKey string
 	// SourceKey is the key used for the source file and line of the log call
 	SourceKey string
 	// StacktraceKey is the key used for the stacktrace
@@ -52,10 +54,10 @@ func NewOptions(opts ...options.Option) Options {
 		ContextAttrFuncs: DefaultContextAttrFuncs,
 	}
 
-	WithMicroKeys()(&options)
+	_ = WithMicroKeys()(&options)
 
 	for _, o := range opts {
-		o(&options)
+		_ = o(&options)
 	}
 	return options
 }
@@ -123,6 +125,9 @@ func WithZapKeys() options.Option {
 		if err = options.Set(src, "stacktrace", ".StacktraceKey"); err != nil {
 			return err
 		}
+		if err = options.Set(src, "error", ".ErrorKey"); err != nil {
+			return err
+		}
 		return nil
 	}
 }
@@ -143,6 +148,9 @@ func WithZerologKeys() options.Option {
 			return err
 		}
 		if err = options.Set(src, "stacktrace", ".StacktraceKey"); err != nil {
+			return err
+		}
+		if err = options.Set(src, "error", ".ErrorKey"); err != nil {
 			return err
 		}
 		return nil
@@ -167,6 +175,9 @@ func WithSlogKeys() options.Option {
 		if err = options.Set(src, "stacktrace", ".StacktraceKey"); err != nil {
 			return err
 		}
+		if err = options.Set(src, "error", ".ErrorKey"); err != nil {
+			return err
+		}
 		return nil
 	}
 }
@@ -187,6 +198,9 @@ func WithMicroKeys() options.Option {
 			return err
 		}
 		if err = options.Set(src, "stacktrace", ".StacktraceKey"); err != nil {
+			return err
+		}
+		if err = options.Set(src, "error", ".ErrorKey"); err != nil {
 			return err
 		}
 		return nil

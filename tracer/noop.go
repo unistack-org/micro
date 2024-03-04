@@ -24,7 +24,6 @@ func (t *noopTracer) Start(ctx context.Context, name string, opts ...options.Opt
 		name:   name,
 		ctx:    ctx,
 		tracer: t,
-		labels: options.Labels,
 		kind:   options.Kind,
 	}
 	span.spanID.s, _ = id.New()
@@ -36,7 +35,7 @@ func (t *noopTracer) Start(ctx context.Context, name string, opts ...options.Opt
 	return NewSpanContext(ctx, span), span
 }
 
-func (t *noopTracer) Flush(ctx context.Context) error {
+func (t *noopTracer) Flush(_ context.Context) error {
 	return nil
 }
 
@@ -49,11 +48,6 @@ func (t *noopTracer) Init(opts ...options.Option) error {
 
 func (t *noopTracer) Name() string {
 	return t.opts.Name
-}
-
-type noopEvent struct {
-	name   string
-	labels []interface{}
 }
 
 type noopStringer struct {
@@ -71,14 +65,11 @@ type noopSpan struct {
 	statusMsg string
 	traceID   noopStringer
 	spanID    noopStringer
-	events    []*noopEvent
-	labels    []interface{}
-	logs      []interface{}
 	kind      SpanKind
 	status    SpanStatus
 }
 
-func (s *noopSpan) Finish(opts ...options.Option) {
+func (s *noopSpan) Finish(_ ...options.Option) {
 }
 
 func (s *noopSpan) Context() context.Context {
@@ -89,21 +80,17 @@ func (s *noopSpan) Tracer() Tracer {
 	return s.tracer
 }
 
-func (s *noopSpan) AddEvent(name string, opts ...options.Option) {
-	options := NewEventOptions(opts...)
-	s.events = append(s.events, &noopEvent{name: name, labels: options.Labels})
+func (s *noopSpan) AddEvent(_ string, _ ...options.Option) {
 }
 
 func (s *noopSpan) SetName(name string) {
 	s.name = name
 }
 
-func (s *noopSpan) AddLogs(kv ...interface{}) {
-	s.logs = append(s.logs, kv...)
+func (s *noopSpan) AddLogs(_ ...interface{}) {
 }
 
-func (s *noopSpan) AddLabels(kv ...interface{}) {
-	s.labels = append(s.labels, kv...)
+func (s *noopSpan) AddLabels(_ ...interface{}) {
 }
 
 func (s *noopSpan) Kind() SpanKind {
