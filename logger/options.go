@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-// Option func
+// Option func signature
 type Option func(*Options)
 
 // Options holds logger options
@@ -15,14 +15,16 @@ type Options struct {
 	Out io.Writer
 	// Context holds exernal options
 	Context context.Context
-	// Fields holds additional metadata
-	Fields []interface{}
 	// Name holds the logger name
 	Name string
-	// The logging level the logger should log
-	Level Level
+	// Fields holds additional metadata
+	Fields []interface{}
 	// CallerSkipCount number of frmaes to skip
 	CallerSkipCount int
+	// Stacktrace controls writing of stacktaces on error
+	Stacktrace bool
+	// The logging level the logger should log
+	Level Level
 }
 
 // NewOptions creates new options struct
@@ -58,6 +60,13 @@ func WithLevel(level Level) Option {
 func WithOutput(out io.Writer) Option {
 	return func(o *Options) {
 		o.Out = out
+	}
+}
+
+// WithStacktrace controls writing stacktrace on error
+func WithStacktrace(v bool) Option {
+	return func(o *Options) {
+		o.Stacktrace = v
 	}
 }
 

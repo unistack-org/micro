@@ -18,10 +18,10 @@ import (
 var reTrace = regexp.MustCompile(`.*/slog/logger\.go.*\n`)
 
 var (
-	DefaultSourceKey  string = slog.SourceKey
-	DefaultTimeKey    string = slog.TimeKey
-	DefaultMessageKey string = slog.MessageKey
-	DefaultLevelKey   string = slog.LevelKey
+	DefaultSourceKey  = slog.SourceKey
+	DefaultTimeKey    = slog.TimeKey
+	DefaultMessageKey = slog.MessageKey
+	DefaultLevelKey   = slog.LevelKey
 )
 
 var (
