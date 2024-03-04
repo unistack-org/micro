@@ -174,6 +174,15 @@ func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, msg string, attr
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
+	if s.opts.Stacktrace && lvl == logger.ErrorLevel {
+		stackInfo := make([]byte, 1024*1024)
+		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
+			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
+			if len(traceLines) != 0 {
+				attrs = append(attrs, slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1]))
+			}
+		}
+	}
 	r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
@@ -235,7 +244,7 @@ func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}
 		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
 			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
 			if len(traceLines) != 0 {
-				attrs = append(attrs, slog.String("stacktrace", traceLines[len(traceLines)-1]))
+				attrs = append(attrs, slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1]))
 			}
 		}
 	}
