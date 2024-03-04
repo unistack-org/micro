@@ -4,14 +4,18 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"regexp"
 	"runtime"
 	"strconv"
+	"sync"
 	"time"
 
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/tracer"
 )
+
+var reTrace = regexp.MustCompile(`.*/slog/logger\.go.*\n`)
 
 var (
 	traceValue = slog.StringValue("trace")
@@ -61,13 +65,15 @@ type slogLogger struct {
 	slog    *slog.Logger
 	leveler *slog.LevelVar
 	opts    logger.Options
+	mu      sync.RWMutex
 }
 
 func (s *slogLogger) Clone(opts ...options.Option) logger.Logger {
+	s.mu.RLock()
 	options := s.opts
 
 	for _, o := range opts {
-		o(&options)
+		_ = o(&options)
 	}
 
 	l := &slogLogger{
@@ -91,6 +97,8 @@ func (s *slogLogger) Clone(opts ...options.Option) logger.Logger {
 	handler := slog.NewJSONHandler(options.Out, handleOpt)
 	l.slog = slog.New(handler).With(options.Attrs...)
 
+	s.mu.RUnlock()
+
 	return l
 }
 
@@ -107,6 +115,7 @@ func (s *slogLogger) Options() logger.Options {
 }
 
 func (s *slogLogger) Attrs(attrs ...interface{}) logger.Logger {
+	s.mu.RLock()
 	nl := &slogLogger{opts: s.opts}
 	nl.leveler = new(slog.LevelVar)
 	nl.leveler.Set(s.leveler.Level())
@@ -119,6 +128,8 @@ func (s *slogLogger) Attrs(attrs ...interface{}) logger.Logger {
 
 	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
 	nl.slog = slog.New(handler).With(attrs...)
+
+	s.mu.RUnlock()
 
 	return nl
 }
@@ -218,6 +229,15 @@ func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}
 	r := slog.NewRecord(time.Now(), slog.LevelError, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
+	}
+	if s.opts.Stacktrace {
+		stackInfo := make([]byte, 1024*1024)
+		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
+			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
+			if len(traceLines) != 0 {
+				attrs = append(attrs, slog.String("stacktrace", traceLines[len(traceLines)-1]))
+			}
+		}
 	}
 	r.Add(attrs...)
 	r.Attrs(func(a slog.Attr) bool {

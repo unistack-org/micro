@@ -48,8 +48,10 @@ type Logger interface {
 	Fatal(ctx context.Context, msg string, attrs ...interface{})
 	// Log logs message with needed level
 	Log(ctx context.Context, level Level, msg string, attrs ...interface{})
-	// String returns the name of logger
+	// String returns the type name of logger
 	String() string
+	// String returns the name of logger
+	Name() string
 }
 
 // Info writes formatted msg to default logger on info level

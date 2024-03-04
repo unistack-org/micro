@@ -35,6 +35,10 @@ type Options struct {
 	MessageKey string
 	// SourceKey is the key used for the source file and line of the log call
 	SourceKey string
+	// StacktraceKey is the key used for the stacktrace
+	StacktraceKey string
+	// Stacktrace controls writing of stacktaces on error
+	Stacktrace bool
 }
 
 // NewOptions creates new options struct
@@ -116,6 +120,9 @@ func WithZapKeys() options.Option {
 		if err = options.Set(src, "caller", ".SourceKey"); err != nil {
 			return err
 		}
+		if err = options.Set(src, "stacktrace", ".StacktraceKey"); err != nil {
+			return err
+		}
 		return nil
 	}
 }
@@ -133,6 +140,9 @@ func WithZerologKeys() options.Option {
 			return err
 		}
 		if err = options.Set(src, "caller", ".SourceKey"); err != nil {
+			return err
+		}
+		if err = options.Set(src, "stacktrace", ".StacktraceKey"); err != nil {
 			return err
 		}
 		return nil
@@ -154,6 +164,9 @@ func WithSlogKeys() options.Option {
 		if err = options.Set(src, slog.SourceKey, ".SourceKey"); err != nil {
 			return err
 		}
+		if err = options.Set(src, "stacktrace", ".StacktraceKey"); err != nil {
+			return err
+		}
 		return nil
 	}
 }
@@ -173,6 +186,16 @@ func WithMicroKeys() options.Option {
 		if err = options.Set(src, "caller", ".SourceKey"); err != nil {
 			return err
 		}
+		if err = options.Set(src, "stacktrace", ".StacktraceKey"); err != nil {
+			return err
+		}
 		return nil
+	}
+}
+
+// WithStacktrace controls writing stacktrace on error
+func WithStacktrace(v bool) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, v, ".Stacktrace")
 	}
 }
