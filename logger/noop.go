@@ -45,6 +45,10 @@ func (l *noopLogger) Options() Options {
 	return l.opts
 }
 
+func (l *noopLogger) Name() string {
+	return l.opts.Name
+}
+
 func (l *noopLogger) String() string {
 	return "noop"
 }

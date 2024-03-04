@@ -113,7 +113,7 @@ func (s *slogLogger) Attrs(attrs ...interface{}) logger.Logger {
 
 	handleOpt := &slog.HandlerOptions{
 		ReplaceAttr: nl.renameAttr,
-		Level:       s.leveler,
+		Level:       nl.leveler,
 		AddSource:   true,
 	}
 
@@ -259,6 +259,10 @@ func (s *slogLogger) Warn(ctx context.Context, msg string, attrs ...interface{})
 	}
 	r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
+}
+
+func (s *slogLogger) Name() string {
+	return s.opts.Name
 }
 
 func (s *slogLogger) String() string {
