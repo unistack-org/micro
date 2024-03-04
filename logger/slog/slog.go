@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"regexp"
 	"runtime"
 	"strconv"
 	"sync"
@@ -13,6 +14,8 @@ import (
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/tracer"
 )
+
+var reTrace = regexp.MustCompile(`.*/slog/logger\.go.*\n`)
 
 var (
 	DefaultSourceKey  string = slog.SourceKey
@@ -290,6 +293,15 @@ func (s *slogLogger) Error(ctx context.Context, attrs ...interface{}) {
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelError, fmt.Sprintf("%s", attrs[0]), pcs[0])
 	//	r.Add(attrs[1:]...)
+	if s.opts.Stacktrace {
+		stackInfo := make([]byte, 1024*1024)
+		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
+			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
+			if len(traceLines) != 0 {
+				r.AddAttrs(slog.String("stacktrace", traceLines[len(traceLines)-1]))
+			}
+		}
+	}
 	r.Attrs(func(a slog.Attr) bool {
 		if a.Key == "error" {
 			if span, ok := tracer.SpanFromContext(ctx); ok {
@@ -310,6 +322,15 @@ func (s *slogLogger) Errorf(ctx context.Context, msg string, attrs ...interface{
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), slog.LevelError, fmt.Sprintf(msg, attrs...), pcs[0])
 	// r.Add(attrs...)
+	if s.opts.Stacktrace {
+		stackInfo := make([]byte, 1024*1024)
+		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
+			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
+			if len(traceLines) != 0 {
+				r.AddAttrs(slog.String("stacktrace", traceLines[len(traceLines)-1]))
+			}
+		}
+	}
 	r.Attrs(func(a slog.Attr) bool {
 		if a.Key == "error" {
 			if span, ok := tracer.SpanFromContext(ctx); ok {

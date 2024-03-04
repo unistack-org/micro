@@ -9,6 +9,20 @@ import (
 	"go.unistack.org/micro/v3/logger"
 )
 
+func TestError(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithStacktrace(true))
+	if err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Error(ctx, "message")
+	if !bytes.Contains(buf.Bytes(), []byte(`"stacktrace":"`)) {
+		t.Fatalf("logger stacktrace not works, buf contains: %s", buf.Bytes())
+	}
+}
+
 func TestContext(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
