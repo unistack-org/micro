@@ -18,13 +18,6 @@ import (
 var reTrace = regexp.MustCompile(`.*/slog/logger\.go.*\n`)
 
 var (
-	DefaultSourceKey  = slog.SourceKey
-	DefaultTimeKey    = slog.TimeKey
-	DefaultMessageKey = slog.MessageKey
-	DefaultLevelKey   = slog.LevelKey
-)
-
-var (
 	traceValue = slog.StringValue("trace")
 	debugValue = slog.StringValue("debug")
 	infoValue  = slog.StringValue("info")
@@ -38,15 +31,15 @@ func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 	case slog.SourceKey:
 		source := a.Value.Any().(*slog.Source)
 		a.Value = slog.StringValue(source.File + ":" + strconv.Itoa(source.Line))
-		a.Key = s.sourceKey
+		a.Key = s.opts.SourceKey
 	case slog.TimeKey:
-		a.Key = s.timeKey
+		a.Key = s.opts.TimeKey
 	case slog.MessageKey:
-		a.Key = s.messageKey
+		a.Key = s.opts.MessageKey
 	case slog.LevelKey:
 		level := a.Value.Any().(slog.Level)
 		lvl := slogToLoggerLevel(level)
-		a.Key = s.levelKey
+		a.Key = s.opts.LevelKey
 		switch {
 		case lvl < logger.DebugLevel:
 			a.Value = traceValue
@@ -69,14 +62,10 @@ func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 }
 
 type slogLogger struct {
-	slog       *slog.Logger
-	leveler    *slog.LevelVar
-	levelKey   string
-	messageKey string
-	sourceKey  string
-	timeKey    string
-	opts       logger.Options
-	mu         sync.RWMutex
+	slog    *slog.Logger
+	leveler *slog.LevelVar
+	opts    logger.Options
+	mu      sync.RWMutex
 }
 
 func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
@@ -88,24 +77,7 @@ func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
 	}
 
 	l := &slogLogger{
-		opts:       options,
-		levelKey:   s.levelKey,
-		messageKey: s.messageKey,
-		sourceKey:  s.sourceKey,
-		timeKey:    s.timeKey,
-	}
-
-	if v, ok := l.opts.Context.Value(levelKey{}).(string); ok && v != "" {
-		l.levelKey = v
-	}
-	if v, ok := l.opts.Context.Value(messageKey{}).(string); ok && v != "" {
-		l.messageKey = v
-	}
-	if v, ok := l.opts.Context.Value(sourceKey{}).(string); ok && v != "" {
-		l.sourceKey = v
-	}
-	if v, ok := l.opts.Context.Value(timeKey{}).(string); ok && v != "" {
-		l.timeKey = v
+		opts: options,
 	}
 
 	l.leveler = new(slog.LevelVar)
@@ -137,13 +109,7 @@ func (s *slogLogger) Options() logger.Options {
 
 func (s *slogLogger) Fields(attrs ...interface{}) logger.Logger {
 	s.mu.RLock()
-	nl := &slogLogger{
-		opts:       s.opts,
-		levelKey:   s.levelKey,
-		messageKey: s.messageKey,
-		sourceKey:  s.sourceKey,
-		timeKey:    s.timeKey,
-	}
+	nl := &slogLogger{opts: s.opts}
 	nl.leveler = new(slog.LevelVar)
 	nl.leveler.Set(s.leveler.Level())
 
@@ -163,21 +129,13 @@ func (s *slogLogger) Fields(attrs ...interface{}) logger.Logger {
 
 func (s *slogLogger) Init(opts ...logger.Option) error {
 	s.mu.Lock()
-	for _, o := range opts {
-		o(&s.opts)
+
+	if len(s.opts.ContextAttrFuncs) == 0 {
+		s.opts.ContextAttrFuncs = logger.DefaultContextAttrFuncs
 	}
 
-	if v, ok := s.opts.Context.Value(levelKey{}).(string); ok && v != "" {
-		s.levelKey = v
-	}
-	if v, ok := s.opts.Context.Value(messageKey{}).(string); ok && v != "" {
-		s.messageKey = v
-	}
-	if v, ok := s.opts.Context.Value(sourceKey{}).(string); ok && v != "" {
-		s.sourceKey = v
-	}
-	if v, ok := s.opts.Context.Value(timeKey{}).(string); ok && v != "" {
-		s.timeKey = v
+	for _, o := range opts {
+		o(&s.opts)
 	}
 
 	s.leveler = new(slog.LevelVar)
@@ -189,8 +147,6 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 	s.leveler.Set(loggerToSlogLevel(s.opts.Level))
 	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
 	s.slog = slog.New(handler).With(s.opts.Fields...)
-
-	slog.SetDefault(s.slog)
 
 	s.mu.Unlock()
 
@@ -204,6 +160,15 @@ func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, attrs ...interfa
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), loggerToSlogLevel(lvl), fmt.Sprintf("%s", attrs[0]), pcs[0])
+	if s.opts.Stacktrace && lvl == logger.ErrorLevel {
+		stackInfo := make([]byte, 1024*1024)
+		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
+			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
+			if len(traceLines) != 0 {
+				r.AddAttrs(slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1]))
+			}
+		}
+	}
 	// r.Add(attrs[1:]...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
@@ -215,6 +180,15 @@ func (s *slogLogger) Logf(ctx context.Context, lvl logger.Level, msg string, att
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
 	r := slog.NewRecord(time.Now(), loggerToSlogLevel(lvl), fmt.Sprintf(msg, attrs...), pcs[0])
+	if s.opts.Stacktrace && lvl == logger.ErrorLevel {
+		stackInfo := make([]byte, 1024*1024)
+		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
+			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
+			if len(traceLines) != 0 {
+				r.AddAttrs(slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1]))
+			}
+		}
+	}
 	// r.Add(attrs...)
 	_ = s.slog.Handler().Handle(ctx, r)
 }
@@ -399,24 +373,9 @@ func (s *slogLogger) String() string {
 
 func NewLogger(opts ...logger.Option) logger.Logger {
 	s := &slogLogger{
-		opts:       logger.NewOptions(opts...),
-		sourceKey:  DefaultSourceKey,
-		timeKey:    DefaultTimeKey,
-		messageKey: DefaultMessageKey,
-		levelKey:   DefaultLevelKey,
+		opts: logger.NewOptions(opts...),
 	}
-	if v, ok := s.opts.Context.Value(levelKey{}).(string); ok && v != "" {
-		s.levelKey = v
-	}
-	if v, ok := s.opts.Context.Value(messageKey{}).(string); ok && v != "" {
-		s.messageKey = v
-	}
-	if v, ok := s.opts.Context.Value(sourceKey{}).(string); ok && v != "" {
-		s.sourceKey = v
-	}
-	if v, ok := s.opts.Context.Value(timeKey{}).(string); ok && v != "" {
-		s.timeKey = v
-	}
+
 	return s
 }
 

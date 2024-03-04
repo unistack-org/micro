@@ -6,6 +6,10 @@ import (
 	"os"
 )
 
+type ContextAttrFunc func(ctx context.Context) []interface{}
+
+var DefaultContextAttrFuncs []ContextAttrFunc
+
 var (
 	// DefaultLogger variable
 	DefaultLogger = NewLogger(WithLevel(ParseLevel(os.Getenv("MICRO_LOG_LEVEL"))))
