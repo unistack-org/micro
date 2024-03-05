@@ -80,18 +80,11 @@ func (s *slogLogger) Clone(opts ...options.Option) logger.Logger {
 		opts: options,
 	}
 
-	/*
-		if slog, ok := s.opts.Context.Value(loggerKey{}).(*slog.Logger); ok {
-			l.slog = slog
-			return nil
-		}
-	*/
-
 	l.leveler = new(slog.LevelVar)
 	handleOpt := &slog.HandlerOptions{
-		ReplaceAttr: s.renameAttr,
+		ReplaceAttr: l.renameAttr,
 		Level:       l.leveler,
-		AddSource:   true,
+		AddSource:   l.opts.AddSource,
 	}
 	l.leveler.Set(loggerToSlogLevel(l.opts.Level))
 	handler := slog.NewJSONHandler(options.Out, handleOpt)
@@ -116,50 +109,47 @@ func (s *slogLogger) Options() logger.Options {
 
 func (s *slogLogger) Attrs(attrs ...interface{}) logger.Logger {
 	s.mu.RLock()
-	nl := &slogLogger{opts: s.opts}
-	nl.leveler = new(slog.LevelVar)
-	nl.leveler.Set(s.leveler.Level())
+	l := &slogLogger{opts: s.opts}
+	l.leveler = new(slog.LevelVar)
+	l.leveler.Set(s.leveler.Level())
 
 	handleOpt := &slog.HandlerOptions{
-		ReplaceAttr: nl.renameAttr,
-		Level:       nl.leveler,
-		AddSource:   true,
+		ReplaceAttr: l.renameAttr,
+		Level:       l.leveler,
+		AddSource:   l.opts.AddSource,
 	}
 
 	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
-	nl.slog = slog.New(handler).With(attrs...)
+	l.slog = slog.New(handler).With(attrs...)
 
 	s.mu.RUnlock()
 
-	return nl
+	return l
 }
 
 func (s *slogLogger) Init(opts ...options.Option) error {
+	s.mu.Lock()
+
 	if len(s.opts.ContextAttrFuncs) == 0 {
 		s.opts.ContextAttrFuncs = logger.DefaultContextAttrFuncs
 	}
+
 	for _, o := range opts {
 		if err := o(&s.opts); err != nil {
 			return err
 		}
 	}
 
-	/*
-		if slog, ok := s.opts.Context.Value(loggerKey{}).(*slog.Logger); ok {
-			s.slog = slog
-			return nil
-		}
-	*/
-
 	s.leveler = new(slog.LevelVar)
 	handleOpt := &slog.HandlerOptions{
 		ReplaceAttr: s.renameAttr,
 		Level:       s.leveler,
-		AddSource:   true,
+		AddSource:   s.opts.AddSource,
 	}
 	s.leveler.Set(loggerToSlogLevel(s.opts.Level))
 	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
 	s.slog = slog.New(handler).With(s.opts.Attrs...)
+	s.mu.Unlock()
 
 	return nil
 }
@@ -180,7 +170,7 @@ func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, msg string, attr
 			break
 		}
 	}
-	if s.opts.Stacktrace && lvl == logger.ErrorLevel {
+	if s.opts.AddStacktrace && lvl == logger.ErrorLevel {
 		stackInfo := make([]byte, 1024*1024)
 		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
 			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
@@ -260,7 +250,7 @@ func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}
 			break
 		}
 	}
-	if s.opts.Stacktrace {
+	if s.opts.AddStacktrace {
 		stackInfo := make([]byte, 1024*1024)
 		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
 			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)

@@ -13,6 +13,26 @@ import (
 // DefaultTracer is the global default tracer
 var DefaultTracer = NewTracer()
 
+var (
+	// TraceIDKey is the key used for the trace id in the log call
+	TraceIDKey = "trace-id"
+	// SpanIDKey is the key used for the span id in the log call
+	SpanIDKey = "span-id"
+)
+
+func init() {
+	logger.DefaultContextAttrFuncs = append(logger.DefaultContextAttrFuncs,
+		func(ctx context.Context) []interface{} {
+			if span, ok := SpanFromContext(ctx); ok {
+				return []interface{}{
+					TraceIDKey, span.TraceID(),
+					SpanIDKey, span.SpanID(),
+				}
+			}
+			return nil
+		})
+}
+
 // Tracer is an interface for distributed tracing
 type Tracer interface {
 	// Name return tracer name
@@ -52,16 +72,6 @@ type Span interface {
 	SpanID() string
 }
 
-func init() {
-	logger.DefaultContextAttrFuncs = append(logger.DefaultContextAttrFuncs, func(ctx context.Context) []interface{} {
-		span, ok := SpanFromContext(ctx)
-		if !ok || span == nil {
-			return nil
-		}
-		return []interface{}{"trace", span.TraceID(), "span", span.SpanID()}
-	})
-}
-
 // sort labels alphabeticaly by label name
 type byKey []interface{}
 
@@ -76,6 +86,7 @@ func UniqLabels(labels []interface{}) []interface{} {
 	if len(labels)%2 == 1 {
 		labels = labels[:len(labels)-1]
 	}
+
 	if len(labels) > 2 {
 		sort.Sort(byKey(labels))
 

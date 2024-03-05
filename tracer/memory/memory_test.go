@@ -27,12 +27,12 @@ func TestLoggerWithTracer(t *testing.T) {
 	logger.Error(ctx, "my test error", fmt.Errorf("error"))
 
 	if !strings.Contains(buf.String(), span.TraceID()) {
-		t.Fatalf("log does not contains tracer id: %s", buf.Bytes())
+		t.Fatalf("log does not contains trace id: %s", buf.Bytes())
 	}
 
 	_, _ = tr.Start(ctx, "test2")
 
 	for _, s := range tr.Spans() {
-		t.Logf("span %#+v\n", s)
+		_ = s
 	}
 }

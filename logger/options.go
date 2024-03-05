@@ -39,8 +39,10 @@ type Options struct {
 	SourceKey string
 	// StacktraceKey is the key used for the stacktrace
 	StacktraceKey string
-	// Stacktrace controls writing of stacktaces on error
-	Stacktrace bool
+	// AddStacktrace controls writing of stacktaces on error
+	AddStacktrace bool
+	// AddSource enabled writing source file and position in log
+	AddSource bool
 }
 
 // NewOptions creates new options struct
@@ -52,6 +54,7 @@ func NewOptions(opts ...options.Option) Options {
 		CallerSkipCount:  DefaultCallerSkipCount,
 		Context:          context.Background(),
 		ContextAttrFuncs: DefaultContextAttrFuncs,
+		AddSource:        true,
 	}
 
 	_ = WithMicroKeys()(&options)
@@ -207,9 +210,16 @@ func WithMicroKeys() options.Option {
 	}
 }
 
-// WithStacktrace controls writing stacktrace on error
-func WithStacktrace(v bool) options.Option {
+// WithAddStacktrace controls writing stacktrace on error
+func WithAddStacktrace(v bool) options.Option {
 	return func(src interface{}) error {
-		return options.Set(src, v, ".Stacktrace")
+		return options.Set(src, v, ".AddStacktrace")
+	}
+}
+
+// WitAddSource controls writing source file and pos in log
+func WithAddSource(v bool) options.Option {
+	return func(src interface{}) error {
+		return options.Set(src, v, ".AddSource")
 	}
 }
