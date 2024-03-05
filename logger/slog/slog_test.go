@@ -3,6 +3,7 @@ package slog
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"log"
 	"testing"
 
@@ -17,9 +18,29 @@ func TestError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	l.Error(ctx, "message")
+	l.Error(ctx, "message", fmt.Errorf("error message"))
 	if !bytes.Contains(buf.Bytes(), []byte(`"stacktrace":"`)) {
 		t.Fatalf("logger stacktrace not works, buf contains: %s", buf.Bytes())
+	}
+	if !bytes.Contains(buf.Bytes(), []byte(`"error":"`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+}
+
+func TestErrorf(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithStacktrace(true))
+	if err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Errorf(ctx, "message", fmt.Errorf("error message"))
+	if !bytes.Contains(buf.Bytes(), []byte(`"stacktrace":"`)) {
+		t.Fatalf("logger stacktrace not works, buf contains: %s", buf.Bytes())
+	}
+	if !bytes.Contains(buf.Bytes(), []byte(`"error":"`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
 	}
 }
 

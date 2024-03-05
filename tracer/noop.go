@@ -2,6 +2,8 @@ package tracer
 
 import (
 	"context"
+
+	"go.unistack.org/micro/v3/util/id"
 )
 
 var _ Tracer = (*noopTracer)(nil)
@@ -24,11 +26,21 @@ func (t *noopTracer) Start(ctx context.Context, name string, opts ...SpanOption)
 		labels: options.Labels,
 		kind:   options.Kind,
 	}
+	span.spanID.s, _ = id.New()
+	span.traceID.s, _ = id.New()
 	if span.ctx == nil {
 		span.ctx = context.Background()
 	}
 	t.spans = append(t.spans, span)
 	return NewSpanContext(ctx, span), span
+}
+
+type noopStringer struct {
+	s string
+}
+
+func (s noopStringer) String() string {
+	return s.s
 }
 
 func (t *noopTracer) Flush(ctx context.Context) error {
@@ -56,6 +68,8 @@ type noopSpan struct {
 	tracer    Tracer
 	name      string
 	statusMsg string
+	traceID   noopStringer
+	spanID    noopStringer
 	events    []*noopEvent
 	labels    []interface{}
 	logs      []interface{}
@@ -63,7 +77,15 @@ type noopSpan struct {
 	status    SpanStatus
 }
 
-func (s *noopSpan) Finish(opts ...SpanOption) {
+func (s *noopSpan) TraceID() string {
+	return s.traceID.String()
+}
+
+func (s *noopSpan) SpanID() string {
+	return s.spanID.String()
+}
+
+func (s *noopSpan) Finish(_ ...SpanOption) {
 }
 
 func (s *noopSpan) Context() context.Context {
