@@ -71,76 +71,106 @@ type Logger interface {
 type Field interface{}
 
 // Info writes msg to default logger on info level
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Info(ctx context.Context, args ...interface{}) {
-	DefaultLogger.Info(ctx, args...)
+	DefaultLogger.Clone(WithCallerSkipCount(DefaultCallerSkipCount+1)).Info(ctx, args...)
 }
 
 // Error writes msg to default logger on error level
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Error(ctx context.Context, args ...interface{}) {
-	DefaultLogger.Error(ctx, args...)
+	DefaultLogger.Clone(WithCallerSkipCount(DefaultCallerSkipCount+1)).Error(ctx, args...)
 }
 
 // Debug writes msg to default logger on debug level
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Debug(ctx context.Context, args ...interface{}) {
-	DefaultLogger.Debug(ctx, args...)
+	DefaultLogger.Clone(WithCallerSkipCount(DefaultCallerSkipCount+1)).Debug(ctx, args...)
 }
 
 // Warn writes msg to default logger on warn level
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Warn(ctx context.Context, args ...interface{}) {
-	DefaultLogger.Warn(ctx, args...)
+	DefaultLogger.Clone(WithCallerSkipCount(DefaultCallerSkipCount+1)).Warn(ctx, args...)
 }
 
 // Trace writes msg to default logger on trace level
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Trace(ctx context.Context, args ...interface{}) {
-	DefaultLogger.Trace(ctx, args...)
+	DefaultLogger.Clone(WithCallerSkipCount(DefaultCallerSkipCount+1)).Trace(ctx, args...)
 }
 
 // Fatal writes msg to default logger on fatal level
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Fatal(ctx context.Context, args ...interface{}) {
-	DefaultLogger.Fatal(ctx, args...)
+	DefaultLogger.Clone(WithCallerSkipCount(DefaultCallerSkipCount+1)).Fatal(ctx, args...)
 }
 
 // Infof writes formatted msg to default logger on info level
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Infof(ctx context.Context, msg string, args ...interface{}) {
-	DefaultLogger.Infof(ctx, msg, args...)
+	DefaultLogger.Clone(WithCallerSkipCount(DefaultCallerSkipCount+1)).Infof(ctx, msg, args...)
 }
 
 // Errorf writes formatted msg to default logger on error level
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Errorf(ctx context.Context, msg string, args ...interface{}) {
-	DefaultLogger.Errorf(ctx, msg, args...)
+	DefaultLogger.Clone(WithCallerSkipCount(DefaultCallerSkipCount+1)).Errorf(ctx, msg, args...)
 }
 
 // Debugf writes formatted msg to default logger on debug level
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Debugf(ctx context.Context, msg string, args ...interface{}) {
-	DefaultLogger.Debugf(ctx, msg, args...)
+	DefaultLogger.Clone(WithCallerSkipCount(DefaultCallerSkipCount+1)).Debugf(ctx, msg, args...)
 }
 
 // Warnf writes formatted msg to default logger on warn level
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Warnf(ctx context.Context, msg string, args ...interface{}) {
-	DefaultLogger.Warnf(ctx, msg, args...)
+	DefaultLogger.Clone(WithCallerSkipCount(DefaultCallerSkipCount+1)).Warnf(ctx, msg, args...)
 }
 
 // Tracef writes formatted msg to default logger on trace level
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Tracef(ctx context.Context, msg string, args ...interface{}) {
-	DefaultLogger.Tracef(ctx, msg, args...)
+	DefaultLogger.Clone(WithCallerSkipCount(DefaultCallerSkipCount+1)).Tracef(ctx, msg, args...)
 }
 
 // Fatalf writes formatted msg to default logger on fatal level
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Fatalf(ctx context.Context, msg string, args ...interface{}) {
-	DefaultLogger.Fatalf(ctx, msg, args...)
+	DefaultLogger.Clone(WithCallerSkipCount(DefaultCallerSkipCount+1)).Fatalf(ctx, msg, args...)
 }
 
 // V returns true if passed level enabled in default logger
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func V(level Level) bool {
 	return DefaultLogger.V(level)
 }
 
 // Init initialize logger
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Init(opts ...Option) error {
 	return DefaultLogger.Init(opts...)
 }
 
 // Fields create logger with specific fields
+//
+// Deprecated: Dont use logger methods directly, use instance of logger to avoid additional allocations
 func Fields(fields ...interface{}) Logger {
 	return DefaultLogger.Fields(fields...)
 }

@@ -5,10 +5,32 @@ import (
 	"context"
 	"fmt"
 	"sort"
+
+	"go.unistack.org/micro/v3/logger"
 )
 
 // DefaultTracer is the global default tracer
 var DefaultTracer = NewTracer()
+
+var (
+	// TraceIDKey is the key used for the trace id in the log call
+	TraceIDKey = "trace-id"
+	// SpanIDKey is the key used for the span id in the log call
+	SpanIDKey = "span-id"
+)
+
+func init() {
+	logger.DefaultContextAttrFuncs = append(logger.DefaultContextAttrFuncs,
+		func(ctx context.Context) []interface{} {
+			if span, ok := SpanFromContext(ctx); ok {
+				return []interface{}{
+					TraceIDKey, span.TraceID(),
+					SpanIDKey, span.SpanID(),
+				}
+			}
+			return nil
+		})
+}
 
 // Tracer is an interface for distributed tracing
 type Tracer interface {
@@ -43,6 +65,10 @@ type Span interface {
 	AddLogs(kv ...interface{})
 	// Kind returns span kind
 	Kind() SpanKind
+	// TraceID returns trace id
+	TraceID() string
+	// SpanID returns span id
+	SpanID() string
 }
 
 // sort labels alphabeticaly by label name

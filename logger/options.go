@@ -20,6 +20,7 @@ type Options struct {
 	Name string
 	// Fields holds additional metadata
 	Fields []interface{}
+
 	// CallerSkipCount number of frmaes to skip
 	CallerSkipCount int
 	// ContextAttrFuncs contains funcs that executed before log func on context
@@ -28,14 +29,18 @@ type Options struct {
 	TimeKey string
 	// LevelKey is the key used for the level of the log call
 	LevelKey string
+	// ErroreKey is the key used for the error of the log call
+	ErrorKey string
 	// MessageKey is the key used for the message of the log call
 	MessageKey string
 	// SourceKey is the key used for the source file and line of the log call
 	SourceKey string
 	// StacktraceKey is the key used for the stacktrace
 	StacktraceKey string
-	// Stacktrace controls writing of stacktaces on error
-	Stacktrace bool
+	// AddStacktrace controls writing of stacktaces on error
+	AddStacktrace bool
+	// AddSource enabled writing source file and position in log
+	AddSource bool
 	// The logging level the logger should log
 	Level Level
 }
@@ -49,6 +54,7 @@ func NewOptions(opts ...Option) Options {
 		CallerSkipCount:  DefaultCallerSkipCount,
 		Context:          context.Background(),
 		ContextAttrFuncs: DefaultContextAttrFuncs,
+		AddSource:        true,
 	}
 
 	WithMicroKeys()(&options)
@@ -56,6 +62,7 @@ func NewOptions(opts ...Option) Options {
 	for _, o := range opts {
 		o(&options)
 	}
+
 	return options
 }
 
@@ -87,10 +94,17 @@ func WithOutput(out io.Writer) Option {
 	}
 }
 
-// WithStacktrace controls writing stacktrace on error
-func WithStacktrace(v bool) Option {
+// WitAddStacktrace controls writing stacktrace on error
+func WithAddStacktrace(v bool) Option {
 	return func(o *Options) {
-		o.Stacktrace = v
+		o.AddStacktrace = v
+	}
+}
+
+// WitAddSource controls writing source file and pos in log
+func WithAddSource(v bool) Option {
+	return func(o *Options) {
+		o.AddSource = v
 	}
 }
 
@@ -122,6 +136,7 @@ func WithZapKeys() Option {
 		o.MessageKey = "msg"
 		o.SourceKey = "caller"
 		o.StacktraceKey = "stacktrace"
+		o.ErrorKey = "error"
 	}
 }
 
@@ -132,6 +147,7 @@ func WithZerologKeys() Option {
 		o.MessageKey = "message"
 		o.SourceKey = "caller"
 		o.StacktraceKey = "stacktrace"
+		o.ErrorKey = "error"
 	}
 }
 
@@ -142,6 +158,7 @@ func WithSlogKeys() Option {
 		o.MessageKey = slog.MessageKey
 		o.SourceKey = slog.SourceKey
 		o.StacktraceKey = "stacktrace"
+		o.ErrorKey = "error"
 	}
 }
 
@@ -152,5 +169,6 @@ func WithMicroKeys() Option {
 		o.MessageKey = "msg"
 		o.SourceKey = "caller"
 		o.StacktraceKey = "stacktrace"
+		o.ErrorKey = "error"
 	}
 }
