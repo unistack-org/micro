@@ -12,7 +12,7 @@ var (
 	// ErrInvalidKey is returned when a key has empty or have invalid format
 	ErrInvalidKey = errors.New("invalid key")
 	// DefaultStore is the global default store
-	DefaultStore = NewStore()
+	DefaultStore Store = NewStore()
 	// DefaultSeparator is the gloabal default key parts separator
 	DefaultSeparator = "/"
 )

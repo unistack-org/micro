@@ -7,7 +7,7 @@ import (
 
 var (
 	// DefaultRouter is the global default router
-	DefaultRouter = NewRouter()
+	DefaultRouter Router = NewRouter()
 	// DefaultNetwork is default micro network
 	DefaultNetwork = "micro"
 	// ErrRouteNotFound is returned when no route was found in the routing table

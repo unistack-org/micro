@@ -3,7 +3,6 @@ package logger // import "go.unistack.org/micro/v3/logger"
 
 import (
 	"context"
-	"os"
 )
 
 type ContextAttrFunc func(ctx context.Context) []interface{}
@@ -12,7 +11,7 @@ var DefaultContextAttrFuncs []ContextAttrFunc
 
 var (
 	// DefaultLogger variable
-	DefaultLogger = NewLogger(WithLevel(ParseLevel(os.Getenv("MICRO_LOG_LEVEL"))))
+	DefaultLogger Logger = NewLogger()
 	// DefaultLevel used by logger
 	DefaultLevel = InfoLevel
 	// DefaultCallerSkipCount used by logger
