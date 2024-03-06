@@ -11,7 +11,7 @@ import (
 )
 
 // DefaultServer default server
-var DefaultServer = NewServer()
+var DefaultServer Server = NewServer()
 
 var (
 	// DefaultAddress will be used if no address passed, use secure localhost

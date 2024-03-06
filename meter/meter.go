@@ -1,5 +1,5 @@
 // Package meter is for instrumentation
-package meter // import "go.unistack.org/micro/v3/meter"
+package meter
 
 import (
 	"io"
@@ -11,7 +11,7 @@ import (
 
 var (
 	// DefaultMeter is the default meter
-	DefaultMeter = NewMeter()
+	DefaultMeter Meter = NewMeter()
 	// DefaultAddress data will be made available on this host:port
 	DefaultAddress = ":9090"
 	// DefaultPath the meter endpoint where the Meter data will be made available

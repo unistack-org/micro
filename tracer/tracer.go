@@ -10,7 +10,7 @@ import (
 )
 
 // DefaultTracer is the global default tracer
-var DefaultTracer = NewTracer()
+var DefaultTracer Tracer = NewTracer()
 
 var (
 	// TraceIDKey is the key used for the trace id in the log call

@@ -18,7 +18,7 @@ var DefaultDomain = "micro"
 
 var (
 	// DefaultRegister is the global default register
-	DefaultRegister = NewRegister()
+	DefaultRegister Register = NewRegister()
 	// ErrNotFound returned when LookupService is called and no services found
 	ErrNotFound = errors.New("service not found")
 	// ErrWatcherStopped returned when when watcher is stopped
