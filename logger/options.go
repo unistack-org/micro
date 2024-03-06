@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"reflect"
+	"time"
 
 	"go.unistack.org/micro/v4/options"
 	rutil "go.unistack.org/micro/v4/util/reflect"
@@ -43,6 +44,8 @@ type Options struct {
 	AddStacktrace bool
 	// AddSource enabled writing source file and position in log
 	AddSource bool
+	// TimeFunc used to obtain current time
+	TimeFunc func() time.Time
 }
 
 // NewOptions creates new options struct
@@ -55,6 +58,7 @@ func NewOptions(opts ...options.Option) Options {
 		Context:          context.Background(),
 		ContextAttrFuncs: DefaultContextAttrFuncs,
 		AddSource:        true,
+		TimeFunc:         time.Now,
 	}
 
 	_ = WithMicroKeys()(&options)
