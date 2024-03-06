@@ -5,6 +5,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"time"
 )
 
 // Option func signature
@@ -20,7 +21,6 @@ type Options struct {
 	Name string
 	// Fields holds additional metadata
 	Fields []interface{}
-
 	// CallerSkipCount number of frmaes to skip
 	CallerSkipCount int
 	// ContextAttrFuncs contains funcs that executed before log func on context
@@ -43,6 +43,8 @@ type Options struct {
 	AddSource bool
 	// The logging level the logger should log
 	Level Level
+	// TimeFunc used to obtain current time
+	TimeFunc func() time.Time
 }
 
 // NewOptions creates new options struct
@@ -55,6 +57,7 @@ func NewOptions(opts ...Option) Options {
 		Context:          context.Background(),
 		ContextAttrFuncs: DefaultContextAttrFuncs,
 		AddSource:        true,
+		TimeFunc:         time.Now,
 	}
 
 	WithMicroKeys()(&options)
@@ -126,6 +129,13 @@ func WithContext(ctx context.Context) Option {
 func WithName(n string) Option {
 	return func(o *Options) {
 		o.Name = n
+	}
+}
+
+// WithTimeFunc sets the func to obtain current time
+func WithTimeFunc(fn func() time.Time) Option {
+	return func(o *Options) {
+		o.TimeFunc = fn
 	}
 }
 

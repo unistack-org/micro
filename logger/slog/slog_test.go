@@ -13,7 +13,7 @@ import (
 func TestError(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithStacktrace(true))
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithAddStacktrace(true))
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -30,7 +30,7 @@ func TestError(t *testing.T) {
 func TestErrorf(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithStacktrace(true))
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithAddStacktrace(true))
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
