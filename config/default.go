@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"dario.cat/mergo"
 	"github.com/google/uuid"
-	"github.com/imdario/mergo"
 	mid "go.unistack.org/micro/v3/util/id"
 	rutil "go.unistack.org/micro/v3/util/reflect"
 	mtime "go.unistack.org/micro/v3/util/time"
