@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
-	"time"
 
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/tracer"
@@ -159,7 +158,7 @@ func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, attrs ...interfa
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), loggerToSlogLevel(lvl), fmt.Sprintf("%s", attrs[0]), pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), loggerToSlogLevel(lvl), fmt.Sprintf("%s", attrs[0]), pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -198,7 +197,7 @@ func (s *slogLogger) Logf(ctx context.Context, lvl logger.Level, msg string, att
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), loggerToSlogLevel(lvl), msg, pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), loggerToSlogLevel(lvl), msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -237,7 +236,7 @@ func (s *slogLogger) Info(ctx context.Context, attrs ...interface{}) {
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelInfo, fmt.Sprintf("%s", attrs[0]), pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelInfo, fmt.Sprintf("%s", attrs[0]), pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -258,7 +257,7 @@ func (s *slogLogger) Infof(ctx context.Context, msg string, attrs ...interface{}
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelInfo, msg, pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelInfo, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -279,7 +278,7 @@ func (s *slogLogger) Debug(ctx context.Context, attrs ...interface{}) {
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelDebug, fmt.Sprintf("%s", attrs[0]), pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelDebug, fmt.Sprintf("%s", attrs[0]), pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -300,7 +299,7 @@ func (s *slogLogger) Debugf(ctx context.Context, msg string, attrs ...interface{
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelDebug, msg, pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelDebug, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -321,7 +320,7 @@ func (s *slogLogger) Trace(ctx context.Context, attrs ...interface{}) {
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelDebug-1, fmt.Sprintf("%s", attrs[0]), pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelDebug-1, fmt.Sprintf("%s", attrs[0]), pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -342,7 +341,7 @@ func (s *slogLogger) Tracef(ctx context.Context, msg string, attrs ...interface{
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelDebug-1, msg, pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelDebug-1, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -363,7 +362,7 @@ func (s *slogLogger) Error(ctx context.Context, attrs ...interface{}) {
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelError, fmt.Sprintf("%s", attrs[0]), pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelError, fmt.Sprintf("%s", attrs[0]), pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -402,7 +401,7 @@ func (s *slogLogger) Errorf(ctx context.Context, msg string, attrs ...interface{
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelError, msg, pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelError, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -441,7 +440,7 @@ func (s *slogLogger) Fatal(ctx context.Context, attrs ...interface{}) {
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelError+1, fmt.Sprintf("%s", attrs[0]), pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelError+1, fmt.Sprintf("%s", attrs[0]), pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -463,7 +462,7 @@ func (s *slogLogger) Fatalf(ctx context.Context, msg string, attrs ...interface{
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelError+1, msg, pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelError+1, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -485,7 +484,7 @@ func (s *slogLogger) Warn(ctx context.Context, attrs ...interface{}) {
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelWarn, fmt.Sprintf("%s", attrs[0]), pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelWarn, fmt.Sprintf("%s", attrs[0]), pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
@@ -506,7 +505,7 @@ func (s *slogLogger) Warnf(ctx context.Context, msg string, attrs ...interface{}
 	}
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelWarn, msg, pcs[0])
+	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelWarn, msg, pcs[0])
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
