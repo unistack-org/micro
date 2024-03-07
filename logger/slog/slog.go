@@ -63,6 +63,7 @@ func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 type slogLogger struct {
 	slog    *slog.Logger
 	leveler *slog.LevelVar
+	handler slog.Handler
 	opts    logger.Options
 	mu      sync.RWMutex
 }
@@ -70,6 +71,7 @@ type slogLogger struct {
 func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
 	s.mu.RLock()
 	options := s.opts
+	s.mu.RUnlock()
 
 	for _, o := range opts {
 		o(&options)
@@ -86,10 +88,8 @@ func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
 		AddSource:   l.opts.AddSource,
 	}
 	l.leveler.Set(loggerToSlogLevel(l.opts.Level))
-	handler := slog.NewJSONHandler(options.Out, handleOpt)
-	l.slog = slog.New(handler).With(options.Fields...)
-
-	s.mu.RUnlock()
+	l.slog = slog.New(slog.NewJSONHandler(options.Out, handleOpt)).With(options.Fields...)
+	l.handler = l.slog.Handler()
 
 	return l
 }
@@ -108,9 +108,13 @@ func (s *slogLogger) Options() logger.Options {
 
 func (s *slogLogger) Fields(attrs ...interface{}) logger.Logger {
 	s.mu.RLock()
-	l := &slogLogger{opts: s.opts}
+	level := s.leveler.Level()
+	options := s.opts
+	s.mu.RUnlock()
+
+	l := &slogLogger{opts: options}
 	l.leveler = new(slog.LevelVar)
-	l.leveler.Set(s.leveler.Level())
+	l.leveler.Set(level)
 
 	handleOpt := &slog.HandlerOptions{
 		ReplaceAttr: l.renameAttr,
@@ -118,10 +122,8 @@ func (s *slogLogger) Fields(attrs ...interface{}) logger.Logger {
 		AddSource:   l.opts.AddSource,
 	}
 
-	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
-	l.slog = slog.New(handler).With(attrs...)
-
-	s.mu.RUnlock()
+	l.slog = slog.New(slog.NewJSONHandler(l.opts.Out, handleOpt)).With(attrs...)
+	l.handler = l.slog.Handler()
 
 	return l
 }
@@ -144,9 +146,8 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 		AddSource:   s.opts.AddSource,
 	}
 	s.leveler.Set(loggerToSlogLevel(s.opts.Level))
-	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
-	s.slog = slog.New(handler).With(s.opts.Fields...)
-
+	s.slog = slog.New(slog.NewJSONHandler(s.opts.Out, handleOpt)).With(s.opts.Fields...)
+	s.handler = s.slog.Handler()
 	s.mu.Unlock()
 
 	return nil
@@ -188,7 +189,7 @@ func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, attrs ...interfa
 		}
 		return true
 	})
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Logf(ctx context.Context, lvl logger.Level, msg string, attrs ...interface{}) {
@@ -227,7 +228,7 @@ func (s *slogLogger) Logf(ctx context.Context, lvl logger.Level, msg string, att
 		}
 		return true
 	})
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Info(ctx context.Context, attrs ...interface{}) {
@@ -248,7 +249,7 @@ func (s *slogLogger) Info(ctx context.Context, attrs ...interface{}) {
 		}
 	}
 	r.Add(attrs[1:]...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Infof(ctx context.Context, msg string, attrs ...interface{}) {
@@ -269,7 +270,7 @@ func (s *slogLogger) Infof(ctx context.Context, msg string, attrs ...interface{}
 		}
 	}
 	r.Add(attrs...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Debug(ctx context.Context, attrs ...interface{}) {
@@ -290,7 +291,7 @@ func (s *slogLogger) Debug(ctx context.Context, attrs ...interface{}) {
 		}
 	}
 	r.Add(attrs[1:]...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Debugf(ctx context.Context, msg string, attrs ...interface{}) {
@@ -311,7 +312,7 @@ func (s *slogLogger) Debugf(ctx context.Context, msg string, attrs ...interface{
 		}
 	}
 	r.Add(attrs...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Trace(ctx context.Context, attrs ...interface{}) {
@@ -332,7 +333,7 @@ func (s *slogLogger) Trace(ctx context.Context, attrs ...interface{}) {
 		}
 	}
 	r.Add(attrs[1:]...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Tracef(ctx context.Context, msg string, attrs ...interface{}) {
@@ -353,7 +354,7 @@ func (s *slogLogger) Tracef(ctx context.Context, msg string, attrs ...interface{
 		}
 	}
 	r.Add(attrs[1:]...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Error(ctx context.Context, attrs ...interface{}) {
@@ -392,7 +393,7 @@ func (s *slogLogger) Error(ctx context.Context, attrs ...interface{}) {
 		}
 		return true
 	})
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Errorf(ctx context.Context, msg string, attrs ...interface{}) {
@@ -431,7 +432,7 @@ func (s *slogLogger) Errorf(ctx context.Context, msg string, attrs ...interface{
 		}
 		return true
 	})
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Fatal(ctx context.Context, attrs ...interface{}) {
@@ -452,7 +453,7 @@ func (s *slogLogger) Fatal(ctx context.Context, attrs ...interface{}) {
 		}
 	}
 	r.Add(attrs[1:]...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 	os.Exit(1)
 }
 
@@ -474,7 +475,7 @@ func (s *slogLogger) Fatalf(ctx context.Context, msg string, attrs ...interface{
 		}
 	}
 	r.Add(attrs...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 	os.Exit(1)
 }
 
@@ -496,7 +497,7 @@ func (s *slogLogger) Warn(ctx context.Context, attrs ...interface{}) {
 		}
 	}
 	r.Add(attrs[1:]...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Warnf(ctx context.Context, msg string, attrs ...interface{}) {
@@ -517,7 +518,7 @@ func (s *slogLogger) Warnf(ctx context.Context, msg string, attrs ...interface{}
 		}
 	}
 	r.Add(attrs[1:]...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Name() string {
