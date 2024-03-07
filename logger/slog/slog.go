@@ -61,8 +61,8 @@ func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 }
 
 type slogLogger struct {
-	slog    *slog.Logger
 	leveler *slog.LevelVar
+	handler slog.Handler
 	opts    logger.Options
 	mu      sync.RWMutex
 }
@@ -70,6 +70,7 @@ type slogLogger struct {
 func (s *slogLogger) Clone(opts ...options.Option) logger.Logger {
 	s.mu.RLock()
 	options := s.opts
+	s.mu.RUnlock()
 
 	for _, o := range opts {
 		_ = o(&options)
@@ -86,10 +87,7 @@ func (s *slogLogger) Clone(opts ...options.Option) logger.Logger {
 		AddSource:   l.opts.AddSource,
 	}
 	l.leveler.Set(loggerToSlogLevel(l.opts.Level))
-	handler := slog.NewJSONHandler(options.Out, handleOpt)
-	l.slog = slog.New(handler).With(options.Attrs...)
-
-	s.mu.RUnlock()
+	l.handler = slog.New(slog.NewJSONHandler(options.Out, handleOpt)).With(options.Attrs...).Handler()
 
 	return l
 }
@@ -108,9 +106,13 @@ func (s *slogLogger) Options() logger.Options {
 
 func (s *slogLogger) Attrs(attrs ...interface{}) logger.Logger {
 	s.mu.RLock()
-	l := &slogLogger{opts: s.opts}
+	level := s.leveler.Level()
+	options := s.opts
+	s.mu.RUnlock()
+
+	l := &slogLogger{opts: options}
 	l.leveler = new(slog.LevelVar)
-	l.leveler.Set(s.leveler.Level())
+	l.leveler.Set(level)
 
 	handleOpt := &slog.HandlerOptions{
 		ReplaceAttr: l.renameAttr,
@@ -118,10 +120,7 @@ func (s *slogLogger) Attrs(attrs ...interface{}) logger.Logger {
 		AddSource:   l.opts.AddSource,
 	}
 
-	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
-	l.slog = slog.New(handler).With(attrs...)
-
-	s.mu.RUnlock()
+	l.handler = slog.New(slog.NewJSONHandler(s.opts.Out, handleOpt)).With(attrs...).Handler()
 
 	return l
 }
@@ -146,8 +145,7 @@ func (s *slogLogger) Init(opts ...options.Option) error {
 		AddSource:   s.opts.AddSource,
 	}
 	s.leveler.Set(loggerToSlogLevel(s.opts.Level))
-	handler := slog.NewJSONHandler(s.opts.Out, handleOpt)
-	s.slog = slog.New(handler).With(s.opts.Attrs...)
+	s.handler = slog.New(slog.NewJSONHandler(s.opts.Out, handleOpt)).With(s.opts.Attrs...).Handler()
 	s.mu.Unlock()
 
 	return nil
@@ -163,9 +161,9 @@ func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, msg string, attr
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
-	for _, a := range attrs {
-		if ve, ok := a.(error); ok && ve != nil {
-			attrs = append(attrs, slog.String(s.opts.ErrorKey, ve.Error()))
+	for idx, attr := range attrs {
+		if ve, ok := attr.(error); ok && ve != nil {
+			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
 			break
 		}
 	}
@@ -188,7 +186,7 @@ func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, msg string, attr
 		}
 		return true
 	})
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Info(ctx context.Context, msg string, attrs ...interface{}) {
@@ -201,8 +199,14 @@ func (s *slogLogger) Info(ctx context.Context, msg string, attrs ...interface{})
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
+	for idx, attr := range attrs {
+		if ve, ok := attr.(error); ok && ve != nil {
+			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
+			break
+		}
+	}
 	r.Add(attrs...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Debug(ctx context.Context, msg string, attrs ...interface{}) {
@@ -215,8 +219,14 @@ func (s *slogLogger) Debug(ctx context.Context, msg string, attrs ...interface{}
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
+	for idx, attr := range attrs {
+		if ve, ok := attr.(error); ok && ve != nil {
+			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
+			break
+		}
+	}
 	r.Add(attrs...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Trace(ctx context.Context, msg string, attrs ...interface{}) {
@@ -229,8 +239,14 @@ func (s *slogLogger) Trace(ctx context.Context, msg string, attrs ...interface{}
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
+	for idx, attr := range attrs {
+		if ve, ok := attr.(error); ok && ve != nil {
+			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
+			break
+		}
+	}
 	r.Add(attrs...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}) {
@@ -243,9 +259,9 @@ func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
-	for _, a := range attrs {
-		if ve, ok := a.(error); ok && ve != nil {
-			attrs = append(attrs, slog.String(s.opts.ErrorKey, ve.Error()))
+	for idx, attr := range attrs {
+		if ve, ok := attr.(error); ok && ve != nil {
+			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
 			break
 		}
 	}
@@ -268,7 +284,7 @@ func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}
 		}
 		return true
 	})
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Fatal(ctx context.Context, msg string, attrs ...interface{}) {
@@ -281,8 +297,14 @@ func (s *slogLogger) Fatal(ctx context.Context, msg string, attrs ...interface{}
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
+	for idx, attr := range attrs {
+		if ve, ok := attr.(error); ok && ve != nil {
+			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
+			break
+		}
+	}
 	r.Add(attrs...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 	os.Exit(1)
 }
 
@@ -296,8 +318,14 @@ func (s *slogLogger) Warn(ctx context.Context, msg string, attrs ...interface{})
 	for _, fn := range s.opts.ContextAttrFuncs {
 		attrs = append(attrs, fn(ctx)...)
 	}
+	for idx, attr := range attrs {
+		if ve, ok := attr.(error); ok && ve != nil {
+			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
+			break
+		}
+	}
 	r.Add(attrs...)
-	_ = s.slog.Handler().Handle(ctx, r)
+	_ = s.handler.Handle(ctx, r)
 }
 
 func (s *slogLogger) Name() string {
