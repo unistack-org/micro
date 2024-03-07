@@ -61,7 +61,6 @@ func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 }
 
 type slogLogger struct {
-	slog    *slog.Logger
 	leveler *slog.LevelVar
 	handler slog.Handler
 	opts    logger.Options
@@ -88,8 +87,7 @@ func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
 		AddSource:   l.opts.AddSource,
 	}
 	l.leveler.Set(loggerToSlogLevel(l.opts.Level))
-	l.slog = slog.New(slog.NewJSONHandler(options.Out, handleOpt)).With(options.Fields...)
-	l.handler = l.slog.Handler()
+	l.handler = slog.New(slog.NewJSONHandler(options.Out, handleOpt)).With(options.Fields...).Handler()
 
 	return l
 }
@@ -122,8 +120,7 @@ func (s *slogLogger) Fields(attrs ...interface{}) logger.Logger {
 		AddSource:   l.opts.AddSource,
 	}
 
-	l.slog = slog.New(slog.NewJSONHandler(l.opts.Out, handleOpt)).With(attrs...)
-	l.handler = l.slog.Handler()
+	l.handler = slog.New(slog.NewJSONHandler(l.opts.Out, handleOpt)).With(attrs...).Handler()
 
 	return l
 }
@@ -146,8 +143,7 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 		AddSource:   s.opts.AddSource,
 	}
 	s.leveler.Set(loggerToSlogLevel(s.opts.Level))
-	s.slog = slog.New(slog.NewJSONHandler(s.opts.Out, handleOpt)).With(s.opts.Fields...)
-	s.handler = s.slog.Handler()
+	s.handler = slog.New(slog.NewJSONHandler(s.opts.Out, handleOpt)).With(s.opts.Fields...).Handler()
 	s.mu.Unlock()
 
 	return nil
