@@ -37,10 +37,10 @@ func TestMemoryBatchBroker(t *testing.T) {
 	msgs := make([]Message, 0, count)
 	for i := 0; i < count; i++ {
 		message := &memoryMessage{
-			header: map[string]string{
-				metadata.HeaderTopic: topic,
-				"foo":                "bar",
-				"id":                 fmt.Sprintf("%d", i),
+			header: metadata.Metadata{
+				metadata.HeaderTopic: []string{topic},
+				"foo":                []string{"bar"},
+				"id":                 []string{fmt.Sprintf("%d", i)},
 			},
 			body: []byte(`"hello world"`),
 		}
@@ -83,10 +83,10 @@ func TestMemoryBroker(t *testing.T) {
 	msgs := make([]Message, 0, count)
 	for i := 0; i < count; i++ {
 		message := &memoryMessage{
-			header: map[string]string{
-				metadata.HeaderTopic: topic,
-				"foo":                "bar",
-				"id":                 fmt.Sprintf("%d", i),
+			header: metadata.Metadata{
+				metadata.HeaderTopic: []string{topic},
+				"foo":                []string{"bar"},
+				"id":                 []string{fmt.Sprintf("%d", i)},
 			},
 			body: []byte(`"hello world"`),
 		}

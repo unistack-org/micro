@@ -77,8 +77,8 @@ func NewRegisterService(s Server) (*register.Service, error) {
 	}
 	node.Metadata = metadata.Copy(opts.Metadata)
 
-	node.Metadata["server"] = s.String()
-	node.Metadata["register"] = opts.Register.String()
+	node.Metadata.Set("server", s.String())
+	node.Metadata.Set("register", opts.Register.String())
 
 	return &register.Service{
 		Name:     opts.Name,

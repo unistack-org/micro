@@ -532,6 +532,9 @@ func Equal(src interface{}, dst interface{}, excptFields ...string) bool {
 			}
 			s := srcVal.MapIndex(key)
 			d := dstVal.MapIndex(key)
+			if !s.IsValid() || !d.IsValid() {
+				return false
+			}
 			if !Equal(s.Interface(), d.Interface(), excptFields...) {
 				return false
 			}

@@ -1,9 +1,9 @@
 // Package metadata is a way of defining message headers
-package metadata // import "go.unistack.org/micro/v4/metadata"
+package metadata
 
 import (
 	"net/textproto"
-	"sort"
+	"strings"
 )
 
 var (
@@ -24,47 +24,7 @@ var (
 )
 
 // Metadata is our way of representing request headers internally.
-// They're used at the RPC level and translate back and forth
-// from Transport headers.
-type Metadata map[string]string
-
-type rawMetadata struct {
-	md Metadata
-}
-
-// defaultMetadataSize used when need to init new Metadata
-var defaultMetadataSize = 2
-
-// Iterator used to iterate over metadata with order
-type Iterator struct {
-	md   Metadata
-	keys []string
-	cur  int
-	cnt  int
-}
-
-// Next advance iterator to next element
-func (iter *Iterator) Next(k, v *string) bool {
-	if iter.cur+1 > iter.cnt {
-		return false
-	}
-
-	*k = iter.keys[iter.cur]
-	*v = iter.md[*k]
-	iter.cur++
-	return true
-}
-
-// Iterator returns the itarator for metadata in sorted order
-func (md Metadata) Iterator() *Iterator {
-	iter := &Iterator{md: md, cnt: len(md)}
-	iter.keys = make([]string, 0, iter.cnt)
-	for k := range md {
-		iter.keys = append(iter.keys, k)
-	}
-	sort.Strings(iter.keys)
-	return iter
-}
+type Metadata map[string][]string
 
 // Get returns value from metadata by key
 func (md Metadata) Get(key string) (string, bool) {
@@ -74,7 +34,7 @@ func (md Metadata) Get(key string) (string, bool) {
 		// slow path
 		val, ok = md[textproto.CanonicalMIMEHeaderKey(key)]
 	}
-	return val, ok
+	return strings.Join(val, ","), ok
 }
 
 // Set is used to store value in metadata
@@ -83,8 +43,17 @@ func (md Metadata) Set(kv ...string) {
 		kv = kv[:len(kv)-1]
 	}
 	for idx := 0; idx < len(kv); idx += 2 {
-		md[textproto.CanonicalMIMEHeaderKey(kv[idx])] = kv[idx+1]
+		md[textproto.CanonicalMIMEHeaderKey(kv[idx])] = []string{kv[idx+1]}
 	}
+}
+
+// Append is used to append value in metadata
+func (md Metadata) Append(k string, v ...string) {
+	if len(v) == 0 {
+		return
+	}
+	k = textproto.CanonicalMIMEHeaderKey(k)
+	md[k] = append(md[k], v...)
 }
 
 // Del is used to remove value from metadata
@@ -99,9 +68,9 @@ func (md Metadata) Del(keys ...string) {
 
 // Copy makes a copy of the metadata
 func Copy(md Metadata) Metadata {
-	nmd := New(len(md))
-	for key, val := range md {
-		nmd.Set(key, val)
+	nmd := make(Metadata, len(md))
+	for k, v := range md {
+		nmd[k] = v
 	}
 	return nmd
 }
@@ -109,35 +78,40 @@ func Copy(md Metadata) Metadata {
 // New return new sized metadata
 func New(size int) Metadata {
 	if size == 0 {
-		size = defaultMetadataSize
+		size = 2
 	}
 	return make(Metadata, size)
 }
 
 // Merge merges metadata to existing metadata, overwriting if specified
 func Merge(omd Metadata, mmd Metadata, overwrite bool) Metadata {
-	var ok bool
 	nmd := Copy(omd)
 	for key, val := range mmd {
-		_, ok = nmd[key]
+		nval, ok := nmd[key]
 		switch {
+		case ok && overwrite:
+			nmd[key] = nval
+			continue
 		case ok && !overwrite:
 			continue
-		case val != "":
-			nmd.Set(key, val)
-		case ok && val == "":
-			nmd.Del(key)
+		case !ok:
+			for _, v := range val {
+				if v != "" {
+					nval = append(nval, v)
+				}
+			}
+			nmd[key] = nval
 		}
 	}
 	return nmd
 }
 
 // Pairs from which metadata created
-func Pairs(kv ...string) (Metadata, bool) {
+func Pairs(kv ...string) Metadata {
 	if len(kv)%2 == 1 {
-		return nil, false
+		kv = kv[:len(kv)-1]
 	}
-	md := New(len(kv) / 2)
+	md := make(Metadata, len(kv)/2)
 	md.Set(kv...)
-	return md, true
+	return md
 }

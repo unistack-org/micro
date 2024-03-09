@@ -24,7 +24,7 @@ func TestNewNilContext(t *testing.T) {
 }
 
 func TestFromContext(t *testing.T) {
-	ctx := context.WithValue(context.TODO(), mdKey{}, &rawMetadata{New(0)})
+	ctx := context.WithValue(context.TODO(), mdKey{}, New(0))
 
 	c, ok := FromContext(ctx)
 	if c == nil || !ok {
@@ -42,7 +42,7 @@ func TestNewContext(t *testing.T) {
 }
 
 func TestFromIncomingContext(t *testing.T) {
-	ctx := context.WithValue(context.TODO(), mdIncomingKey{}, &rawMetadata{New(0)})
+	ctx := context.WithValue(context.TODO(), mdIncomingKey{}, New(0))
 
 	c, ok := FromIncomingContext(ctx)
 	if c == nil || !ok {
@@ -51,41 +51,11 @@ func TestFromIncomingContext(t *testing.T) {
 }
 
 func TestFromOutgoingContext(t *testing.T) {
-	ctx := context.WithValue(context.TODO(), mdOutgoingKey{}, &rawMetadata{New(0)})
+	ctx := context.WithValue(context.TODO(), mdOutgoingKey{}, New(0))
 
 	c, ok := FromOutgoingContext(ctx)
 	if c == nil || !ok {
 		t.Fatal("FromOutgoingContext not works")
-	}
-}
-
-func TestSetIncomingContext(t *testing.T) {
-	md := New(1)
-	md.Set("key", "val")
-	ctx := context.WithValue(context.TODO(), mdIncomingKey{}, &rawMetadata{})
-	if !SetIncomingContext(ctx, md) {
-		t.Fatal("SetIncomingContext not works")
-	}
-	md, ok := FromIncomingContext(ctx)
-	if md == nil || !ok {
-		t.Fatal("SetIncomingContext not works")
-	} else if v, ok := md.Get("key"); !ok || v != "val" {
-		t.Fatal("SetIncomingContext not works")
-	}
-}
-
-func TestSetOutgoingContext(t *testing.T) {
-	md := New(1)
-	md.Set("key", "val")
-	ctx := context.WithValue(context.TODO(), mdOutgoingKey{}, &rawMetadata{})
-	if !SetOutgoingContext(ctx, md) {
-		t.Fatal("SetOutgoingContext not works")
-	}
-	md, ok := FromOutgoingContext(ctx)
-	if md == nil || !ok {
-		t.Fatal("SetOutgoingContext not works")
-	} else if v, ok := md.Get("key"); !ok || v != "val" {
-		t.Fatal("SetOutgoingContext not works")
 	}
 }
 

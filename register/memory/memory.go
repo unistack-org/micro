@@ -2,9 +2,11 @@ package memory
 
 import (
 	"context"
-	"go.unistack.org/micro/v4/register"
 	"sync"
 	"time"
+
+	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/register"
 
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/util/id"
@@ -24,7 +26,7 @@ type node struct {
 type record struct {
 	Name      string
 	Version   string
-	Metadata  map[string]string
+	Metadata  metadata.Metadata
 	Nodes     map[string]*node
 	Endpoints []*register.Endpoint
 }
@@ -137,10 +139,10 @@ func (m *memory) Register(ctx context.Context, s *register.Service, opts ...regi
 
 	// domain is set in metadata so it can be passed to watchers
 	if s.Metadata == nil {
-		s.Metadata = map[string]string{"domain": options.Domain}
-	} else {
-		s.Metadata["domain"] = options.Domain
+		s.Metadata = metadata.New(0)
 	}
+
+	s.Metadata.Set("domain", options.Domain)
 
 	// ensure the service name exists
 	r := serviceToRecord(s, options.TTL)
@@ -165,15 +167,8 @@ func (m *memory) Register(ctx context.Context, s *register.Service, opts ...regi
 			continue
 		}
 
-		metadata := make(map[string]string, len(n.Metadata))
-
-		// make copy of metadata
-		for k, v := range n.Metadata {
-			metadata[k] = v
-		}
-
-		// set the domain
-		metadata["domain"] = options.Domain
+		metadata := metadata.Copy(n.Metadata)
+		metadata.Set("domain", options.Domain)
 
 		// add the node
 		srvs[s.Name][s.Version].Nodes[n.ID] = &node{
@@ -217,10 +212,9 @@ func (m *memory) Deregister(ctx context.Context, s *register.Service, opts ...re
 
 	// domain is set in metadata so it can be passed to watchers
 	if s.Metadata == nil {
-		s.Metadata = map[string]string{"domain": options.Domain}
-	} else {
-		s.Metadata["domain"] = options.Domain
+		s.Metadata = metadata.New(0)
 	}
+	s.Metadata.Set("domain", options.Domain)
 
 	// if the domain doesn't exist, there is nothing to deregister
 	services, ok := m.records[options.Domain]
@@ -425,16 +419,24 @@ func (m *watcher) Next() (*register.Result, error) {
 				continue
 			}
 
+			if m.wo.Domain == register.WildcardDomain {
+				return r, nil
+			}
+
+			if r.Service.Metadata == nil {
+				continue
+			}
+
 			// extract domain from service metadata
 			var domain string
-			if r.Service.Metadata != nil && len(r.Service.Metadata["domain"]) > 0 {
-				domain = r.Service.Metadata["domain"]
+			if v, ok := r.Service.Metadata.Get("domain"); ok && v != "" {
+				domain = v
 			} else {
 				domain = register.DefaultDomain
 			}
 
 			// only send the event if watching the wildcard or this specific domain
-			if m.wo.Domain == register.WildcardDomain || m.wo.Domain == domain {
+			if m.wo.Domain == domain {
 				return r, nil
 			}
 		case <-m.exit:
@@ -453,10 +455,7 @@ func (m *watcher) Stop() {
 }
 
 func serviceToRecord(s *register.Service, ttl time.Duration) *record {
-	metadata := make(map[string]string, len(s.Metadata))
-	for k, v := range s.Metadata {
-		metadata[k] = v
-	}
+	metadata := metadata.Copy(s.Metadata)
 
 	nodes := make(map[string]*node, len(s.Nodes))
 	for _, n := range s.Nodes {
@@ -482,20 +481,11 @@ func serviceToRecord(s *register.Service, ttl time.Duration) *record {
 }
 
 func recordToService(r *record, domain string) *register.Service {
-	metadata := make(map[string]string, len(r.Metadata))
-	for k, v := range r.Metadata {
-		metadata[k] = v
-	}
-
-	// set the domain in metadata so it can be determined when a wildcard query is performed
-	metadata["domain"] = domain
-
 	endpoints := make([]*register.Endpoint, len(r.Endpoints))
 	for i, e := range r.Endpoints {
-		md := make(map[string]string, len(e.Metadata))
-		for k, v := range e.Metadata {
-			md[k] = v
-		}
+		md := metadata.Copy(e.Metadata)
+		// set the domain in metadata so it can be determined when a wildcard query is performed
+		md.Set("domain", domain)
 
 		endpoints[i] = &register.Endpoint{
 			Name:     e.Name,
@@ -508,15 +498,10 @@ func recordToService(r *record, domain string) *register.Service {
 	nodes := make([]*register.Node, len(r.Nodes))
 	i := 0
 	for _, n := range r.Nodes {
-		md := make(map[string]string, len(n.Metadata))
-		for k, v := range n.Metadata {
-			md[k] = v
-		}
-
 		nodes[i] = &register.Node{
 			ID:       n.ID,
 			Address:  n.Address,
-			Metadata: md,
+			Metadata: metadata.Copy(n.Metadata),
 		}
 		i++
 	}
@@ -524,7 +509,7 @@ func recordToService(r *record, domain string) *register.Service {
 	return &register.Service{
 		Name:      r.Name,
 		Version:   r.Version,
-		Metadata:  metadata,
+		Metadata:  metadata.Copy(r.Metadata),
 		Endpoints: endpoints,
 		Nodes:     nodes,
 	}
