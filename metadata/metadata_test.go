@@ -189,3 +189,14 @@ func TestMetadataContext(t *testing.T) {
 		t.Errorf("Expected metadata length 1 got %d", i)
 	}
 }
+
+func TestCopy(t *testing.T) {
+	md := New(2)
+	md.Set("key1", "val1", "key2", "val2")
+	nmd := Copy(md, "key2")
+	if len(nmd) != 1 {
+		t.Fatal("Copy exclude not works")
+	} else if nmd["Key1"][0] != "val1" {
+		t.Fatal("Copy exclude not works")
+	}
+}

@@ -67,11 +67,12 @@ func (md Metadata) Del(keys ...string) {
 }
 
 // Copy makes a copy of the metadata
-func Copy(md Metadata) Metadata {
+func Copy(md Metadata, exclude ...string) Metadata {
 	nmd := make(Metadata, len(md))
 	for k, v := range md {
 		nmd[k] = v
 	}
+	nmd.Del(exclude...)
 	return nmd
 }
 
