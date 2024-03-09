@@ -1,6 +1,5 @@
 run:
   concurrency: 4
-  deadline: 5m
   issues-exit-code: 1
   tests: true
 
@@ -13,15 +12,13 @@ linters-settings:
 linters:
   enable:
     - govet
-    - deadcode
     - errcheck
     - govet
     - ineffassign
     - staticcheck
-    - structcheck
     - typecheck
     - unused
-    - varcheck
+    - spancheck
     - bodyclose
     - gci
     - goconst
@@ -41,4 +38,5 @@ linters:
     - prealloc
     - unconvert
     - unparam
+    - unused
   disable-all: false

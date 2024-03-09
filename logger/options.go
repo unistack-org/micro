@@ -18,18 +18,12 @@ type Options struct {
 	Out io.Writer
 	// Context holds exernal options
 	Context context.Context
-	// Attrs holds additional attributes
-	Attrs []interface{}
-	// Name holds the logger name
-	Name string
-	// The logging level the logger should log
-	Level Level
-	// CallerSkipCount number of frmaes to skip
-	CallerSkipCount int
-	// ContextAttrFuncs contains funcs that executed before log func on context
-	ContextAttrFuncs []ContextAttrFunc
+	// TimeFunc used to obtain current time
+	TimeFunc func() time.Time
 	// TimeKey is the key used for the time of the log call
 	TimeKey string
+	// Name holds the logger name
+	Name string
 	// LevelKey is the key used for the level of the log call
 	LevelKey string
 	// MessageKey is the key used for the message of the log call
@@ -40,12 +34,18 @@ type Options struct {
 	SourceKey string
 	// StacktraceKey is the key used for the stacktrace
 	StacktraceKey string
+	// Attrs holds additional attributes
+	Attrs []interface{}
+	// ContextAttrFuncs contains funcs that executed before log func on context
+	ContextAttrFuncs []ContextAttrFunc
+	// CallerSkipCount number of frmaes to skip
+	CallerSkipCount int
+	// The logging level the logger should log
+	Level Level
 	// AddStacktrace controls writing of stacktaces on error
 	AddStacktrace bool
 	// AddSource enabled writing source file and position in log
 	AddSource bool
-	// TimeFunc used to obtain current time
-	TimeFunc func() time.Time
 }
 
 // NewOptions creates new options struct

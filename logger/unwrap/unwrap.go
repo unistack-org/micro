@@ -56,9 +56,9 @@ type Wrapper struct {
 	s                fmt.State
 	pointers         map[uintptr]int
 	opts             *Options
+	takeMap          map[int]bool
 	depth            int
 	ignoreNextType   bool
-	takeMap          map[int]bool
 	protoWrapperType bool
 	sqlWrapperType   bool
 }

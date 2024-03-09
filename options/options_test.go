@@ -1,7 +1,6 @@
 package options_test
 
 import (
-	"fmt"
 	"testing"
 
 	"go.unistack.org/micro/v4/codec"
@@ -132,7 +131,6 @@ func TestMetadataAny(t *testing.T) {
 			var opts []options.Option
 			switch valData := tt.Data.(type) {
 			case []any:
-				fmt.Printf("%s any %#+v\n", tt.Name, valData)
 				opts = append(opts, options.Metadata(valData...))
 			case map[string]string, map[string][]string, metadata.Metadata:
 				opts = append(opts, options.Metadata(valData))

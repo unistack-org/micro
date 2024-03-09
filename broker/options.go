@@ -58,14 +58,14 @@ func NewOptions(opts ...options.Option) Options {
 type PublishOptions struct {
 	// Context holds external options
 	Context context.Context
-	// BodyOnly flag says the message contains raw body bytes
-	BodyOnly bool
 	// Message metadata usually passed as message headers
 	Metadata metadata.Metadata
 	// Content-Type of message for marshal
 	ContentType string
 	// Topic destination
 	Topic string
+	// BodyOnly flag says the message contains raw body bytes
+	BodyOnly bool
 }
 
 // NewPublishOptions creates PublishOptions struct

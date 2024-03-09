@@ -109,12 +109,11 @@ func Merge(olist []*register.Service, nlist []*register.Service) []*register.Ser
 				seen = true
 				srv = append(srv, sp)
 				break
-			} else {
-				sp := &register.Service{}
-				// make copy
-				*sp = *o
-				srv = append(srv, sp)
 			}
+			sp := &register.Service{}
+			// make copy
+			*sp = *o
+			srv = append(srv, sp)
 		}
 		if !seen {
 			srv = append(srv, Copy([]*register.Service{n})...)

@@ -32,10 +32,10 @@ type record struct {
 }
 
 type memory struct {
-	sync.RWMutex
 	records  map[string]services
 	watchers map[string]*watcher
 	opts     register.Options
+	sync.RWMutex
 }
 
 // services is a KV map with service name as the key and a map of records as the value
@@ -102,10 +102,20 @@ func (m *memory) sendEvent(r *register.Result) {
 }
 
 func (m *memory) Connect(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 	return nil
 }
 
 func (m *memory) Disconnect(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 	return nil
 }
 
@@ -126,6 +136,11 @@ func (m *memory) Options() register.Options {
 }
 
 func (m *memory) Register(ctx context.Context, s *register.Service, opts ...register.RegisterOption) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 	m.Lock()
 	defer m.Unlock()
 
@@ -467,9 +482,7 @@ func serviceToRecord(s *register.Service, ttl time.Duration) *record {
 	}
 
 	endpoints := make([]*register.Endpoint, len(s.Endpoints))
-	for i, e := range s.Endpoints { // TODO: vtolstov use copy
-		endpoints[i] = e
-	}
+	copy(endpoints, s.Endpoints)
 
 	return &record{
 		Name:      s.Name,

@@ -67,9 +67,9 @@ func (fi *fileInfo) Name() string {
 
 func (fi *fileInfo) Mode() os.FileMode {
 	if strings.HasSuffix(fi.name, "/") {
-		return os.FileMode(0755) | os.ModeDir
+		return os.FileMode(0o755) | os.ModeDir
 	}
-	return os.FileMode(0644)
+	return os.FileMode(0o644)
 }
 
 func (fi *fileInfo) IsDir() bool {
@@ -112,15 +112,14 @@ func (f *file) Readdir(count int) ([]os.FileInfo, error) {
 func (f *file) Seek(offset int64, whence int) (int64, error) {
 	//	log.Printf("seek %d %d %s\n", offset, whence, f.name)
 	switch whence {
-	case os.SEEK_SET:
+	case io.SeekStart:
 		f.offset = offset
-	case os.SEEK_CUR:
+	case io.SeekCurrent:
 		f.offset += offset
-	case os.SEEK_END:
+	case io.SeekEnd:
 		f.offset = int64(len(f.data)) + offset
 	}
 	return f.offset, nil
-
 }
 
 func (f *file) Stat() (os.FileInfo, error) {

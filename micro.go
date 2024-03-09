@@ -65,6 +65,8 @@ func As(b any, target any) bool {
 			break
 		case targetType.Implements(routerType):
 			break
+		case targetType.Implements(tracerType):
+			break
 		default:
 			return false
 		}
@@ -76,19 +78,21 @@ func As(b any, target any) bool {
 	return false
 }
 
-var brokerType = reflect.TypeOf((*broker.Broker)(nil)).Elem()
-var loggerType = reflect.TypeOf((*logger.Logger)(nil)).Elem()
-var clientType = reflect.TypeOf((*client.Client)(nil)).Elem()
-var serverType = reflect.TypeOf((*server.Server)(nil)).Elem()
-var codecType = reflect.TypeOf((*codec.Codec)(nil)).Elem()
-var flowType = reflect.TypeOf((*flow.Flow)(nil)).Elem()
-var fsmType = reflect.TypeOf((*fsm.FSM)(nil)).Elem()
-var meterType = reflect.TypeOf((*meter.Meter)(nil)).Elem()
-var registerType = reflect.TypeOf((*register.Register)(nil)).Elem()
-var resolverType = reflect.TypeOf((*resolver.Resolver)(nil)).Elem()
-var routerType = reflect.TypeOf((*router.Router)(nil)).Elem()
-var selectorType = reflect.TypeOf((*selector.Selector)(nil)).Elem()
-var storeType = reflect.TypeOf((*store.Store)(nil)).Elem()
-var syncType = reflect.TypeOf((*sync.Sync)(nil)).Elem()
-var tracerType = reflect.TypeOf((*tracer.Tracer)(nil)).Elem()
-var serviceType = reflect.TypeOf((*Service)(nil)).Elem()
+var (
+	brokerType   = reflect.TypeOf((*broker.Broker)(nil)).Elem()
+	loggerType   = reflect.TypeOf((*logger.Logger)(nil)).Elem()
+	clientType   = reflect.TypeOf((*client.Client)(nil)).Elem()
+	serverType   = reflect.TypeOf((*server.Server)(nil)).Elem()
+	codecType    = reflect.TypeOf((*codec.Codec)(nil)).Elem()
+	flowType     = reflect.TypeOf((*flow.Flow)(nil)).Elem()
+	fsmType      = reflect.TypeOf((*fsm.FSM)(nil)).Elem()
+	meterType    = reflect.TypeOf((*meter.Meter)(nil)).Elem()
+	registerType = reflect.TypeOf((*register.Register)(nil)).Elem()
+	resolverType = reflect.TypeOf((*resolver.Resolver)(nil)).Elem()
+	routerType   = reflect.TypeOf((*router.Router)(nil)).Elem()
+	selectorType = reflect.TypeOf((*selector.Selector)(nil)).Elem()
+	storeType    = reflect.TypeOf((*store.Store)(nil)).Elem()
+	syncType     = reflect.TypeOf((*sync.Sync)(nil)).Elem()
+	tracerType   = reflect.TypeOf((*tracer.Tracer)(nil)).Elem()
+	serviceType  = reflect.TypeOf((*Service)(nil)).Elem()
+)

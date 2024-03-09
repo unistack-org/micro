@@ -54,7 +54,24 @@ func testOutgoingCtx(ctx context.Context) {
 	}
 }
 
-func TestPassing(t *testing.T) {
+func TestIncoming(t *testing.T) {
+	ctx := context.TODO()
+	md1 := New(2)
+	md1.Set("Key1", "Val1")
+	md1.Set("Key2", "Val2")
+
+	ctx = NewIncomingContext(ctx, md1)
+	testIncomingCtx(ctx)
+	md, ok := FromIncomingContext(ctx)
+	if !ok {
+		t.Fatalf("missing metadata from incoming context")
+	}
+	if v, ok := md.Get("Key1"); !ok || v != "Val1_new" {
+		t.Fatalf("invalid metadata value %#+v", md)
+	}
+}
+
+func TestOutgoing(t *testing.T) {
 	ctx := context.TODO()
 	md1 := New(2)
 	md1.Set("Key1", "Val1")
