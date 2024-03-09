@@ -100,40 +100,29 @@ func TestMetadataAny(t *testing.T) {
 	}{
 		{
 			"strings_even",
-			[]any{"key1", "val1", "key2", "val2"},
-			metadata.Metadata{
-				"Key1": "val1",
-				"Key2": "val2",
-			},
+			[]any{"Strkey1", []string{"val1"}, "Strkey2", []string{"val2"}},
+			metadata.Pairs("Strkey1", "val1", "Strkey2", "val2"),
 		},
 		{
 			"strings_odd",
 			[]any{"key1", "val1", "key2"},
-			metadata.Metadata{
-				"Key1": "val1",
-			},
+			metadata.Pairs("Key1", "val1"),
 		},
 		{
 			Name: "map",
-			Data: map[string]string{
-				"key1": "val1",
-				"key2": "val2",
+			Data: map[string][]string{
+				"Mapkey1": {"val1"},
+				"Mapkey2": {"val2"},
 			},
 			Expected: metadata.Metadata{
-				"Key1": "val1",
-				"Key2": "val2",
+				"Mapkey1": []string{"val1"},
+				"Mapkey2": []string{"val2"},
 			},
 		},
 		{
 			"metadata.Metadata",
-			metadata.Metadata{
-				"key1": "val1",
-				"key2": "val2",
-			},
-			metadata.Metadata{
-				"Key1": "val1",
-				"Key2": "val2",
-			},
+			metadata.Pairs("key1", "val1", "key2", "val2"),
+			metadata.Pairs("Key1", "val1", "Key2", "val2"),
 		},
 	}
 
@@ -143,8 +132,9 @@ func TestMetadataAny(t *testing.T) {
 			var opts []options.Option
 			switch valData := tt.Data.(type) {
 			case []any:
+				fmt.Printf("%s any %#+v\n", tt.Name, valData)
 				opts = append(opts, options.Metadata(valData...))
-			case map[string]string, metadata.Metadata:
+			case map[string]string, map[string][]string, metadata.Metadata:
 				opts = append(opts, options.Metadata(valData))
 			}
 
@@ -153,7 +143,7 @@ func TestMetadataAny(t *testing.T) {
 					t.Fatal(err)
 				}
 				if !reflect.Equal(tt.Expected, src.Metadata) {
-					t.Fatal(fmt.Sprintf("expected: %v, actual: %v", tt.Expected, src.Metadata))
+					t.Fatalf("expected: %v, actual: %v", tt.Expected, src.Metadata)
 				}
 			}
 		})

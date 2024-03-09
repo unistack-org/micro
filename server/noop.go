@@ -112,8 +112,8 @@ func (n *noopServer) Register() error {
 	}
 	n.RUnlock()
 
-	service.Nodes[0].Metadata["protocol"] = "noop"
-	service.Nodes[0].Metadata["transport"] = service.Nodes[0].Metadata["protocol"]
+	service.Nodes[0].Metadata.Set("protocol", "noop")
+	service.Nodes[0].Metadata.Set("transport", "noop")
 	service.Endpoints = endpoints
 
 	n.RLock()

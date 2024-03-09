@@ -158,17 +158,28 @@ func Metadata(md ...any) Option {
 		case metadata.Metadata:
 			result = metadata.Copy(vt)
 		case map[string]string:
+			result = make(metadata.Metadata, len(vt))
+			for k, v := range vt {
+				result.Set(k, v)
+			}
+		case map[string][]string:
 			result = metadata.Copy(vt)
 		default:
 			result = metadata.New(0)
 		}
 	} else {
 		result = metadata.New(len(md) / 2)
-		for idx := 0; idx < len(md)/2; idx += 2 {
-			k, kok := md[idx].(string)
-			v, vok := md[idx+1].(string)
-			if kok && vok {
-				result.Set(k, v)
+		for idx := 0; idx <= len(md)/2; idx += 2 {
+			k, ok := md[idx].(string)
+			switch vt := md[idx+1].(type) {
+			case string:
+				if ok {
+					result.Set(k, vt)
+				}
+			case []string:
+				if ok {
+					result.Append(k, vt...)
+				}
 			}
 		}
 	}

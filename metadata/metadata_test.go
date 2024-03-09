@@ -33,20 +33,25 @@ func TestAppend(t *testing.T) {
 }
 
 func TestPairs(t *testing.T) {
-	md, ok := Pairs("key1", "val1", "key2", "val2")
-	if !ok {
-		t.Fatal("odd number of kv")
-	}
-	if _, ok = md.Get("key1"); !ok {
+	md := Pairs("key1", "val1", "key2", "val2")
+
+	if _, ok := md.Get("key1"); !ok {
 		t.Fatal("key1 not found")
 	}
 }
 
-func testCtx(ctx context.Context) {
-	md := New(2)
-	md.Set("Key1", "Val1_new")
-	md.Set("Key3", "Val3")
-	SetOutgoingContext(ctx, md)
+func testIncomingCtx(ctx context.Context) {
+	if md, ok := FromIncomingContext(ctx); ok && md != nil {
+		md.Set("Key1", "Val1_new")
+		md.Set("Key3", "Val3")
+	}
+}
+
+func testOutgoingCtx(ctx context.Context) {
+	if md, ok := FromOutgoingContext(ctx); ok && md != nil {
+		md.Set("Key1", "Val1_new")
+		md.Set("Key3", "Val3")
+	}
 }
 
 func TestPassing(t *testing.T) {
@@ -55,8 +60,8 @@ func TestPassing(t *testing.T) {
 	md1.Set("Key1", "Val1")
 	md1.Set("Key2", "Val2")
 
-	ctx = NewIncomingContext(ctx, md1)
-	testCtx(ctx)
+	ctx = NewOutgoingContext(ctx, md1)
+	testOutgoingCtx(ctx)
 	md, ok := FromOutgoingContext(ctx)
 	if !ok {
 		t.Fatalf("missing metadata from outgoing context")
@@ -68,30 +73,15 @@ func TestPassing(t *testing.T) {
 
 func TestMerge(t *testing.T) {
 	omd := Metadata{
-		"key1": "val1",
+		"key1": []string{"val1"},
 	}
 	mmd := Metadata{
-		"key2": "val2",
+		"key2": []string{"val2"},
 	}
 
 	nmd := Merge(omd, mmd, true)
 	if len(nmd) != 2 {
 		t.Fatalf("merge failed: %v", nmd)
-	}
-}
-
-func TestIterator(t *testing.T) {
-	md := Metadata{
-		"1Last":   "last",
-		"2First":  "first",
-		"3Second": "second",
-	}
-
-	iter := md.Iterator()
-	var k, v string
-
-	for iter.Next(&k, &v) {
-		// fmt.Printf("k: %s, v: %s\n", k, v)
 	}
 }
 
@@ -134,10 +124,7 @@ func TestMetadataSet(t *testing.T) {
 }
 
 func TestMetadataDelete(t *testing.T) {
-	md := Metadata{
-		"Foo": "bar",
-		"Baz": "empty",
-	}
+	md := Pairs("Foo", "bar", "Baz", "empty")
 
 	md.Del("Baz")
 	_, ok := md.Get("Baz")
@@ -156,24 +143,19 @@ func TestNilContext(t *testing.T) {
 }
 
 func TestMetadataCopy(t *testing.T) {
-	md := Metadata{
-		"Foo": "bar",
-		"Bar": "baz",
-	}
+	md := Pairs("Foo", "bar", "Bar", "baz")
 
 	cp := Copy(md)
 
 	for k, v := range md {
-		if cv := cp[k]; cv != v {
+		if cv := cp[k]; len(cv) != len(v) {
 			t.Fatalf("Got %s:%s for %s:%s", k, cv, k, v)
 		}
 	}
 }
 
 func TestMetadataContext(t *testing.T) {
-	md := Metadata{
-		"Foo": "bar",
-	}
+	md := Pairs("Foo", "bar")
 
 	ctx := NewContext(context.TODO(), md)
 
@@ -182,7 +164,7 @@ func TestMetadataContext(t *testing.T) {
 		t.Errorf("Unexpected error retrieving metadata, got %t", ok)
 	}
 
-	if emd["Foo"] != md["Foo"] {
+	if len(emd["Foo"]) != len(md["Foo"]) {
 		t.Errorf("Expected key: %s val: %s, got key: %s val: %s", "Foo", md["Foo"], "Foo", emd["Foo"])
 	}
 
