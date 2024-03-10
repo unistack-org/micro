@@ -1,0 +1,30 @@
+name: Go
+
+on:
+  push:
+    branches: [ master, v3 ]
+  pull_request:
+    branches: [ master, v3 ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+
+    - name: setup
+      uses: actions/setup-go@v4
+      with:
+        go-version: stable
+
+    - name: coverage
+      run: go test -v -coverprofile coverage.out ./...
+
+    - name: badge
+      uses: ncruces/go-coverage-report@main
+      with:
+        coverage-file: coverage.out
+        reuse-go: true
+        amend: true
