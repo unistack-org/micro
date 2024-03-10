@@ -171,7 +171,8 @@ func NewEventOptions(opts ...options.Option) EventOptions {
 // NewOptions returns default options
 func NewOptions(opts ...options.Option) Options {
 	options := Options{
-		Logger: logger.DefaultLogger,
+		Logger:  logger.DefaultLogger,
+		Context: context.Background(),
 	}
 	for _, o := range opts {
 		o(&options)
