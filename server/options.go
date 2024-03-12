@@ -13,6 +13,7 @@ import (
 	"go.unistack.org/micro/v4/meter"
 	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/register"
+	msync "go.unistack.org/micro/v4/sync"
 	"go.unistack.org/micro/v4/tracer"
 	"go.unistack.org/micro/v4/util/id"
 )
@@ -32,7 +33,7 @@ type Options struct {
 	// Listener may be passed if already created
 	Listener net.Listener
 	// Wait group
-	Wait *sync.WaitGroup
+	Wait *msync.WaitGroup
 	// TLSConfig specifies tls.Config for secure serving
 	TLSConfig *tls.Config
 	// Metadata holds the server metadata
@@ -146,8 +147,11 @@ func Wait(wg *sync.WaitGroup) options.Option {
 	if wg == nil {
 		wg = new(sync.WaitGroup)
 	}
+
+	wrap := msync.WrapWaitGroup(wg)
+
 	return func(src interface{}) error {
-		return options.Set(src, wg, ".Wait")
+		return options.Set(src, wrap, ".Wait")
 	}
 }
 
