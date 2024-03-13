@@ -15,6 +15,7 @@ import (
 	"go.unistack.org/micro/v3/network/transport"
 	"go.unistack.org/micro/v3/options"
 	"go.unistack.org/micro/v3/register"
+	msync "go.unistack.org/micro/v3/sync"
 	"go.unistack.org/micro/v3/tracer"
 	"go.unistack.org/micro/v3/util/id"
 )
@@ -47,7 +48,7 @@ type Options struct {
 	// Listener may be passed if already created
 	Listener net.Listener
 	// Wait group
-	Wait *sync.WaitGroup
+	Wait *msync.WaitGroup
 	// TLSConfig specifies tls.Config for secure serving
 	TLSConfig *tls.Config
 	// Metadata holds the server metadata
@@ -282,7 +283,7 @@ func Wait(wg *sync.WaitGroup) Option {
 		if wg == nil {
 			wg = new(sync.WaitGroup)
 		}
-		o.Wait = wg
+		o.Wait = msync.WrapWaitGroup(wg)
 	}
 }
 
@@ -330,7 +331,6 @@ func GracefulTimeout(td time.Duration) Option {
 		o.GracefulTimeout = td
 	}
 }
-
 
 // HandlerOptions struct
 type HandlerOptions struct {
