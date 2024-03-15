@@ -3,7 +3,11 @@ package wrapper // import "go.unistack.org/micro/v3/meter/wrapper"
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strconv"
 	"time"
+
+	"google.golang.org/grpc/status"
 
 	"go.unistack.org/micro/v3/client"
 	"go.unistack.org/micro/v3/meter"
@@ -48,6 +52,8 @@ var (
 	labelFailure  = "failure"
 	labelStatus   = "status"
 	labelEndpoint = "endpoint"
+	labelType     = "type"
+	labelCode     = "code"
 
 	// DefaultSkipEndpoints contains list of endpoints that not evaluted by wrapper
 	DefaultSkipEndpoints = []string{"Meter.Metrics", "Health.Live", "Health.Ready", "Health.Version"}
@@ -177,8 +183,8 @@ func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{},
 		}
 	}
 
-	labels := make([]string, 0, 4)
-	labels = append(labels, labelEndpoint, endpoint)
+	labels := make([]string, 0, 8)
+	labels = append(labels, labelEndpoint, endpoint, labelType, "client_wrapper")
 
 	w.opts.Meter.Counter(ClientRequestInflight, labels...).Inc()
 	ts := time.Now()
@@ -193,6 +199,13 @@ func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{},
 		labels = append(labels, labelStatus, labelSuccess)
 	} else {
 		labels = append(labels, labelStatus, labelFailure)
+	}
+
+	if httpRsp, ok := rsp.(*http.Response); ok {
+		labels = append(labels, labelCode, strconv.Itoa(httpRsp.StatusCode))
+	}
+	if st, ok := status.FromError(err); ok {
+		labels = append(labels, labelCode, st.String())
 	}
 	w.opts.Meter.Counter(ClientRequestTotal, labels...).Inc()
 
@@ -280,8 +293,8 @@ func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 			}
 		}
 
-		labels := make([]string, 0, 4)
-		labels = append(labels, labelEndpoint, endpoint)
+		labels := make([]string, 0, 8)
+		labels = append(labels, labelEndpoint, endpoint, labelType, "server_wrapper")
 
 		w.opts.Meter.Counter(ServerRequestInflight, labels...).Inc()
 		ts := time.Now()
@@ -296,6 +309,13 @@ func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 			labels = append(labels, labelStatus, labelSuccess)
 		} else {
 			labels = append(labels, labelStatus, labelFailure)
+		}
+
+		if httpRsp, ok := rsp.(*http.Response); ok {
+			labels = append(labels, labelCode, strconv.Itoa(httpRsp.StatusCode))
+		}
+		if st, ok := status.FromError(err); ok {
+			labels = append(labels, labelCode, st.String())
 		}
 		w.opts.Meter.Counter(ServerRequestTotal, labels...).Inc()
 
