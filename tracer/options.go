@@ -100,13 +100,13 @@ type EventOption func(o *EventOptions)
 
 func WithEventLabels(kv ...interface{}) EventOption {
 	return func(o *EventOptions) {
-		o.Labels = kv
+		o.Labels = append(o.Labels, kv...)
 	}
 }
 
 func WithSpanLabels(kv ...interface{}) SpanOption {
 	return func(o *SpanOptions) {
-		o.Labels = kv
+		o.Labels = append(o.Labels, kv...)
 	}
 }
 
