@@ -64,8 +64,8 @@ func Error(ctx context.Context, msg string, attrs ...interface{}) {
 	DefaultLogger.Error(ctx, msg, attrs...)
 }
 
-// Debugf writes formatted msg to default logger on debug level
-func Debugf(ctx context.Context, msg string, attrs ...interface{}) {
+// Debug writes formatted msg to default logger on debug level
+func Debug(ctx context.Context, msg string, attrs ...interface{}) {
 	DefaultLogger.Debug(ctx, msg, attrs...)
 }
 
