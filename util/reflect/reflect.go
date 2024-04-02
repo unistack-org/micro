@@ -1,6 +1,7 @@
-package reflect // import "go.unistack.org/micro/v4/util/reflect"
+package reflect
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -45,14 +46,22 @@ func SliceAppend(b bool) Option {
 
 // Merge merges map[string]interface{} to destination struct
 func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
-	var err error
-	var sval reflect.Value
-	var fname string
-
 	options := Options{}
 	for _, o := range opts {
 		o(&options)
 	}
+
+	if unmarshaler, ok := dst.(json.Unmarshaler); ok {
+		buf, err := json.Marshal(mp)
+		if err == nil {
+			err = unmarshaler.UnmarshalJSON(buf)
+		}
+		return err
+	}
+
+	var err error
+	var sval reflect.Value
+	var fname string
 
 	dviface := reflect.ValueOf(dst)
 	if dviface.Kind() == reflect.Ptr {
