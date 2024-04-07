@@ -3,7 +3,6 @@ package broker
 import (
 	"context"
 	"crypto/tls"
-	"sync"
 	"time"
 
 	"go.unistack.org/micro/v4/codec"
@@ -12,6 +11,7 @@ import (
 	"go.unistack.org/micro/v4/meter"
 	"go.unistack.org/micro/v4/options"
 	"go.unistack.org/micro/v4/register"
+	"go.unistack.org/micro/v4/sync"
 	"go.unistack.org/micro/v4/tracer"
 )
 
