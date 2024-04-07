@@ -1,6 +1,8 @@
 # Develop tools
 /.vscode/
 /.idea/
+.idea
+.vscode
 
 # Binaries for programs and plugins
 *.exe
@@ -13,6 +15,7 @@
 _obj
 _test
 _build
+.DS_Store
 
 # Architecture specific extensions/prefixes
 *.[568vq]
