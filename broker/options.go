@@ -3,6 +3,7 @@ package broker
 import (
 	"context"
 	"crypto/tls"
+	"sync"
 	"time"
 
 	"go.unistack.org/micro/v4/codec"
@@ -36,22 +37,27 @@ type Options struct {
 	Name string
 	// Address holds the broker address
 	Address []string
+
+	Wait *sync.WaitGroup
+
+	GracefulTimeout time.Duration
 }
 
 // NewOptions create new Options
 func NewOptions(opts ...options.Option) Options {
-	options := Options{
-		Register: register.DefaultRegister,
-		Logger:   logger.DefaultLogger,
-		Context:  context.Background(),
-		Meter:    meter.DefaultMeter,
-		Codecs:   make(map[string]codec.Codec),
-		Tracer:   tracer.DefaultTracer,
+	newOpts := Options{
+		Register:        register.DefaultRegister,
+		Logger:          logger.DefaultLogger,
+		Context:         context.Background(),
+		Meter:           meter.DefaultMeter,
+		Codecs:          make(map[string]codec.Codec),
+		Tracer:          tracer.DefaultTracer,
+		GracefulTimeout: DefaultGracefulTimeout,
 	}
 	for _, o := range opts {
-		o(&options)
+		o(&newOpts)
 	}
-	return options
+	return newOpts
 }
 
 // PublishOptions struct
