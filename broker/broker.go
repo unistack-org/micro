@@ -4,6 +4,7 @@ package broker // import "go.unistack.org/micro/v3/broker"
 import (
 	"context"
 	"errors"
+	"time"
 
 	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/metadata"
@@ -17,6 +18,8 @@ var (
 	ErrNotConnected = errors.New("broker not connected")
 	// ErrDisconnected returns when broker disconnected
 	ErrDisconnected = errors.New("broker disconnected")
+	// DefaultGracefulTimeout
+	DefaultGracefulTimeout = 5 * time.Second
 )
 
 // Broker is an interface used for asynchronous messaging.

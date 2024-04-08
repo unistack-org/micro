@@ -9,6 +9,7 @@ import (
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/meter"
 	"go.unistack.org/micro/v3/register"
+	"go.unistack.org/micro/v3/sync"
 	"go.unistack.org/micro/v3/tracer"
 )
 
@@ -36,17 +37,22 @@ type Options struct {
 	Name string
 	// Addrs holds the broker address
 	Addrs []string
+
+	Wait *sync.WaitGroup
+
+	GracefulTimeout time.Duration
 }
 
 // NewOptions create new Options
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Register: register.DefaultRegister,
-		Logger:   logger.DefaultLogger,
-		Context:  context.Background(),
-		Meter:    meter.DefaultMeter,
-		Codec:    codec.DefaultCodec,
-		Tracer:   tracer.DefaultTracer,
+		Register:        register.DefaultRegister,
+		Logger:          logger.DefaultLogger,
+		Context:         context.Background(),
+		Meter:           meter.DefaultMeter,
+		Codec:           codec.DefaultCodec,
+		Tracer:          tracer.DefaultTracer,
+		GracefulTimeout: DefaultGracefulTimeout,
 	}
 	for _, o := range opts {
 		o(&options)
