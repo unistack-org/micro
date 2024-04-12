@@ -17,4 +17,6 @@ var (
 	SubscribeMessageTotal = "subscribe_message_total"
 	// SubscribeMessageInflight specifies meter metric name
 	SubscribeMessageInflight = "subscribe_message_inflight"
+	// BrokerGroupLag specifies broker lag
+	BrokerGroupLag = "broker_lag"
 )
