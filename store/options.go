@@ -144,6 +144,10 @@ type ReadOptions struct {
 	Context context.Context
 	// Namespace holds namespace
 	Namespace string
+	// Name holds mnemonic name
+	Name string
+	// Timeout specifies max timeout for operation
+	Timeout time.Duration
 }
 
 // NewReadOptions fills ReadOptions struct with opts slice
@@ -157,6 +161,20 @@ func NewReadOptions(opts ...ReadOption) ReadOptions {
 
 // ReadOption sets values in ReadOptions
 type ReadOption func(r *ReadOptions)
+
+// ReadTimeout pass timeout to ReadOptions
+func ReadTimeout(td time.Duration) ReadOption {
+	return func(o *ReadOptions) {
+		o.Timeout = td
+	}
+}
+
+// ReadName pass name to ReadOptions
+func ReadName(name string) ReadOption {
+	return func(o *ReadOptions) {
+		o.Name = name
+	}
+}
 
 // ReadContext pass context.Context to ReadOptions
 func ReadContext(ctx context.Context) ReadOption {
@@ -180,6 +198,10 @@ type WriteOptions struct {
 	Metadata metadata.Metadata
 	// Namespace holds namespace
 	Namespace string
+	// Name holds mnemonic name
+	Name string
+	// Timeout specifies max timeout for operation
+	Timeout time.Duration
 	// TTL specifies key TTL
 	TTL time.Duration
 }
@@ -224,12 +246,30 @@ func WriteNamespace(ns string) WriteOption {
 	}
 }
 
+// WriteName pass name to WriteOptions
+func WriteName(name string) WriteOption {
+	return func(o *WriteOptions) {
+		o.Name = name
+	}
+}
+
+// WriteTimeout pass timeout to WriteOptions
+func WriteTimeout(td time.Duration) WriteOption {
+	return func(o *WriteOptions) {
+		o.Timeout = td
+	}
+}
+
 // DeleteOptions configures an individual Delete operation
 type DeleteOptions struct {
 	// Context holds external options
 	Context context.Context
 	// Namespace holds namespace
 	Namespace string
+	// Name holds mnemonic name
+	Name string
+	// Timeout specifies max timeout for operation
+	Timeout time.Duration
 }
 
 // NewDeleteOptions fills DeleteOptions struct with opts slice
@@ -258,14 +298,32 @@ func DeleteNamespace(ns string) DeleteOption {
 	}
 }
 
+// DeleteName pass name to DeleteOptions
+func DeleteName(name string) DeleteOption {
+	return func(o *DeleteOptions) {
+		o.Name = name
+	}
+}
+
+// DeleteTimeout pass timeout to DeleteOptions
+func DeleteTimeout(td time.Duration) DeleteOption {
+	return func(o *DeleteOptions) {
+		o.Timeout = td
+	}
+}
+
 // ListOptions configures an individual List operation
 type ListOptions struct {
 	Context   context.Context
 	Prefix    string
 	Suffix    string
 	Namespace string
-	Limit     uint
-	Offset    uint
+	// Name holds mnemonic name
+	Name   string
+	Limit  uint
+	Offset uint
+	// Timeout specifies max timeout for operation
+	Timeout time.Duration
 }
 
 // NewListOptions fills ListOptions struct with opts slice
@@ -322,12 +380,23 @@ func ListNamespace(ns string) ListOption {
 	}
 }
 
+// ListTimeout pass timeout to ListOptions
+func ListTimeout(td time.Duration) ListOption {
+	return func(o *ListOptions) {
+		o.Timeout = td
+	}
+}
+
 // ExistsOptions holds options for Exists method
 type ExistsOptions struct {
 	// Context holds external options
 	Context context.Context
 	// Namespace contains namespace
 	Namespace string
+	// Name holds mnemonic name
+	Name string
+	// Timeout specifies max timeout for operation
+	Timeout time.Duration
 }
 
 // ExistsOption specifies Exists call options
@@ -355,6 +424,20 @@ func ExistsContext(ctx context.Context) ExistsOption {
 func ExistsNamespace(ns string) ExistsOption {
 	return func(o *ExistsOptions) {
 		o.Namespace = ns
+	}
+}
+
+// ExistsName pass name to exist options
+func ExistsName(name string) ExistsOption {
+	return func(o *ExistsOptions) {
+		o.Name = name
+	}
+}
+
+// ExistsTimeout timeout to ListOptions
+func ExistsTimeout(td time.Duration) ExistsOption {
+	return func(o *ExistsOptions) {
+		o.Timeout = td
 	}
 }
 
