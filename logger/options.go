@@ -182,3 +182,10 @@ func WithMicroKeys() Option {
 		o.ErrorKey = "error"
 	}
 }
+
+// WithAddCallerSkipCount add skip count for copy logger
+func WithAddCallerSkipCount(n int) Option {
+	return func(o *Options) {
+		o.CallerSkipCount += n
+	}
+}
