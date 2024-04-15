@@ -214,6 +214,20 @@ func WithMicroKeys() options.Option {
 	}
 }
 
+// WithAddCallerSkipCount add skip count for copy logger
+func WithAddCallerSkipCount(n int) options.Option {
+	return func(src interface{}) error {
+		c, err := options.Get(src, ".CallerSkipCount")
+		if err != nil {
+			return err
+		}
+		if err = options.Set(src, c.(int)+n, ".CallerSkipCount"); err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
 // WithAddStacktrace controls writing stacktrace on error
 func WithAddStacktrace(v bool) options.Option {
 	return func(src interface{}) error {
