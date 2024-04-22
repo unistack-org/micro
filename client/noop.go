@@ -10,6 +10,7 @@ import (
 	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/errors"
 	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/options"
 	"go.unistack.org/micro/v3/selector"
 )
 
@@ -19,7 +20,11 @@ var DefaultCodecs = map[string]codec.Codec{
 }
 
 type noopClient struct {
-	opts Options
+	funcPublish      FuncPublish
+	funcBatchPublish FuncBatchPublish
+	funcCall         FuncCall
+	funcStream       FuncStream
+	opts             Options
 }
 
 type noopMessage struct {
@@ -40,16 +45,14 @@ type noopRequest struct {
 
 // NewClient returns new noop client
 func NewClient(opts ...Option) Client {
-	nc := &noopClient{opts: NewOptions(opts...)}
-	// wrap in reverse
+	n := &noopClient{opts: NewOptions(opts...)}
 
-	c := Client(nc)
+	n.funcCall = n.fnCall
+	n.funcStream = n.fnStream
+	n.funcPublish = n.fnPublish
+	n.funcBatchPublish = n.fnBatchPublish
 
-	for i := len(nc.opts.Wrappers); i > 0; i-- {
-		c = nc.opts.Wrappers[i-1](c)
-	}
-
-	return c
+	return n
 }
 
 func (n *noopClient) Name() string {
@@ -173,6 +176,25 @@ func (n *noopClient) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
 	}
+
+	n.funcCall = n.fnCall
+	n.funcStream = n.fnStream
+	n.funcPublish = n.fnPublish
+	n.funcBatchPublish = n.fnBatchPublish
+
+	n.opts.Hooks.EachNext(func(hook options.Hook) {
+		switch h := hook.(type) {
+		case HookCall:
+			n.funcCall = h(n.funcCall)
+		case HookStream:
+			n.funcStream = h(n.funcStream)
+		case HookPublish:
+			n.funcPublish = h(n.funcPublish)
+		case HookBatchPublish:
+			n.funcBatchPublish = h(n.funcBatchPublish)
+		}
+	})
+
 	return nil
 }
 
@@ -185,6 +207,10 @@ func (n *noopClient) String() string {
 }
 
 func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error {
+	return n.funcCall(ctx, req, rsp, opts...)
+}
+
+func (n *noopClient) fnCall(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error {
 	// make a copy of call opts
 	callOpts := n.opts.CallOptions
 	for _, opt := range opts {
@@ -213,11 +239,8 @@ func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opt
 	}
 
 	// make copy of call method
-	hcall := n.call
-
-	// wrap the call in reverse
-	for i := len(callOpts.CallWrappers); i > 0; i-- {
-		hcall = callOpts.CallWrappers[i-1](hcall)
+	hcall := func(ctx context.Context, addr string, req Request, rsp interface{}, opts CallOptions) error {
+		return nil
 	}
 
 	// use the router passed as a call option, or fallback to the rpc clients router
@@ -316,10 +339,6 @@ func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opt
 	return gerr
 }
 
-func (n *noopClient) call(ctx context.Context, addr string, req Request, rsp interface{}, opts CallOptions) error {
-	return nil
-}
-
 func (n *noopClient) NewRequest(service, endpoint string, req interface{}, opts ...RequestOption) Request {
 	return &noopRequest{service: service, endpoint: endpoint}
 }
@@ -330,6 +349,10 @@ func (n *noopClient) NewMessage(topic string, msg interface{}, opts ...MessageOp
 }
 
 func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error) {
+	return n.funcStream(ctx, req, opts...)
+}
+
+func (n *noopClient) fnStream(ctx context.Context, req Request, opts ...CallOption) (Stream, error) {
 	var err error
 
 	// make a copy of call opts
@@ -474,10 +497,18 @@ func (n *noopClient) stream(ctx context.Context, addr string, req Request, opts 
 }
 
 func (n *noopClient) BatchPublish(ctx context.Context, ps []Message, opts ...PublishOption) error {
+	return n.funcBatchPublish(ctx, ps, opts...)
+}
+
+func (n *noopClient) fnBatchPublish(ctx context.Context, ps []Message, opts ...PublishOption) error {
 	return n.publish(ctx, ps, opts...)
 }
 
 func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOption) error {
+	return n.funcPublish(ctx, p, opts...)
+}
+
+func (n *noopClient) fnPublish(ctx context.Context, p Message, opts ...PublishOption) error {
 	return n.publish(ctx, []Message{p}, opts...)
 }
 
@@ -536,6 +567,13 @@ func (n *noopClient) publish(ctx context.Context, ps []Message, opts ...PublishO
 		}
 
 		msgs = append(msgs, &broker.Message{Header: md, Body: body})
+	}
+
+	if len(msgs) == 1 {
+		return n.opts.Broker.Publish(ctx, msgs[0].Header[metadata.HeaderTopic], msgs[0],
+			broker.PublishContext(options.Context),
+			broker.PublishBodyOnly(options.BodyOnly),
+		)
 	}
 
 	return n.opts.Broker.BatchPublish(ctx, msgs,

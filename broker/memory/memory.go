@@ -7,6 +7,7 @@ import (
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/options"
 	maddr "go.unistack.org/micro/v3/util/addr"
 	"go.unistack.org/micro/v3/util/id"
 	mnet "go.unistack.org/micro/v3/util/net"
@@ -14,9 +15,13 @@ import (
 )
 
 type memoryBroker struct {
-	subscribers map[string][]*memorySubscriber
-	addr        string
-	opts        broker.Options
+	funcPublish        broker.FuncPublish
+	funcBatchPublish   broker.FuncBatchPublish
+	funcSubscribe      broker.FuncSubscribe
+	funcBatchSubscribe broker.FuncBatchSubscribe
+	subscribers        map[string][]*memorySubscriber
+	addr               string
+	opts               broker.Options
 	sync.RWMutex
 	connected bool
 }
@@ -98,15 +103,42 @@ func (m *memoryBroker) Init(opts ...broker.Option) error {
 	for _, o := range opts {
 		o(&m.opts)
 	}
+
+	m.funcPublish = m.fnPublish
+	m.funcBatchPublish = m.fnBatchPublish
+	m.funcSubscribe = m.fnSubscribe
+	m.funcBatchSubscribe = m.fnBatchSubscribe
+
+	m.opts.Hooks.EachNext(func(hook options.Hook) {
+		switch h := hook.(type) {
+		case broker.HookPublish:
+			m.funcPublish = h(m.funcPublish)
+		case broker.HookBatchPublish:
+			m.funcBatchPublish = h(m.funcBatchPublish)
+		case broker.HookSubscribe:
+			m.funcSubscribe = h(m.funcSubscribe)
+		case broker.HookBatchSubscribe:
+			m.funcBatchSubscribe = h(m.funcBatchSubscribe)
+		}
+	})
+
 	return nil
 }
 
 func (m *memoryBroker) Publish(ctx context.Context, topic string, msg *broker.Message, opts ...broker.PublishOption) error {
+	return m.funcPublish(ctx, topic, msg, opts...)
+}
+
+func (m *memoryBroker) fnPublish(ctx context.Context, topic string, msg *broker.Message, opts ...broker.PublishOption) error {
 	msg.Header.Set(metadata.HeaderTopic, topic)
 	return m.publish(ctx, []*broker.Message{msg}, opts...)
 }
 
 func (m *memoryBroker) BatchPublish(ctx context.Context, msgs []*broker.Message, opts ...broker.PublishOption) error {
+	return m.funcBatchPublish(ctx, msgs, opts...)
+}
+
+func (m *memoryBroker) fnBatchPublish(ctx context.Context, msgs []*broker.Message, opts ...broker.PublishOption) error {
 	return m.publish(ctx, msgs, opts...)
 }
 
@@ -202,6 +234,10 @@ func (m *memoryBroker) publish(ctx context.Context, msgs []*broker.Message, opts
 }
 
 func (m *memoryBroker) BatchSubscribe(ctx context.Context, topic string, handler broker.BatchHandler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
+	return m.funcBatchSubscribe(ctx, topic, handler, opts...)
+}
+
+func (m *memoryBroker) fnBatchSubscribe(ctx context.Context, topic string, handler broker.BatchHandler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
 	m.RLock()
 	if !m.connected {
 		m.RUnlock()
@@ -247,6 +283,10 @@ func (m *memoryBroker) BatchSubscribe(ctx context.Context, topic string, handler
 }
 
 func (m *memoryBroker) Subscribe(ctx context.Context, topic string, handler broker.Handler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
+	return m.funcSubscribe(ctx, topic, handler, opts...)
+}
+
+func (m *memoryBroker) fnSubscribe(ctx context.Context, topic string, handler broker.Handler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
 	m.RLock()
 	if !m.connected {
 		m.RUnlock()

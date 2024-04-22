@@ -62,6 +62,13 @@ type Server interface {
 	String() string
 }
 
+type (
+	FuncBatchSubHandler func(ctxs []context.Context, ms []Message) error
+	HookBatchSubHandler func(next FuncBatchSubHandler) FuncBatchSubHandler
+	FuncSubHandler      func(ctx context.Context, ms Message) error
+	HookSubHandler      func(next FuncSubHandler) FuncSubHandler
+)
+
 /*
 // Router handle serving messages
 type Router interface {
@@ -147,12 +154,11 @@ type Stream interface {
 //
 // Example:
 //
-//      type Greeter struct {}
+//	type Greeter struct {}
 //
-//      func (g *Greeter) Hello(context, request, response) error {
-//              return nil
-//      }
-//
+//	func (g *Greeter) Hello(context, request, response) error {
+//	        return nil
+//	}
 type Handler interface {
 	Name() string
 	Handler() interface{}

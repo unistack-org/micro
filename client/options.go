@@ -12,6 +12,7 @@ import (
 	"go.unistack.org/micro/v3/metadata"
 	"go.unistack.org/micro/v3/meter"
 	"go.unistack.org/micro/v3/network/transport"
+	"go.unistack.org/micro/v3/options"
 	"go.unistack.org/micro/v3/register"
 	"go.unistack.org/micro/v3/router"
 	"go.unistack.org/micro/v3/selector"
@@ -59,6 +60,9 @@ type Options struct {
 	PoolTTL time.Duration
 	// ContextDialer used to connect
 	ContextDialer func(context.Context, string) (net.Conn, error)
+	// Hooks can be run before broker Publish/BatchPublish and
+	// Subscribe/BatchSubscribe methods
+	Hooks options.Hooks
 }
 
 // NewCallOptions creates new call options struct
@@ -92,8 +96,6 @@ type CallOptions struct {
 	Address []string
 	// SelectOptions selector options
 	SelectOptions []selector.SelectOption
-	// CallWrappers call wrappers
-	CallWrappers []CallWrapper
 	// StreamTimeout stream timeout
 	StreamTimeout time.Duration
 	// RequestTimeout request timeout
@@ -185,7 +187,7 @@ func NewOptions(opts ...Option) Options {
 	options := Options{
 		Context:     context.Background(),
 		ContentType: DefaultContentType,
-		Codecs:      make(map[string]codec.Codec),
+		Codecs:      DefaultCodecs,
 		CallOptions: CallOptions{
 			Context:        context.Background(),
 			Backoff:        DefaultBackoff,
@@ -303,20 +305,6 @@ func Router(r router.Router) Option {
 func Selector(s selector.Selector) Option {
 	return func(o *Options) {
 		o.Selector = s
-	}
-}
-
-// Wrap adds a wrapper to the list of options passed into the client
-func Wrap(w Wrapper) Option {
-	return func(o *Options) {
-		o.Wrappers = append(o.Wrappers, w)
-	}
-}
-
-// WrapCall adds a wrapper to the list of CallFunc wrappers
-func WrapCall(cw ...CallWrapper) Option {
-	return func(o *Options) {
-		o.CallOptions.CallWrappers = append(o.CallOptions.CallWrappers, cw...)
 	}
 }
 
@@ -447,13 +435,6 @@ func WithContentType(ct string) CallOption {
 func WithAddress(a ...string) CallOption {
 	return func(o *CallOptions) {
 		o.Address = a
-	}
-}
-
-// WithCallWrapper is a CallOption which adds to the existing CallFunc wrappers
-func WithCallWrapper(cw ...CallWrapper) CallOption {
-	return func(o *CallOptions) {
-		o.CallWrappers = append(o.CallWrappers, cw...)
 	}
 }
 
@@ -589,5 +570,12 @@ func StreamingRequest(b bool) RequestOption {
 func RequestContentType(ct string) RequestOption {
 	return func(o *RequestOptions) {
 		o.ContentType = ct
+	}
+}
+
+// Hooks sets hook runs before action
+func Hooks(h ...options.Hook) Option {
+	return func(o *Options) {
+		o.Hooks = append(o.Hooks, h...)
 	}
 }

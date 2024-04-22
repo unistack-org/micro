@@ -69,12 +69,6 @@ type Options struct {
 	Advertise string
 	// Version holds the server version
 	Version string
-	// SubWrappers holds the server subscribe wrappers
-	SubWrappers []SubscriberWrapper
-	// BatchSubWrappers holds the server batch subscribe wrappers
-	BatchSubWrappers []BatchSubscriberWrapper
-	// HdlrWrappers holds the handler wrappers
-	HdlrWrappers []HandlerWrapper
 	// RegisterAttempts holds the number of register attempts before error
 	RegisterAttempts int
 	// RegisterInterval holds he interval for re-register
@@ -85,7 +79,8 @@ type Options struct {
 	MaxConn int
 	// DeregisterAttempts holds the number of deregister attempts before error
 	DeregisterAttempts int
-	// Hooks may contains SubscriberWrapper, HandlerWrapper or Server func wrapper
+	// Hooks may contains hook actions that performs before/after server handler
+	// or server subscriber handler
 	Hooks options.Hooks
 	// GracefulTimeout timeout for graceful stop server
 	GracefulTimeout time.Duration
@@ -287,27 +282,6 @@ func Wait(wg *sync.WaitGroup) Option {
 	}
 }
 
-// WrapHandler adds a handler Wrapper to a list of options passed into the server
-func WrapHandler(w HandlerWrapper) Option {
-	return func(o *Options) {
-		o.HdlrWrappers = append(o.HdlrWrappers, w)
-	}
-}
-
-// WrapSubscriber adds a subscriber Wrapper to a list of options passed into the server
-func WrapSubscriber(w SubscriberWrapper) Option {
-	return func(o *Options) {
-		o.SubWrappers = append(o.SubWrappers, w)
-	}
-}
-
-// WrapBatchSubscriber adds a batch subscriber Wrapper to a list of options passed into the server
-func WrapBatchSubscriber(w BatchSubscriberWrapper) Option {
-	return func(o *Options) {
-		o.BatchSubWrappers = append(o.BatchSubWrappers, w)
-	}
-}
-
 // MaxConn specifies maximum number of max simultaneous connections to server
 func MaxConn(n int) Option {
 	return func(o *Options) {
@@ -459,5 +433,12 @@ func SubscriberBatchSize(n int) SubscriberOption {
 func SubscriberBatchWait(td time.Duration) SubscriberOption {
 	return func(o *SubscriberOptions) {
 		o.BatchWait = td
+	}
+}
+
+// Hooks sets hook runs before action
+func Hooks(h ...options.Hook) Option {
+	return func(o *Options) {
+		o.Hooks = append(o.Hooks, h...)
 	}
 }

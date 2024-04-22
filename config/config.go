@@ -50,6 +50,13 @@ type Config interface {
 	String() string
 }
 
+type (
+	FuncLoad func(ctx context.Context, opts ...LoadOption) error
+	HookLoad func(next FuncLoad) FuncLoad
+	FuncSave func(ctx context.Context, opts ...SaveOption) error
+	HookSave func(next FuncSave) FuncSave
+)
+
 // Watcher is the config watcher
 type Watcher interface {
 	// Next blocks until update happens or error returned

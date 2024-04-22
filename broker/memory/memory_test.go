@@ -13,6 +13,10 @@ func TestMemoryBatchBroker(t *testing.T) {
 	b := NewBroker()
 	ctx := context.Background()
 
+	if err := b.Init(); err != nil {
+		t.Fatalf("Unexpected init error %v", err)
+	}
+
 	if err := b.Connect(ctx); err != nil {
 		t.Fatalf("Unexpected connect error %v", err)
 	}
@@ -58,6 +62,10 @@ func TestMemoryBatchBroker(t *testing.T) {
 func TestMemoryBroker(t *testing.T) {
 	b := NewBroker()
 	ctx := context.Background()
+
+	if err := b.Init(); err != nil {
+		t.Fatalf("Unexpected init error %v", err)
+	}
 
 	if err := b.Connect(ctx); err != nil {
 		t.Fatalf("Unexpected connect error %v", err)

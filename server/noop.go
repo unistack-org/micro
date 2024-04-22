@@ -1,14 +1,22 @@
 package server
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"reflect"
+	"runtime/debug"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v3/errors"
 	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/options"
 	"go.unistack.org/micro/v3/register"
 	maddr "go.unistack.org/micro/v3/util/addr"
 	mnet "go.unistack.org/micro/v3/util/net"
@@ -23,6 +31,58 @@ var DefaultCodecs = map[string]codec.Codec{
 const (
 	defaultContentType = "application/json"
 )
+
+type rpcHandler struct {
+	opts      HandlerOptions
+	handler   interface{}
+	name      string
+	endpoints []*register.Endpoint
+}
+
+func newRPCHandler(handler interface{}, opts ...HandlerOption) Handler {
+	options := NewHandlerOptions(opts...)
+
+	typ := reflect.TypeOf(handler)
+	hdlr := reflect.ValueOf(handler)
+	name := reflect.Indirect(hdlr).Type().Name()
+
+	var endpoints []*register.Endpoint
+
+	for m := 0; m < typ.NumMethod(); m++ {
+		if e := register.ExtractEndpoint(typ.Method(m)); e != nil {
+			e.Name = name + "." + e.Name
+
+			for k, v := range options.Metadata[e.Name] {
+				e.Metadata[k] = v
+			}
+
+			endpoints = append(endpoints, e)
+		}
+	}
+
+	return &rpcHandler{
+		name:      name,
+		handler:   handler,
+		endpoints: endpoints,
+		opts:      options,
+	}
+}
+
+func (r *rpcHandler) Name() string {
+	return r.name
+}
+
+func (r *rpcHandler) Handler() interface{} {
+	return r.handler
+}
+
+func (r *rpcHandler) Endpoints() []*register.Endpoint {
+	return r.endpoints
+}
+
+func (r *rpcHandler) Options() HandlerOptions {
+	return r.opts
+}
 
 type noopServer struct {
 	h           Handler
@@ -92,6 +152,35 @@ func (n *noopServer) Subscribe(sb Subscriber) error {
 	n.subscribers[sub] = nil
 	n.Unlock()
 	return nil
+}
+
+type rpcMessage struct {
+	payload     interface{}
+	codec       codec.Codec
+	header      metadata.Metadata
+	topic       string
+	contentType string
+	body        []byte
+}
+
+func (r *rpcMessage) ContentType() string {
+	return r.contentType
+}
+
+func (r *rpcMessage) Topic() string {
+	return r.topic
+}
+
+func (r *rpcMessage) Body() interface{} {
+	return r.payload
+}
+
+func (r *rpcMessage) Header() metadata.Metadata {
+	return r.header
+}
+
+func (r *rpcMessage) Codec() codec.Codec {
+	return r.codec
 }
 
 func (n *noopServer) NewHandler(h interface{}, opts ...HandlerOption) Handler {
@@ -477,4 +566,340 @@ func (n *noopServer) Stop() error {
 	n.Unlock()
 
 	return err
+}
+
+func newSubscriber(topic string, sub interface{}, opts ...SubscriberOption) Subscriber {
+	var endpoints []*register.Endpoint
+	var handlers []*handler
+
+	options := NewSubscriberOptions(opts...)
+
+	if typ := reflect.TypeOf(sub); typ.Kind() == reflect.Func {
+		h := &handler{
+			method: reflect.ValueOf(sub),
+		}
+
+		switch typ.NumIn() {
+		case 1:
+			h.reqType = typ.In(0)
+		case 2:
+			h.ctxType = typ.In(0)
+			h.reqType = typ.In(1)
+		}
+
+		handlers = append(handlers, h)
+		ep := &register.Endpoint{
+			Name:     "Func",
+			Request:  register.ExtractSubValue(typ),
+			Metadata: metadata.New(2),
+		}
+		ep.Metadata.Set("topic", topic)
+		ep.Metadata.Set("subscriber", "true")
+		endpoints = append(endpoints, ep)
+	} else {
+		hdlr := reflect.ValueOf(sub)
+		name := reflect.Indirect(hdlr).Type().Name()
+
+		for m := 0; m < typ.NumMethod(); m++ {
+			method := typ.Method(m)
+			h := &handler{
+				method: method.Func,
+			}
+
+			switch method.Type.NumIn() {
+			case 2:
+				h.reqType = method.Type.In(1)
+			case 3:
+				h.ctxType = method.Type.In(1)
+				h.reqType = method.Type.In(2)
+			}
+
+			handlers = append(handlers, h)
+			ep := &register.Endpoint{
+				Name:     name + "." + method.Name,
+				Request:  register.ExtractSubValue(method.Type),
+				Metadata: metadata.New(2),
+			}
+			ep.Metadata.Set("topic", topic)
+			ep.Metadata.Set("subscriber", "true")
+			endpoints = append(endpoints, ep)
+		}
+	}
+
+	return &subscriber{
+		rcvr:       reflect.ValueOf(sub),
+		typ:        reflect.TypeOf(sub),
+		topic:      topic,
+		subscriber: sub,
+		handlers:   handlers,
+		endpoints:  endpoints,
+		opts:       options,
+	}
+}
+
+//nolint:gocyclo
+func (n *noopServer) createBatchSubHandler(sb *subscriber, opts Options) broker.BatchHandler {
+	return func(ps broker.Events) (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				n.RLock()
+				config := n.opts
+				n.RUnlock()
+				if config.Logger.V(logger.ErrorLevel) {
+					config.Logger.Error(n.opts.Context, "panic recovered: ", r)
+					config.Logger.Error(n.opts.Context, string(debug.Stack()))
+				}
+				err = errors.InternalServerError(n.opts.Name+".subscriber", "panic recovered: %v", r)
+			}
+		}()
+
+		msgs := make([]Message, 0, len(ps))
+		ctxs := make([]context.Context, 0, len(ps))
+		for _, p := range ps {
+			msg := p.Message()
+			// if we don't have headers, create empty map
+			if msg.Header == nil {
+				msg.Header = metadata.New(2)
+			}
+
+			ct, _ := msg.Header.Get(metadata.HeaderContentType)
+			if len(ct) == 0 {
+				msg.Header.Set(metadata.HeaderContentType, defaultContentType)
+				ct = defaultContentType
+			}
+			hdr := metadata.Copy(msg.Header)
+			topic, _ := msg.Header.Get(metadata.HeaderTopic)
+			ctxs = append(ctxs, metadata.NewIncomingContext(sb.opts.Context, hdr))
+			msgs = append(msgs, &rpcMessage{
+				topic:       topic,
+				contentType: ct,
+				header:      msg.Header,
+				body:        msg.Body,
+			})
+		}
+		results := make(chan error, len(sb.handlers))
+
+		for i := 0; i < len(sb.handlers); i++ {
+			handler := sb.handlers[i]
+
+			var req reflect.Value
+
+			switch handler.reqType.Kind() {
+			case reflect.Ptr:
+				req = reflect.New(handler.reqType.Elem())
+			default:
+				req = reflect.New(handler.reqType.Elem()).Elem()
+			}
+
+			reqType := handler.reqType
+			var cf codec.Codec
+			for _, msg := range msgs {
+				cf, err = n.newCodec(msg.ContentType())
+				if err != nil {
+					return err
+				}
+				rb := reflect.New(req.Type().Elem())
+				if err = cf.ReadBody(bytes.NewReader(msg.(*rpcMessage).body), rb.Interface()); err != nil {
+					return err
+				}
+				msg.(*rpcMessage).codec = cf
+				msg.(*rpcMessage).payload = rb.Interface()
+			}
+
+			fn := func(ctxs []context.Context, ms []Message) error {
+				var vals []reflect.Value
+				if sb.typ.Kind() != reflect.Func {
+					vals = append(vals, sb.rcvr)
+				}
+				if handler.ctxType != nil {
+					vals = append(vals, reflect.ValueOf(ctxs))
+				}
+				payloads := reflect.MakeSlice(reqType, 0, len(ms))
+				for _, m := range ms {
+					payloads = reflect.Append(payloads, reflect.ValueOf(m.Body()))
+				}
+				vals = append(vals, payloads)
+
+				returnValues := handler.method.Call(vals)
+				if rerr := returnValues[0].Interface(); rerr != nil {
+					return rerr.(error)
+				}
+				return nil
+			}
+
+			opts.Hooks.EachNext(func(hook options.Hook) {
+				if h, ok := hook.(HookBatchSubHandler); ok {
+					fn = h(fn)
+				}
+			})
+
+			if n.wg != nil {
+				n.wg.Add(1)
+			}
+
+			go func() {
+				if n.wg != nil {
+					defer n.wg.Done()
+				}
+				results <- fn(ctxs, msgs)
+			}()
+		}
+
+		var errors []string
+		for i := 0; i < len(sb.handlers); i++ {
+			if rerr := <-results; rerr != nil {
+				errors = append(errors, rerr.Error())
+			}
+		}
+		if len(errors) > 0 {
+			err = fmt.Errorf("subscriber error: %s", strings.Join(errors, "\n"))
+		}
+		return err
+	}
+}
+
+//nolint:gocyclo
+func (n *noopServer) createSubHandler(sb *subscriber, opts Options) broker.Handler {
+	return func(p broker.Event) (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				n.RLock()
+				config := n.opts
+				n.RUnlock()
+				if config.Logger.V(logger.ErrorLevel) {
+					config.Logger.Error(n.opts.Context, "panic recovered: ", r)
+					config.Logger.Error(n.opts.Context, string(debug.Stack()))
+				}
+				err = errors.InternalServerError(n.opts.Name+".subscriber", "panic recovered: %v", r)
+			}
+		}()
+
+		msg := p.Message()
+		// if we don't have headers, create empty map
+		if msg.Header == nil {
+			msg.Header = metadata.New(2)
+		}
+
+		ct := msg.Header["Content-Type"]
+		if len(ct) == 0 {
+			msg.Header.Set(metadata.HeaderContentType, defaultContentType)
+			ct = defaultContentType
+		}
+		cf, err := n.newCodec(ct)
+		if err != nil {
+			return err
+		}
+
+		hdr := metadata.New(len(msg.Header))
+		for k, v := range msg.Header {
+			hdr.Set(k, v)
+		}
+
+		ctx := metadata.NewIncomingContext(sb.opts.Context, hdr)
+
+		results := make(chan error, len(sb.handlers))
+
+		for i := 0; i < len(sb.handlers); i++ {
+			handler := sb.handlers[i]
+
+			var isVal bool
+			var req reflect.Value
+
+			if handler.reqType.Kind() == reflect.Ptr {
+				req = reflect.New(handler.reqType.Elem())
+			} else {
+				req = reflect.New(handler.reqType)
+				isVal = true
+			}
+			if isVal {
+				req = req.Elem()
+			}
+
+			if err = cf.ReadBody(bytes.NewBuffer(msg.Body), req.Interface()); err != nil {
+				return err
+			}
+
+			fn := func(ctx context.Context, msg Message) error {
+				var vals []reflect.Value
+				if sb.typ.Kind() != reflect.Func {
+					vals = append(vals, sb.rcvr)
+				}
+				if handler.ctxType != nil {
+					vals = append(vals, reflect.ValueOf(ctx))
+				}
+
+				vals = append(vals, reflect.ValueOf(msg.Body()))
+
+				returnValues := handler.method.Call(vals)
+				if rerr := returnValues[0].Interface(); rerr != nil {
+					return rerr.(error)
+				}
+				return nil
+			}
+
+			opts.Hooks.EachNext(func(hook options.Hook) {
+				if h, ok := hook.(HookSubHandler); ok {
+					fn = h(fn)
+				}
+			})
+
+			if n.wg != nil {
+				n.wg.Add(1)
+			}
+			go func() {
+				if n.wg != nil {
+					defer n.wg.Done()
+				}
+				cerr := fn(ctx, &rpcMessage{
+					topic:       sb.topic,
+					contentType: ct,
+					payload:     req.Interface(),
+					header:      msg.Header,
+				})
+				results <- cerr
+			}()
+		}
+		var errors []string
+		for i := 0; i < len(sb.handlers); i++ {
+			if rerr := <-results; rerr != nil {
+				errors = append(errors, rerr.Error())
+			}
+		}
+		if len(errors) > 0 {
+			err = fmt.Errorf("subscriber error: %s", strings.Join(errors, "\n"))
+		}
+		return err
+	}
+}
+
+func (s *subscriber) Topic() string {
+	return s.topic
+}
+
+func (s *subscriber) Subscriber() interface{} {
+	return s.subscriber
+}
+
+func (s *subscriber) Endpoints() []*register.Endpoint {
+	return s.endpoints
+}
+
+func (s *subscriber) Options() SubscriberOptions {
+	return s.opts
+}
+
+type subscriber struct {
+	typ        reflect.Type
+	subscriber interface{}
+	topic      string
+	endpoints  []*register.Endpoint
+	handlers   []*handler
+	opts       SubscriberOptions
+	rcvr       reflect.Value
+}
+
+type handler struct {
+	reqType reflect.Type
+	ctxType reflect.Type
+	method  reflect.Value
 }
