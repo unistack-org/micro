@@ -1,4 +1,4 @@
-package options // import "go.unistack.org/micro/v3/options"
+package options
 
 // Hook func interface
 type Hook interface{}

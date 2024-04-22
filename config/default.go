@@ -9,13 +9,16 @@ import (
 
 	"dario.cat/mergo"
 	"github.com/google/uuid"
+	"go.unistack.org/micro/v3/options"
 	mid "go.unistack.org/micro/v3/util/id"
 	rutil "go.unistack.org/micro/v3/util/reflect"
 	mtime "go.unistack.org/micro/v3/util/time"
 )
 
 type defaultConfig struct {
-	opts Options
+	funcLoad FuncLoad
+	funcSave FuncSave
+	opts     Options
 }
 
 func (c *defaultConfig) Options() Options {
@@ -31,6 +34,18 @@ func (c *defaultConfig) Init(opts ...Option) error {
 		return err
 	}
 
+	c.funcLoad = c.fnLoad
+	c.funcSave = c.fnSave
+
+	c.opts.Hooks.EachNext(func(hook options.Hook) {
+		switch h := hook.(type) {
+		case HookLoad:
+			c.funcLoad = h(c.funcLoad)
+		case HookSave:
+			c.funcSave = h(c.funcSave)
+		}
+	})
+
 	if err := DefaultAfterInit(c.opts.Context, c); err != nil && !c.opts.AllowFail {
 		return err
 	}
@@ -39,11 +54,17 @@ func (c *defaultConfig) Init(opts ...Option) error {
 }
 
 func (c *defaultConfig) Load(ctx context.Context, opts ...LoadOption) error {
+	return c.funcLoad(ctx, opts...)
+}
+
+func (c *defaultConfig) fnLoad(ctx context.Context, opts ...LoadOption) error {
+	var err error
+
 	if c.opts.SkipLoad != nil && c.opts.SkipLoad(ctx, c) {
 		return nil
 	}
 
-	if err := DefaultBeforeLoad(ctx, c); err != nil && !c.opts.AllowFail {
+	if err = DefaultBeforeLoad(ctx, c); err != nil && !c.opts.AllowFail {
 		return err
 	}
 
@@ -233,6 +254,7 @@ func fillValue(value reflect.Value, val string) error {
 		}
 		value.Set(reflect.ValueOf(v))
 	}
+
 	return nil
 }
 
@@ -295,7 +317,11 @@ func fillValues(valueOf reflect.Value, tname string) error {
 	return nil
 }
 
-func (c *defaultConfig) Save(ctx context.Context, _ ...SaveOption) error {
+func (c *defaultConfig) Save(ctx context.Context, opts ...SaveOption) error {
+	return c.funcSave(ctx, opts...)
+}
+
+func (c *defaultConfig) fnSave(ctx context.Context, opts ...SaveOption) error {
 	if c.opts.SkipSave != nil && c.opts.SkipSave(ctx, c) {
 		return nil
 	}
@@ -319,7 +345,7 @@ func (c *defaultConfig) Name() string {
 	return c.opts.Name
 }
 
-func (c *defaultConfig) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
+func (c *defaultConfig) Watch(_ context.Context, _ ...WatchOption) (Watcher, error) {
 	return nil, ErrWatcherNotImplemented
 }
 
@@ -329,5 +355,9 @@ func NewConfig(opts ...Option) Config {
 	if len(options.StructTag) == 0 {
 		options.StructTag = "default"
 	}
-	return &defaultConfig{opts: options}
+	c := &defaultConfig{opts: options}
+	c.funcLoad = c.fnLoad
+	c.funcSave = c.fnSave
+
+	return c
 }

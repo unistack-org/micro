@@ -48,6 +48,17 @@ type Broker interface {
 	String() string
 }
 
+type (
+	FuncPublish        func(ctx context.Context, topic string, msg *Message, opts ...PublishOption) error
+	HookPublish        func(next FuncPublish) FuncPublish
+	FuncBatchPublish   func(ctx context.Context, msgs []*Message, opts ...PublishOption) error
+	HookBatchPublish   func(next FuncBatchPublish) FuncBatchPublish
+	FuncSubscribe      func(ctx context.Context, topic string, h Handler, opts ...SubscribeOption) (Subscriber, error)
+	HookSubscribe      func(next FuncSubscribe) FuncSubscribe
+	FuncBatchSubscribe func(ctx context.Context, topic string, h BatchHandler, opts ...SubscribeOption) (Subscriber, error)
+	HookBatchSubscribe func(next FuncBatchSubscribe) FuncBatchSubscribe
+)
+
 // Handler is used to process messages via a subscription of a topic.
 type Handler func(Event) error
 

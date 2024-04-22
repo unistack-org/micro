@@ -9,6 +9,7 @@ import (
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/metadata"
 	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/options"
 	"go.unistack.org/micro/v3/tracer"
 )
 
@@ -38,6 +39,8 @@ type Options struct {
 	// Wrappers []Wrapper
 	// Timeout specifies timeout duration for all operations
 	Timeout time.Duration
+	// Hooks can be run before/after store Read/List/Write/Exists/Delete
+	Hooks options.Hooks
 }
 
 // NewOptions creates options struct
@@ -441,11 +444,9 @@ func ExistsTimeout(td time.Duration) ExistsOption {
 	}
 }
 
-/*
-// WrapStore adds a store Wrapper to a list of options passed into the store
-func WrapStore(w Wrapper) Option {
+// Hooks sets hook runs before action
+func Hooks(h ...options.Hook) Option {
 	return func(o *Options) {
-		o.Wrappers = append(o.Wrappers, w)
+		o.Hooks = append(o.Hooks, h...)
 	}
 }
-*/

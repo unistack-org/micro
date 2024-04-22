@@ -41,6 +41,35 @@ func (c *cfgStructValue) Validate() error {
 	return nil
 }
 
+type testHook struct {
+	f bool
+}
+
+func (t *testHook) Load(fn config.FuncLoad) config.FuncLoad {
+	return func(ctx context.Context, opts ...config.LoadOption) error {
+		t.f = true
+		return fn(ctx, opts...)
+	}
+}
+
+func TestHook(t *testing.T) {
+	h := &testHook{}
+
+	c := config.NewConfig(config.Struct(h), config.Hooks(config.HookLoad(h.Load)))
+
+	if err := c.Init(); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := c.Load(context.TODO()); err != nil {
+		t.Fatal(err)
+	}
+
+	if !h.f {
+		t.Fatal("hook not works")
+	}
+}
+
 func TestDefault(t *testing.T) {
 	ctx := context.Background()
 	conf := &cfg{IntValue: 10}

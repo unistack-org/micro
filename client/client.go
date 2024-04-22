@@ -44,6 +44,17 @@ type Client interface {
 	String() string
 }
 
+type (
+	FuncCall         func(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error
+	HookCall         func(next FuncCall) FuncCall
+	FuncStream       func(ctx context.Context, req Request, opts ...CallOption) (Stream, error)
+	HookStream       func(next FuncStream) FuncStream
+	FuncPublish      func(ctx context.Context, msg Message, opts ...PublishOption) error
+	HookPublish      func(next FuncPublish) FuncPublish
+	FuncBatchPublish func(ctx context.Context, msg []Message, opts ...PublishOption) error
+	HookBatchPublish func(next FuncBatchPublish) FuncBatchPublish
+)
+
 // Message is the interface for publishing asynchronously
 type Message interface {
 	Topic() string

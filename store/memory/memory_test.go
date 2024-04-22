@@ -1,4 +1,4 @@
-package store_test
+package memory
 
 import (
 	"context"
@@ -8,8 +8,41 @@ import (
 	"go.unistack.org/micro/v3/store"
 )
 
+type testHook struct {
+	f bool
+}
+
+func (t *testHook) Exists(fn store.FuncExists) store.FuncExists {
+	return func(ctx context.Context, key string, opts ...store.ExistsOption) error {
+		t.f = true
+		return fn(ctx, key, opts...)
+	}
+}
+
+func TestHook(t *testing.T) {
+	h := &testHook{}
+
+	s := NewStore(store.Hooks(store.HookExists(h.Exists)))
+
+	if err := s.Init(); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := s.Write(context.TODO(), "test", nil); err != nil {
+		t.Error(err)
+	}
+
+	if err := s.Exists(context.TODO(), "test"); err != nil {
+		t.Fatal(err)
+	}
+
+	if !h.f {
+		t.Fatal("hook not works")
+	}
+}
+
 func TestMemoryReInit(t *testing.T) {
-	s := store.NewStore(store.Namespace("aaa"))
+	s := NewStore(store.Namespace("aaa"))
 	if err := s.Init(store.Namespace("")); err != nil {
 		t.Fatal(err)
 	}
@@ -19,7 +52,7 @@ func TestMemoryReInit(t *testing.T) {
 }
 
 func TestMemoryBasic(t *testing.T) {
-	s := store.NewStore()
+	s := NewStore()
 	if err := s.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -27,7 +60,7 @@ func TestMemoryBasic(t *testing.T) {
 }
 
 func TestMemoryPrefix(t *testing.T) {
-	s := store.NewStore()
+	s := NewStore()
 	if err := s.Init(store.Namespace("some-prefix")); err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +68,7 @@ func TestMemoryPrefix(t *testing.T) {
 }
 
 func TestMemoryNamespace(t *testing.T) {
-	s := store.NewStore()
+	s := NewStore()
 	if err := s.Init(store.Namespace("some-namespace")); err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +76,7 @@ func TestMemoryNamespace(t *testing.T) {
 }
 
 func TestMemoryNamespacePrefix(t *testing.T) {
-	s := store.NewStore()
+	s := NewStore()
 	if err := s.Init(store.Namespace("some-namespace")); err != nil {
 		t.Fatal(err)
 	}

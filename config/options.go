@@ -7,6 +7,7 @@ import (
 	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/options"
 	"go.unistack.org/micro/v3/tracer"
 )
 
@@ -46,6 +47,8 @@ type Options struct {
 	SkipLoad func(context.Context, Config) bool
 	// SkipSave runs only if condition returns true
 	SkipSave func(context.Context, Config) bool
+	// Hooks can be run before/after config Save/Load
+	Hooks options.Hooks
 }
 
 // Option function signature
@@ -286,5 +289,12 @@ func WatchInterval(min, max time.Duration) WatchOption {
 func WatchStruct(src interface{}) WatchOption {
 	return func(o *WatchOptions) {
 		o.Struct = src
+	}
+}
+
+// Hooks sets hook runs before action
+func Hooks(h ...options.Hook) Option {
+	return func(o *Options) {
+		o.Hooks = append(o.Hooks, h...)
 	}
 }

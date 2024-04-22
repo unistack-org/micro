@@ -1,4 +1,4 @@
-package store
+package memory
 
 import (
 	"context"
@@ -6,13 +6,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/patrickmn/go-cache"
+	cache "github.com/patrickmn/go-cache"
+	"go.unistack.org/micro/v3/options"
+	"go.unistack.org/micro/v3/store"
 )
 
 // NewStore returns a memory store
-func NewStore(opts ...Option) Store {
+func NewStore(opts ...store.Option) store.Store {
 	return &memoryStore{
-		opts:  NewOptions(opts...),
+		opts:  store.NewOptions(opts...),
 		store: cache.New(cache.NoExpiration, 5*time.Minute),
 	}
 }
@@ -27,8 +29,13 @@ func (m *memoryStore) Disconnect(ctx context.Context) error {
 }
 
 type memoryStore struct {
-	store *cache.Cache
-	opts  Options
+	funcRead   store.FuncRead
+	funcWrite  store.FuncWrite
+	funcExists store.FuncExists
+	funcList   store.FuncList
+	funcDelete store.FuncDelete
+	store      *cache.Cache
+	opts       store.Options
 }
 
 func (m *memoryStore) key(prefix, key string) string {
@@ -39,7 +46,7 @@ func (m *memoryStore) exists(prefix, key string) error {
 	key = m.key(prefix, key)
 	_, found := m.store.Get(key)
 	if !found {
-		return ErrNotFound
+		return store.ErrNotFound
 	}
 
 	return nil
@@ -50,12 +57,12 @@ func (m *memoryStore) get(prefix, key string, val interface{}) error {
 
 	r, found := m.store.Get(key)
 	if !found {
-		return ErrNotFound
+		return store.ErrNotFound
 	}
 
 	buf, ok := r.([]byte)
 	if !ok {
-		return ErrNotFound
+		return store.ErrNotFound
 	}
 
 	return m.opts.Codec.Unmarshal(buf, val)
@@ -100,10 +107,32 @@ func (m *memoryStore) list(prefix string, limit, offset uint) []string {
 	return allKeys
 }
 
-func (m *memoryStore) Init(opts ...Option) error {
+func (m *memoryStore) Init(opts ...store.Option) error {
 	for _, o := range opts {
 		o(&m.opts)
 	}
+
+	m.funcRead = m.fnRead
+	m.funcWrite = m.fnWrite
+	m.funcExists = m.fnExists
+	m.funcList = m.fnList
+	m.funcDelete = m.fnDelete
+
+	m.opts.Hooks.EachNext(func(hook options.Hook) {
+		switch h := hook.(type) {
+		case store.HookRead:
+			m.funcRead = h(m.funcRead)
+		case store.HookWrite:
+			m.funcWrite = h(m.funcWrite)
+		case store.HookExists:
+			m.funcExists = h(m.funcExists)
+		case store.HookList:
+			m.funcList = h(m.funcList)
+		case store.HookDelete:
+			m.funcDelete = h(m.funcDelete)
+		}
+	})
+
 	return nil
 }
 
@@ -115,24 +144,36 @@ func (m *memoryStore) Name() string {
 	return m.opts.Name
 }
 
-func (m *memoryStore) Exists(ctx context.Context, key string, opts ...ExistsOption) error {
-	options := NewExistsOptions(opts...)
+func (m *memoryStore) Exists(ctx context.Context, key string, opts ...store.ExistsOption) error {
+	return m.funcExists(ctx, key, opts...)
+}
+
+func (m *memoryStore) fnExists(ctx context.Context, key string, opts ...store.ExistsOption) error {
+	options := store.NewExistsOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace
 	}
 	return m.exists(options.Namespace, key)
 }
 
-func (m *memoryStore) Read(ctx context.Context, key string, val interface{}, opts ...ReadOption) error {
-	options := NewReadOptions(opts...)
+func (m *memoryStore) Read(ctx context.Context, key string, val interface{}, opts ...store.ReadOption) error {
+	return m.funcRead(ctx, key, val, opts...)
+}
+
+func (m *memoryStore) fnRead(ctx context.Context, key string, val interface{}, opts ...store.ReadOption) error {
+	options := store.NewReadOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace
 	}
 	return m.get(options.Namespace, key, val)
 }
 
-func (m *memoryStore) Write(ctx context.Context, key string, val interface{}, opts ...WriteOption) error {
-	options := NewWriteOptions(opts...)
+func (m *memoryStore) Write(ctx context.Context, key string, val interface{}, opts ...store.WriteOption) error {
+	return m.funcWrite(ctx, key, val, opts...)
+}
+
+func (m *memoryStore) fnWrite(ctx context.Context, key string, val interface{}, opts ...store.WriteOption) error {
+	options := store.NewWriteOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace
 	}
@@ -151,8 +192,12 @@ func (m *memoryStore) Write(ctx context.Context, key string, val interface{}, op
 	return nil
 }
 
-func (m *memoryStore) Delete(ctx context.Context, key string, opts ...DeleteOption) error {
-	options := NewDeleteOptions(opts...)
+func (m *memoryStore) Delete(ctx context.Context, key string, opts ...store.DeleteOption) error {
+	return m.funcDelete(ctx, key, opts...)
+}
+
+func (m *memoryStore) fnDelete(ctx context.Context, key string, opts ...store.DeleteOption) error {
+	options := store.NewDeleteOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace
 	}
@@ -161,12 +206,16 @@ func (m *memoryStore) Delete(ctx context.Context, key string, opts ...DeleteOpti
 	return nil
 }
 
-func (m *memoryStore) Options() Options {
+func (m *memoryStore) Options() store.Options {
 	return m.opts
 }
 
-func (m *memoryStore) List(ctx context.Context, opts ...ListOption) ([]string, error) {
-	options := NewListOptions(opts...)
+func (m *memoryStore) List(ctx context.Context, opts ...store.ListOption) ([]string, error) {
+	return m.funcList(ctx, opts...)
+}
+
+func (m *memoryStore) fnList(ctx context.Context, opts ...store.ListOption) ([]string, error) {
+	options := store.NewListOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace
 	}

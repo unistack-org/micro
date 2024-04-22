@@ -19,6 +19,7 @@ var (
 
 // Store is a data storage interface
 type Store interface {
+	// Name returns store name
 	Name() string
 	// Init initialises the store
 	Init(opts ...Option) error
@@ -41,3 +42,16 @@ type Store interface {
 	// String returns the name of the implementation.
 	String() string
 }
+
+type (
+	FuncExists func(ctx context.Context, key string, opts ...ExistsOption) error
+	HookExists func(next FuncExists) FuncExists
+	FuncRead   func(ctx context.Context, key string, val interface{}, opts ...ReadOption) error
+	HookRead   func(next FuncRead) FuncRead
+	FuncWrite  func(ctx context.Context, key string, val interface{}, opts ...WriteOption) error
+	HookWrite  func(next FuncWrite) FuncWrite
+	FuncDelete func(ctx context.Context, key string, opts ...DeleteOption) error
+	HookDelete func(next FuncDelete) FuncDelete
+	FuncList   func(ctx context.Context, opts ...ListOption) ([]string, error)
+	HookList   func(next FuncList) FuncList
+)

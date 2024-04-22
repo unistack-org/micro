@@ -8,6 +8,7 @@ import (
 	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/options"
 	"go.unistack.org/micro/v3/register"
 	"go.unistack.org/micro/v3/sync"
 	"go.unistack.org/micro/v3/tracer"
@@ -37,10 +38,13 @@ type Options struct {
 	Name string
 	// Addrs holds the broker address
 	Addrs []string
-
+	// Wait waits for a collection of goroutines to finish
 	Wait *sync.WaitGroup
-
+	// GracefulTimeout contains time to wait to finish in flight requests
 	GracefulTimeout time.Duration
+	// Hooks can be run before broker Publish/BatchPublish and
+	// Subscribe/BatchSubscribe methods
+	Hooks options.Hooks
 }
 
 // NewOptions create new Options
@@ -227,6 +231,13 @@ func Meter(m meter.Meter) Option {
 func Name(n string) Option {
 	return func(o *Options) {
 		o.Name = n
+	}
+}
+
+// Hooks sets hook runs before action
+func Hooks(h ...options.Hook) Option {
+	return func(o *Options) {
+		o.Hooks = append(o.Hooks, h...)
 	}
 }
 
