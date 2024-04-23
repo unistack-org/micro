@@ -9,7 +9,6 @@ import (
 	"go.unistack.org/micro/v3/client"
 	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/logger"
-	"go.unistack.org/micro/v3/metadata"
 	"go.unistack.org/micro/v3/server"
 )
 
@@ -23,18 +22,6 @@ type TestMessage struct {
 
 func (h *TestHandler) SingleSubHandler(ctx context.Context, msg *codec.Frame) error {
 	// fmt.Printf("msg %s\n", msg.Data)
-	return nil
-}
-
-func (h *TestHandler) BatchSubHandler(ctxs []context.Context, msgs []*codec.Frame) error {
-	if len(msgs) != 8 {
-		h.t.Fatal("invalid number of messages received")
-	}
-	for idx := 0; idx < len(msgs); idx++ {
-		md, _ := metadata.FromIncomingContext(ctxs[idx])
-		_ = md
-		//	fmt.Printf("msg md %v\n", md)
-	}
 	return nil
 }
 
@@ -72,13 +59,6 @@ func TestNoopSub(t *testing.T) {
 
 	if err := s.Subscribe(s.NewSubscriber("single_topic", h.SingleSubHandler,
 		server.SubscriberQueue("queue"),
-	)); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := s.Subscribe(s.NewSubscriber("batch_topic", h.BatchSubHandler,
-		server.SubscriberQueue("queue"),
-		server.SubscriberBatch(true),
 	)); err != nil {
 		t.Fatal(err)
 	}

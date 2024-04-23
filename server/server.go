@@ -63,10 +63,8 @@ type Server interface {
 }
 
 type (
-	FuncBatchSubHandler func(ctxs []context.Context, ms []Message) error
-	HookBatchSubHandler func(next FuncBatchSubHandler) FuncBatchSubHandler
-	FuncSubHandler      func(ctx context.Context, ms Message) error
-	HookSubHandler      func(next FuncSubHandler) FuncSubHandler
+	FuncSubHandler func(ctx context.Context, ms Message) error
+	HookSubHandler func(next FuncSubHandler) FuncSubHandler
 )
 
 /*
