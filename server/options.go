@@ -341,8 +341,6 @@ type SubscriberOptions struct {
 	AutoAck bool
 	// BodyOnly flag specifies that message without headers
 	BodyOnly bool
-	// Batch flag specifies that message processed in batches
-	Batch bool
 	// BatchSize flag specifies max size of batch
 	BatchSize int
 	// BatchWait flag specifies max wait time for batch filling
@@ -411,13 +409,6 @@ func SubscriberContext(ctx context.Context) SubscriberOption {
 func SubscriberAck(b bool) SubscriberOption {
 	return func(o *SubscriberOptions) {
 		o.AutoAck = b
-	}
-}
-
-// SubscriberBatch control batch processing for handler
-func SubscriberBatch(b bool) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.Batch = b
 	}
 }
 
