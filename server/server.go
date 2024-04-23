@@ -65,6 +65,8 @@ type Server interface {
 type (
 	FuncSubHandler func(ctx context.Context, ms Message) error
 	HookSubHandler func(next FuncSubHandler) FuncSubHandler
+	FuncHandler    func(ctx context.Context, req Request, rsp interface{}) error
+	HookHandler    func(next FuncHandler) FuncHandler
 )
 
 /*

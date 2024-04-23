@@ -512,27 +512,31 @@ func (n *noopServer) Start() error {
 func (n *noopServer) subscribe() error {
 	config := n.Options()
 
-	cx := config.Context
-	var err error
-	var sub broker.Subscriber
+	subCtx := config.Context
 
 	for sb := range n.subscribers {
-		if sb.Options().Context != nil {
-			cx = sb.Options().Context
+
+		if cx := sb.Options().Context; cx != nil {
+			subCtx = cx
 		}
 
-		opts := []broker.SubscribeOption{broker.SubscribeContext(cx), broker.SubscribeAutoAck(sb.Options().AutoAck)}
+		opts := []broker.SubscribeOption{
+			broker.SubscribeContext(subCtx),
+			broker.SubscribeAutoAck(sb.Options().AutoAck),
+			broker.SubscribeBodyOnly(sb.Options().BodyOnly),
+		}
+
 		if queue := sb.Options().Queue; len(queue) > 0 {
 			opts = append(opts, broker.SubscribeGroup(queue))
 		}
 
-		sub, err = config.Broker.Subscribe(cx, sb.Topic(), n.createSubHandler(sb, config), opts...)
-		if err != nil {
-			return err
-		}
-
 		if config.Logger.V(logger.InfoLevel) {
 			config.Logger.Info(n.opts.Context, "subscribing to topic: "+sb.Topic())
+		}
+
+		sub, err := config.Broker.Subscribe(subCtx, sb.Topic(), n.createSubHandler(sb, config), opts...)
+		if err != nil {
+			return err
 		}
 
 		n.subscribers[sb] = []broker.Subscriber{sub}
