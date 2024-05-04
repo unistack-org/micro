@@ -25,6 +25,48 @@ type StructField struct {
 	Field reflect.StructField
 }
 
+// StructFieldNameByTag get struct field name by tag key and its value
+func StructFieldNameByTag(src interface{}, tkey string, tval string) (string, error) {
+	sv := reflect.ValueOf(src)
+	if sv.Kind() == reflect.Ptr {
+		sv = sv.Elem()
+	}
+	if sv.Kind() != reflect.Struct {
+		return "", ErrInvalidStruct
+	}
+
+	typ := sv.Type()
+	for idx := 0; idx < typ.NumField(); idx++ {
+		fld := typ.Field(idx)
+		val := sv.Field(idx)
+		if len(fld.PkgPath) != 0 {
+			continue
+		}
+
+		if ts, ok := fld.Tag.Lookup(tkey); ok {
+			for _, p := range strings.Split(ts, ",") {
+				if p == tval {
+					return fld.Name, nil
+				}
+			}
+		}
+
+		switch val.Kind() {
+		case reflect.Ptr:
+			if val = val.Elem(); val.Kind() == reflect.Struct {
+				if name, err := StructFieldNameByTag(val.Interface(), tkey, tval); err == nil {
+					return name, nil
+				}
+			}
+		case reflect.Struct:
+			if name, err := StructFieldNameByTag(val.Interface(), tkey, tval); err == nil {
+				return name, nil
+			}
+		}
+	}
+	return "", ErrNotFound
+}
+
 // StructFieldByTag get struct field by tag key and its value
 func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, error) {
 	sv := reflect.ValueOf(src)
