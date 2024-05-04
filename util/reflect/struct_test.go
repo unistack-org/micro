@@ -190,9 +190,9 @@ func TestStructFieldByTag(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if v, ok := iface.(*[]string); !ok {
+	if v, ok := iface.([]string); !ok {
 		t.Fatalf("not *[]string %v", iface)
-	} else if len(*v) != 2 {
+	} else if len(v) != 2 {
 		t.Fatalf("invalid number %v", iface)
 	}
 }

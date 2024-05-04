@@ -46,9 +46,6 @@ func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, e
 		if ts, ok := fld.Tag.Lookup(tkey); ok {
 			for _, p := range strings.Split(ts, ",") {
 				if p == tval {
-					if val.Kind() != reflect.Ptr && val.CanAddr() {
-						val = val.Addr()
-					}
 					return val.Interface(), nil
 				}
 			}
@@ -493,13 +490,14 @@ func btSplitter(str string) []string {
 }
 
 // queryToMap turns something like a[b][c]=4 into
-//   map[string]interface{}{
-//     "a": map[string]interface{}{
-// 		  "b": map[string]interface{}{
-// 			  "c": 4,
-// 		  },
-// 	  },
-//   }
+//
+//	  map[string]interface{}{
+//	    "a": map[string]interface{}{
+//			  "b": map[string]interface{}{
+//				  "c": 4,
+//			  },
+//		  },
+//	  }
 func queryToMap(param string) (map[string]interface{}, error) {
 	rawKey, rawValue, err := splitKeyAndValue(param)
 	if err != nil {
