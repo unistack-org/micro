@@ -155,7 +155,8 @@ func NewEventOptions(opts ...EventOption) EventOptions {
 // NewSpanOptions returns default SpanOptions
 func NewSpanOptions(opts ...SpanOption) SpanOptions {
 	options := SpanOptions{
-		Kind: SpanKindInternal,
+		Kind:   SpanKindInternal,
+		Record: true,
 	}
 	for _, o := range opts {
 		o(&options)
