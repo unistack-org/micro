@@ -26,13 +26,13 @@ type StructField struct {
 }
 
 // StructFieldNameByTag get struct field name by tag key and its value
-func StructFieldNameByTag(src interface{}, tkey string, tval string) (string, error) {
+func StructFieldNameByTag(src interface{}, tkey string, tval string) (string, interface{}, error) {
 	sv := reflect.ValueOf(src)
 	if sv.Kind() == reflect.Ptr {
 		sv = sv.Elem()
 	}
 	if sv.Kind() != reflect.Struct {
-		return "", ErrInvalidStruct
+		return "", nil, ErrInvalidStruct
 	}
 
 	typ := sv.Type()
@@ -46,7 +46,7 @@ func StructFieldNameByTag(src interface{}, tkey string, tval string) (string, er
 		if ts, ok := fld.Tag.Lookup(tkey); ok {
 			for _, p := range strings.Split(ts, ",") {
 				if p == tval {
-					return fld.Name, nil
+					return fld.Name, val.Interface(), nil
 				}
 			}
 		}
@@ -54,17 +54,17 @@ func StructFieldNameByTag(src interface{}, tkey string, tval string) (string, er
 		switch val.Kind() {
 		case reflect.Ptr:
 			if val = val.Elem(); val.Kind() == reflect.Struct {
-				if name, err := StructFieldNameByTag(val.Interface(), tkey, tval); err == nil {
-					return name, nil
+				if name, fld, err := StructFieldNameByTag(val.Interface(), tkey, tval); err == nil {
+					return name, fld, nil
 				}
 			}
 		case reflect.Struct:
-			if name, err := StructFieldNameByTag(val.Interface(), tkey, tval); err == nil {
-				return name, nil
+			if name, fld, err := StructFieldNameByTag(val.Interface(), tkey, tval); err == nil {
+				return name, fld, nil
 			}
 		}
 	}
-	return "", ErrNotFound
+	return "", nil, ErrNotFound
 }
 
 // StructFieldByTag get struct field by tag key and its value
