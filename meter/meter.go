@@ -24,6 +24,13 @@ var (
 	DefaultSummaryQuantiles = []float64{0.5, 0.9, 0.97, 0.99, 1}
 	// DefaultSummaryWindow is the default window for summary
 	DefaultSummaryWindow = 5 * time.Minute
+	// DefaultSkipEndpoints is the slice of endpoint that must not be metered
+	DefaultSkipEndpoints = []string{
+		"MeterService.Metrics",
+		"HealthService.Live",
+		"HealthService.Ready",
+		"HealthService.Version",
+	}
 )
 
 // Meter is an interface for collecting and instrumenting metrics

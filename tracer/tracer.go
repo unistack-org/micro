@@ -7,14 +7,20 @@ import (
 	"go.unistack.org/micro/v3/logger"
 )
 
-// DefaultTracer is the global default tracer
-var DefaultTracer Tracer = NewTracer()
-
 var (
+	// DefaultTracer is the global default tracer
+	DefaultTracer Tracer = NewTracer() //nolint:revive
 	// TraceIDKey is the key used for the trace id in the log call
 	TraceIDKey = "trace-id"
 	// SpanIDKey is the key used for the span id in the log call
 	SpanIDKey = "span-id"
+	// DefaultSkipEndpoints is the slice of endpoint that must not be traced
+	DefaultSkipEndpoints = []string{
+		"MeterService.Metrics",
+		"HealthService.Live",
+		"HealthService.Ready",
+		"HealthService.Version",
+	}
 )
 
 func init() {
