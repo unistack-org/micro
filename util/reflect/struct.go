@@ -111,10 +111,21 @@ func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, e
 
 // ZeroFieldByPath clean struct field by its path
 func ZeroFieldByPath(src interface{}, path string) error {
+	if src == nil {
+		return nil
+	}
 	var err error
 	val := reflect.ValueOf(src)
 
+	if IsEmpty(val) {
+		return nil
+	}
+
 	for _, p := range strings.Split(path, ".") {
+		if IsEmpty(val) {
+			return nil
+		}
+
 		val, err = structValueByName(val, p)
 		if err != nil {
 			return err
