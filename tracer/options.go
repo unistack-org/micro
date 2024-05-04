@@ -85,6 +85,7 @@ func (sk SpanKind) String() string {
 type SpanOptions struct {
 	Labels []interface{}
 	Kind   SpanKind
+	Record bool
 }
 
 // SpanOption func signature
@@ -113,6 +114,12 @@ func WithSpanLabels(kv ...interface{}) SpanOption {
 func WithSpanKind(k SpanKind) SpanOption {
 	return func(o *SpanOptions) {
 		o.Kind = k
+	}
+}
+
+func WithSpanRecord(b bool) SpanOption {
+	return func(o *SpanOptions) {
+		o.Record = b
 	}
 }
 
