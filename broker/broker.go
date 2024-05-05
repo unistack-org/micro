@@ -88,6 +88,8 @@ type BatchHandler func(Events) error
 
 // Event is given to a subscription handler for processing
 type Event interface {
+	// Context return context.Context for event
+	Context() context.Context
 	// Topic returns event topic
 	Topic() string
 	// Message returns broker message
