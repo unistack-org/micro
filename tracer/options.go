@@ -83,9 +83,11 @@ func (sk SpanKind) String() string {
 
 // SpanOptions contains span option
 type SpanOptions struct {
-	Labels []interface{}
-	Kind   SpanKind
-	Record bool
+	StatusMsg string
+	Labels    []interface{}
+	Status    SpanStatus
+	Kind      SpanKind
+	Record    bool
 }
 
 // SpanOption func signature
@@ -108,6 +110,13 @@ func WithEventLabels(kv ...interface{}) EventOption {
 func WithSpanLabels(kv ...interface{}) SpanOption {
 	return func(o *SpanOptions) {
 		o.Labels = append(o.Labels, kv...)
+	}
+}
+
+func WithSpanStatus(st SpanStatus, msg string) SpanOption {
+	return func(o *SpanOptions) {
+		o.Status = st
+		o.StatusMsg = msg
 	}
 }
 

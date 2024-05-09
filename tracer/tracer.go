@@ -44,6 +44,8 @@ type Tracer interface {
 	Init(...Option) error
 	// Start a trace
 	Start(ctx context.Context, name string, opts ...SpanOption) (context.Context, Span)
+	// Extract get span metadata from context
+	// Extract(ctx context.Context)
 	// Flush flushes spans
 	Flush(ctx context.Context) error
 }
