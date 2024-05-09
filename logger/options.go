@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"os"
 	"time"
+
+	"go.unistack.org/micro/v3/meter"
 )
 
 // Option func signature
@@ -45,6 +47,8 @@ type Options struct {
 	Level Level
 	// TimeFunc used to obtain current time
 	TimeFunc func() time.Time
+	// Meter used to count logs for specific level
+	Meter meter.Meter
 }
 
 // NewOptions creates new options struct
@@ -58,6 +62,7 @@ func NewOptions(opts ...Option) Options {
 		ContextAttrFuncs: DefaultContextAttrFuncs,
 		AddSource:        true,
 		TimeFunc:         time.Now,
+		Meter:            meter.DefaultMeter,
 	}
 
 	WithMicroKeys()(&options)

@@ -2,8 +2,6 @@ package meter
 
 import (
 	"context"
-
-	"go.unistack.org/micro/v3/logger"
 )
 
 // Option powers the configuration for metrics implementations:
@@ -11,8 +9,6 @@ type Option func(*Options)
 
 // Options for metrics implementations
 type Options struct {
-	// Logger used for logging
-	Logger logger.Logger
 	// Context holds external options
 	Context context.Context
 	// Name holds the meter name
@@ -39,7 +35,6 @@ func NewOptions(opt ...Option) Options {
 		Address:      DefaultAddress,
 		Path:         DefaultPath,
 		Context:      context.Background(),
-		Logger:       logger.DefaultLogger,
 		MetricPrefix: DefaultMetricPrefix,
 		LabelPrefix:  DefaultLabelPrefix,
 	}
@@ -94,13 +89,6 @@ func TimingObjectives(value map[float64]float64) Option {
 	}
 }
 */
-
-// Logger sets the logger
-func Logger(l logger.Logger) Option {
-	return func(o *Options) {
-		o.Logger = l
-	}
-}
 
 // Labels sets the meter labels
 func Labels(ls ...string) Option {

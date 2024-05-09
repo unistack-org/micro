@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/semconv"
 	"go.unistack.org/micro/v3/tracer"
 )
 
@@ -150,6 +151,7 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 }
 
 func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", lvl.String()).Inc()
 	if !s.V(lvl) {
 		return
 	}
@@ -189,6 +191,7 @@ func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, attrs ...interfa
 }
 
 func (s *slogLogger) Logf(ctx context.Context, lvl logger.Level, msg string, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", lvl.String()).Inc()
 	if !s.V(lvl) {
 		return
 	}
@@ -228,6 +231,7 @@ func (s *slogLogger) Logf(ctx context.Context, lvl logger.Level, msg string, att
 }
 
 func (s *slogLogger) Info(ctx context.Context, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.InfoLevel.String()).Inc()
 	if !s.V(logger.InfoLevel) {
 		return
 	}
@@ -249,6 +253,7 @@ func (s *slogLogger) Info(ctx context.Context, attrs ...interface{}) {
 }
 
 func (s *slogLogger) Infof(ctx context.Context, msg string, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.InfoLevel.String()).Inc()
 	if !s.V(logger.InfoLevel) {
 		return
 	}
@@ -270,6 +275,7 @@ func (s *slogLogger) Infof(ctx context.Context, msg string, attrs ...interface{}
 }
 
 func (s *slogLogger) Debug(ctx context.Context, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.DebugLevel.String()).Inc()
 	if !s.V(logger.DebugLevel) {
 		return
 	}
@@ -291,6 +297,7 @@ func (s *slogLogger) Debug(ctx context.Context, attrs ...interface{}) {
 }
 
 func (s *slogLogger) Debugf(ctx context.Context, msg string, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.DebugLevel.String()).Inc()
 	if !s.V(logger.DebugLevel) {
 		return
 	}
@@ -312,6 +319,7 @@ func (s *slogLogger) Debugf(ctx context.Context, msg string, attrs ...interface{
 }
 
 func (s *slogLogger) Trace(ctx context.Context, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.TraceLevel.String()).Inc()
 	if !s.V(logger.TraceLevel) {
 		return
 	}
@@ -333,6 +341,7 @@ func (s *slogLogger) Trace(ctx context.Context, attrs ...interface{}) {
 }
 
 func (s *slogLogger) Tracef(ctx context.Context, msg string, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.TraceLevel.String()).Inc()
 	if !s.V(logger.TraceLevel) {
 		return
 	}
@@ -354,6 +363,7 @@ func (s *slogLogger) Tracef(ctx context.Context, msg string, attrs ...interface{
 }
 
 func (s *slogLogger) Error(ctx context.Context, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.ErrorLevel.String()).Inc()
 	if !s.V(logger.ErrorLevel) {
 		return
 	}
@@ -393,6 +403,7 @@ func (s *slogLogger) Error(ctx context.Context, attrs ...interface{}) {
 }
 
 func (s *slogLogger) Errorf(ctx context.Context, msg string, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.ErrorLevel.String()).Inc()
 	if !s.V(logger.ErrorLevel) {
 		return
 	}
@@ -432,6 +443,7 @@ func (s *slogLogger) Errorf(ctx context.Context, msg string, attrs ...interface{
 }
 
 func (s *slogLogger) Fatal(ctx context.Context, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.FatalLevel.String()).Inc()
 	if !s.V(logger.FatalLevel) {
 		return
 	}
@@ -454,6 +466,7 @@ func (s *slogLogger) Fatal(ctx context.Context, attrs ...interface{}) {
 }
 
 func (s *slogLogger) Fatalf(ctx context.Context, msg string, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.FatalLevel.String()).Inc()
 	if !s.V(logger.FatalLevel) {
 		return
 	}
@@ -476,6 +489,7 @@ func (s *slogLogger) Fatalf(ctx context.Context, msg string, attrs ...interface{
 }
 
 func (s *slogLogger) Warn(ctx context.Context, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.WarnLevel.String()).Inc()
 	if !s.V(logger.WarnLevel) {
 		return
 	}
@@ -497,6 +511,7 @@ func (s *slogLogger) Warn(ctx context.Context, attrs ...interface{}) {
 }
 
 func (s *slogLogger) Warnf(ctx context.Context, msg string, attrs ...interface{}) {
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.WarnLevel.String()).Inc()
 	if !s.V(logger.WarnLevel) {
 		return
 	}
