@@ -269,15 +269,7 @@ func Logger(l logger.Logger, opts ...LoggerOption) Option {
 				}
 			}
 		}
-		for _, mtr := range o.Meters {
-			for _, or := range lopts.meters {
-				if mtr.Name() == or || all {
-					if err = mtr.Init(meter.Logger(l)); err != nil {
-						return err
-					}
-				}
-			}
-		}
+		
 		for _, trc := range o.Tracers {
 			for _, ot := range lopts.tracers {
 				if trc.Name() == ot || all {
