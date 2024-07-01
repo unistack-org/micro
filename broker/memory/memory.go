@@ -373,6 +373,10 @@ func (m *memoryEvent) SetError(err error) {
 	m.err = err
 }
 
+func (m *memoryEvent) Context() context.Context {
+	return m.opts.Context
+}
+
 func (m *memorySubscriber) Options() broker.SubscribeOptions {
 	return m.opts
 }

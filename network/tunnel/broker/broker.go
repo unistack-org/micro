@@ -305,6 +305,10 @@ func (t *tunEvent) SetError(err error) {
 	t.err = err
 }
 
+func (t *tunEvent) Context() context.Context {
+	return context.TODO()
+}
+
 // NewBroker returns new tunnel broker
 func NewBroker(opts ...broker.Option) (broker.Broker, error) {
 	options := broker.NewOptions(opts...)
