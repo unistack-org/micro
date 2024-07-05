@@ -74,7 +74,7 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
-// WithContextAttrFuncs appends default funcs for the context arrts filler
+// WithContextAttrFuncs appends default funcs for the context attrs filler
 func WithContextAttrFuncs(fncs ...ContextAttrFunc) Option {
 	return func(o *Options) {
 		o.ContextAttrFuncs = append(o.ContextAttrFuncs, fncs...)

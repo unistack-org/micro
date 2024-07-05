@@ -140,6 +140,8 @@ type Options struct {
 	Logger logger.Logger
 	// Name of the tracer
 	Name string
+	// ContextAttrFuncs contains funcs that provides tracing
+	ContextAttrFuncs []ContextAttrFunc
 }
 
 // Option func signature
@@ -176,8 +178,9 @@ func NewSpanOptions(opts ...SpanOption) SpanOptions {
 // NewOptions returns default options
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Logger:  logger.DefaultLogger,
-		Context: context.Background(),
+		Logger:           logger.DefaultLogger,
+		Context:          context.Background(),
+		ContextAttrFuncs: DefaultContextAttrFuncs,
 	}
 	for _, o := range opts {
 		o(&options)

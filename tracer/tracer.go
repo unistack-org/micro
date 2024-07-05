@@ -21,7 +21,10 @@ var (
 		"HealthService.Ready",
 		"HealthService.Version",
 	}
+	DefaultContextAttrFuncs []ContextAttrFunc
 )
+
+type ContextAttrFunc func(ctx context.Context) []interface{}
 
 func init() {
 	logger.DefaultContextAttrFuncs = append(logger.DefaultContextAttrFuncs,
