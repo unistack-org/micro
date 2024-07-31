@@ -44,6 +44,20 @@ var (
 	ErrGatewayTimeout = &Error{Code: 504}
 )
 
+const ProblemContentType = "application/problem+json"
+
+type Problem struct {
+	Type     string `json:"type,omitempty"`
+	Title    string `json:"title,omitempty"`
+	Detail   string `json:"detail,omitempty"`
+	Instance string `json:"instance,omitempty"`
+	Errors   []struct {
+		Title  string `json:"title,omitempty"`
+		Detail string `json:"detail,omitempty"`
+	} `json:"errors,omitempty"`
+	Status int `json:"status,omitempty"`
+}
+
 // Error type
 type Error struct {
 	// ID holds error id or service, usually someting like my_service or id
