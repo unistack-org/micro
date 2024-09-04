@@ -137,6 +137,13 @@ func WithName(n string) Option {
 	}
 }
 
+// WithMeter sets the meter
+func WithMeter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
+	}
+}
+
 // WithTimeFunc sets the func to obtain current time
 func WithTimeFunc(fn func() time.Time) Option {
 	return func(o *Options) {

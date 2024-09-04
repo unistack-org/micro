@@ -1,6 +1,9 @@
 package pool
 
-import "sync"
+import (
+	"bytes"
+	"sync"
+)
 
 type Pool[T any] struct {
 	p *sync.Pool
@@ -22,4 +25,12 @@ func (p Pool[T]) Get() T {
 
 func (p Pool[T]) Put(t T) {
 	p.p.Put(t)
+}
+
+func NewBytePool(size int) Pool[T] {
+	return NewPool(func() []byte { return make([]byte, size) })
+}
+
+func NewBytesPool() Pool[T] {
+	return NewPool(func() *bytes.Buffer { return bytes.NewBuffer(nil) })
 }
