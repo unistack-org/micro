@@ -27,10 +27,10 @@ func (p Pool[T]) Put(t T) {
 	p.p.Put(t)
 }
 
-func NewBytePool(size int) Pool[T] {
+func NewBytePool(size int) Pool[[]byte] {
 	return NewPool(func() []byte { return make([]byte, size) })
 }
 
-func NewBytesPool() Pool[T] {
+func NewBytesPool() Pool[*bytes.Buffer] {
 	return NewPool(func() *bytes.Buffer { return bytes.NewBuffer(nil) })
 }
