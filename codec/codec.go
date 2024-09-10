@@ -93,6 +93,8 @@ type RawMessage []byte
 func (m *RawMessage) MarshalJSON() ([]byte, error) {
 	if m == nil {
 		return []byte("null"), nil
+	} else if len(*m) == 0 {
+		return []byte("null"), nil
 	}
 	return *m, nil
 }
