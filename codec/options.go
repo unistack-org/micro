@@ -23,15 +23,8 @@ type Options struct {
 	Context context.Context
 	// TagName specifies tag name in struct to control codec
 	TagName string
-	// MaxMsgSize specifies max messages size that reads by codec
-	MaxMsgSize int
-}
-
-// MaxMsgSize sets the max message size
-func MaxMsgSize(n int) Option {
-	return func(o *Options) {
-		o.MaxMsgSize = n
-	}
+	// Flatten specifies that struct must be analyzed for flatten tag
+	Flatten bool
 }
 
 // TagName sets the codec tag name in struct
@@ -65,12 +58,12 @@ func Meter(m meter.Meter) Option {
 // NewOptions returns new options
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Context:    context.Background(),
-		Logger:     logger.DefaultLogger,
-		Meter:      meter.DefaultMeter,
-		Tracer:     tracer.DefaultTracer,
-		MaxMsgSize: DefaultMaxMsgSize,
-		TagName:    DefaultTagName,
+		Context: context.Background(),
+		Logger:  logger.DefaultLogger,
+		Meter:   meter.DefaultMeter,
+		Tracer:  tracer.DefaultTracer,
+		TagName: DefaultTagName,
+		Flatten: false,
 	}
 
 	for _, o := range opts {

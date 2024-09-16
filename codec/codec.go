@@ -1,5 +1,5 @@
 // Package codec is an interface for encoding messages
-package codec // import "go.unistack.org/micro/v3/codec"
+package codec
 
 import (
 	"errors"
@@ -13,8 +13,6 @@ var (
 )
 
 var (
-	// DefaultMaxMsgSize specifies how much data codec can handle
-	DefaultMaxMsgSize = 1024 * 1024 * 4 // 4Mb
 	// DefaultCodec is the global default codec
 	DefaultCodec = NewCodec()
 	// DefaultTagName specifies struct tag name to control codec Marshal/Unmarshal
@@ -28,21 +26,10 @@ type Codec interface {
 	String() string
 }
 
-// MarshalAppend calls codec.Marshal(v) and returns the data appended to buf.
-// If codec implements MarshalAppend, that is called instead.
-func MarshalAppend(buf []byte, c Codec, v interface{}, opts ...Option) ([]byte, error) {
-	if nc, ok := c.(interface {
-		MarshalAppend([]byte, interface{}, ...Option) ([]byte, error)
-	}); ok {
-		return nc.MarshalAppend(buf, v, opts...)
-	}
-
-	mbuf, err := c.Marshal(v, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	return append(buf, mbuf...), nil
+type CodecV2 interface {
+	Marshal(buf []byte, v interface{}, opts ...Option) ([]byte, error)
+	Unmarshal(buf []byte, v interface{}, opts ...Option) error
+	String() string
 }
 
 // RawMessage is a raw encoded JSON value.
