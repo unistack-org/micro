@@ -2,68 +2,12 @@ package codec
 
 import (
 	"encoding/json"
-	"io"
+
+	codecpb "go.unistack.org/micro-proto/v3/codec"
 )
 
 type noopCodec struct {
 	opts Options
-}
-
-func (c *noopCodec) ReadHeader(conn io.Reader, m *Message, t MessageType) error {
-	return nil
-}
-
-func (c *noopCodec) ReadBody(conn io.Reader, b interface{}) error {
-	// read bytes
-	buf, err := io.ReadAll(conn)
-	if err != nil {
-		return err
-	}
-
-	if b == nil {
-		return nil
-	}
-
-	switch v := b.(type) {
-	case *string:
-		*v = string(buf)
-	case *[]byte:
-		*v = buf
-	case *Frame:
-		v.Data = buf
-	default:
-		return json.Unmarshal(buf, v)
-	}
-
-	return nil
-}
-
-func (c *noopCodec) Write(conn io.Writer, m *Message, b interface{}) error {
-	if b == nil {
-		return nil
-	}
-
-	var v []byte
-	switch vb := b.(type) {
-	case *Frame:
-		v = vb.Data
-	case string:
-		v = []byte(vb)
-	case *string:
-		v = []byte(*vb)
-	case *[]byte:
-		v = *vb
-	case []byte:
-		v = vb
-	default:
-		var err error
-		v, err = json.Marshal(vb)
-		if err != nil {
-			return err
-		}
-	}
-	_, err := conn.Write(v)
-	return err
 }
 
 func (c *noopCodec) String() string {
@@ -91,8 +35,8 @@ func (c *noopCodec) Marshal(v interface{}, opts ...Option) ([]byte, error) {
 		return ve, nil
 	case *Frame:
 		return ve.Data, nil
-	case *Message:
-		return ve.Body, nil
+	case *codecpb.Frame:
+		return ve.Data, nil
 	}
 
 	return json.Marshal(v)
@@ -115,8 +59,8 @@ func (c *noopCodec) Unmarshal(d []byte, v interface{}, opts ...Option) error {
 	case *Frame:
 		ve.Data = d
 		return nil
-	case *Message:
-		ve.Body = d
+	case *codecpb.Frame:
+		ve.Data = d
 		return nil
 	}
 

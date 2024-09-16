@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"reflect"
@@ -691,7 +690,7 @@ func (n *noopServer) createSubHandler(sb *subscriber, opts Options) broker.Handl
 				req = req.Elem()
 			}
 
-			if err = cf.ReadBody(bytes.NewBuffer(msg.Body), req.Interface()); err != nil {
+			if err = cf.Unmarshal(msg.Body, req.Interface()); err != nil {
 				return err
 			}
 
