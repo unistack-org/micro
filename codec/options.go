@@ -34,6 +34,13 @@ func TagName(n string) Option {
 	}
 }
 
+// Flatten enables checking for flatten tag name
+func Flatten(b bool) Option {
+	return func(o *Options) {
+		o.Flatten = b
+	}
+}
+
 // Logger sets the logger
 func Logger(l logger.Logger) Option {
 	return func(o *Options) {
