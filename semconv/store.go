@@ -2,11 +2,11 @@ package semconv
 
 var (
 	// StoreRequestDurationSeconds specifies meter metric name
-	StoreRequestDurationSeconds = "store_request_duration_seconds"
+	StoreRequestDurationSeconds = "micro_store_request_duration_seconds"
 	// ClientRequestLatencyMicroseconds specifies meter metric name
-	StoreRequestLatencyMicroseconds = "store_request_latency_microseconds"
+	StoreRequestLatencyMicroseconds = "micro_store_request_latency_microseconds"
 	// StoreRequestTotal specifies meter metric name
-	StoreRequestTotal = "store_request_total"
+	StoreRequestTotal = "micro_store_request_total"
 	// StoreRequestInflight specifies meter metric name
-	StoreRequestInflight = "store_request_inflight"
+	StoreRequestInflight = "micro_store_request_inflight"
 )
