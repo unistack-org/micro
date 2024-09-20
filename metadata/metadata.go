@@ -1,5 +1,5 @@
 // Package metadata is a way of defining message headers
-package metadata // import "go.unistack.org/micro/v3/metadata"
+package metadata
 
 import (
 	"net/textproto"

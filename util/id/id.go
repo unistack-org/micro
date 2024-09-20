@@ -1,4 +1,4 @@
-package id // import "go.unistack.org/micro/v3/util/id"
+package id
 
 import (
 	"context"

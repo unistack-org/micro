@@ -1,5 +1,5 @@
 // Package socket provides a pseudo socket
-package socket // import "go.unistack.org/micro/v3/util/socket"
+package socket
 
 import (
 	"io"

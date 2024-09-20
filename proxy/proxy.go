@@ -1,5 +1,5 @@
 // Package proxy is a transparent proxy built on the micro/server
-package proxy // import "go.unistack.org/micro/v3/proxy"
+package proxy
 
 import (
 	"context"

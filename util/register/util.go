@@ -1,4 +1,4 @@
-package register // import "go.unistack.org/micro/v3/util/register"
+package register
 
 import (
 	"context"

@@ -1,5 +1,5 @@
 // Package backoff provides backoff functionality
-package backoff // import "go.unistack.org/micro/v3/util/backoff"
+package backoff
 
 import (
 	"math"

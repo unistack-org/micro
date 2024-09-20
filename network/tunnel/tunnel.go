@@ -1,5 +1,5 @@
 // Package tunnel provides gre network tunnelling
-package tunnel // import "go.unistack.org/micro/v3/network/transport/tunnel"
+package tunnel
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package http // import "go.unistack.org/micro/v3/util/http"
+package http
 
 import (
 	"context"

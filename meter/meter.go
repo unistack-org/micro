@@ -16,10 +16,6 @@ var (
 	DefaultAddress = ":9090"
 	// DefaultPath the meter endpoint where the Meter data will be made available
 	DefaultPath = "/metrics"
-	// DefaultMetricPrefix holds the string that prepends to all metrics
-	DefaultMetricPrefix = "micro_"
-	// DefaultLabelPrefix holds the string that prepends to all labels
-	DefaultLabelPrefix = "micro_"
 	// DefaultSummaryQuantiles is the default spread of stats for summary
 	DefaultSummaryQuantiles = []float64{0.5, 0.9, 0.97, 0.99, 1}
 	// DefaultSummaryWindow is the default window for summary

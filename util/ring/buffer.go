@@ -1,5 +1,5 @@
 // Package ring provides a simple ring buffer for storing local data
-package ring // import "go.unistack.org/micro/v3/util/ring"
+package ring
 
 import (
 	"sync"

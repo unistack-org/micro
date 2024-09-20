@@ -1,6 +1,6 @@
 // Package pki provides PKI all the PKI functions necessary to run micro over an untrusted network
 // including a CA
-package pki // import "go.unistack.org/micro/v3/util/pki"
+package pki
 
 import (
 	"bytes"

@@ -1,5 +1,5 @@
 // Package profiler is for profilers
-package profiler // import "go.unistack.org/micro/v3/profiler"
+package profiler
 
 // Profiler interface
 type Profiler interface {

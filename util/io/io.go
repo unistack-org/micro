@@ -1,5 +1,5 @@
 // Package io is for io management
-package io // import "go.unistack.org/micro/v3/util/io"
+package io
 
 import (
 	"io"

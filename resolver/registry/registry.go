@@ -1,5 +1,5 @@
 // Package register resolves names using the micro register
-package register // import "go.unistack.org/micro/v3/resolver/registry"
+package register
 
 import (
 	"context"

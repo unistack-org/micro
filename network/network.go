@@ -1,5 +1,5 @@
 // Package network is for creating internetworks
-package network // import "go.unistack.org/micro/v3/network"
+package network
 
 import (
 	"go.unistack.org/micro/v3/client"

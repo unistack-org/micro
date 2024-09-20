@@ -1,5 +1,5 @@
 // Package jitter provides a random jitter
-package jitter // import "go.unistack.org/micro/v3/util/jitter"
+package jitter
 
 import (
 	"time"

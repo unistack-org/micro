@@ -1,5 +1,5 @@
 // Package dnssrv resolves names to dns srv records
-package dnssrv // import "go.unistack.org/micro/v3/resolver/dnssrv"
+package dnssrv
 
 import (
 	"fmt"

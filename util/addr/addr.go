@@ -1,4 +1,4 @@
-package addr // import "go.unistack.org/micro/v3/util/addr"
+package addr
 
 import (
 	"fmt"
@@ -58,6 +58,7 @@ func IsLocal(addr string) bool {
 }
 
 // Extract returns a real ip
+//
 //nolint:gocyclo
 func Extract(addr string) (string, error) {
 	// if addr specified then its returned

@@ -1,5 +1,5 @@
 // Package flow is an interface used for saga pattern microservice workflow
-package flow // import "go.unistack.org/micro/v3/flow"
+package flow
 
 import (
 	"context"

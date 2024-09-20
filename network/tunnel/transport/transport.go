@@ -1,5 +1,5 @@
 // Package transport provides a tunnel transport
-package transport // import "go.unistack.org/micro/v3/network/tunnel/transport"
+package transport
 
 import (
 	"context"

@@ -1,5 +1,5 @@
 // Package register is an interface for service discovery
-package register // import "go.unistack.org/micro/v3/register"
+package register
 
 import (
 	"context"

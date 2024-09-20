@@ -1,4 +1,4 @@
-package roundrobin // import "go.unistack.org/micro/v3/selector/roundrobin"
+package roundrobin
 
 import (
 	"go.unistack.org/micro/v3/selector"

@@ -1,5 +1,5 @@
 // Package http enables the http profiler
-package http // import "go.unistack.org/micro/v3/profiler/http"
+package http
 
 import (
 	"context"

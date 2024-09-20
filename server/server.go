@@ -1,5 +1,5 @@
 // Package server is an interface for a micro server
-package server // import "go.unistack.org/micro/v3/server"
+package server
 
 import (
 	"context"
@@ -11,7 +11,9 @@ import (
 )
 
 // DefaultServer default server
-var DefaultServer Server = NewServer()
+var (
+	DefaultServer Server = NewServer()
+)
 
 var (
 	// DefaultAddress will be used if no address passed, use secure localhost

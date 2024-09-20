@@ -1,5 +1,5 @@
 // Package stream encapsulates streams within streams
-package stream // import "go.unistack.org/micro/v3/util/stream"
+package stream
 
 import (
 	"context"

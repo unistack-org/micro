@@ -1,4 +1,4 @@
-package random // import "go.unistack.org/micro/v3/selector/random"
+package random
 
 import (
 	"go.unistack.org/micro/v3/selector"

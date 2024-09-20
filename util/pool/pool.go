@@ -1,5 +1,5 @@
 // Package pool is a connection pool
-package pool // import "go.unistack.org/micro/v3/util/pool"
+package pool
 
 import (
 	"context"

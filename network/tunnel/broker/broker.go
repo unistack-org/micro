@@ -1,5 +1,5 @@
 // Package broker is a tunnel broker
-package broker // import "go.unistack.org/micro/v3/network/tunnel/broker"
+package broker
 
 import (
 	"context"

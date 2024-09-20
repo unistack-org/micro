@@ -1,5 +1,5 @@
 // Package broker is an interface used for asynchronous messaging
-package broker // import "go.unistack.org/micro/v3/broker"
+package broker
 
 import (
 	"context"

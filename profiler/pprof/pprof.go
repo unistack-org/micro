@@ -1,5 +1,5 @@
 // Package pprof provides a pprof profiler which writes output to /tmp/[name].{cpu,mem}.pprof
-package pprof // import "go.unistack.org/micro/v3/profiler/pprof"
+package pprof
 
 import (
 	"os"

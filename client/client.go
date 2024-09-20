@@ -1,5 +1,5 @@
 // Package client is an interface for an RPC client
-package client // import "go.unistack.org/micro/v3/client"
+package client
 
 import (
 	"context"

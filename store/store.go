@@ -1,5 +1,5 @@
 // Package store is an interface for distributed data storage.
-package store // import "go.unistack.org/micro/v3/store"
+package store
 
 import (
 	"context"
