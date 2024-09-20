@@ -31,6 +31,9 @@ func (c *cfg) Validate() error {
 	if c.IntValue != 10 {
 		return fmt.Errorf("invalid IntValue %d != %d", 10, c.IntValue)
 	}
+	if c.MapValue["key1"] != true {
+		return fmt.Errorf("invalid MapValue %t != %t", true, c.MapValue["key1"])
+	}
 	return nil
 }
 
@@ -103,5 +106,21 @@ func TestValidate(t *testing.T) {
 
 	if err := config.Validate(ctx, conf); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestString(t *testing.T) {
+	cfg := config.NewConfig()
+	res := cfg.String()
+	if res != "default" {
+		t.Fatalf("string value invalid: %s", res)
+	}
+}
+
+func TestName(t *testing.T) {
+	cfg := config.NewConfig()
+	res := cfg.Name()
+	if res != "" {
+		t.Fatal("name value not empty")
 	}
 }
