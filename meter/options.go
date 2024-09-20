@@ -17,10 +17,6 @@ type Options struct {
 	Address string
 	// Path holds the path for metrics
 	Path string
-	// MetricPrefix holds the prefix for all metrics
-	MetricPrefix string
-	// LabelPrefix holds the prefix for all labels
-	LabelPrefix string
 	// Labels holds the default labels
 	Labels []string
 	// WriteProcessMetrics flag to write process metrics
@@ -32,11 +28,9 @@ type Options struct {
 // NewOptions prepares a set of options:
 func NewOptions(opt ...Option) Options {
 	opts := Options{
-		Address:      DefaultAddress,
-		Path:         DefaultPath,
-		Context:      context.Background(),
-		MetricPrefix: DefaultMetricPrefix,
-		LabelPrefix:  DefaultLabelPrefix,
+		Address: DefaultAddress,
+		Path:    DefaultPath,
+		Context: context.Background(),
 	}
 
 	for _, o := range opt {
@@ -44,20 +38,6 @@ func NewOptions(opt ...Option) Options {
 	}
 
 	return opts
-}
-
-// LabelPrefix sets the labels prefix
-func LabelPrefix(pref string) Option {
-	return func(o *Options) {
-		o.LabelPrefix = pref
-	}
-}
-
-// MetricPrefix sets the metric prefix
-func MetricPrefix(pref string) Option {
-	return func(o *Options) {
-		o.MetricPrefix = pref
-	}
 }
 
 // Context sets the metrics context
@@ -90,7 +70,7 @@ func TimingObjectives(value map[float64]float64) Option {
 }
 */
 
-// Labels sets the meter labels
+// Labels add the meter labels
 func Labels(ls ...string) Option {
 	return func(o *Options) {
 		o.Labels = append(o.Labels, ls...)
