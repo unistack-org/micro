@@ -44,6 +44,37 @@ func SliceAppend(b bool) Option {
 	}
 }
 
+var maxDepth = 32
+
+func mergeMap(dst, src map[string]interface{}, depth int) map[string]interface{} {
+	if depth > maxDepth {
+		return dst
+	}
+	for key, srcVal := range src {
+		if dstVal, ok := dst[key]; ok {
+			srcMap, srcMapOk := mapify(srcVal)
+			dstMap, dstMapOk := mapify(dstVal)
+			if srcMapOk && dstMapOk {
+				srcVal = mergeMap(dstMap, srcMap, depth+1)
+			}
+		}
+		dst[key] = srcVal
+	}
+	return dst
+}
+
+func mapify(i interface{}) (map[string]interface{}, bool) {
+	value := reflect.ValueOf(i)
+	if value.Kind() == reflect.Map {
+		m := map[string]interface{}{}
+		for _, k := range value.MapKeys() {
+			m[k.String()] = value.MapIndex(k).Interface()
+		}
+		return m, true
+	}
+	return map[string]interface{}{}, false
+}
+
 // Merge merges map[string]interface{} to destination struct
 func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 	options := Options{}
@@ -57,6 +88,11 @@ func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 			err = unmarshaler.UnmarshalJSON(buf)
 		}
 		return err
+	}
+
+	if mapper, ok := dst.(map[string]interface{}); ok {
+		dst = mergeMap(mapper, mp, 0)
+		return nil
 	}
 
 	var err error

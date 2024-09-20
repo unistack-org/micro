@@ -4,6 +4,27 @@ import (
 	"testing"
 )
 
+func TestMergeMap(t *testing.T) {
+	src := map[string]interface{}{
+		"skey1": "sval1",
+		"skey2": map[string]interface{}{
+			"skey3": "sval3",
+		},
+	}
+	dst := map[string]interface{}{
+		"skey1": "dval1",
+		"skey2": map[string]interface{}{
+			"skey3": "dval3",
+		},
+	}
+
+	if err := Merge(src, dst); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("%#+v", src)
+}
+
 func TestFieldName(t *testing.T) {
 	src := "SomeVar"
 	chk := "some_var"
