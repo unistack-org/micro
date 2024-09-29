@@ -16,6 +16,8 @@ var (
 	DefaultAddress = ":9090"
 	// DefaultPath the meter endpoint where the Meter data will be made available
 	DefaultPath = "/metrics"
+	// DefaultMeterStatsInterval specifies interval for meter updating
+	DefaultMeterStatsInterval = 5 * time.Second
 	// DefaultSummaryQuantiles is the default spread of stats for summary
 	DefaultSummaryQuantiles = []float64{0.5, 0.9, 0.97, 0.99, 1}
 	// DefaultSummaryWindow is the default window for summary
