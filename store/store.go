@@ -7,6 +7,8 @@ import (
 )
 
 var (
+	// ErrNotConnected is returned when a store is not connected
+	ErrNotConnected = errors.New("not conected")
 	// ErrNotFound is returned when a key doesn't exist
 	ErrNotFound = errors.New("not found")
 	// ErrInvalidKey is returned when a key has empty or have invalid format
