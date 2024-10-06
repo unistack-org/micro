@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/KimMachineGun/automemlimit/memlimit"
+	_ "go.uber.org/automaxprocs"
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/client"
 	"go.unistack.org/micro/v3/config"
@@ -16,6 +18,18 @@ import (
 	"go.unistack.org/micro/v3/store"
 	"go.unistack.org/micro/v3/tracer"
 )
+
+func init() {
+	memlimit.SetGoMemLimitWithOpts(
+		memlimit.WithRatio(0.9),
+		memlimit.WithProvider(
+			memlimit.ApplyFallback(
+				memlimit.FromCgroup,
+				memlimit.FromSystem,
+			),
+		),
+	)
+}
 
 // Service is an interface that wraps the lower level components.
 // Its works as container with building blocks for service.
