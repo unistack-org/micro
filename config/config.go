@@ -4,6 +4,7 @@ package config
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"time"
 )
@@ -138,7 +139,7 @@ var (
 				return nil
 			}
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s BeforeLoad err: %v", c.String(), err)
+				c.Options().Logger.Error(ctx, fmt.Sprintf("%s BeforeLoad error", c.String()), err)
 				if !c.Options().AllowFail {
 					return err
 				}
@@ -153,7 +154,7 @@ var (
 				return nil
 			}
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s AfterLoad err: %v", c.String(), err)
+				c.Options().Logger.Error(ctx, fmt.Sprintf("%s AfterLoad error", c.String()), err)
 				if !c.Options().AllowFail {
 					return err
 				}
@@ -168,7 +169,7 @@ var (
 				return nil
 			}
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s BeforeSave err: %v", c.String(), err)
+				c.Options().Logger.Error(ctx, fmt.Sprintf("%s BeforeSave error", c.String()), err)
 				if !c.Options().AllowFail {
 					return err
 				}
@@ -183,7 +184,7 @@ var (
 				return nil
 			}
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s AfterSave err: %v", c.String(), err)
+				c.Options().Logger.Error(ctx, fmt.Sprintf("%s AfterSave error", c.String()), err)
 				if !c.Options().AllowFail {
 					return err
 				}
@@ -198,7 +199,7 @@ var (
 				return nil
 			}
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s BeforeInit err: %v", c.String(), err)
+				c.Options().Logger.Error(ctx, fmt.Sprintf("%s BeforeInit error", c.String()), err)
 				if !c.Options().AllowFail {
 					return err
 				}
@@ -213,7 +214,7 @@ var (
 				return nil
 			}
 			if err := fn(ctx, c); err != nil {
-				c.Options().Logger.Errorf(ctx, "%s AfterInit err: %v", c.String(), err)
+				c.Options().Logger.Error(ctx, fmt.Sprintf("%s AfterInit error", c.String(), err), err)
 				if !c.Options().AllowFail {
 					return err
 				}

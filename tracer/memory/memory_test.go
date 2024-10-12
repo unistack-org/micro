@@ -17,14 +17,14 @@ func TestLoggerWithTracer(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	logger.DefaultLogger = slog.NewLogger(logger.WithOutput(buf))
 
-	if err := logger.Init(); err != nil {
+	if err := logger.DefaultLogger.Init(); err != nil {
 		t.Fatal(err)
 	}
 	var span tracer.Span
 	tr := NewTracer()
 	ctx, span = tr.Start(ctx, "test1")
 
-	logger.Error(ctx, "my test error", fmt.Errorf("error"))
+	logger.DefaultLogger.Error(ctx, "my test error", fmt.Errorf("error"))
 
 	if !strings.Contains(buf.String(), span.TraceID()) {
 		t.Fatalf("log does not contains trace id: %s", buf.Bytes())

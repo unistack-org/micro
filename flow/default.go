@@ -188,7 +188,7 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 	steps, err := w.getSteps(options.Start, options.Reverse)
 	if err != nil {
 		if werr := workflowStore.Write(w.opts.Context, "status", &codec.Frame{Data: []byte(StatusPending.String())}); werr != nil {
-			w.opts.Logger.Errorf(w.opts.Context, "store error: %v", werr)
+			w.opts.Logger.Error(w.opts.Context, "store write error", werr)
 		}
 		return "", err
 	}
@@ -212,7 +212,7 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 	done := make(chan struct{})
 
 	if werr := workflowStore.Write(w.opts.Context, "status", &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
-		w.opts.Logger.Errorf(w.opts.Context, "store error: %v", werr)
+		w.opts.Logger.Error(w.opts.Context, "store write error", werr)
 		return eid, werr
 	}
 	for idx := range steps {
@@ -237,7 +237,7 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 					return
 				}
 				if w.opts.Logger.V(logger.TraceLevel) {
-					w.opts.Logger.Tracef(nctx, "will be executed %v", steps[idx][nidx])
+					w.opts.Logger.Trace(nctx, fmt.Sprintf("will be executed %v", steps[idx][nidx]))
 				}
 				cstep := steps[idx][nidx]
 				// nolint: nestif
@@ -257,21 +257,21 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 						if serr != nil {
 							step.SetStatus(StatusFailure)
 							if werr := stepStore.Write(ctx, step.ID()+w.opts.Store.Options().Separator+"rsp", serr); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
-								w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
+								w.opts.Logger.Error(ctx, "store write error", werr)
 							}
 							if werr := stepStore.Write(ctx, step.ID()+w.opts.Store.Options().Separator+"status", &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
-								w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
+								w.opts.Logger.Error(ctx, "store write error", werr)
 							}
 							cherr <- serr
 							return
 						}
 						if werr := stepStore.Write(ctx, step.ID()+w.opts.Store.Options().Separator+"rsp", rsp); werr != nil {
-							w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
+							w.opts.Logger.Error(ctx, "store write error", werr)
 							cherr <- werr
 							return
 						}
 						if werr := stepStore.Write(ctx, step.ID()+w.opts.Store.Options().Separator+"status", &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
-							w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
+							w.opts.Logger.Error(ctx, "store write error", werr)
 							cherr <- werr
 							return
 						}
@@ -290,16 +290,16 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 					if serr != nil {
 						cstep.SetStatus(StatusFailure)
 						if werr := stepStore.Write(ctx, cstep.ID()+w.opts.Store.Options().Separator+"rsp", serr); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
-							w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
+							w.opts.Logger.Error(ctx, "store write error", werr)
 						}
 						if werr := stepStore.Write(ctx, cstep.ID()+w.opts.Store.Options().Separator+"status", &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
-							w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
+							w.opts.Logger.Error(ctx, "store write error", werr)
 						}
 						cherr <- serr
 						return
 					}
 					if werr := stepStore.Write(ctx, cstep.ID()+w.opts.Store.Options().Separator+"rsp", rsp); werr != nil {
-						w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
+						w.opts.Logger.Error(ctx, "store write error", werr)
 						cherr <- werr
 						return
 					}
@@ -317,7 +317,7 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 		return eid, nil
 	}
 
-	logger.Tracef(ctx, "wait for finish or error")
+	logger.DefaultLogger.Trace(ctx, "wait for finish or error")
 	select {
 	case <-nctx.Done():
 		err = nctx.Err()
@@ -333,15 +333,15 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 	switch {
 	case nctx.Err() != nil:
 		if werr := workflowStore.Write(w.opts.Context, "status", &codec.Frame{Data: []byte(StatusAborted.String())}); werr != nil {
-			w.opts.Logger.Errorf(w.opts.Context, "store error: %v", werr)
+			w.opts.Logger.Error(w.opts.Context, "store write error", werr)
 		}
 	case err == nil:
 		if werr := workflowStore.Write(w.opts.Context, "status", &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
-			w.opts.Logger.Errorf(w.opts.Context, "store error: %v", werr)
+			w.opts.Logger.Error(w.opts.Context, "store write error", werr)
 		}
 	case err != nil:
 		if werr := workflowStore.Write(w.opts.Context, "status", &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil {
-			w.opts.Logger.Errorf(w.opts.Context, "store error: %v", werr)
+			w.opts.Logger.Error(w.opts.Context, "store write error", werr)
 		}
 	}
 

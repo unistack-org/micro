@@ -3,8 +3,12 @@ package slog
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"github.com/google/uuid"
+	"go.unistack.org/micro/v3/metadata"
 	"log"
+	"strings"
 	"testing"
 
 	"go.unistack.org/micro/v3/logger"
@@ -29,13 +33,25 @@ func TestError(t *testing.T) {
 
 func TestErrorf(t *testing.T) {
 	ctx := context.TODO()
+
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithAddStacktrace(true))
-	if err := l.Init(); err != nil {
+	if err := l.Init(logger.WithContextAttrFuncs(func(ctx context.Context) []interface{} {
+		return nil
+	})); err != nil {
 		t.Fatal(err)
 	}
 
-	l.Errorf(ctx, "message", fmt.Errorf("error message"))
+	l.Log(ctx, logger.ErrorLevel, "message", errors.New("error msg"))
+	if !bytes.Contains(buf.Bytes(), []byte(`"!BADKEY":"`)) {
+		t.Fatalf("logger BADKEY not works, buf contains: %s", buf.Bytes())
+	}
+
+	l.Log(ctx, logger.ErrorLevel, "", errors.New("error msg"))
+	if !bytes.Contains(buf.Bytes(), []byte(`"error":"error msg"`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+
 	if !bytes.Contains(buf.Bytes(), []byte(`"stacktrace":"`)) {
 		t.Fatalf("logger stacktrace not works, buf contains: %s", buf.Bytes())
 	}
@@ -97,6 +113,11 @@ func TestFromContextWithFields(t *testing.T) {
 
 	l.Info(ctx, "message")
 	if !bytes.Contains(buf.Bytes(), []byte(`"key":"val"`)) {
+		t.Fatalf("logger fields not works, buf contains: %s", buf.Bytes())
+	}
+
+	l.Info(ctx, "test", "uncorrected number attributes")
+	if !bytes.Contains(buf.Bytes(), []byte(`"!BADKEY":"uncorrected number attributes"`)) {
 		t.Fatalf("logger fields not works, buf contains: %s", buf.Bytes())
 	}
 }
@@ -173,4 +194,47 @@ func TestLogger(t *testing.T) {
 	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"warn"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"first second"`))) {
 		t.Fatalf("logger warn, buf %s", buf.Bytes())
 	}
+}
+
+func Test_WithContextAttrFunc(t *testing.T) {
+	loggerContextAttrFuncs := []logger.ContextAttrFunc{
+		func(ctx context.Context) []interface{} {
+			md, ok := metadata.FromIncomingContext(ctx)
+			if !ok {
+				return nil
+			}
+			attrs := make([]interface{}, 0, 10)
+			for k, v := range md {
+				switch k {
+				case "X-Request-Id", "Phone", "External-Id", "Source-Service", "X-App-Install-Id", "Client-Id", "Client-Ip":
+					attrs = append(attrs, strings.ToLower(k), v)
+				}
+			}
+			return attrs
+		},
+	}
+
+	logger.DefaultContextAttrFuncs = append(logger.DefaultContextAttrFuncs, loggerContextAttrFuncs...)
+
+	ctx := context.TODO()
+	ctx = metadata.AppendIncomingContext(ctx, "X-Request-Id", uuid.New().String(),
+		"Source-Service", "Test-System")
+
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.TraceLevel), logger.WithOutput(buf))
+	if err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Info(ctx, "test message")
+	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"info"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"test message"`))) {
+		t.Fatalf("logger info, buf %s", buf.Bytes())
+	}
+	if !(bytes.Contains(buf.Bytes(), []byte(`"x-request-id":"`))) {
+		t.Fatalf("logger info, buf %s", buf.Bytes())
+	}
+	if !(bytes.Contains(buf.Bytes(), []byte(`"source-service":"Test-System"`))) {
+		t.Fatalf("logger info, buf %s", buf.Bytes())
+	}
+
 }

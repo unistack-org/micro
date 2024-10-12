@@ -206,7 +206,7 @@ func (m *memoryBroker) publish(ctx context.Context, msgs []*broker.Message, opts
 						}
 					} else if sub.opts.AutoAck {
 						if err = ms.Ack(); err != nil {
-							m.opts.Logger.Errorf(m.opts.Context, "ack failed: %v", err)
+							m.opts.Logger.Error(m.opts.Context, "broker ack error", err)
 						}
 					}
 					// single processing
@@ -217,11 +217,11 @@ func (m *memoryBroker) publish(ctx context.Context, msgs []*broker.Message, opts
 							if eh != nil {
 								_ = eh(p)
 							} else if m.opts.Logger.V(logger.ErrorLevel) {
-								m.opts.Logger.Error(m.opts.Context, err.Error())
+								m.opts.Logger.Error(m.opts.Context, "broker handler error", err)
 							}
 						} else if sub.opts.AutoAck {
 							if err = p.Ack(); err != nil {
-								m.opts.Logger.Errorf(m.opts.Context, "ack failed: %v", err)
+								m.opts.Logger.Error(m.opts.Context, "broker ack error", err)
 							}
 						}
 					}

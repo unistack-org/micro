@@ -177,12 +177,12 @@ func (t *tunBatchSubscriber) run() {
 		// receive message
 		m := new(transport.Message)
 		if err := c.Recv(m); err != nil {
-			if logger.V(logger.ErrorLevel) {
-				logger.Error(t.opts.Context, err.Error())
+			if logger.DefaultLogger.V(logger.ErrorLevel) {
+				logger.DefaultLogger.Error(t.opts.Context, err.Error(), err)
 			}
 			if err = c.Close(); err != nil {
-				if logger.V(logger.ErrorLevel) {
-					logger.Error(t.opts.Context, err.Error())
+				if logger.DefaultLogger.V(logger.ErrorLevel) {
+					logger.DefaultLogger.Error(t.opts.Context, err.Error(), err)
 				}
 			}
 			continue
@@ -222,12 +222,12 @@ func (t *tunSubscriber) run() {
 		// receive message
 		m := new(transport.Message)
 		if err := c.Recv(m); err != nil {
-			if logger.V(logger.ErrorLevel) {
-				logger.Error(t.opts.Context, err.Error())
+			if logger.DefaultLogger.V(logger.ErrorLevel) {
+				logger.DefaultLogger.Error(t.opts.Context, err.Error(), err)
 			}
 			if err = c.Close(); err != nil {
-				if logger.V(logger.ErrorLevel) {
-					logger.Error(t.opts.Context, err.Error())
+				if logger.DefaultLogger.V(logger.ErrorLevel) {
+					logger.DefaultLogger.Error(t.opts.Context, err.Error(), err)
 				}
 			}
 			continue

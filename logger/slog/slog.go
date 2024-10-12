@@ -2,7 +2,6 @@ package slog
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
 	"regexp"
@@ -13,6 +12,12 @@ import (
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/semconv"
 	"go.unistack.org/micro/v3/tracer"
+)
+
+const (
+	badKey = "!BADKEY"
+	// defaultCallerSkipCount used by logger
+	defaultCallerSkipCount = 3
 )
 
 var reTrace = regexp.MustCompile(`.*/slog/logger\.go.*\n`)
@@ -150,386 +155,33 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 	return nil
 }
 
-func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", lvl.String()).Inc()
-	if !s.V(lvl) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), loggerToSlogLevel(lvl), fmt.Sprintf("%s", attrs[0]), pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	if s.opts.AddStacktrace && lvl == logger.ErrorLevel {
-		stackInfo := make([]byte, 1024*1024)
-		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
-			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
-			if len(traceLines) != 0 {
-				attrs = append(attrs, slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1]))
-			}
-		}
-	}
-	r.Add(attrs[1:]...)
-	r.Attrs(func(a slog.Attr) bool {
-		if a.Key == s.opts.ErrorKey {
-			if span, ok := tracer.SpanFromContext(ctx); ok {
-				span.SetStatus(tracer.SpanStatusError, a.Value.String())
-				return false
-			}
-		}
-		return true
-	})
-	_ = s.handler.Handle(ctx, r)
+func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, msg string, attrs ...interface{}) {
+	s.printLog(ctx, lvl, msg, attrs...)
 }
 
-func (s *slogLogger) Logf(ctx context.Context, lvl logger.Level, msg string, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", lvl.String()).Inc()
-	if !s.V(lvl) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), loggerToSlogLevel(lvl), msg, pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	if s.opts.AddStacktrace && lvl == logger.ErrorLevel {
-		stackInfo := make([]byte, 1024*1024)
-		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
-			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
-			if len(traceLines) != 0 {
-				attrs = append(attrs, (slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1])))
-			}
-		}
-	}
-	r.Add(attrs[1:]...)
-	r.Attrs(func(a slog.Attr) bool {
-		if a.Key == s.opts.ErrorKey {
-			if span, ok := tracer.SpanFromContext(ctx); ok {
-				span.SetStatus(tracer.SpanStatusError, a.Value.String())
-				return false
-			}
-		}
-		return true
-	})
-	_ = s.handler.Handle(ctx, r)
+func (s *slogLogger) Info(ctx context.Context, msg string, attrs ...interface{}) {
+	s.printLog(ctx, logger.InfoLevel, msg, attrs...)
 }
 
-func (s *slogLogger) Info(ctx context.Context, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.InfoLevel.String()).Inc()
-	if !s.V(logger.InfoLevel) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelInfo, fmt.Sprintf("%s", attrs[0]), pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	r.Add(attrs[1:]...)
-	_ = s.handler.Handle(ctx, r)
+func (s *slogLogger) Debug(ctx context.Context, msg string, attrs ...interface{}) {
+	s.printLog(ctx, logger.DebugLevel, msg, attrs...)
 }
 
-func (s *slogLogger) Infof(ctx context.Context, msg string, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.InfoLevel.String()).Inc()
-	if !s.V(logger.InfoLevel) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelInfo, msg, pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	r.Add(attrs...)
-	_ = s.handler.Handle(ctx, r)
+func (s *slogLogger) Trace(ctx context.Context, msg string, attrs ...interface{}) {
+	s.printLog(ctx, logger.TraceLevel, msg, attrs...)
 }
 
-func (s *slogLogger) Debug(ctx context.Context, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.DebugLevel.String()).Inc()
-	if !s.V(logger.DebugLevel) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelDebug, fmt.Sprintf("%s", attrs[0]), pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	r.Add(attrs[1:]...)
-	_ = s.handler.Handle(ctx, r)
+func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}) {
+	s.printLog(ctx, logger.ErrorLevel, msg, attrs...)
 }
 
-func (s *slogLogger) Debugf(ctx context.Context, msg string, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.DebugLevel.String()).Inc()
-	if !s.V(logger.DebugLevel) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelDebug, msg, pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	r.Add(attrs...)
-	_ = s.handler.Handle(ctx, r)
-}
-
-func (s *slogLogger) Trace(ctx context.Context, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.TraceLevel.String()).Inc()
-	if !s.V(logger.TraceLevel) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelDebug-1, fmt.Sprintf("%s", attrs[0]), pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	r.Add(attrs[1:]...)
-	_ = s.handler.Handle(ctx, r)
-}
-
-func (s *slogLogger) Tracef(ctx context.Context, msg string, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.TraceLevel.String()).Inc()
-	if !s.V(logger.TraceLevel) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelDebug-1, msg, pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	r.Add(attrs[1:]...)
-	_ = s.handler.Handle(ctx, r)
-}
-
-func (s *slogLogger) Error(ctx context.Context, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.ErrorLevel.String()).Inc()
-	if !s.V(logger.ErrorLevel) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelError, fmt.Sprintf("%s", attrs[0]), pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	if s.opts.AddStacktrace {
-		stackInfo := make([]byte, 1024*1024)
-		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
-			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
-			if len(traceLines) != 0 {
-				attrs = append(attrs, slog.String("stacktrace", traceLines[len(traceLines)-1]))
-			}
-		}
-	}
-	r.Add(attrs[1:]...)
-	r.Attrs(func(a slog.Attr) bool {
-		if a.Key == s.opts.ErrorKey {
-			if span, ok := tracer.SpanFromContext(ctx); ok {
-				span.SetStatus(tracer.SpanStatusError, a.Value.String())
-				return false
-			}
-		}
-		return true
-	})
-	_ = s.handler.Handle(ctx, r)
-}
-
-func (s *slogLogger) Errorf(ctx context.Context, msg string, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.ErrorLevel.String()).Inc()
-	if !s.V(logger.ErrorLevel) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelError, msg, pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	if s.opts.AddStacktrace {
-		stackInfo := make([]byte, 1024*1024)
-		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
-			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
-			if len(traceLines) != 0 {
-				attrs = append(attrs, slog.String("stacktrace", traceLines[len(traceLines)-1]))
-			}
-		}
-	}
-	r.Add(attrs...)
-	r.Attrs(func(a slog.Attr) bool {
-		if a.Key == s.opts.ErrorKey {
-			if span, ok := tracer.SpanFromContext(ctx); ok {
-				span.SetStatus(tracer.SpanStatusError, a.Value.String())
-				return false
-			}
-		}
-		return true
-	})
-	_ = s.handler.Handle(ctx, r)
-}
-
-func (s *slogLogger) Fatal(ctx context.Context, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.FatalLevel.String()).Inc()
-	if !s.V(logger.FatalLevel) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelError+1, fmt.Sprintf("%s", attrs[0]), pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	r.Add(attrs[1:]...)
-	_ = s.handler.Handle(ctx, r)
+func (s *slogLogger) Fatal(ctx context.Context, msg string, attrs ...interface{}) {
+	s.printLog(ctx, logger.FatalLevel, msg, attrs...)
 	os.Exit(1)
 }
 
-func (s *slogLogger) Fatalf(ctx context.Context, msg string, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.FatalLevel.String()).Inc()
-	if !s.V(logger.FatalLevel) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelError+1, msg, pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	r.Add(attrs...)
-	_ = s.handler.Handle(ctx, r)
-	os.Exit(1)
-}
-
-func (s *slogLogger) Warn(ctx context.Context, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.WarnLevel.String()).Inc()
-	if !s.V(logger.WarnLevel) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelWarn, fmt.Sprintf("%s", attrs[0]), pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	r.Add(attrs[1:]...)
-	_ = s.handler.Handle(ctx, r)
-}
-
-func (s *slogLogger) Warnf(ctx context.Context, msg string, attrs ...interface{}) {
-	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", logger.WarnLevel.String()).Inc()
-	if !s.V(logger.WarnLevel) {
-		return
-	}
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(s.opts.TimeFunc(), slog.LevelWarn, msg, pcs[0])
-	for _, fn := range s.opts.ContextAttrFuncs {
-		attrs = append(attrs, fn(ctx)...)
-	}
-
-	for idx, attr := range attrs {
-		if ve, ok := attr.(error); ok && ve != nil {
-			attrs[idx] = slog.String(s.opts.ErrorKey, ve.Error())
-			break
-		}
-	}
-	r.Add(attrs[1:]...)
-	_ = s.handler.Handle(ctx, r)
+func (s *slogLogger) Warn(ctx context.Context, msg string, attrs ...interface{}) {
+	s.printLog(ctx, logger.WarnLevel, msg, attrs...)
 }
 
 func (s *slogLogger) Name() string {
@@ -540,10 +192,52 @@ func (s *slogLogger) String() string {
 	return "slog"
 }
 
+func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string, attrs ...interface{}) {
+	if !s.V(lvl) {
+		return
+	}
+
+	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", lvl.String()).Inc()
+
+	attrs = prepareAttributes(attrs)
+
+	for _, fn := range s.opts.ContextAttrFuncs {
+		a := prepareAttributes(fn(ctx))
+		attrs = append(attrs, a...)
+	}
+
+	for _, attr := range attrs {
+		if ve, hasErr := attr.(error); hasErr && ve != nil {
+			attrs = append(attrs, slog.String(s.opts.ErrorKey, ve.Error()))
+			if span, ok := tracer.SpanFromContext(ctx); ok {
+				span.SetStatus(tracer.SpanStatusError, ve.Error())
+			}
+			break
+		}
+	}
+
+	if s.opts.AddStacktrace && lvl == logger.ErrorLevel {
+		stackInfo := make([]byte, 1024*1024)
+		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
+			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
+			if len(traceLines) != 0 {
+				attrs = append(attrs, slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1]))
+			}
+		}
+	}
+
+	var pcs [1]uintptr
+	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, printLog, LogLvlMethod]
+	r := slog.NewRecord(s.opts.TimeFunc(), loggerToSlogLevel(lvl), msg, pcs[0])
+	r.Add(attrs...)
+	_ = s.handler.Handle(ctx, r)
+}
+
 func NewLogger(opts ...logger.Option) logger.Logger {
 	s := &slogLogger{
 		opts: logger.NewOptions(opts...),
 	}
+	s.opts.CallerSkipCount = defaultCallerSkipCount
 
 	return s
 }
@@ -580,4 +274,13 @@ func slogToLoggerLevel(level slog.Level) logger.Level {
 	default:
 		return logger.InfoLevel
 	}
+}
+
+func prepareAttributes(attrs []interface{}) []interface{} {
+	if len(attrs)%2 == 1 {
+		attrs = append(attrs, badKey)
+		attrs[len(attrs)-1], attrs[len(attrs)-2] = attrs[len(attrs)-2], attrs[len(attrs)-1]
+	}
+
+	return attrs
 }

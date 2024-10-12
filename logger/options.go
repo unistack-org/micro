@@ -23,7 +23,7 @@ type Options struct {
 	Name string
 	// Fields holds additional metadata
 	Fields []interface{}
-	// CallerSkipCount number of frmaes to skip
+	// callerSkipCount number of frmaes to skip
 	CallerSkipCount int
 	// ContextAttrFuncs contains funcs that executed before log func on context
 	ContextAttrFuncs []ContextAttrFunc
@@ -57,7 +57,6 @@ func NewOptions(opts ...Option) Options {
 		Level:            DefaultLevel,
 		Fields:           make([]interface{}, 0, 6),
 		Out:              os.Stderr,
-		CallerSkipCount:  DefaultCallerSkipCount,
 		Context:          context.Background(),
 		ContextAttrFuncs: DefaultContextAttrFuncs,
 		AddSource:        true,
@@ -102,24 +101,17 @@ func WithOutput(out io.Writer) Option {
 	}
 }
 
-// WitAddStacktrace controls writing stacktrace on error
+// WithAddStacktrace controls writing stacktrace on error
 func WithAddStacktrace(v bool) Option {
 	return func(o *Options) {
 		o.AddStacktrace = v
 	}
 }
 
-// WitAddSource controls writing source file and pos in log
+// WithAddSource controls writing source file and pos in log
 func WithAddSource(v bool) Option {
 	return func(o *Options) {
 		o.AddSource = v
-	}
-}
-
-// WithCallerSkipCount set frame count to skip
-func WithCallerSkipCount(c int) Option {
-	return func(o *Options) {
-		o.CallerSkipCount = c
 	}
 }
 
@@ -198,6 +190,8 @@ func WithMicroKeys() Option {
 // WithAddCallerSkipCount add skip count for copy logger
 func WithAddCallerSkipCount(n int) Option {
 	return func(o *Options) {
-		o.CallerSkipCount += n
+		if n > 0 {
+			o.CallerSkipCount += n
+		}
 	}
 }

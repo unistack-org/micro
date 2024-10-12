@@ -276,7 +276,7 @@ func (s *service) Start() error {
 	}
 
 	if config.Loggers[0].V(logger.InfoLevel) {
-		config.Loggers[0].Infof(s.opts.Context, "starting [service] %s version %s", s.Options().Name, s.Options().Version)
+		config.Loggers[0].Info(s.opts.Context, fmt.Sprintf("starting [service] %s version %s", s.Options().Name, s.Options().Version))
 	}
 
 	if len(s.opts.Servers) == 0 {
@@ -322,7 +322,7 @@ func (s *service) Stop() error {
 	s.RUnlock()
 
 	if config.Loggers[0].V(logger.InfoLevel) {
-		config.Loggers[0].Infof(s.opts.Context, "stoppping [service] %s", s.Name())
+		config.Loggers[0].Info(s.opts.Context, fmt.Sprintf("stoppping [service] %s", s.Name()))
 	}
 
 	var err error
