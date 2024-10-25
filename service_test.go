@@ -134,7 +134,7 @@ func TestNewService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewService(tt.args.opts...); !reflect.DeepEqual(got, tt.want) {
+			if got := NewService(tt.args.opts...); got.Name() != tt.want.Name() {
 				t.Errorf("NewService() = %v, want %v", got.Options().Name, tt.want.Options().Name)
 			}
 		})

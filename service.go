@@ -86,13 +86,14 @@ func RegisterSubscriber(topic string, s server.Server, h interface{}, opts ...se
 }
 
 type service struct {
+	done chan struct{}
 	opts Options
 	sync.RWMutex
 }
 
 // NewService creates and returns a new Service based on the packages within.
 func NewService(opts ...Option) Service {
-	return &service{opts: NewOptions(opts...)}
+	return &service{opts: NewOptions(opts...), done: make(chan struct{})}
 }
 
 func (s *service) Name() string {
@@ -362,6 +363,8 @@ func (s *service) Stop() error {
 		}
 	}
 
+	close(s.done)
+
 	return nil
 }
 
@@ -385,7 +388,7 @@ func (s *service) Run() error {
 	}
 
 	// wait on context cancel
-	<-s.opts.Context.Done()
+	<-s.done
 
 	return s.Stop()
 }
