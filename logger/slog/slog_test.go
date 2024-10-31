@@ -5,11 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"go.unistack.org/micro/v3/metadata"
 	"log"
 	"strings"
 	"testing"
+
+	"github.com/google/uuid"
+	"go.unistack.org/micro/v3/metadata"
 
 	"go.unistack.org/micro/v3/logger"
 )
@@ -43,9 +44,6 @@ func TestErrorf(t *testing.T) {
 	}
 
 	l.Log(ctx, logger.ErrorLevel, "message", errors.New("error msg"))
-	if !bytes.Contains(buf.Bytes(), []byte(`"!BADKEY":"`)) {
-		t.Fatalf("logger BADKEY not works, buf contains: %s", buf.Bytes())
-	}
 
 	l.Log(ctx, logger.ErrorLevel, "", errors.New("error msg"))
 	if !bytes.Contains(buf.Bytes(), []byte(`"error":"error msg"`)) {
@@ -236,5 +234,4 @@ func Test_WithContextAttrFunc(t *testing.T) {
 	if !(bytes.Contains(buf.Bytes(), []byte(`"source-service":"Test-System"`))) {
 		t.Fatalf("logger info, buf %s", buf.Bytes())
 	}
-
 }

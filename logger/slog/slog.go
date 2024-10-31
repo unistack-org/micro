@@ -192,27 +192,34 @@ func (s *slogLogger) String() string {
 	return "slog"
 }
 
-func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string, attrs ...interface{}) {
+func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string, args ...interface{}) {
 	if !s.V(lvl) {
 		return
 	}
+	var argError error
 
 	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", lvl.String()).Inc()
 
-	attrs = prepareAttributes(attrs)
-
-	for _, fn := range s.opts.ContextAttrFuncs {
-		a := prepareAttributes(fn(ctx))
-		attrs = append(attrs, a...)
+	attrs, err := s.argsAttrs(args)
+	if err != nil {
+		argError = err
+	}
+	if argError != nil {
+		if span, ok := tracer.SpanFromContext(ctx); ok {
+			span.SetStatus(tracer.SpanStatusError, argError.Error())
+		}
 	}
 
-	for _, attr := range attrs {
-		if ve, hasErr := attr.(error); hasErr && ve != nil {
-			attrs = append(attrs, slog.String(s.opts.ErrorKey, ve.Error()))
-			if span, ok := tracer.SpanFromContext(ctx); ok {
-				span.SetStatus(tracer.SpanStatusError, ve.Error())
-			}
-			break
+	for _, fn := range s.opts.ContextAttrFuncs {
+		ctxAttrs, err := s.argsAttrs(fn(ctx))
+		if err != nil {
+			argError = err
+		}
+		attrs = append(attrs, ctxAttrs...)
+	}
+	if argError != nil {
+		if span, ok := tracer.SpanFromContext(ctx); ok {
+			span.SetStatus(tracer.SpanStatusError, argError.Error())
 		}
 	}
 
@@ -229,7 +236,7 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 	var pcs [1]uintptr
 	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, printLog, LogLvlMethod]
 	r := slog.NewRecord(s.opts.TimeFunc(), loggerToSlogLevel(lvl), msg, pcs[0])
-	r.Add(attrs...)
+	r.AddAttrs(attrs...)
 	_ = s.handler.Handle(ctx, r)
 }
 
@@ -276,11 +283,26 @@ func slogToLoggerLevel(level slog.Level) logger.Level {
 	}
 }
 
-func prepareAttributes(attrs []interface{}) []interface{} {
-	if len(attrs)%2 == 1 {
-		attrs = append(attrs, badKey)
-		attrs[len(attrs)-1], attrs[len(attrs)-2] = attrs[len(attrs)-2], attrs[len(attrs)-1]
+func (s *slogLogger) argsAttrs(args []interface{}) ([]slog.Attr, error) {
+	attrs := make([]slog.Attr, 0, len(args))
+	var err error
+
+	for idx := 0; idx < len(args); idx++ {
+		switch arg := args[idx].(type) {
+		case slog.Attr:
+			attrs = append(attrs, arg)
+		case string:
+			if idx+1 < len(args) {
+				attrs = append(attrs, slog.Any(arg, args[idx+1]))
+				idx += 1
+			} else {
+				attrs = append(attrs, slog.String(badKey, arg))
+			}
+		case error:
+			attrs = append(attrs, slog.String(s.opts.ErrorKey, arg.Error()))
+			err = arg
+		}
 	}
 
-	return attrs
+	return attrs, err
 }
