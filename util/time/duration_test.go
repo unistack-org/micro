@@ -5,7 +5,43 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
+
+func TestMarshalYAML(t *testing.T) {
+	d := Duration(10000000)
+	buf, err := yaml.Marshal(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(buf, []byte(`10ms
+`)) {
+		t.Fatalf("invalid duration: %s != %s", buf, `10ms`)
+	}
+}
+
+func TestUnmarshalYAML(t *testing.T) {
+	type str struct {
+		TTL Duration `yaml:"ttl"`
+	}
+	v := &str{}
+	var err error
+
+	err = yaml.Unmarshal([]byte(`{"ttl":"10ms"}`), v)
+	if err != nil {
+		t.Fatal(err)
+	} else if v.TTL != 10000000 {
+		t.Fatalf("invalid duration %v != 10000000", v.TTL)
+	}
+
+	err = yaml.Unmarshal([]byte(`{"ttl":"1y"}`), v)
+	if err != nil {
+		t.Fatal(err)
+	} else if v.TTL != 31622400000000000 {
+		t.Fatalf("invalid duration %v != 31622400000000000", v.TTL)
+	}
+}
 
 func TestMarshalJSON(t *testing.T) {
 	d := Duration(10000000)

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Duration int64
@@ -51,6 +53,31 @@ loop:
 	}
 
 	return time.ParseDuration(fmt.Sprintf("%dh%s", hours, s[p:]))
+}
+
+func (d Duration) MarshalYAML() (interface{}, error) {
+	return time.Duration(d).String(), nil
+}
+
+func (d *Duration) UnmarshalYAML(n *yaml.Node) error {
+	var v interface{}
+	if err := yaml.Unmarshal([]byte(n.Value), &v); err != nil {
+		return err
+	}
+	switch value := v.(type) {
+	case float64:
+		*d = Duration(time.Duration(value))
+		return nil
+	case string:
+		dv, err := ParseDuration(value)
+		if err != nil {
+			return err
+		}
+		*d = Duration(dv)
+		return nil
+	default:
+		return fmt.Errorf("invalid duration")
+	}
 }
 
 func (d Duration) MarshalJSON() ([]byte, error) {
