@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/KimMachineGun/automemlimit/memlimit"
-	_ "go.uber.org/automaxprocs"
+	"go.uber.org/automaxprocs/maxprocs"
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/client"
 	"go.unistack.org/micro/v3/config"
@@ -20,6 +20,7 @@ import (
 )
 
 func init() {
+	maxprocs.Set()
 	memlimit.SetGoMemLimitWithOpts(
 		memlimit.WithRatio(0.9),
 		memlimit.WithProvider(
