@@ -31,6 +31,28 @@ var (
 	fatalValue = slog.StringValue("fatal")
 )
 
+type wrapper struct {
+	h     slog.Handler
+	level logger.Level
+}
+
+func (h *wrapper) Enabled(ctx context.Context, level slog.Level) bool {
+	lvl := slogToLoggerLevel(level)
+	return h.level.Enabled(lvl)
+}
+
+func (h *wrapper) Handle(ctx context.Context, rec slog.Record) error {
+	return h.h.Handle(ctx, rec)
+}
+
+func (h *wrapper) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return h.WithAttrs(attrs)
+}
+
+func (h *wrapper) WithGroup(name string) slog.Handler {
+	return h.WithGroup(name)
+}
+
 func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 	switch a.Key {
 	case slog.SourceKey:
@@ -68,7 +90,7 @@ func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 
 type slogLogger struct {
 	leveler *slog.LevelVar
-	handler slog.Handler
+	handler *wrapper
 	opts    logger.Options
 	mu      sync.RWMutex
 }
@@ -76,19 +98,21 @@ type slogLogger struct {
 func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
 	s.mu.RLock()
 	options := s.opts
-	level := s.leveler.Level()
 	s.mu.RUnlock()
 
 	for _, o := range opts {
 		o(&options)
 	}
 
-	l := &slogLogger{opts: options}
+	if len(options.ContextAttrFuncs) == 0 {
+		options.ContextAttrFuncs = logger.DefaultContextAttrFuncs
+	}
 
-	l.leveler = new(slog.LevelVar)
-	l.leveler.Set(level)
-	attrs, _ := s.argsAttrs(l.opts.Fields)
-	l.handler = s.handler.WithAttrs(attrs)
+	attrs, _ := s.argsAttrs(options.Fields)
+	l := &slogLogger{
+		handler: &wrapper{level: options.Level, h: s.handler.h.WithAttrs(attrs)},
+		opts:    options,
+	}
 
 	return l
 }
@@ -98,7 +122,9 @@ func (s *slogLogger) V(level logger.Level) bool {
 }
 
 func (s *slogLogger) Level(level logger.Level) {
-	s.leveler.Set(loggerToSlogLevel(level))
+	s.mu.Lock()
+	s.opts.Level = level
+	s.mu.Unlock()
 }
 
 func (s *slogLogger) Options() logger.Options {
@@ -107,16 +133,17 @@ func (s *slogLogger) Options() logger.Options {
 
 func (s *slogLogger) Fields(fields ...interface{}) logger.Logger {
 	s.mu.RLock()
-	level := s.leveler.Level()
 	options := s.opts
 	s.mu.RUnlock()
 
 	l := &slogLogger{opts: options}
-	l.leveler = new(slog.LevelVar)
-	l.leveler.Set(level)
+
+	if len(options.ContextAttrFuncs) == 0 {
+		options.ContextAttrFuncs = logger.DefaultContextAttrFuncs
+	}
 
 	attrs, _ := s.argsAttrs(fields)
-	l.handler = s.handler.WithAttrs(attrs)
+	l.handler = &wrapper{level: s.opts.Level, h: s.handler.h.WithAttrs(attrs)}
 
 	return l
 }
@@ -124,22 +151,22 @@ func (s *slogLogger) Fields(fields ...interface{}) logger.Logger {
 func (s *slogLogger) Init(opts ...logger.Option) error {
 	s.mu.Lock()
 
-	if len(s.opts.ContextAttrFuncs) == 0 {
-		s.opts.ContextAttrFuncs = logger.DefaultContextAttrFuncs
-	}
-
 	for _, o := range opts {
 		o(&s.opts)
 	}
 
-	s.leveler = new(slog.LevelVar)
+	if len(s.opts.ContextAttrFuncs) == 0 {
+		s.opts.ContextAttrFuncs = logger.DefaultContextAttrFuncs
+	}
+
 	handleOpt := &slog.HandlerOptions{
 		ReplaceAttr: s.renameAttr,
-		Level:       s.leveler,
+		Level:       loggerToSlogLevel(logger.TraceLevel),
 		AddSource:   s.opts.AddSource,
 	}
-	s.leveler.Set(loggerToSlogLevel(s.opts.Level))
-	s.handler = slog.New(slog.NewJSONHandler(s.opts.Out, handleOpt)).With(s.opts.Fields...).Handler()
+
+	attrs, _ := s.argsAttrs(s.opts.Fields)
+	s.handler = &wrapper{level: s.opts.Level, h: slog.NewJSONHandler(s.opts.Out, handleOpt).WithAttrs(attrs)}
 	s.mu.Unlock()
 
 	return nil
