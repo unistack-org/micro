@@ -15,6 +15,56 @@ import (
 	"go.unistack.org/micro/v3/logger"
 )
 
+func TestMultipleFieldsWithLevel(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.InfoLevel), logger.WithOutput(buf))
+	if err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+
+	l = l.Fields("key", "val")
+
+	l.Info(ctx, "msg1")
+	nl := l.Clone(logger.WithLevel(logger.DebugLevel))
+	nl.Debug(ctx, "msg2")
+	l.Debug(ctx, "msg3")
+	if !bytes.Contains(buf.Bytes(), []byte(`"key":"val"`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+	if !bytes.Contains(buf.Bytes(), []byte(`"msg1"`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+	if !bytes.Contains(buf.Bytes(), []byte(`"msg2"`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+	if bytes.Contains(buf.Bytes(), []byte(`"msg3"`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+}
+
+func TestMultipleFields(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.InfoLevel), logger.WithOutput(buf))
+	if err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+
+	l = l.Fields("key", "val")
+
+	l = l.Fields("key1", "val1")
+
+	l.Info(ctx, "msg")
+
+	if !bytes.Contains(buf.Bytes(), []byte(`"key":"val"`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+	if !bytes.Contains(buf.Bytes(), []byte(`"key1":"val1"`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+}
+
 func TestError(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
@@ -234,4 +284,11 @@ func Test_WithContextAttrFunc(t *testing.T) {
 	if !(bytes.Contains(buf.Bytes(), []byte(`"source-service":"Test-System"`))) {
 		t.Fatalf("logger info, buf %s", buf.Bytes())
 	}
+	buf.Reset()
+	imd, _ := metadata.FromIncomingContext(ctx)
+	l.Info(ctx, "test message1")
+	imd.Set("Source-Service", "Test-System2")
+	l.Info(ctx, "test message2")
+
+	// t.Logf("xxx %s", buf.Bytes())
 }
