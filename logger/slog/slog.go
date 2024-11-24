@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/semconv"
@@ -33,12 +34,11 @@ var (
 
 type wrapper struct {
 	h     slog.Handler
-	level logger.Level
+	level atomic.Int64
 }
 
 func (h *wrapper) Enabled(ctx context.Context, level slog.Level) bool {
-	lvl := slogToLoggerLevel(level)
-	return h.level.Enabled(lvl)
+	return level >= slog.Level(int(h.level.Load()))
 }
 
 func (h *wrapper) Handle(ctx context.Context, rec slog.Record) error {
@@ -110,20 +110,25 @@ func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
 
 	attrs, _ := s.argsAttrs(options.Fields)
 	l := &slogLogger{
-		handler: &wrapper{level: options.Level, h: s.handler.h.WithAttrs(attrs)},
+		handler: &wrapper{h: s.handler.h.WithAttrs(attrs)},
 		opts:    options,
 	}
+	l.handler.level.Store(int64(loggerToSlogLevel(options.Level)))
 
 	return l
 }
 
 func (s *slogLogger) V(level logger.Level) bool {
-	return s.opts.Level.Enabled(level)
+	s.mu.Lock()
+	v := s.opts.Level.Enabled(level)
+	s.mu.Unlock()
+	return v
 }
 
 func (s *slogLogger) Level(level logger.Level) {
 	s.mu.Lock()
 	s.opts.Level = level
+	s.handler.level.Store(int64(loggerToSlogLevel(level)))
 	s.mu.Unlock()
 }
 
@@ -143,7 +148,8 @@ func (s *slogLogger) Fields(fields ...interface{}) logger.Logger {
 	}
 
 	attrs, _ := s.argsAttrs(fields)
-	l.handler = &wrapper{level: s.opts.Level, h: s.handler.h.WithAttrs(attrs)}
+	l.handler = &wrapper{h: s.handler.h.WithAttrs(attrs)}
+	l.handler.level.Store(int64(loggerToSlogLevel(l.opts.Level)))
 
 	return l
 }
@@ -166,7 +172,8 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 	}
 
 	attrs, _ := s.argsAttrs(s.opts.Fields)
-	s.handler = &wrapper{level: s.opts.Level, h: slog.NewJSONHandler(s.opts.Out, handleOpt).WithAttrs(attrs)}
+	s.handler = &wrapper{h: slog.NewJSONHandler(s.opts.Out, handleOpt).WithAttrs(attrs)}
+	s.handler.level.Store(int64(loggerToSlogLevel(s.opts.Level)))
 	s.mu.Unlock()
 
 	return nil
