@@ -134,6 +134,13 @@ func Timeout(td time.Duration) Option {
 	}
 }
 
+// LazyConnect initialize connection only when needed
+func LazyConnect(b bool) Option {
+	return func(o *Options) {
+		o.LazyConnect = b
+	}
+}
+
 // Addrs contains the addresses or other connection information of the backing storage.
 // For example, an etcd implementation would contain the nodes of the cluster.
 // A SQL implementation could contain one or more connection strings.
