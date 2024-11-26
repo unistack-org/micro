@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	cache "github.com/patrickmn/go-cache"
@@ -20,7 +21,10 @@ func NewStore(opts ...store.Option) store.Store {
 }
 
 func (m *memoryStore) Connect(ctx context.Context) error {
-	return nil
+	if m.opts.LazyConnect {
+		return nil
+	}
+	return m.connect(ctx)
 }
 
 func (m *memoryStore) Disconnect(ctx context.Context) error {
@@ -29,13 +33,14 @@ func (m *memoryStore) Disconnect(ctx context.Context) error {
 }
 
 type memoryStore struct {
-	funcRead   store.FuncRead
-	funcWrite  store.FuncWrite
-	funcExists store.FuncExists
-	funcList   store.FuncList
-	funcDelete store.FuncDelete
-	store      *cache.Cache
-	opts       store.Options
+	funcRead    store.FuncRead
+	funcWrite   store.FuncWrite
+	funcExists  store.FuncExists
+	funcList    store.FuncList
+	funcDelete  store.FuncDelete
+	store       *cache.Cache
+	opts        store.Options
+	isConnected atomic.Int32
 }
 
 func (m *memoryStore) key(prefix, key string) string {
@@ -145,6 +150,11 @@ func (m *memoryStore) Name() string {
 }
 
 func (m *memoryStore) Exists(ctx context.Context, key string, opts ...store.ExistsOption) error {
+	if m.opts.LazyConnect {
+		if err := m.connect(ctx); err != nil {
+			return err
+		}
+	}
 	return m.funcExists(ctx, key, opts...)
 }
 
@@ -157,6 +167,11 @@ func (m *memoryStore) fnExists(ctx context.Context, key string, opts ...store.Ex
 }
 
 func (m *memoryStore) Read(ctx context.Context, key string, val interface{}, opts ...store.ReadOption) error {
+	if m.opts.LazyConnect {
+		if err := m.connect(ctx); err != nil {
+			return err
+		}
+	}
 	return m.funcRead(ctx, key, val, opts...)
 }
 
@@ -169,6 +184,11 @@ func (m *memoryStore) fnRead(ctx context.Context, key string, val interface{}, o
 }
 
 func (m *memoryStore) Write(ctx context.Context, key string, val interface{}, opts ...store.WriteOption) error {
+	if m.opts.LazyConnect {
+		if err := m.connect(ctx); err != nil {
+			return err
+		}
+	}
 	return m.funcWrite(ctx, key, val, opts...)
 }
 
@@ -193,6 +213,11 @@ func (m *memoryStore) fnWrite(ctx context.Context, key string, val interface{}, 
 }
 
 func (m *memoryStore) Delete(ctx context.Context, key string, opts ...store.DeleteOption) error {
+	if m.opts.LazyConnect {
+		if err := m.connect(ctx); err != nil {
+			return err
+		}
+	}
 	return m.funcDelete(ctx, key, opts...)
 }
 
@@ -211,6 +236,11 @@ func (m *memoryStore) Options() store.Options {
 }
 
 func (m *memoryStore) List(ctx context.Context, opts ...store.ListOption) ([]string, error) {
+	if m.opts.LazyConnect {
+		if err := m.connect(ctx); err != nil {
+			return nil, err
+		}
+	}
 	return m.funcList(ctx, opts...)
 }
 
@@ -243,4 +273,9 @@ func (m *memoryStore) fnList(ctx context.Context, opts ...store.ListOption) ([]s
 	}
 
 	return keys, nil
+}
+
+func (m *memoryStore) connect(ctx context.Context) error {
+	m.isConnected.CompareAndSwap(0, 1)
+	return nil
 }

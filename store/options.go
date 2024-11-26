@@ -41,6 +41,8 @@ type Options struct {
 	Timeout time.Duration
 	// Hooks can be run before/after store Read/List/Write/Exists/Delete
 	Hooks options.Hooks
+	// LazyConnect creates a connection when using store
+	LazyConnect bool
 }
 
 // NewOptions creates options struct

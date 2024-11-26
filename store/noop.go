@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"sync/atomic"
 
 	"go.unistack.org/micro/v3/options"
 )
@@ -9,12 +10,13 @@ import (
 var _ Store = (*noopStore)(nil)
 
 type noopStore struct {
-	funcRead   FuncRead
-	funcWrite  FuncWrite
-	funcExists FuncExists
-	funcList   FuncList
-	funcDelete FuncDelete
-	opts       Options
+	funcRead    FuncRead
+	funcWrite   FuncWrite
+	funcExists  FuncExists
+	funcList    FuncList
+	funcDelete  FuncDelete
+	opts        Options
+	isConnected atomic.Int32
 }
 
 func NewStore(opts ...Option) *noopStore {
@@ -52,12 +54,10 @@ func (n *noopStore) Init(opts ...Option) error {
 }
 
 func (n *noopStore) Connect(ctx context.Context) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
+	if n.opts.LazyConnect {
+		return nil
 	}
-	return nil
+	return n.connect(ctx)
 }
 
 func (n *noopStore) Disconnect(ctx context.Context) error {
@@ -70,6 +70,11 @@ func (n *noopStore) Disconnect(ctx context.Context) error {
 }
 
 func (n *noopStore) Read(ctx context.Context, key string, val interface{}, opts ...ReadOption) error {
+	if n.opts.LazyConnect {
+		if err := n.connect(ctx); err != nil {
+			return err
+		}
+	}
 	return n.funcRead(ctx, key, val, opts...)
 }
 
@@ -83,6 +88,11 @@ func (n *noopStore) fnRead(ctx context.Context, key string, val interface{}, opt
 }
 
 func (n *noopStore) Delete(ctx context.Context, key string, opts ...DeleteOption) error {
+	if n.opts.LazyConnect {
+		if err := n.connect(ctx); err != nil {
+			return err
+		}
+	}
 	return n.funcDelete(ctx, key, opts...)
 }
 
@@ -96,6 +106,11 @@ func (n *noopStore) fnDelete(ctx context.Context, key string, opts ...DeleteOpti
 }
 
 func (n *noopStore) Exists(ctx context.Context, key string, opts ...ExistsOption) error {
+	if n.opts.LazyConnect {
+		if err := n.connect(ctx); err != nil {
+			return err
+		}
+	}
 	return n.funcExists(ctx, key, opts...)
 }
 
@@ -109,6 +124,11 @@ func (n *noopStore) fnExists(ctx context.Context, key string, opts ...ExistsOpti
 }
 
 func (n *noopStore) Write(ctx context.Context, key string, val interface{}, opts ...WriteOption) error {
+	if n.opts.LazyConnect {
+		if err := n.connect(ctx); err != nil {
+			return err
+		}
+	}
 	return n.funcWrite(ctx, key, val, opts...)
 }
 
@@ -122,6 +142,11 @@ func (n *noopStore) fnWrite(ctx context.Context, key string, val interface{}, op
 }
 
 func (n *noopStore) List(ctx context.Context, opts ...ListOption) ([]string, error) {
+	if n.opts.LazyConnect {
+		if err := n.connect(ctx); err != nil {
+			return nil, err
+		}
+	}
 	return n.funcList(ctx, opts...)
 }
 
@@ -144,4 +169,16 @@ func (n *noopStore) String() string {
 
 func (n *noopStore) Options() Options {
 	return n.opts
+}
+
+func (n *noopStore) connect(ctx context.Context) error {
+	if n.isConnected.CompareAndSwap(0, 1) {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+	}
+
+	return nil
 }
