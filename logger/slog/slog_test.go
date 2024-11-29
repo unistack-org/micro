@@ -15,6 +15,34 @@ import (
 	"go.unistack.org/micro/v3/logger"
 )
 
+func TestWithAddFields(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.InfoLevel), logger.WithOutput(buf))
+	if err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Info(ctx, "msg1")
+
+	if err := l.Init(logger.WithAddFields("key1", "val1")); err != nil {
+		t.Fatal(err)
+	}
+	l.Info(ctx, "msg2")
+
+	if err := l.Init(logger.WithAddFields("key2", "val2")); err != nil {
+		t.Fatal(err)
+	}
+	l.Info(ctx, "msg3")
+
+	if !bytes.Contains(buf.Bytes(), []byte(`"key1"`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+	if !bytes.Contains(buf.Bytes(), []byte(`"key2"`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+}
+
 func TestMultipleFieldsWithLevel(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)

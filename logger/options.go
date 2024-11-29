@@ -80,6 +80,13 @@ func WithContextAttrFuncs(fncs ...ContextAttrFunc) Option {
 	}
 }
 
+// WithAddFields add fields for the logger
+func WithAddFields(fields ...interface{}) Option {
+	return func(o *Options) {
+		o.Fields = append(o.Fields, fields...)
+	}
+}
+
 // WithFields set default fields for the logger
 func WithFields(fields ...interface{}) Option {
 	return func(o *Options) {
