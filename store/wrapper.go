@@ -67,16 +67,6 @@ func (w *NamespaceStore) String() string {
 	return w.s.String()
 }
 
-// type NamespaceWrapper struct{}
-
-// func NewNamespaceWrapper() Wrapper {
-//	return &NamespaceWrapper{}
-// }
-
-/*
-func (w *OmitWrapper) Logf(fn LogfFunc) LogfFunc {
-	return func(ctx context.Context, level Level, msg string, args ...interface{}) {
-		fn(ctx, level, msg, getArgs(args)...)
-	}
+func (w *NamespaceStore) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
+	return w.s.Watch(ctx, opts...)
 }
-*/

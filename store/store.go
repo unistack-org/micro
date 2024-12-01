@@ -4,9 +4,11 @@ package store
 import (
 	"context"
 	"errors"
+	"time"
 )
 
 var (
+	ErrWatcherStopped = errors.New("watcher stopped")
 	// ErrNotConnected is returned when a store is not connected
 	ErrNotConnected = errors.New("not conected")
 	// ErrNotFound is returned when a key doesn't exist
@@ -43,6 +45,7 @@ type Store interface {
 	Disconnect(ctx context.Context) error
 	// String returns the name of the implementation.
 	String() string
+	Watch(ctx context.Context, opts ...WatchOption) (Watcher, error)
 }
 
 type (
@@ -57,3 +60,41 @@ type (
 	FuncList   func(ctx context.Context, opts ...ListOption) ([]string, error)
 	HookList   func(next FuncList) FuncList
 )
+
+type EventType int
+
+const (
+	EventTypeUnknown = iota
+	EventTypeConnect
+	EventTypeDisconnect
+	EventTypeOpError
+)
+
+type Event interface {
+	Timestamp() time.Time
+	Error() error
+	Type() EventType
+}
+
+type Watcher interface {
+	// Next is a blocking call
+	Next() (Event, error)
+	// Stop stops the watcher
+	Stop()
+}
+
+type WatchOption func(*WatchOptions) error
+
+type WatchOptions struct{}
+
+func NewWatchOptions(opts ...WatchOption) (WatchOptions, error) {
+	options := WatchOptions{}
+	var err error
+	for _, o := range opts {
+		if err = o(&options); err != nil {
+			break
+		}
+	}
+
+	return options, err
+}

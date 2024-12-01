@@ -2,14 +2,18 @@ package store
 
 import (
 	"context"
+	"sync"
 	"sync/atomic"
 
 	"go.unistack.org/micro/v3/options"
+	"go.unistack.org/micro/v3/util/id"
 )
 
 var _ Store = (*noopStore)(nil)
 
 type noopStore struct {
+	mu          sync.Mutex
+	watchers    map[string]Watcher
 	funcRead    FuncRead
 	funcWrite   FuncWrite
 	funcExists  FuncExists
@@ -181,4 +185,42 @@ func (n *noopStore) connect(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+type watcher struct {
+	exit chan bool
+	id   string
+	ch   chan Event
+	opts WatchOptions
+}
+
+func (m *noopStore) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
+	id, err := id.New()
+	if err != nil {
+		return nil, err
+	}
+	wo, err := NewWatchOptions(opts...)
+	if err != nil {
+		return nil, err
+	}
+	// construct the watcher
+	w := &watcher{
+		exit: make(chan bool),
+		ch:   make(chan Event),
+		id:   id,
+		opts: wo,
+	}
+
+	m.mu.Lock()
+	m.watchers[w.id] = w
+	m.mu.Unlock()
+
+	return w, nil
+}
+
+func (w *watcher) Next() (Event, error) {
+	return nil, nil
+}
+
+func (w *watcher) Stop() {
 }
