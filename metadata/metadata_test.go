@@ -5,6 +5,28 @@ import (
 	"testing"
 )
 
+func TestMultipleUsage(t *testing.T) {
+	ctx := context.TODO()
+	md := New(0)
+	md.Set("key1_1", "val1_1", "key1_2", "val1_2", "key1_3", "val1_3")
+	ctx = NewIncomingContext(ctx, Copy(md))
+	ctx = NewOutgoingContext(ctx, Copy(md))
+	imd, _ := FromIncomingContext(ctx)
+	omd, _ := FromOutgoingContext(ctx)
+	_ = func(x context.Context) context.Context {
+		m, _ := FromIncomingContext(x)
+		m.Del("key1_2")
+		return ctx
+	}(ctx)
+	_ = func(x context.Context) context.Context {
+		m, _ := FromIncomingContext(x)
+		m.Del("key1_3")
+		return ctx
+	}(ctx)
+	t.Logf("imd %#+v", imd)
+	t.Logf("omd %#+v", omd)
+}
+
 func TestMetadataSetMultiple(t *testing.T) {
 	md := New(4)
 	md.Set("key1", "val1", "key2", "val2", "key3")

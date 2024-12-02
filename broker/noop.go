@@ -25,6 +25,18 @@ func NewBroker(opts ...Option) *NoopBroker {
 	return b
 }
 
+func (b *NoopBroker) Health() bool {
+	return true
+}
+
+func (b *NoopBroker) Live() bool {
+	return true
+}
+
+func (b *NoopBroker) Ready() bool {
+	return true
+}
+
 func (b *NoopBroker) Name() string {
 	return b.opts.Name
 }

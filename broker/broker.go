@@ -46,6 +46,12 @@ type Broker interface {
 	BatchSubscribe(ctx context.Context, topic string, h BatchHandler, opts ...SubscribeOption) (Subscriber, error)
 	// String type of broker
 	String() string
+	// Live returns broker liveness
+	Live() bool
+	// Ready returns broker readiness
+	Ready() bool
+	// Health returns broker health
+	Health() bool
 }
 
 type (

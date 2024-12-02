@@ -11,7 +11,6 @@ import (
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/metadata"
 	"go.unistack.org/micro/v3/meter"
-	"go.unistack.org/micro/v3/network/transport"
 	"go.unistack.org/micro/v3/options"
 	"go.unistack.org/micro/v3/register"
 	"go.unistack.org/micro/v3/router"
@@ -22,8 +21,6 @@ import (
 
 // Options holds client options
 type Options struct {
-	// Transport used for transfer messages
-	Transport transport.Transport
 	// Selector used to select needed address
 	Selector selector.Selector
 	// Logger used to log messages
@@ -194,18 +191,16 @@ func NewOptions(opts ...Option) Options {
 			Retry:          DefaultRetry,
 			Retries:        DefaultRetries,
 			RequestTimeout: DefaultRequestTimeout,
-			DialTimeout:    transport.DefaultDialTimeout,
 		},
-		Lookup:    LookupRoute,
-		PoolSize:  DefaultPoolSize,
-		PoolTTL:   DefaultPoolTTL,
-		Selector:  random.NewSelector(),
-		Logger:    logger.DefaultLogger,
-		Broker:    broker.DefaultBroker,
-		Meter:     meter.DefaultMeter,
-		Tracer:    tracer.DefaultTracer,
-		Router:    router.DefaultRouter,
-		Transport: transport.DefaultTransport,
+		Lookup:   LookupRoute,
+		PoolSize: DefaultPoolSize,
+		PoolTTL:  DefaultPoolTTL,
+		Selector: random.NewSelector(),
+		Logger:   logger.DefaultLogger,
+		Broker:   broker.DefaultBroker,
+		Meter:    meter.DefaultMeter,
+		Tracer:   tracer.DefaultTracer,
+		Router:   router.DefaultRouter,
 	}
 
 	for _, o := range opts {
@@ -278,13 +273,6 @@ func PoolTTL(d time.Duration) Option {
 	}
 }
 
-// Transport to use for communication e.g http, rabbitmq, etc
-func Transport(t transport.Transport) Option {
-	return func(o *Options) {
-		o.Transport = t
-	}
-}
-
 // Register sets the routers register
 func Register(r register.Register) Option {
 	return func(o *Options) {
@@ -334,14 +322,6 @@ func TLSConfig(t *tls.Config) Option {
 	return func(o *Options) {
 		// set the internal tls
 		o.TLSConfig = t
-
-		// set the default transport if one is not
-		// already set. Required for Init call below.
-
-		// set the transport tls
-		_ = o.Transport.Init(
-			transport.TLSConfig(t),
-		)
 	}
 }
 
@@ -504,13 +484,6 @@ func WithDialTimeout(d time.Duration) CallOption {
 func WithAuthToken(t string) CallOption {
 	return func(o *CallOptions) {
 		o.AuthToken = t
-	}
-}
-
-// WithNetwork is a CallOption which sets the network attribute
-func WithNetwork(n string) CallOption {
-	return func(o *CallOptions) {
-		o.Network = n
 	}
 }
 

@@ -29,17 +29,32 @@ var (
 // and an abstraction over varying implementations
 // {consul, etcd, zookeeper, ...}
 type Register interface {
+	// Name returns register name
 	Name() string
+	// Init initialize register
 	Init(...Option) error
+	// Options returns options for register
 	Options() Options
+	// Connect initialize connect to register
 	Connect(context.Context) error
+	// Disconnect initialize discconection from register
 	Disconnect(context.Context) error
+	// Register service in registry
 	Register(context.Context, *Service, ...RegisterOption) error
+	// Deregister service from registry
 	Deregister(context.Context, *Service, ...DeregisterOption) error
+	// LookupService in registry
 	LookupService(context.Context, string, ...LookupOption) ([]*Service, error)
+	// ListServices in registry
 	ListServices(context.Context, ...ListOption) ([]*Service, error)
+	// Watch registry events
 	Watch(context.Context, ...WatchOption) (Watcher, error)
+	// String returns registry string representation
 	String() string
+	// Live returns register liveness
+	// Live() bool
+	// Ready returns register readiness
+	// Ready() bool
 }
 
 // Service holds service register info

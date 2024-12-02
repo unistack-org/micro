@@ -23,7 +23,7 @@ func TestMarshalYAML(t *testing.T) {
 
 func TestUnmarshalYAML(t *testing.T) {
 	type str struct {
-		TTL Duration `yaml:"ttl"`
+		TTL *Duration `yaml:"ttl"`
 	}
 	v := &str{}
 	var err error
@@ -31,14 +31,14 @@ func TestUnmarshalYAML(t *testing.T) {
 	err = yaml.Unmarshal([]byte(`{"ttl":"10ms"}`), v)
 	if err != nil {
 		t.Fatal(err)
-	} else if v.TTL != 10000000 {
+	} else if *(v.TTL) != 10000000 {
 		t.Fatalf("invalid duration %v != 10000000", v.TTL)
 	}
 
 	err = yaml.Unmarshal([]byte(`{"ttl":"1y"}`), v)
 	if err != nil {
 		t.Fatal(err)
-	} else if v.TTL != 31622400000000000 {
+	} else if *(v.TTL) != 31622400000000000 {
 		t.Fatalf("invalid duration %v != 31622400000000000", v.TTL)
 	}
 }

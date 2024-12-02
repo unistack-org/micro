@@ -339,6 +339,18 @@ func (m *memoryBroker) Name() string {
 	return m.opts.Name
 }
 
+func (m *memoryBroker) Live() bool {
+	return true
+}
+
+func (m *memoryBroker) Ready() bool {
+	return true
+}
+
+func (m *memoryBroker) Health() bool {
+	return true
+}
+
 func (m *memoryEvent) Topic() string {
 	return m.topic
 }

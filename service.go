@@ -1,5 +1,5 @@
 // Package micro is a pluggable framework for microservices
-package micro // import "go.unistack.org/micro/v3"
+package micro
 
 import (
 	"fmt"
@@ -72,8 +72,14 @@ type Service interface {
 	Start() error
 	// Stop the service
 	Stop() error
-	// The service implementation
+	// String service representation
 	String() string
+	// Live returns service liveness
+	Live() bool
+	// Ready returns service readiness
+	Ready() bool
+	// Health returns service health
+	Health() bool
 }
 
 // RegisterHandler is syntactic sugar for registering a handler
@@ -101,9 +107,7 @@ func (s *service) Name() string {
 	return s.opts.Name
 }
 
-// Init initialises options. Additionally it calls cmd.Init
-// which parses command line flags. cmd.Init is only called
-// on first Init.
+// Init initialises options.
 //
 //nolint:gocyclo
 func (s *service) Init(opts ...Option) error {
@@ -252,6 +256,63 @@ func (s *service) String() string {
 	return s.opts.Name
 }
 
+func (s *service) Live() bool {
+	for _, v := range s.opts.Brokers {
+		if !v.Live() {
+			return false
+		}
+	}
+	for _, v := range s.opts.Servers {
+		if !v.Live() {
+			return false
+		}
+	}
+	for _, v := range s.opts.Stores {
+		if !v.Live() {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *service) Ready() bool {
+	for _, v := range s.opts.Brokers {
+		if !v.Ready() {
+			return false
+		}
+	}
+	for _, v := range s.opts.Servers {
+		if !v.Ready() {
+			return false
+		}
+	}
+	for _, v := range s.opts.Stores {
+		if !v.Ready() {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *service) Health() bool {
+	for _, v := range s.opts.Brokers {
+		if !v.Health() {
+			return false
+		}
+	}
+	for _, v := range s.opts.Servers {
+		if !v.Health() {
+			return false
+		}
+	}
+	for _, v := range s.opts.Stores {
+		if !v.Health() {
+			return false
+		}
+	}
+	return true
+}
+
 //nolint:gocyclo
 func (s *service) Start() error {
 	var err error
@@ -279,10 +340,6 @@ func (s *service) Start() error {
 
 	if config.Loggers[0].V(logger.InfoLevel) {
 		config.Loggers[0].Info(s.opts.Context, fmt.Sprintf("starting [service] %s version %s", s.Options().Name, s.Options().Version))
-	}
-
-	if len(s.opts.Servers) == 0 {
-		return fmt.Errorf("cant start nil server")
 	}
 
 	for _, reg := range s.opts.Registers {

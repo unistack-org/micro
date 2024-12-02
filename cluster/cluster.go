@@ -38,4 +38,10 @@ type Cluster interface {
 	Broadcast(ctx context.Context, msg Message, filter ...string) error
 	// Unicast send message to single member in cluster
 	Unicast(ctx context.Context, node Node, msg Message) error
+	// Live returns cluster liveness
+	Live() bool
+	// Ready returns cluster readiness
+	Ready() bool
+	// Health returns cluster health
+	Health() bool
 }

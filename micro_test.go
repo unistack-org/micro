@@ -66,6 +66,12 @@ type bro struct {
 
 func (p *bro) Name() string { return p.name }
 
+func (p *bro) Live() bool { return true }
+
+func (p *bro) Ready() bool { return true }
+
+func (p *bro) Health() bool { return true }
+
 func (p *bro) Init(opts ...broker.Option) error { return nil }
 
 // Options returns broker options

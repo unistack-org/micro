@@ -70,3 +70,15 @@ func (w *NamespaceStore) String() string {
 func (w *NamespaceStore) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
 	return w.s.Watch(ctx, opts...)
 }
+
+func (w *NamespaceStore) Live() bool {
+	return w.s.Live()
+}
+
+func (w *NamespaceStore) Ready() bool {
+	return w.s.Ready()
+}
+
+func (w *NamespaceStore) Health() bool {
+	return w.s.Health()
+}

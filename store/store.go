@@ -45,7 +45,14 @@ type Store interface {
 	Disconnect(ctx context.Context) error
 	// String returns the name of the implementation.
 	String() string
+	// Watch returns events watcher
 	Watch(ctx context.Context, opts ...WatchOption) (Watcher, error)
+	// Live returns store liveness
+	Live() bool
+	// Ready returns store readiness
+	Ready() bool
+	// Health returns store health
+	Health() bool
 }
 
 type (

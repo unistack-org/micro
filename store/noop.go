@@ -23,6 +23,18 @@ type noopStore struct {
 	isConnected atomic.Int32
 }
 
+func (n *noopStore) Live() bool {
+	return true
+}
+
+func (n *noopStore) Ready() bool {
+	return true
+}
+
+func (n *noopStore) Health() bool {
+	return true
+}
+
 func NewStore(opts ...Option) *noopStore {
 	options := NewOptions(opts...)
 	return &noopStore{opts: options}

@@ -149,6 +149,18 @@ func (m *memoryStore) Name() string {
 	return m.opts.Name
 }
 
+func (m *memoryStore) Live() bool {
+	return true
+}
+
+func (m *memoryStore) Ready() bool {
+	return true
+}
+
+func (m *memoryStore) Health() bool {
+	return true
+}
+
 func (m *memoryStore) Exists(ctx context.Context, key string, opts ...store.ExistsOption) error {
 	if m.opts.LazyConnect {
 		if err := m.connect(ctx); err != nil {
@@ -278,4 +290,17 @@ func (m *memoryStore) fnList(ctx context.Context, opts ...store.ListOption) ([]s
 func (m *memoryStore) connect(ctx context.Context) error {
 	m.isConnected.CompareAndSwap(0, 1)
 	return nil
+}
+
+func (m *memoryStore) Watch(ctx context.Context, opts ...store.WatchOption) (store.Watcher, error) {
+	return &watcher{}, nil
+}
+
+type watcher struct{}
+
+func (w *watcher) Next() (store.Event, error) {
+	return nil, nil
+}
+
+func (w *watcher) Stop() {
 }

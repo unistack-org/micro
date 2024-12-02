@@ -45,6 +45,18 @@ type (
 	tunnelAddr struct{}
 )
 
+func (t *tunBroker) Live() bool {
+	return true
+}
+
+func (t *tunBroker) Ready() bool {
+	return true
+}
+
+func (t *tunBroker) Health() bool {
+	return true
+}
+
 func (t *tunBroker) Init(opts ...broker.Option) error {
 	for _, o := range opts {
 		o(&t.opts)

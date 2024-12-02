@@ -121,6 +121,18 @@ func (n *noopServer) newCodec(contentType string) (codec.Codec, error) {
 	return nil, codec.ErrUnknownContentType
 }
 
+func (n *noopServer) Live() bool {
+	return true
+}
+
+func (n *noopServer) Ready() bool {
+	return true
+}
+
+func (n *noopServer) Health() bool {
+	return true
+}
+
 func (n *noopServer) Handle(handler Handler) error {
 	n.h = handler
 	return nil

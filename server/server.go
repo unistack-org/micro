@@ -62,6 +62,12 @@ type Server interface {
 	Stop() error
 	// Server implementation
 	String() string
+	// Live returns server liveness
+	Live() bool
+	// Ready returns server readiness
+	Ready() bool
+	// Health returns server health
+	Health() bool
 }
 
 type (

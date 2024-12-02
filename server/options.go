@@ -12,7 +12,6 @@ import (
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/metadata"
 	"go.unistack.org/micro/v3/meter"
-	"go.unistack.org/micro/v3/network/transport"
 	"go.unistack.org/micro/v3/options"
 	"go.unistack.org/micro/v3/register"
 	msync "go.unistack.org/micro/v3/sync"
@@ -37,8 +36,6 @@ type Options struct {
 	Logger logger.Logger
 	// Meter holds the meter
 	Meter meter.Meter
-	// Transport holds the transport
-	Transport transport.Transport
 
 	/*
 		// Router for requests
@@ -100,7 +97,6 @@ func NewOptions(opts ...Option) Options {
 		Tracer:           tracer.DefaultTracer,
 		Broker:           broker.DefaultBroker,
 		Register:         register.DefaultRegister,
-		Transport:        transport.DefaultTransport,
 		Address:          DefaultAddress,
 		Name:             DefaultName,
 		Version:          DefaultVersion,
@@ -209,13 +205,6 @@ func Tracer(t tracer.Tracer) Option {
 	}
 }
 
-// Transport mechanism for communication e.g http, rabbitmq, etc
-func Transport(t transport.Transport) Option {
-	return func(o *Options) {
-		o.Transport = t
-	}
-}
-
 // Metadata associated with the server
 func Metadata(md metadata.Metadata) Option {
 	return func(o *Options) {
@@ -249,14 +238,6 @@ func TLSConfig(t *tls.Config) Option {
 	return func(o *Options) {
 		// set the internal tls
 		o.TLSConfig = t
-
-		// set the default transport if one is not
-		// already set. Required for Init call below.
-
-		// set the transport tls
-		_ = o.Transport.Init(
-			transport.TLSConfig(t),
-		)
 	}
 }
 
