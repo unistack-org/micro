@@ -3,7 +3,9 @@ package micro
 
 import (
 	"fmt"
+	"net"
 	"sync"
+	"time"
 
 	"github.com/KimMachineGun/automemlimit/memlimit"
 	"go.uber.org/automaxprocs/maxprocs"
@@ -17,6 +19,7 @@ import (
 	"go.unistack.org/micro/v3/server"
 	"go.unistack.org/micro/v3/store"
 	"go.unistack.org/micro/v3/tracer"
+	utildns "go.unistack.org/micro/v3/util/dns"
 )
 
 func init() {
@@ -30,6 +33,8 @@ func init() {
 			),
 		),
 	)
+
+	net.DefaultResolver = utildns.NewNetResolver(utildns.Timeout(1 * time.Second))
 }
 
 // Service is an interface that wraps the lower level components.
