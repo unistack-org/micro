@@ -2,7 +2,7 @@ name: lint
 
 on:
   pull_request:
-    types: [opened, reopened, closed, synchronize]
+    types: [opened, reopened, synchronize]
     branches:
     - master
     - v3
