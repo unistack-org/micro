@@ -91,7 +91,7 @@ func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 	}
 
 	if mapper, ok := dst.(map[string]interface{}); ok {
-		dst = mergeMap(mapper, mp, 0)
+		mergeMap(mapper, mp, 0)
 		return nil
 	}
 

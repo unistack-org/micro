@@ -2,6 +2,7 @@ package errors
 
 import (
 	"encoding/json"
+	"errors"
 	er "errors"
 	"fmt"
 	"net/http"
@@ -26,7 +27,7 @@ func TestMarshalJSON(t *testing.T) {
 func TestEmpty(t *testing.T) {
 	msg := "test"
 	var err *Error
-	err = FromError(fmt.Errorf(msg))
+	err = FromError(errors.New(msg))
 	if err.Detail != msg {
 		t.Fatalf("invalid error %v", err)
 	}

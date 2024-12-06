@@ -66,8 +66,13 @@ func (c *dnsConn) RemoteAddr() net.Addr {
 }
 
 func (c *dnsConn) SetDeadline(t time.Time) error {
-	c.SetReadDeadline(t)
-	c.SetWriteDeadline(t)
+	var err error
+	if err = c.SetReadDeadline(t); err != nil {
+		return err
+	}
+	if err = c.SetWriteDeadline(t); err != nil {
+		return err
+	}
 	return nil
 }
 

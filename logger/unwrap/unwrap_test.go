@@ -82,12 +82,12 @@ func TestTagged(t *testing.T) {
 func TestTaggedNested(t *testing.T) {
 	type val struct {
 		key string `logger:"take"`
-		val string `logger:"omit"`
+		// val string `logger:"omit"`
 		unk string
 	}
 	type str struct {
-		key string `logger:"omit"`
-		val *val   `logger:"take"`
+		// key string `logger:"omit"`
+		val *val `logger:"take"`
 	}
 
 	var iface interface{}

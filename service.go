@@ -23,8 +23,8 @@ import (
 )
 
 func init() {
-	maxprocs.Set()
-	memlimit.SetGoMemLimitWithOpts(
+	_, _ = maxprocs.Set()
+	_, _ = memlimit.SetGoMemLimitWithOpts(
 		memlimit.WithRatio(0.9),
 		memlimit.WithProvider(
 			memlimit.ApplyFallback(

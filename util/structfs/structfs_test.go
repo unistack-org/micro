@@ -2,7 +2,7 @@ package structfs
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"reflect"
 	"testing"
@@ -61,7 +61,7 @@ var doOrig = []byte(`{
 }
 `)
 
-func server(t *testing.T) {
+func server(t *testing.T, ch chan error) {
 	stfs := DigitalOceanMetadata{}
 	err := json.Unmarshal(doOrig, &stfs.Metadata.V1)
 	if err != nil {
@@ -71,7 +71,7 @@ func server(t *testing.T) {
 	http.Handle("/metadata/v1/", FileServer(&stfs, "json", time.Now()))
 	http.Handle("/metadata/v1.json", &stfs)
 	go func() {
-		t.Fatal(http.ListenAndServe("127.0.0.1:8080", nil))
+		ch <- http.ListenAndServe("127.0.0.1:8080", nil)
 	}()
 	time.Sleep(2 * time.Second)
 }
@@ -82,13 +82,14 @@ func get(path string) ([]byte, error) {
 		return nil, err
 	}
 	defer res.Body.Close()
-	return ioutil.ReadAll(res.Body)
+	return io.ReadAll(res.Body)
 }
 
 func TestAll(t *testing.T) {
-	server(t)
+	ch := make(chan error)
+	server(t, ch)
 
-	var tests = []struct {
+	tests := []struct {
 		in  string
 		out string
 	}{
@@ -100,34 +101,44 @@ func TestAll(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		buf, err := get(tt.in)
+		select {
+		case err := <-ch:
+			t.Fatal(err)
+		default:
+			buf, err := get(tt.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(buf) != tt.out {
+				t.Errorf("req %s output %s not match requested %s", tt.in, string(buf), tt.out)
+			}
+		}
+	}
+
+	select {
+	case err := <-ch:
+		t.Fatal(err)
+	default:
+		doTest, err := get("http://127.0.0.1:8080/metadata/v1.json")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if string(buf) != tt.out {
-			t.Errorf("req %s output %s not match requested %s", tt.in, string(buf), tt.out)
+
+		oSt := DigitalOceanMetadata{}
+		err = json.Unmarshal(doOrig, &oSt.Metadata.V1)
+		if err != nil {
+			t.Fatal(err)
 		}
-	}
 
-	doTest, err := get("http://127.0.0.1:8080/metadata/v1.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+		nSt := DigitalOceanMetadata{}
 
-	oSt := DigitalOceanMetadata{}
-	err = json.Unmarshal(doOrig, &oSt.Metadata.V1)
-	if err != nil {
-		t.Fatal(err)
-	}
+		err = json.Unmarshal(doTest, &nSt.Metadata.V1)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	nSt := DigitalOceanMetadata{}
-
-	err = json.Unmarshal(doTest, &nSt.Metadata.V1)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(oSt, nSt) {
-		t.Fatalf("%v not match %v", oSt, nSt)
+		if !reflect.DeepEqual(oSt, nSt) {
+			t.Fatalf("%v not match %v", oSt, nSt)
+		}
 	}
 }

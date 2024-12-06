@@ -105,3 +105,7 @@ func NewWatchOptions(opts ...WatchOption) (WatchOptions, error) {
 
 	return options, err
 }
+
+func Watch(context.Context) (Watcher, error) {
+	return nil, nil
+}

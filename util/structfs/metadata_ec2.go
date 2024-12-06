@@ -12,7 +12,7 @@ type EC2Metadata struct {
 			InstanceType       string   `json:"instance-type"`
 			LocalHostname      string   `json:"local-hostname"`
 			LocalIPv4          string   `json:"local-ipv4"`
-			kernelID           int      `json:"kernel-id"`
+			KernelID           int      `json:"kernel-id"`
 			Placement          string   `json:"placement"`
 			AvailabilityZone   string   `json:"availability-zone"`
 			ProductCodes       string   `json:"product-codes"`

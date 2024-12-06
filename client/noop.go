@@ -298,7 +298,7 @@ func (n *noopClient) fnCall(ctx context.Context, req Request, rsp interface{}, o
 		// call backoff first. Someone may want an initial start delay
 		t, err := callOpts.Backoff(ctx, req, i)
 		if err != nil {
-			return errors.InternalServerError("go.micro.client", err.Error())
+			return errors.InternalServerError("go.micro.client", "%s", err.Error())
 		}
 
 		// only sleep if greater than 0
@@ -312,7 +312,7 @@ func (n *noopClient) fnCall(ctx context.Context, req Request, rsp interface{}, o
 			// TODO apply any filtering here
 			routes, err = n.opts.Lookup(ctx, req, callOpts)
 			if err != nil {
-				return errors.InternalServerError("go.micro.client", err.Error())
+				return errors.InternalServerError("go.micro.client", "%s", err.Error())
 			}
 
 			// balance the list of nodes
@@ -466,7 +466,7 @@ func (n *noopClient) fnStream(ctx context.Context, req Request, opts ...CallOpti
 		// call backoff first. Someone may want an initial start delay
 		t, cerr := callOpts.Backoff(ctx, req, i)
 		if cerr != nil {
-			return nil, errors.InternalServerError("go.micro.client", cerr.Error())
+			return nil, errors.InternalServerError("go.micro.client", "%s", cerr.Error())
 		}
 
 		// only sleep if greater than 0
@@ -480,7 +480,7 @@ func (n *noopClient) fnStream(ctx context.Context, req Request, opts ...CallOpti
 			// TODO apply any filtering here
 			routes, err = n.opts.Lookup(ctx, req, callOpts)
 			if err != nil {
-				return nil, errors.InternalServerError("go.micro.client", err.Error())
+				return nil, errors.InternalServerError("go.micro.client", "%s", err.Error())
 			}
 
 			// balance the list of nodes
@@ -609,13 +609,13 @@ func (n *noopClient) publish(ctx context.Context, ps []Message, opts ...PublishO
 			// use codec for payload
 			cf, err := n.newCodec(p.ContentType())
 			if err != nil {
-				return errors.InternalServerError("go.micro.client", err.Error())
+				return errors.InternalServerError("go.micro.client", "%s", err.Error())
 			}
 
 			// set the body
 			b, err := cf.Marshal(p.Payload())
 			if err != nil {
-				return errors.InternalServerError("go.micro.client", err.Error())
+				return errors.InternalServerError("go.micro.client", "%s", err.Error())
 			}
 			body = b
 		}

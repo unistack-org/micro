@@ -83,6 +83,7 @@ func TestPassing(t *testing.T) {
 	if ok {
 		t.Fatalf("create outgoing context")
 	}
+	_ = md
 
 	ctx = NewOutgoingContext(ctx, New(1))
 	testCtx(ctx)

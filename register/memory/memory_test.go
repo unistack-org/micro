@@ -290,27 +290,25 @@ func TestWatcher(t *testing.T) {
 
 	ctx := context.TODO()
 	m := NewRegister()
-	m.Init()
-	m.Connect(ctx)
+	_ = m.Init()
+	_ = m.Connect(ctx)
 	wc, err := m.Watch(ctx)
 	if err != nil {
 		t.Fatalf("cant watch: %v", err)
 	}
 	defer wc.Stop()
 
+	cherr := make(chan error, 10)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		for {
-			_, err := wc.Next()
-			if err != nil {
-				t.Fatal("unexpected err", err)
-			}
-			// t.Logf("changes %#+v", ch.Service)
-			wc.Stop()
-			wg.Done()
-			return
+		_, err := wc.Next()
+		if err != nil {
+			cherr <- fmt.Errorf("unexpected err %v", err)
 		}
+		// t.Logf("changes %#+v", ch.Service)
+		wc.Stop()
+		wg.Done()
 	}()
 
 	if err := m.Register(ctx, testSrv); err != nil {

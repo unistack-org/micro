@@ -16,7 +16,6 @@ type Ticker struct {
 	C    chan time.Time
 	min  int64
 	max  int64
-	exp  int64
 	exit bool
 	rng  rand.Rand
 }

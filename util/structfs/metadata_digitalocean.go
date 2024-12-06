@@ -56,7 +56,7 @@ type DigitalOceanMetadata struct {
 func (stfs *DigitalOceanMetadata) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/metadata/v1.json":
-		json.NewEncoder(w).Encode(stfs.Metadata.V1)
+		_ = json.NewEncoder(w).Encode(stfs.Metadata.V1)
 	default:
 		fs := FileServer(stfs, "json", time.Now())
 		idx := strings.Index(r.URL.Path[1:], "/")

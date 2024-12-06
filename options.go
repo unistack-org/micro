@@ -269,7 +269,7 @@ func Logger(l logger.Logger, opts ...LoggerOption) Option {
 				}
 			}
 		}
-		
+
 		for _, trc := range o.Tracers {
 			for _, ot := range lopts.tracers {
 				if trc.Name() == ot || all {
@@ -294,8 +294,8 @@ type loggerOptions struct {
 	brokers   []string
 	registers []string
 	stores    []string
-	meters    []string
-	tracers   []string
+	// meters    []string
+	tracers []string
 }
 
 /*

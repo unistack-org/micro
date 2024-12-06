@@ -1,0 +1,40 @@
+name: pipeline
+on:
+  pull_request:
+    branches:
+    - master
+    - v3
+    - v4
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+    - name: setup-go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 'stable'
+    - name: checkout
+      uses: actions/checkout@v3
+    - name: deps
+      run: go get -v -d ./...
+    - name: lint
+      uses: https://github.com/golangci/golangci-lint-action@v6
+      with:
+        version: v1.62.2
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: setup-go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 'stable'
+    - name: checkout
+      uses: actions/checkout@v3
+    - name: deps
+      run: go get -v -d ./...
+    - name: test
+      env:
+        INTEGRATION_TESTS: yes
+      run: go test -mod readonly -v ./...

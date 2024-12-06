@@ -27,7 +27,7 @@ func (fs *fs) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f, err := fs.Open(r.URL.Path)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 	w.Header().Set("Content-Type", "application/octet-stream")
@@ -67,9 +67,9 @@ func (fi *fileInfo) Name() string {
 
 func (fi *fileInfo) Mode() os.FileMode {
 	if strings.HasSuffix(fi.name, "/") {
-		return os.FileMode(0755) | os.ModeDir
+		return os.FileMode(0o755) | os.ModeDir
 	}
-	return os.FileMode(0644)
+	return os.FileMode(0o644)
 }
 
 func (fi *fileInfo) IsDir() bool {
@@ -112,15 +112,14 @@ func (f *file) Readdir(count int) ([]os.FileInfo, error) {
 func (f *file) Seek(offset int64, whence int) (int64, error) {
 	//	log.Printf("seek %d %d %s\n", offset, whence, f.name)
 	switch whence {
-	case os.SEEK_SET:
+	case io.SeekStart:
 		f.offset = offset
-	case os.SEEK_CUR:
+	case io.SeekCurrent:
 		f.offset += offset
-	case os.SEEK_END:
+	case io.SeekEnd:
 		f.offset = int64(len(f.data)) + offset
 	}
 	return f.offset, nil
-
 }
 
 func (f *file) Stat() (os.FileInfo, error) {
@@ -222,6 +221,7 @@ func getValue(name string, iface interface{}, tag string) ([]byte, error) {
 	return nil, fmt.Errorf("failed to find %s in interface %T", name, iface)
 }
 
+/*
 func hasValidType(obj interface{}, types []reflect.Kind) bool {
 	for _, t := range types {
 		if reflect.TypeOf(obj).Kind() == t {
@@ -231,6 +231,7 @@ func hasValidType(obj interface{}, types []reflect.Kind) bool {
 
 	return false
 }
+*/
 
 func reflectValue(obj interface{}) reflect.Value {
 	var val reflect.Value

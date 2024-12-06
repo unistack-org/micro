@@ -1,44 +1,5 @@
 run:
-  concurrency: 4
+  concurrency: 8
   deadline: 5m
   issues-exit-code: 1
   tests: true
-
-linters-settings:
-  govet:
-    check-shadowing: true
-    enable:
-      - fieldalignment
-
-linters:
-  enable:
-    - govet
-    - deadcode
-    - errcheck
-    - govet
-    - ineffassign
-    - staticcheck
-    - structcheck
-    - typecheck
-    - unused
-    - varcheck
-    - bodyclose
-    - gci
-    - goconst
-    - gocritic
-    - gosimple
-    - gofmt
-    - gofumpt
-    - goimports
-    - revive
-    - gosec
-    - makezero
-    - misspell
-    - nakedret
-    - nestif
-    - nilerr
-    - noctx
-    - prealloc
-    - unconvert
-    - unparam
-  disable-all: false

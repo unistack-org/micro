@@ -39,19 +39,16 @@ func newStatsMeter() {
 	ticker := time.NewTicker(meter.DefaultMeterStatsInterval)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			poolsMu.Lock()
-			for _, st := range pools {
-				stats := st.Stats()
-				meter.DefaultMeter.Counter(semconv.PoolGetTotal, "capacity", strconv.Itoa(st.Cap())).Set(stats.Get)
-				meter.DefaultMeter.Counter(semconv.PoolPutTotal, "capacity", strconv.Itoa(st.Cap())).Set(stats.Put)
-				meter.DefaultMeter.Counter(semconv.PoolMisTotal, "capacity", strconv.Itoa(st.Cap())).Set(stats.Mis)
-				meter.DefaultMeter.Counter(semconv.PoolRetTotal, "capacity", strconv.Itoa(st.Cap())).Set(stats.Ret)
-			}
-			poolsMu.Unlock()
+	for range ticker.C {
+		poolsMu.Lock()
+		for _, st := range pools {
+			stats := st.Stats()
+			meter.DefaultMeter.Counter(semconv.PoolGetTotal, "capacity", strconv.Itoa(st.Cap())).Set(stats.Get)
+			meter.DefaultMeter.Counter(semconv.PoolPutTotal, "capacity", strconv.Itoa(st.Cap())).Set(stats.Put)
+			meter.DefaultMeter.Counter(semconv.PoolMisTotal, "capacity", strconv.Itoa(st.Cap())).Set(stats.Mis)
+			meter.DefaultMeter.Counter(semconv.PoolRetTotal, "capacity", strconv.Itoa(st.Cap())).Set(stats.Ret)
 		}
+		poolsMu.Unlock()
 	}
 }
 

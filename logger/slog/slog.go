@@ -46,11 +46,11 @@ func (h *wrapper) Handle(ctx context.Context, rec slog.Record) error {
 }
 
 func (h *wrapper) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return h.WithAttrs(attrs)
+	return h.h.WithAttrs(attrs)
 }
 
 func (h *wrapper) WithGroup(name string) slog.Handler {
-	return h.WithGroup(name)
+	return h.h.WithGroup(name)
 }
 
 func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
@@ -89,7 +89,6 @@ func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 }
 
 type slogLogger struct {
-	leveler *slog.LevelVar
 	handler *wrapper
 	opts    logger.Options
 	mu      sync.RWMutex

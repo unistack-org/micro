@@ -1,8 +1,37 @@
 package reflect
 
 import (
+	"fmt"
 	"testing"
 )
+
+func TestMergeMapStringInterface(t *testing.T) {
+	var dst interface{} //nolint:gosimple
+	dst = map[string]interface{}{
+		"xx": 11,
+	}
+
+	src := map[string]interface{}{
+		"zz": "aa",
+	}
+
+	if err := Merge(dst, src); err != nil {
+		t.Fatal(err)
+	}
+
+	mp, ok := dst.(map[string]interface{})
+	if !ok || mp == nil {
+		t.Fatalf("xxx %#+v\n", dst)
+	}
+
+	if fmt.Sprintf("%v", mp["xx"]) != "11" {
+		t.Fatalf("xxx zzzz %#+v", mp)
+	}
+
+	if fmt.Sprintf("%v", mp["zz"]) != "aa" {
+		t.Fatalf("xxx zzzz %#+v", mp)
+	}
+}
 
 func TestMergeMap(t *testing.T) {
 	src := map[string]interface{}{

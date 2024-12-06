@@ -14,7 +14,7 @@ type Duration int64
 
 func ParseDuration(s string) (time.Duration, error) {
 	if s == "" {
-		return 0, fmt.Errorf(`time: invalid duration "` + s + `"`)
+		return 0, errors.New(`time: invalid duration "` + s + `"`)
 	}
 
 	var p int
