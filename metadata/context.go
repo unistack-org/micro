@@ -55,10 +55,7 @@ func NewContext(ctx context.Context, md Metadata) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	ctx = context.WithValue(ctx, mdKey{}, &rawMetadata{md})
-	ctx = context.WithValue(ctx, mdIncomingKey{}, &rawMetadata{})
-	ctx = context.WithValue(ctx, mdOutgoingKey{}, &rawMetadata{})
-	return ctx
+	return context.WithValue(ctx, mdKey{}, &rawMetadata{md})
 }
 
 // SetOutgoingContext modify outgoing context with given metadata
@@ -90,11 +87,7 @@ func NewIncomingContext(ctx context.Context, md Metadata) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	ctx = context.WithValue(ctx, mdIncomingKey{}, &rawMetadata{md})
-	if v, ok := ctx.Value(mdOutgoingKey{}).(*rawMetadata); !ok || v == nil {
-		ctx = context.WithValue(ctx, mdOutgoingKey{}, &rawMetadata{})
-	}
-	return ctx
+	return context.WithValue(ctx, mdIncomingKey{}, &rawMetadata{md})
 }
 
 // NewOutgoingContext creates a new context with outcoming metadata attached
@@ -102,11 +95,7 @@ func NewOutgoingContext(ctx context.Context, md Metadata) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	ctx = context.WithValue(ctx, mdOutgoingKey{}, &rawMetadata{md})
-	if v, ok := ctx.Value(mdIncomingKey{}).(*rawMetadata); !ok || v == nil {
-		ctx = context.WithValue(ctx, mdIncomingKey{}, &rawMetadata{})
-	}
-	return ctx
+	return context.WithValue(ctx, mdOutgoingKey{}, &rawMetadata{md})
 }
 
 // AppendOutgoingContext apends new md to context

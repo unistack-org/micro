@@ -80,6 +80,13 @@ func TestPassing(t *testing.T) {
 	ctx = NewIncomingContext(ctx, md1)
 	testCtx(ctx)
 	md, ok := FromOutgoingContext(ctx)
+	if ok {
+		t.Fatalf("create outgoing context")
+	}
+
+	ctx = NewOutgoingContext(ctx, New(1))
+	testCtx(ctx)
+	md, ok = FromOutgoingContext(ctx)
 	if !ok {
 		t.Fatalf("missing metadata from outgoing context")
 	}
