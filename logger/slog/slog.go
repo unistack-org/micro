@@ -171,7 +171,19 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 	}
 
 	attrs, _ := s.argsAttrs(s.opts.Fields)
-	s.handler = &wrapper{h: slog.NewJSONHandler(s.opts.Out, handleOpt).WithAttrs(attrs)}
+
+	var h slog.Handler
+	if s.opts.Context != nil {
+		if v, ok := s.opts.Context.Value(handlerKey{}).(slog.Handler); ok && v != nil {
+			h = v
+		}
+	}
+
+	if h == nil {
+		h = slog.NewJSONHandler(s.opts.Out, handleOpt)
+	}
+
+	s.handler = &wrapper{h: h.WithAttrs(attrs)}
 	s.handler.level.Store(int64(loggerToSlogLevel(s.opts.Level)))
 	s.mu.Unlock()
 
@@ -328,4 +340,10 @@ func (s *slogLogger) argsAttrs(args []interface{}) ([]slog.Attr, error) {
 	}
 
 	return attrs, err
+}
+
+type handlerKey struct{}
+
+func WithHandler(h slog.Handler) logger.Option {
+	return logger.SetOption(handlerKey{}, h)
 }

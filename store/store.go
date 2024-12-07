@@ -10,7 +10,7 @@ import (
 var (
 	ErrWatcherStopped = errors.New("watcher stopped")
 	// ErrNotConnected is returned when a store is not connected
-	ErrNotConnected = errors.New("not conected")
+	ErrNotConnected = errors.New("not connected")
 	// ErrNotFound is returned when a key doesn't exist
 	ErrNotFound = errors.New("not found")
 	// ErrInvalidKey is returned when a key has empty or have invalid format
