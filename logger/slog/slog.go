@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"reflect"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -177,6 +178,16 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 		if v, ok := s.opts.Context.Value(handlerKey{}).(slog.Handler); ok && v != nil {
 			h = v
 		}
+
+		if fn := s.opts.Context.Value(handlerFnKey{}); fn != nil {
+			if rfn := reflect.ValueOf(fn); rfn.Kind() == reflect.Func {
+				if ret := rfn.Call([]reflect.Value{reflect.ValueOf(s.opts.Out), reflect.ValueOf(handleOpt)}); len(ret) == 1 {
+					if iface, ok := ret[0].Interface().(slog.Handler); ok && iface != nil {
+						h = iface
+					}
+				}
+			}
+		}
 	}
 
 	if h == nil {
@@ -346,4 +357,10 @@ type handlerKey struct{}
 
 func WithHandler(h slog.Handler) logger.Option {
 	return logger.SetOption(handlerKey{}, h)
+}
+
+type handlerFnKey struct{}
+
+func WithHandlerFunc(fn any) logger.Option {
+	return logger.SetOption(handlerFnKey{}, fn)
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"strings"
 	"testing"
 
@@ -14,6 +15,23 @@ import (
 
 	"go.unistack.org/micro/v3/logger"
 )
+
+func TestWithHandlerFunc(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.InfoLevel), logger.WithOutput(buf),
+		WithHandlerFunc(slog.NewTextHandler),
+	)
+	if err := l.Init(); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Info(ctx, "msg1")
+
+	if !bytes.Contains(buf.Bytes(), []byte(`msg=msg1`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+}
 
 func TestWithAddFields(t *testing.T) {
 	ctx := context.TODO()
