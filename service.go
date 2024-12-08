@@ -34,7 +34,10 @@ func init() {
 		),
 	)
 
-	net.DefaultResolver = utildns.NewNetResolver(utildns.Timeout(1 * time.Second))
+	net.DefaultResolver = utildns.NewNetResolver(
+		utildns.Timeout(1*time.Second),
+		utildns.MinCacheTTL(5*time.Second),
+	)
 }
 
 // Service is an interface that wraps the lower level components.

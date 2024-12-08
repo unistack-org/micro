@@ -11,15 +11,13 @@ import (
 )
 
 type dnsConn struct {
-	sync.Mutex
-
-	ibuf bytes.Buffer
-	obuf bytes.Buffer
-
+	deadline  time.Time
 	ctx       context.Context
 	cancel    context.CancelFunc
-	deadline  time.Time
 	roundTrip roundTripper
+	ibuf      bytes.Buffer
+	obuf      bytes.Buffer
+	sync.Mutex
 }
 
 type roundTripper func(ctx context.Context, req string) (res string, err error)
@@ -78,8 +76,8 @@ func (c *dnsConn) SetDeadline(t time.Time) error {
 
 func (c *dnsConn) SetReadDeadline(t time.Time) error {
 	c.Lock()
-	defer c.Unlock()
 	c.deadline = t
+	c.Unlock()
 	return nil
 }
 

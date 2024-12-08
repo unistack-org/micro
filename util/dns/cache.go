@@ -6,6 +6,9 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v3/semconv"
 )
 
 // DialFunc is a [net.Resolver.Dial] function.
@@ -17,6 +20,11 @@ func NewNetResolver(opts ...Option) *net.Resolver {
 
 	for _, o := range opts {
 		o(&options)
+	}
+
+	if options.Meter == nil {
+		options.Meter = meter.DefaultMeter
+		opts = append(opts, Meter(options.Meter))
 	}
 
 	return &net.Resolver{
@@ -56,6 +64,7 @@ type Options struct {
 	PreferIPV4      bool
 	PreferIPV6      bool
 	Timeout         time.Duration
+	Meter           meter.Meter
 }
 
 // MaxCacheEntries sets the maximum number of entries to cache.
@@ -84,6 +93,13 @@ func MinCacheTTL(td time.Duration) Option {
 func NegativeCache(b bool) Option {
 	return func(o *Options) {
 		o.NegativeCache = b
+	}
+}
+
+// Meter sets meter.Meter
+func Meter(m meter.Meter) Option {
+	return func(o *Options) {
+		o.Meter = m
 	}
 }
 
@@ -156,7 +172,6 @@ func (c *cache) put(req string, res string) {
 	}
 
 	c.Lock()
-	defer c.Unlock()
 	if c.entries == nil {
 		c.entries = make(map[string]cacheEntry)
 	}
@@ -165,6 +180,8 @@ func (c *cache) put(req string, res string) {
 	var tested, evicted int
 	for k, e := range c.entries {
 		if time.Until(e.deadline) <= 0 {
+			c.opts.Meter.Counter(semconv.CacheItemsTotal, "type", "dns").Dec()
+			c.opts.Meter.Counter(semconv.CacheRequestTotal, "type", "dns", "method", "evict").Inc()
 			// delete expired entry
 			delete(c.entries, k)
 			evicted++
@@ -175,6 +192,8 @@ func (c *cache) put(req string, res string) {
 			continue
 		}
 		if evicted == 0 && c.opts.MaxCacheEntries > 0 && len(c.entries) >= c.opts.MaxCacheEntries {
+			c.opts.Meter.Counter(semconv.CacheItemsTotal, "type", "dns").Dec()
+			c.opts.Meter.Counter(semconv.CacheRequestTotal, "type", "dns", "method", "evict").Inc()
 			// delete at least one entry
 			delete(c.entries, k)
 		}
@@ -186,6 +205,9 @@ func (c *cache) put(req string, res string) {
 		deadline: time.Now().Add(ttl),
 		value:    res[2:],
 	}
+
+	c.opts.Meter.Counter(semconv.CacheItemsTotal, "type", "dns").Inc()
+	c.Unlock()
 }
 
 func (c *cache) get(req string) (res string) {
@@ -210,6 +232,7 @@ func (c *cache) get(req string) (res string) {
 		// prepend correct ID
 		return req[:2] + entry.value
 	}
+
 	return ""
 }
 
@@ -310,10 +333,19 @@ func getUint32(s string) int {
 
 func cachingRoundTrip(cache *cache, network, address string) roundTripper {
 	return func(ctx context.Context, req string) (res string, err error) {
+		cache.opts.Meter.Counter(semconv.CacheRequestInflight, "type", "dns").Inc()
+		defer cache.opts.Meter.Counter(semconv.CacheRequestInflight, "type", "dns").Dec()
 		// check cache
 		if res := cache.get(req); res != "" {
+			cache.opts.Meter.Counter(semconv.CacheRequestTotal, "type", "dns", "method", "get", "status", "hit").Inc()
 			return res, nil
 		}
+		cache.opts.Meter.Counter(semconv.CacheRequestTotal, "type", "dns", "method", "get", "status", "miss").Inc()
+		ts := time.Now()
+		defer func() {
+			cache.opts.Meter.Summary(semconv.CacheRequestLatencyMicroseconds, "type", "dns", "method", "get").UpdateDuration(ts)
+			cache.opts.Meter.Histogram(semconv.CacheRequestDurationSeconds, "type", "dns", "method", "get").UpdateDuration(ts)
+		}()
 
 		switch {
 		case cache.opts.PreferIPV4 && cache.opts.PreferIPV6:
@@ -340,6 +372,7 @@ func cachingRoundTrip(cache *cache, network, address string) roundTripper {
 			var d net.Dialer
 			conn, err = d.DialContext(ctx, network, address)
 		}
+
 		if err != nil {
 			return "", err
 		}

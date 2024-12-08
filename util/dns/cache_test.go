@@ -12,5 +12,11 @@ func TestCache(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("addrs %v", addrs)
+
+	addrs, err = net.LookupHost("unistack.org")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_ = addrs
 }

@@ -222,7 +222,7 @@ func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opt
 	ts := time.Now()
 	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", req.Endpoint()).Inc()
 	var sp tracer.Span
-	ctx, sp = n.opts.Tracer.Start(ctx, req.Endpoint()+" rpc-client",
+	ctx, sp = n.opts.Tracer.Start(ctx, "rpc-client",
 		tracer.WithSpanKind(tracer.SpanKindClient),
 		tracer.WithSpanLabels("endpoint", req.Endpoint()),
 	)
@@ -385,7 +385,7 @@ func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption
 	ts := time.Now()
 	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", req.Endpoint()).Inc()
 	var sp tracer.Span
-	ctx, sp = n.opts.Tracer.Start(ctx, req.Endpoint()+" rpc-client",
+	ctx, sp = n.opts.Tracer.Start(ctx, "rpc-client",
 		tracer.WithSpanKind(tracer.SpanKindClient),
 		tracer.WithSpanLabels("endpoint", req.Endpoint()),
 	)
