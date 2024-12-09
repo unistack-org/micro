@@ -5,6 +5,15 @@ import (
 	"testing"
 )
 
+func TestLowercase(t *testing.T) {
+	md := New(1)
+	md["x-request-id"] = "12345"
+	v, ok := md.Get("X-Request-Id")
+	if !ok || v == "" {
+		t.Fatalf("metadata invalid %#+v", md)
+	}
+}
+
 func TestMultipleUsage(t *testing.T) {
 	ctx := context.TODO()
 	md := New(0)
