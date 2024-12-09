@@ -19,8 +19,8 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v4
-      #with:
-      #  filter: 'blob:none'
+      with:
+        filter: 'blob:none'
     - name: setup-go
       uses: actions/setup-go@v5
       with:
