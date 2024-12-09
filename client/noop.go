@@ -298,7 +298,7 @@ func (n *noopClient) fnCall(ctx context.Context, req Request, rsp interface{}, o
 		// call backoff first. Someone may want an initial start delay
 		t, err := callOpts.Backoff(ctx, req, i)
 		if err != nil {
-			return errors.InternalServerError("go.micro.client", "%s", err.Error())
+			return errors.InternalServerError("go.micro.client", "%s", err)
 		}
 
 		// only sleep if greater than 0
@@ -312,7 +312,7 @@ func (n *noopClient) fnCall(ctx context.Context, req Request, rsp interface{}, o
 			// TODO apply any filtering here
 			routes, err = n.opts.Lookup(ctx, req, callOpts)
 			if err != nil {
-				return errors.InternalServerError("go.micro.client", "%s", err.Error())
+				return errors.InternalServerError("go.micro.client", "%s", err)
 			}
 
 			// balance the list of nodes
@@ -372,7 +372,7 @@ func (n *noopClient) fnCall(ctx context.Context, req Request, rsp interface{}, o
 	return gerr
 }
 
-func (n *noopClient) NewRequest(service, endpoint string, req interface{}, opts ...RequestOption) Request {
+func (n *noopClient) NewRequest(service, endpoint string, _ interface{}, _ ...RequestOption) Request {
 	return &noopRequest{service: service, endpoint: endpoint}
 }
 
@@ -466,7 +466,7 @@ func (n *noopClient) fnStream(ctx context.Context, req Request, opts ...CallOpti
 		// call backoff first. Someone may want an initial start delay
 		t, cerr := callOpts.Backoff(ctx, req, i)
 		if cerr != nil {
-			return nil, errors.InternalServerError("go.micro.client", "%s", cerr.Error())
+			return nil, errors.InternalServerError("go.micro.client", "%s", cerr)
 		}
 
 		// only sleep if greater than 0
@@ -480,7 +480,7 @@ func (n *noopClient) fnStream(ctx context.Context, req Request, opts ...CallOpti
 			// TODO apply any filtering here
 			routes, err = n.opts.Lookup(ctx, req, callOpts)
 			if err != nil {
-				return nil, errors.InternalServerError("go.micro.client", "%s", err.Error())
+				return nil, errors.InternalServerError("go.micro.client", "%s", err)
 			}
 
 			// balance the list of nodes
@@ -546,7 +546,7 @@ func (n *noopClient) fnStream(ctx context.Context, req Request, opts ...CallOpti
 	return nil, grr
 }
 
-func (n *noopClient) stream(ctx context.Context, addr string, req Request, opts CallOptions) (Stream, error) {
+func (n *noopClient) stream(ctx context.Context, _ string, _ Request, _ CallOptions) (Stream, error) {
 	return &noopStream{ctx: ctx}, nil
 }
 
@@ -609,13 +609,13 @@ func (n *noopClient) publish(ctx context.Context, ps []Message, opts ...PublishO
 			// use codec for payload
 			cf, err := n.newCodec(p.ContentType())
 			if err != nil {
-				return errors.InternalServerError("go.micro.client", "%s", err.Error())
+				return errors.InternalServerError("go.micro.client", "%s", err)
 			}
 
 			// set the body
 			b, err := cf.Marshal(p.Payload())
 			if err != nil {
-				return errors.InternalServerError("go.micro.client", "%s", err.Error())
+				return errors.InternalServerError("go.micro.client", "%s", err)
 			}
 			body = b
 		}

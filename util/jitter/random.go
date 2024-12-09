@@ -14,7 +14,7 @@ func Random(d time.Duration) time.Duration {
 	return time.Duration(v)
 }
 
-func RandomInterval(min, max time.Duration) time.Duration {
+func RandomInterval(minTime, maxTime time.Duration) time.Duration {
 	var rng rand.Rand
-	return time.Duration(rng.Int63n(max.Nanoseconds()-min.Nanoseconds())+min.Nanoseconds()) * time.Nanosecond
+	return time.Duration(rng.Int63n(maxTime.Nanoseconds()-minTime.Nanoseconds())+minTime.Nanoseconds()) * time.Nanosecond
 }

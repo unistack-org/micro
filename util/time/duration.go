@@ -2,7 +2,6 @@ package time
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -14,7 +13,7 @@ type Duration int64
 
 func ParseDuration(s string) (time.Duration, error) {
 	if s == "" {
-		return 0, errors.New(`time: invalid duration "` + s + `"`)
+		return 0, fmt.Errorf(`time: invalid duration "%s"`, s)
 	}
 
 	var p int
@@ -27,21 +26,21 @@ loop:
 		case 'h':
 			d, err := strconv.Atoi(s[p:i])
 			if err != nil {
-				return 0, errors.New("time: invalid duration " + s)
+				return 0, fmt.Errorf(`time: invalid duration "%s"`, s)
 			}
 			hours += d
 			p = i + 1
 		case 'd':
 			d, err := strconv.Atoi(s[p:i])
 			if err != nil {
-				return 0, errors.New("time: invalid duration " + s)
+				return 0, fmt.Errorf(`time: invalid duration "%s"`, s)
 			}
 			hours += d * 24
 			p = i + 1
 		case 'y':
 			n, err := strconv.Atoi(s[p:i])
 			if err != nil {
-				return 0, errors.New("time: invalid duration " + s)
+				return 0, fmt.Errorf(`time: invalid duration "%s"`, s)
 			}
 			var d int
 			for j := n - 1; j >= 0; j-- {

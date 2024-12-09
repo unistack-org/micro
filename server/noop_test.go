@@ -38,7 +38,9 @@ func TestNoopSub(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_ = logger.DefaultLogger.Init(logger.WithLevel(logger.ErrorLevel))
+	if err := logger.DefaultLogger.Init(logger.WithLevel(logger.ErrorLevel)); err != nil {
+		t.Fatal(err)
+	}
 	s := server.NewServer(
 		server.Broker(b),
 		server.Codec("application/octet-stream", codec.NewCodec()),

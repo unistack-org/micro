@@ -10,7 +10,7 @@ import (
 
 var (
 	// DefaultTransport is the global default transport
-	DefaultTransport Transport = NewTransport()
+	DefaultTransport = NewTransport()
 	// DefaultDialTimeout the default dial timeout
 	DefaultDialTimeout = time.Second * 5
 )

@@ -43,7 +43,7 @@ func NewNetDialer(parent DialFunc, opts ...Option) DialFunc {
 	if cache.opts.MaxCacheEntries == 0 {
 		cache.opts.MaxCacheEntries = DefaultMaxCacheEntries
 	}
-	return func(ctx context.Context, network, address string) (net.Conn, error) {
+	return func(_ context.Context, network, address string) (net.Conn, error) {
 		conn := &dnsConn{}
 		conn.roundTrip = cachingRoundTrip(&cache, network, address)
 		return conn, nil
@@ -132,12 +132,12 @@ func PreferIPV6(b bool) Option {
 }
 
 type cache struct {
-	sync.RWMutex
-
-	dial    DialFunc
 	entries map[string]cacheEntry
+	dial    DialFunc
 
 	opts Options
+
+	sync.RWMutex
 }
 
 type cacheEntry struct {
@@ -306,7 +306,7 @@ func getNameLen(msg string) int {
 	for i < len(msg) {
 		if msg[i] == 0 {
 			// end of name
-			i += 1
+			i++
 			break
 		}
 		if msg[i] >= 0xc0 {
@@ -336,8 +336,7 @@ func cachingRoundTrip(cache *cache, network, address string) roundTripper {
 		cache.opts.Meter.Counter(semconv.CacheRequestInflight, "type", "dns").Inc()
 		defer cache.opts.Meter.Counter(semconv.CacheRequestInflight, "type", "dns").Dec()
 		// check cache
-		if res := cache.get(req); res != "" {
-			cache.opts.Meter.Counter(semconv.CacheRequestTotal, "type", "dns", "method", "get", "status", "hit").Inc()
+		if res = cache.get(req); res != "" {
 			return res, nil
 		}
 		cache.opts.Meter.Counter(semconv.CacheRequestTotal, "type", "dns", "method", "get", "status", "miss").Inc()

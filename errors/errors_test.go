@@ -3,7 +3,6 @@ package errors
 import (
 	"encoding/json"
 	"errors"
-	er "errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -43,7 +42,7 @@ func TestFromError(t *testing.T) {
 	if merr.ID != "go.micro.test" || merr.Code != 404 {
 		t.Fatalf("invalid conversation %v != %v", err, merr)
 	}
-	err = er.New(err.Error())
+	err = errors.New(err.Error())
 	merr = FromError(err)
 	if merr.ID != "go.micro.test" || merr.Code != 404 {
 		t.Fatalf("invalid conversation %v != %v", err, merr)
@@ -58,7 +57,7 @@ func TestEqual(t *testing.T) {
 		t.Fatal("errors must be equal")
 	}
 
-	err3 := er.New("my test err")
+	err3 := errors.New("my test err")
 	if Equal(err1, err3) {
 		t.Fatal("errors must be not equal")
 	}

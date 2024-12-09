@@ -74,7 +74,7 @@ func TestMemoryBroker(t *testing.T) {
 	topic := "test"
 	count := 10
 
-	fn := func(p broker.Event) error {
+	fn := func(_ broker.Event) error {
 		return nil
 	}
 

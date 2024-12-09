@@ -11,7 +11,7 @@ var DefaultContextAttrFuncs []ContextAttrFunc
 
 var (
 	// DefaultLogger variable
-	DefaultLogger Logger = NewLogger()
+	DefaultLogger = NewLogger()
 	// DefaultLevel used by logger
 	DefaultLevel = InfoLevel
 )

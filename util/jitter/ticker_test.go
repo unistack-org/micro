@@ -31,26 +31,26 @@ loop:
 func TestTicker(t *testing.T) {
 	t.Parallel()
 
-	min := time.Duration(10)
-	max := time.Duration(20)
+	minTime := time.Duration(10)
+	maxTime := time.Duration(20)
 
 	// tick can take a little longer since we're not adjusting it to account for
 	// processing.
 	precision := time.Duration(4)
 
-	rt := NewTicker(min*time.Millisecond, max*time.Millisecond)
+	rt := NewTicker(minTime*time.Millisecond, maxTime*time.Millisecond)
 	for i := 0; i < 5; i++ {
 		t0 := time.Now()
 		t1 := <-rt.C
 		td := t1.Sub(t0)
-		if td < min*time.Millisecond {
+		if td < minTime*time.Millisecond {
 			t.Fatalf("tick was shorter than expected: %s", td)
-		} else if td > (max+precision)*time.Millisecond {
+		} else if td > (maxTime+precision)*time.Millisecond {
 			t.Fatalf("tick was longer than expected: %s", td)
 		}
 	}
 	rt.Stop()
-	time.Sleep((max + precision) * time.Millisecond)
+	time.Sleep((maxTime + precision) * time.Millisecond)
 	select {
 	case v, ok := <-rt.C:
 		if ok || !v.IsZero() {

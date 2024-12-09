@@ -96,15 +96,15 @@ func (m *memoryStore) list(prefix string, limit, offset uint) []string {
 	if limit != 0 || offset != 0 {
 		sort.Slice(allKeys, func(i, j int) bool { return allKeys[i] < allKeys[j] })
 		sort.Slice(allKeys, func(i, j int) bool { return allKeys[i] < allKeys[j] })
-		end := len(allKeys)
+		end := uint(len(allKeys))
 		if limit > 0 {
-			calcLimit := int(offset + limit)
+			calcLimit := offset + limit
 			if calcLimit < end {
 				end = calcLimit
 			}
 		}
 
-		if int(offset) >= end {
+		if offset >= end {
 			return nil
 		}
 		return allKeys[offset:end]

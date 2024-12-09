@@ -121,8 +121,10 @@ func TestNewService(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		args args
+
 		want Service
+
+		args args
 	}{
 		{
 			name: "NewService",
@@ -146,9 +148,10 @@ func Test_service_Name(t *testing.T) {
 		opts Options
 	}
 	tests := []struct {
-		name   string
+		name string
+		want string
+
 		fields fields
-		want   string
 	}{
 		{
 			name: "Test_service_Name",
@@ -245,10 +248,12 @@ func Test_service_Broker(t *testing.T) {
 		names []string
 	}
 	tests := []struct {
-		name   string
+		name string
+
+		want broker.Broker
+
 		fields fields
 		args   args
-		want   broker.Broker
 	}{
 		{
 			name: "service.Broker",
@@ -301,10 +306,12 @@ func Test_service_Tracer(t *testing.T) {
 		names []string
 	}
 	tests := []struct {
-		name   string
+		name string
+
+		want tracer.Tracer
+
 		fields fields
 		args   args
-		want   tracer.Tracer
 	}{
 		{
 			name: "service.Tracer",
@@ -338,10 +345,11 @@ func Test_service_Config(t *testing.T) {
 		names []string
 	}
 	tests := []struct {
-		name   string
+		name string
+		want config.Config
+
 		fields fields
 		args   args
-		want   config.Config
 	}{
 		{
 			name: "service.Config",
@@ -375,10 +383,12 @@ func Test_service_Client(t *testing.T) {
 		names []string
 	}
 	tests := []struct {
-		name   string
+		name string
+
+		want client.Client
+
 		fields fields
 		args   args
-		want   client.Client
 	}{
 		{
 			name: "service.Client",
@@ -412,10 +422,12 @@ func Test_service_Server(t *testing.T) {
 		names []string
 	}
 	tests := []struct {
-		name   string
+		name string
+
+		want server.Server
+
 		fields fields
 		args   args
-		want   server.Server
 	}{
 		{
 			name: "service.Server",
@@ -449,10 +461,12 @@ func Test_service_Store(t *testing.T) {
 		names []string
 	}
 	tests := []struct {
-		name   string
+		name string
+
+		want store.Store
+
 		fields fields
 		args   args
-		want   store.Store
 	}{
 		{
 			name: "service.Store",
@@ -486,10 +500,12 @@ func Test_service_Register(t *testing.T) {
 		names []string
 	}
 	tests := []struct {
-		name   string
+		name string
+
+		want register.Register
+
 		fields fields
 		args   args
-		want   register.Register
 	}{
 		{
 			name: "service.Register",
@@ -523,10 +539,12 @@ func Test_service_Logger(t *testing.T) {
 		names []string
 	}
 	tests := []struct {
-		name   string
+		name string
+
+		want logger.Logger
+
 		fields fields
 		args   args
-		want   logger.Logger
 	}{
 		{
 			name: "service.Logger",
@@ -560,10 +578,12 @@ func Test_service_Router(t *testing.T) {
 		names []string
 	}
 	tests := []struct {
-		name   string
+		name string
+
+		want router.Router
+
 		fields fields
 		args   args
-		want   router.Router
 	}{
 		{
 			name: "service.Router",
@@ -597,10 +617,12 @@ func Test_service_Meter(t *testing.T) {
 		names []string
 	}
 	tests := []struct {
-		name   string
+		name string
+
+		want meter.Meter
+
 		fields fields
 		args   args
-		want   meter.Meter
 	}{
 		{
 			name: "service.Meter",
@@ -631,8 +653,8 @@ func Test_service_String(t *testing.T) {
 	}
 	tests := []struct {
 		name   string
-		fields fields
 		want   string
+		fields fields
 	}{
 		{
 			name: "service.String",

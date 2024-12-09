@@ -25,7 +25,7 @@ func (r *random) Select(routes []string, opts ...selector.SelectOption) (selecto
 	}, nil
 }
 
-func (r *random) Record(addr string, err error) error {
+func (r *random) Record(_ string, _ error) error {
 	return nil
 }
 

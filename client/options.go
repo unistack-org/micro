@@ -21,6 +21,16 @@ import (
 
 // Options holds client options
 type Options struct {
+	// Codecs map
+	Codecs map[string]codec.Codec
+
+	// Proxy is used for proxy requests
+	Proxy string
+	// ContentType is used to select codec
+	ContentType string
+	// Name is the client name
+	Name string
+
 	// Selector used to select needed address
 	Selector selector.Selector
 	// Logger used to log messages
@@ -35,31 +45,28 @@ type Options struct {
 	Context context.Context
 	// Router used to get route
 	Router router.Router
+
 	// TLSConfig specifies tls.Config for secure connection
 	TLSConfig *tls.Config
-	// Codecs map
-	Codecs map[string]codec.Codec
+
 	// Lookup func used to get destination addr
 	Lookup LookupFunc
-	// Proxy is used for proxy requests
-	Proxy string
-	// ContentType is used to select codec
-	ContentType string
-	// Name is the client name
-	Name string
+	// ContextDialer used to connect
+	ContextDialer func(context.Context, string) (net.Conn, error)
+
 	// Wrappers contains wrappers
 	Wrappers []Wrapper
+	// Hooks can be run before broker Publish/BatchPublish and
+	// Subscribe/BatchSubscribe methods
+	Hooks options.Hooks
+
 	// CallOptions contains default CallOptions
 	CallOptions CallOptions
+
 	// PoolSize connection pool size
 	PoolSize int
 	// PoolTTL connection pool ttl
 	PoolTTL time.Duration
-	// ContextDialer used to connect
-	ContextDialer func(context.Context, string) (net.Conn, error)
-	// Hooks can be run before broker Publish/BatchPublish and
-	// Subscribe/BatchSubscribe methods
-	Hooks options.Hooks
 }
 
 // NewCallOptions creates new call options struct
@@ -73,6 +80,16 @@ func NewCallOptions(opts ...CallOption) CallOptions {
 
 // CallOptions holds client call options
 type CallOptions struct {
+	// RequestMetadata holds additional metadata for call
+	RequestMetadata metadata.Metadata
+
+	// Network name
+	Network string
+	// Content-Type
+	ContentType string
+	// AuthToken string
+	AuthToken string
+
 	// Selector selects addr
 	Selector selector.Selector
 	// Context used for deadline
@@ -80,33 +97,30 @@ type CallOptions struct {
 	// Router used for route
 	Router router.Router
 	// Retry func used for retries
+
+	// ResponseMetadata holds additional metadata from call
+	ResponseMetadata *metadata.Metadata
+
 	Retry RetryFunc
 	// Backoff func used for backoff when retry
 	Backoff BackoffFunc
-	// Network name
-	Network string
-	// Content-Type
-	ContentType string
-	// AuthToken string
-	AuthToken string
+	// ContextDialer used to connect
+	ContextDialer func(context.Context, string) (net.Conn, error)
+
 	// Address specifies static addr list
 	Address []string
 	// SelectOptions selector options
 	SelectOptions []selector.SelectOption
+
 	// StreamTimeout stream timeout
 	StreamTimeout time.Duration
 	// RequestTimeout request timeout
 	RequestTimeout time.Duration
-	// RequestMetadata holds additional metadata for call
-	RequestMetadata metadata.Metadata
-	// ResponseMetadata holds additional metadata from call
-	ResponseMetadata *metadata.Metadata
+
 	// DialTimeout dial timeout
 	DialTimeout time.Duration
 	// Retries specifies retries num
 	Retries int
-	// ContextDialer used to connect
-	ContextDialer func(context.Context, string) (net.Conn, error)
 }
 
 // ContextDialer pass ContextDialer to client

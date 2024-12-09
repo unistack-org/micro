@@ -15,6 +15,6 @@ func (p *noopProfiler) String() string {
 }
 
 // NewProfiler returns new noop profiler
-func NewProfiler(opts ...Option) Profiler {
+func NewProfiler(_ ...Option) Profiler {
 	return &noopProfiler{}
 }

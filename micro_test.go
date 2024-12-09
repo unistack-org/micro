@@ -18,26 +18,27 @@ func TestAs(t *testing.T) {
 	testCases := []struct {
 		b      any
 		target any
-		match  bool
 		want   any
+
+		match bool
 	}{
 		{
-			broTarget,
-			&b,
-			true,
-			broTarget,
+			b:      broTarget,
+			target: &b,
+			match:  true,
+			want:   broTarget,
 		},
 		{
-			nil,
-			&b,
-			false,
-			nil,
+			b:      nil,
+			target: &b,
+			match:  false,
+			want:   nil,
 		},
 		{
-			fsmTarget,
-			&b,
-			false,
-			nil,
+			b:      fsmTarget,
+			target: &b,
+			match:  false,
+			want:   nil,
 		},
 	}
 	for i, tc := range testCases {
@@ -72,7 +73,7 @@ func (p *bro) Ready() bool { return true }
 
 func (p *bro) Health() bool { return true }
 
-func (p *bro) Init(opts ...broker.Option) error { return nil }
+func (p *bro) Init(_ ...broker.Option) error { return nil }
 
 // Options returns broker options
 func (p *bro) Options() broker.Options { return broker.Options{} }
@@ -81,28 +82,28 @@ func (p *bro) Options() broker.Options { return broker.Options{} }
 func (p *bro) Address() string { return "" }
 
 // Connect connects to broker
-func (p *bro) Connect(ctx context.Context) error { return nil }
+func (p *bro) Connect(_ context.Context) error { return nil }
 
 // Disconnect disconnect from broker
-func (p *bro) Disconnect(ctx context.Context) error { return nil }
+func (p *bro) Disconnect(_ context.Context) error { return nil }
 
 // Publish message, msg can be single broker.Message or []broker.Message
-func (p *bro) Publish(ctx context.Context, topic string, msg *broker.Message, opts ...broker.PublishOption) error {
+func (p *bro) Publish(_ context.Context, _ string, _ *broker.Message, _ ...broker.PublishOption) error {
 	return nil
 }
 
 // BatchPublish messages to broker with multiple topics
-func (p *bro) BatchPublish(ctx context.Context, msgs []*broker.Message, opts ...broker.PublishOption) error {
+func (p *bro) BatchPublish(_ context.Context, _ []*broker.Message, _ ...broker.PublishOption) error {
 	return nil
 }
 
 // BatchSubscribe subscribes to topic messages via handler
-func (p *bro) BatchSubscribe(ctx context.Context, topic string, h broker.BatchHandler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
+func (p *bro) BatchSubscribe(_ context.Context, _ string, _ broker.BatchHandler, _ ...broker.SubscribeOption) (broker.Subscriber, error) {
 	return nil, nil
 }
 
 // Subscribe subscribes to topic message via handler
-func (p *bro) Subscribe(ctx context.Context, topic string, handler broker.Handler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
+func (p *bro) Subscribe(_ context.Context, _ string, _ broker.Handler, _ ...broker.SubscribeOption) (broker.Subscriber, error) {
 	return nil, nil
 }
 
@@ -113,9 +114,9 @@ type fsmT struct {
 	name string
 }
 
-func (f *fsmT) Start(ctx context.Context, a interface{}, o ...Option) (interface{}, error) {
+func (f *fsmT) Start(_ context.Context, _ interface{}, _ ...Option) (interface{}, error) {
 	return nil, nil
 }
-func (f *fsmT) Current() string                  { return f.name }
-func (f *fsmT) Reset()                           {}
-func (f *fsmT) State(s string, sf fsm.StateFunc) {}
+func (f *fsmT) Current() string                 { return f.name }
+func (f *fsmT) Reset()                          {}
+func (f *fsmT) State(_ string, _ fsm.StateFunc) {}

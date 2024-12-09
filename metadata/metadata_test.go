@@ -88,15 +88,14 @@ func TestPassing(t *testing.T) {
 
 	ctx = NewIncomingContext(ctx, md1)
 	testCtx(ctx)
-	md, ok := FromOutgoingContext(ctx)
+	_, ok := FromOutgoingContext(ctx)
 	if ok {
 		t.Fatalf("create outgoing context")
 	}
-	_ = md
 
 	ctx = NewOutgoingContext(ctx, New(1))
 	testCtx(ctx)
-	md, ok = FromOutgoingContext(ctx)
+	md, ok := FromOutgoingContext(ctx)
 	if !ok {
 		t.Fatalf("missing metadata from outgoing context")
 	}
@@ -119,7 +118,7 @@ func TestMerge(t *testing.T) {
 	}
 }
 
-func TestIterator(t *testing.T) {
+func TestIterator(_ *testing.T) {
 	md := Metadata{
 		"1Last":   "last",
 		"2First":  "first",

@@ -11,12 +11,15 @@ import (
 )
 
 type dnsConn struct {
-	deadline  time.Time
 	ctx       context.Context
 	cancel    context.CancelFunc
 	roundTrip roundTripper
-	ibuf      bytes.Buffer
-	obuf      bytes.Buffer
+
+	deadline time.Time
+
+	ibuf bytes.Buffer
+	obuf bytes.Buffer
+
 	sync.Mutex
 }
 
@@ -81,7 +84,7 @@ func (c *dnsConn) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
-func (c *dnsConn) SetWriteDeadline(t time.Time) error {
+func (c *dnsConn) SetWriteDeadline(_ time.Time) error {
 	// writes do not timeout
 	return nil
 }
@@ -159,23 +162,22 @@ func readMessage(c net.Conn) (string, error) {
 			return "", err
 		}
 		return string(b[:n]), nil
-	} else {
-		var sz [2]byte
-		_, err := io.ReadFull(c, sz[:])
-		if err != nil {
-			return "", err
-		}
-
-		size := int64(sz[0])<<8 | int64(sz[1])
-
-		var str strings.Builder
-		_, err = io.CopyN(&str, c, size)
-		if err == io.EOF {
-			return "", io.ErrUnexpectedEOF
-		}
-		if err != nil {
-			return "", err
-		}
-		return str.String(), nil
 	}
+	var sz [2]byte
+	_, err := io.ReadFull(c, sz[:])
+	if err != nil {
+		return "", err
+	}
+
+	size := int64(sz[0])<<8 | int64(sz[1])
+
+	var str strings.Builder
+	_, err = io.CopyN(&str, c, size)
+	if err == io.EOF {
+		return "", io.ErrUnexpectedEOF
+	}
+	if err != nil {
+		return "", err
+	}
+	return str.String(), nil
 }

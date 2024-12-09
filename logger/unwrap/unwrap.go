@@ -52,13 +52,15 @@ type protoMessage interface {
 }
 
 type Wrapper struct {
-	val              interface{}
-	s                fmt.State
-	pointers         map[uintptr]int
-	opts             *Options
+	pointers map[uintptr]int
+	takeMap  map[int]bool
+
+	val  interface{}
+	s    fmt.State
+	opts *Options
+
 	depth            int
 	ignoreNextType   bool
-	takeMap          map[int]bool
 	protoWrapperType bool
 	sqlWrapperType   bool
 }

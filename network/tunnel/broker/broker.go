@@ -84,7 +84,7 @@ func (t *tunBroker) Disconnect(ctx context.Context) error {
 	return t.tunnel.Close(ctx)
 }
 
-func (t *tunBroker) BatchPublish(ctx context.Context, msgs []*broker.Message, opts ...broker.PublishOption) error {
+func (t *tunBroker) BatchPublish(ctx context.Context, msgs []*broker.Message, _ ...broker.PublishOption) error {
 	// TODO: this is probably inefficient, we might want to just maintain an open connection
 	// it may be easier to add broadcast to the tunnel
 	topicMap := make(map[string]tunnel.Session)
@@ -114,7 +114,7 @@ func (t *tunBroker) BatchPublish(ctx context.Context, msgs []*broker.Message, op
 	return nil
 }
 
-func (t *tunBroker) Publish(ctx context.Context, topic string, m *broker.Message, opts ...broker.PublishOption) error {
+func (t *tunBroker) Publish(ctx context.Context, topic string, m *broker.Message, _ ...broker.PublishOption) error {
 	// TODO: this is probably inefficient, we might want to just maintain an open connection
 	// it may be easier to add broadcast to the tunnel
 	c, err := t.tunnel.Dial(ctx, topic, tunnel.DialMode(tunnel.Multicast))

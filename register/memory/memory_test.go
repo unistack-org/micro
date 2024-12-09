@@ -208,9 +208,9 @@ func TestMemoryRegistryTTLConcurrent(t *testing.T) {
 		}
 	}
 
-	//if len(os.Getenv("IN_TRAVIS_CI")) == 0 {
+	// if len(os.Getenv("IN_TRAVIS_CI")) == 0 {
 	//	t.Logf("test will wait %v, then check TTL timeouts", waitTime)
-	//}
+	// }
 
 	errChan := make(chan error, concurrency)
 	syncChan := make(chan struct{})
@@ -290,8 +290,12 @@ func TestWatcher(t *testing.T) {
 
 	ctx := context.TODO()
 	m := NewRegister()
-	_ = m.Init()
-	_ = m.Connect(ctx)
+	if err := m.Init(); err != nil {
+		t.Fatal(err)
+	}
+	if err := m.Connect(ctx); err != nil {
+		t.Fatal(err)
+	}
 	wc, err := m.Watch(ctx)
 	if err != nil {
 		t.Fatalf("cant watch: %v", err)

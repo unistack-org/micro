@@ -13,7 +13,7 @@ type Validator interface {
 }
 
 // DefaultConfig default config
-var DefaultConfig Config = NewConfig()
+var DefaultConfig = NewConfig()
 
 // DefaultWatcherMinInterval default min interval for poll changes
 var DefaultWatcherMinInterval = 5 * time.Second

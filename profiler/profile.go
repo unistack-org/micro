@@ -12,7 +12,7 @@ type Profiler interface {
 }
 
 // DefaultProfiler holds the default profiler
-var DefaultProfiler Profiler = NewProfiler()
+var DefaultProfiler = NewProfiler()
 
 // Options holds the options for profiler
 type Options struct {

@@ -35,22 +35,22 @@ func (fs *fs) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type fs struct {
+	modtime time.Time
 	iface   interface{}
 	tag     string
-	modtime time.Time
 }
 
 type file struct {
-	name    string
-	offset  int64
-	data    []byte
 	modtime time.Time
+	name    string
+	data    []byte
+	offset  int64
 }
 
 type fileInfo struct {
+	modtime time.Time
 	name    string
 	size    int64
-	modtime time.Time
 }
 
 func (fi *fileInfo) Sys() interface{} {
@@ -105,7 +105,7 @@ func (f *file) Read(b []byte) (int, error) {
 	return n, err
 }
 
-func (f *file) Readdir(count int) ([]os.FileInfo, error) {
+func (f *file) Readdir(_ int) ([]os.FileInfo, error) {
 	return nil, nil
 }
 

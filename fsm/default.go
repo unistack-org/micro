@@ -32,7 +32,7 @@ type fsm struct {
 
 // NewFSM creates a new finite state machine having the specified initial state
 // with specified options
-func NewFSM(opts ...Option) *fsm {
+func NewFSM(opts ...Option) FSM {
 	return &fsm{
 		statesMap: map[string]StateFunc{},
 		opts:      NewOptions(opts...),

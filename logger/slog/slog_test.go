@@ -11,9 +11,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"go.unistack.org/micro/v3/metadata"
-
 	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/metadata"
 )
 
 func TestWithHandlerFunc(t *testing.T) {
@@ -133,7 +132,7 @@ func TestErrorf(t *testing.T) {
 
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithAddStacktrace(true))
-	if err := l.Init(logger.WithContextAttrFuncs(func(ctx context.Context) []interface{} {
+	if err := l.Init(logger.WithContextAttrFuncs(func(_ context.Context) []interface{} {
 		return nil
 	})); err != nil {
 		t.Fatal(err)

@@ -9,6 +9,6 @@ import (
 type Resolver struct{}
 
 // Resolve returns the list of nodes
-func (r *Resolver) Resolve(name string) ([]*resolver.Record, error) {
+func (r *Resolver) Resolve(_ string) ([]*resolver.Record, error) {
 	return []*resolver.Record{}, nil
 }

@@ -37,32 +37,32 @@ func (r *noopMeter) Init(opts ...Option) error {
 }
 
 // Counter implements the Meter interface
-func (r *noopMeter) Counter(name string, labels ...string) Counter {
+func (r *noopMeter) Counter(_ string, labels ...string) Counter {
 	return &noopCounter{labels: labels}
 }
 
 // FloatCounter implements the Meter interface
-func (r *noopMeter) FloatCounter(name string, labels ...string) FloatCounter {
+func (r *noopMeter) FloatCounter(_ string, labels ...string) FloatCounter {
 	return &noopFloatCounter{labels: labels}
 }
 
 // Gauge implements the Meter interface
-func (r *noopMeter) Gauge(name string, f func() float64, labels ...string) Gauge {
+func (r *noopMeter) Gauge(_ string, _ func() float64, labels ...string) Gauge {
 	return &noopGauge{labels: labels}
 }
 
 // Summary implements the Meter interface
-func (r *noopMeter) Summary(name string, labels ...string) Summary {
+func (r *noopMeter) Summary(_ string, labels ...string) Summary {
 	return &noopSummary{labels: labels}
 }
 
 // SummaryExt implements the Meter interface
-func (r *noopMeter) SummaryExt(name string, window time.Duration, quantiles []float64, labels ...string) Summary {
+func (r *noopMeter) SummaryExt(_ string, _ time.Duration, _ []float64, labels ...string) Summary {
 	return &noopSummary{labels: labels}
 }
 
 // Histogram implements the Meter interface
-func (r *noopMeter) Histogram(name string, labels ...string) Histogram {
+func (r *noopMeter) Histogram(_ string, labels ...string) Histogram {
 	return &noopHistogram{labels: labels}
 }
 
@@ -77,7 +77,7 @@ func (r *noopMeter) Set(opts ...Option) Meter {
 	return m
 }
 
-func (r *noopMeter) Write(w io.Writer, opts ...Option) error {
+func (r *noopMeter) Write(_ io.Writer, _ ...Option) error {
 	return nil
 }
 

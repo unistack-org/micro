@@ -8,19 +8,20 @@ import (
 
 // CertificateOptions holds options for x509.CreateCertificate
 type CertificateOptions struct {
-	Organization          []string
-	OrganizationalUnit    []string
-	CommonName            string
-	OCSPServer            []string
-	IssuingCertificateURL []string
 	SerialNumber          *big.Int
 	NotAfter              time.Time
 	NotBefore             time.Time
-	SignatureAlgorithm    x509.SignatureAlgorithm
-	PublicKeyAlgorithm    x509.PublicKeyAlgorithm
+	CommonName            string
+	Organization          []string
+	OrganizationalUnit    []string
+	OCSPServer            []string
+	IssuingCertificateURL []string
 	ExtKeyUsage           []x509.ExtKeyUsage
-	KeyUsage              x509.KeyUsage
-	IsCA                  bool
+
+	SignatureAlgorithm x509.SignatureAlgorithm
+	PublicKeyAlgorithm x509.PublicKeyAlgorithm
+	KeyUsage           x509.KeyUsage
+	IsCA               bool
 }
 
 // CertificateOrganizationalUnit set OrganizationalUnit in certificate subject

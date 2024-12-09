@@ -41,14 +41,16 @@ type Options struct {
 	BeforeInit []func(context.Context, Config) error
 	// AfterInit contains slice of funcs that runs after Init
 	AfterInit []func(context.Context, Config) error
-	// AllowFail flag to allow fail in config source
-	AllowFail bool
+
 	// SkipLoad runs only if condition returns true
 	SkipLoad func(context.Context, Config) bool
 	// SkipSave runs only if condition returns true
 	SkipSave func(context.Context, Config) bool
 	// Hooks can be run before/after config Save/Load
 	Hooks options.Hooks
+
+	// AllowFail flag to allow fail in config source
+	AllowFail bool
 }
 
 // Option function signature
@@ -278,10 +280,10 @@ func WatchCoalesce(b bool) WatchOption {
 }
 
 // WatchInterval specifies min and max time.Duration for pulling changes
-func WatchInterval(min, max time.Duration) WatchOption {
+func WatchInterval(minTime, maxTime time.Duration) WatchOption {
 	return func(o *WatchOptions) {
-		o.MinInterval = min
-		o.MaxInterval = max
+		o.MinInterval = minTime
+		o.MaxInterval = maxTime
 	}
 }
 

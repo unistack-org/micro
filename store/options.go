@@ -15,6 +15,13 @@ import (
 
 // Options contains configuration for the Store
 type Options struct {
+	// Name specifies store name
+	Name string
+	// Namespace of the records
+	Namespace string
+	// Separator used as key parts separator
+	Separator string
+
 	// Meter used for metrics
 	Meter meter.Meter
 	// Tracer used for tracing
@@ -25,22 +32,17 @@ type Options struct {
 	Codec codec.Codec
 	// Logger used for logging
 	Logger logger.Logger
+
 	// TLSConfig holds tls.TLSConfig options
 	TLSConfig *tls.Config
-	// Name specifies store name
-	Name string
-	// Namespace of the records
-	Namespace string
-	// Separator used as key parts separator
-	Separator string
+
 	// Addrs contains store address
 	Addrs []string
-	// Wrappers store wrapper that called before actual functions
-	// Wrappers []Wrapper
-	// Timeout specifies timeout duration for all operations
-	Timeout time.Duration
 	// Hooks can be run before/after store Read/List/Write/Exists/Delete
 	Hooks options.Hooks
+
+	// Timeout specifies timeout duration for all operations
+	Timeout time.Duration
 	// LazyConnect creates a connection when using store
 	LazyConnect bool
 }

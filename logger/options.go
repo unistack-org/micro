@@ -15,18 +15,6 @@ type Option func(*Options)
 
 // Options holds logger options
 type Options struct {
-	// Out holds the output writer
-	Out io.Writer
-	// Context holds exernal options
-	Context context.Context
-	// Name holds the logger name
-	Name string
-	// Fields holds additional metadata
-	Fields []interface{}
-	// callerSkipCount number of frmaes to skip
-	CallerSkipCount int
-	// ContextAttrFuncs contains funcs that executed before log func on context
-	ContextAttrFuncs []ContextAttrFunc
 	// TimeKey is the key used for the time of the log call
 	TimeKey string
 	// LevelKey is the key used for the level of the log call
@@ -39,16 +27,31 @@ type Options struct {
 	SourceKey string
 	// StacktraceKey is the key used for the stacktrace
 	StacktraceKey string
-	// AddStacktrace controls writing of stacktaces on error
-	AddStacktrace bool
-	// AddSource enabled writing source file and position in log
-	AddSource bool
-	// The logging level the logger should log
-	Level Level
-	// TimeFunc used to obtain current time
-	TimeFunc func() time.Time
+	// Name holds the logger name
+	Name string
+
+	// Out holds the output writer
+	Out io.Writer
+	// Context holds exernal options
+	Context context.Context
 	// Meter used to count logs for specific level
 	Meter meter.Meter
+	// TimeFunc used to obtain current time
+	TimeFunc func() time.Time
+
+	// Fields holds additional metadata
+	Fields []interface{}
+	// ContextAttrFuncs contains funcs that executed before log func on context
+	ContextAttrFuncs []ContextAttrFunc
+
+	// callerSkipCount number of frmaes to skip
+	CallerSkipCount int
+	// The logging level the logger should log
+	Level Level
+	// AddSource enabled writing source file and position in log
+	AddSource bool
+	// AddStacktrace controls writing of stacktaces on error
+	AddStacktrace bool
 }
 
 // NewOptions creates new options struct
@@ -153,8 +156,8 @@ func WithTimeFunc(fn func() time.Time) Option {
 func WithZapKeys() Option {
 	return func(o *Options) {
 		o.TimeKey = "@timestamp"
-		o.LevelKey = "level"
-		o.MessageKey = "msg"
+		o.LevelKey = slog.LevelKey
+		o.MessageKey = slog.MessageKey
 		o.SourceKey = "caller"
 		o.StacktraceKey = "stacktrace"
 		o.ErrorKey = "error"
@@ -163,8 +166,8 @@ func WithZapKeys() Option {
 
 func WithZerologKeys() Option {
 	return func(o *Options) {
-		o.TimeKey = "time"
-		o.LevelKey = "level"
+		o.TimeKey = slog.TimeKey
+		o.LevelKey = slog.LevelKey
 		o.MessageKey = "message"
 		o.SourceKey = "caller"
 		o.StacktraceKey = "stacktrace"
@@ -186,8 +189,8 @@ func WithSlogKeys() Option {
 func WithMicroKeys() Option {
 	return func(o *Options) {
 		o.TimeKey = "timestamp"
-		o.LevelKey = "level"
-		o.MessageKey = "msg"
+		o.LevelKey = slog.LevelKey
+		o.MessageKey = slog.MessageKey
 		o.SourceKey = "caller"
 		o.StacktraceKey = "stacktrace"
 		o.ErrorKey = "error"

@@ -3,6 +3,7 @@ package config_test
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -12,15 +13,17 @@ import (
 )
 
 type cfg struct {
-	StringValue    string `default:"string_value"`
-	IgnoreValue    string `json:"-"`
-	StructValue    *cfgStructValue
-	IntValue       int             `default:"99"`
-	DurationValue  time.Duration   `default:"10s"`
-	MDurationValue mtime.Duration  `default:"10s"`
-	MapValue       map[string]bool `default:"key1=true,key2=false"`
-	UUIDValue      string          `default:"micro:generate uuid"`
-	IDValue        string          `default:"micro:generate id"`
+	MapValue    map[string]bool `default:"key1=true,key2=false"`
+	StructValue *cfgStructValue
+
+	StringValue string `default:"string_value"`
+	IgnoreValue string `json:"-"`
+	UUIDValue   string `default:"micro:generate uuid"`
+	IDValue     string `default:"micro:generate id"`
+
+	DurationValue  time.Duration  `default:"10s"`
+	MDurationValue mtime.Duration `default:"10s"`
+	IntValue       int            `default:"99"`
 }
 
 type cfgStructValue struct {
@@ -132,5 +135,15 @@ func TestValidate(t *testing.T) {
 
 	if err := config.Validate(ctx, conf); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func Test_SizeOf(t *testing.T) {
+	st := cfg{}
+
+	tVal := reflect.TypeOf(st)
+	for i := 0; i < tVal.NumField(); i++ {
+		field := tVal.Field(i)
+		fmt.Printf("Field: %s, Offset: %d, Size: %d\n", field.Name, field.Offset, field.Type.Size())
 	}
 }
