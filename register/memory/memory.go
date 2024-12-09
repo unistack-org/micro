@@ -31,10 +31,10 @@ type record struct {
 }
 
 type memory struct {
-	sync.RWMutex
 	records  map[string]services
 	watchers map[string]*watcher
 	opts     register.Options
+	sync.RWMutex
 }
 
 // services is a KV map with service name as the key and a map of records as the value
@@ -100,11 +100,11 @@ func (m *memory) sendEvent(r *register.Result) {
 	}
 }
 
-func (m *memory) Connect(ctx context.Context) error {
+func (m *memory) Connect(_ context.Context) error {
 	return nil
 }
 
-func (m *memory) Disconnect(ctx context.Context) error {
+func (m *memory) Disconnect(_ context.Context) error {
 	return nil
 }
 
@@ -124,7 +124,7 @@ func (m *memory) Options() register.Options {
 	return m.opts
 }
 
-func (m *memory) Register(ctx context.Context, s *register.Service, opts ...register.RegisterOption) error {
+func (m *memory) Register(_ context.Context, s *register.Service, opts ...register.RegisterOption) error {
 	m.Lock()
 	defer m.Unlock()
 

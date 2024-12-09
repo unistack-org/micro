@@ -6,14 +6,14 @@ import (
 )
 
 // NewSelector returns an initialised round robin selector
-func NewSelector(opts ...selector.Option) selector.Selector {
+func NewSelector(_ ...selector.Option) selector.Selector {
 	return new(roundrobin)
 }
 
 type roundrobin struct{}
 
 // Select return routes based on algo
-func (r *roundrobin) Select(routes []string, opts ...selector.SelectOption) (selector.Next, error) {
+func (r *roundrobin) Select(routes []string, _ ...selector.SelectOption) (selector.Next, error) {
 	if len(routes) == 0 {
 		return nil, selector.ErrNoneAvailable
 	}
@@ -28,7 +28,7 @@ func (r *roundrobin) Select(routes []string, opts ...selector.SelectOption) (sel
 	}, nil
 }
 
-func (r *roundrobin) Record(addr string, err error) error { return nil }
+func (r *roundrobin) Record(_ string, _ error) error { return nil }
 
 func (r *roundrobin) Reset() error { return nil }
 

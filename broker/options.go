@@ -16,6 +16,9 @@ import (
 
 // Options struct
 type Options struct {
+	// Name holds the broker name
+	Name string
+
 	// Tracer used for tracing
 	Tracer tracer.Tracer
 	// Register can be used for clustering
@@ -28,23 +31,25 @@ type Options struct {
 	Meter meter.Meter
 	// Context holds external options
 	Context context.Context
+
+	// Wait waits for a collection of goroutines to finish
+	Wait *sync.WaitGroup
 	// TLSConfig holds tls.TLSConfig options
 	TLSConfig *tls.Config
+
 	// ErrorHandler used when broker can't unmarshal incoming message
 	ErrorHandler Handler
 	// BatchErrorHandler used when broker can't unmashal incoming messages
 	BatchErrorHandler BatchHandler
-	// Name holds the broker name
-	Name string
+
 	// Addrs holds the broker address
 	Addrs []string
-	// Wait waits for a collection of goroutines to finish
-	Wait *sync.WaitGroup
-	// GracefulTimeout contains time to wait to finish in flight requests
-	GracefulTimeout time.Duration
 	// Hooks can be run before broker Publish/BatchPublish and
 	// Subscribe/BatchSubscribe methods
 	Hooks options.Hooks
+
+	// GracefulTimeout contains time to wait to finish in flight requests
+	GracefulTimeout time.Duration
 }
 
 // NewOptions create new Options

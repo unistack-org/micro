@@ -34,23 +34,23 @@ func TestBackoffExp(t *testing.T) {
 }
 
 func TestBackoffInterval(t *testing.T) {
-	min := 100 * time.Millisecond
-	max := 300 * time.Millisecond
+	minTime := 100 * time.Millisecond
+	maxTime := 300 * time.Millisecond
 
 	r := &testRequest{
 		service: "test",
 		method:  "test",
 	}
 
-	fn := BackoffInterval(min, max)
+	fn := BackoffInterval(minTime, maxTime)
 	for i := 0; i < 5; i++ {
 		d, err := fn(context.TODO(), r, i)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if d < min || d > max {
-			t.Fatalf("Expected %v < %v < %v", min, d, max)
+		if d < minTime || d > maxTime {
+			t.Fatalf("Expected %v < %v < %v", minTime, d, maxTime)
 		}
 	}
 }

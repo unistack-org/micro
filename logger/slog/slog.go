@@ -340,7 +340,7 @@ func (s *slogLogger) argsAttrs(args []interface{}) ([]slog.Attr, error) {
 		case string:
 			if idx+1 < len(args) {
 				attrs = append(attrs, slog.Any(arg, args[idx+1]))
-				idx += 1
+				idx++
 			} else {
 				attrs = append(attrs, slog.String(badKey, arg))
 			}

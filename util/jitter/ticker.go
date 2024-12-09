@@ -23,12 +23,12 @@ type Ticker struct {
 // NewTickerContext returns a pointer to an initialized instance of the Ticker.
 // It works like NewTicker except that it has ability to close via context.
 // Also it works fine with context.WithTimeout to handle max time to run ticker.
-func NewTickerContext(ctx context.Context, min, max time.Duration) *Ticker {
+func NewTickerContext(ctx context.Context, minTime, maxTime time.Duration) *Ticker {
 	ticker := &Ticker{
 		C:    make(chan time.Time),
 		done: make(chan chan struct{}),
-		min:  min.Nanoseconds(),
-		max:  max.Nanoseconds(),
+		min:  minTime.Nanoseconds(),
+		max:  maxTime.Nanoseconds(),
 		ctx:  ctx,
 	}
 	go ticker.run()
@@ -38,12 +38,12 @@ func NewTickerContext(ctx context.Context, min, max time.Duration) *Ticker {
 // NewTicker returns a pointer to an initialized instance of the Ticker.
 // Min and max are durations of the shortest and longest allowed
 // ticks. Ticker will run in a goroutine until explicitly stopped.
-func NewTicker(min, max time.Duration) *Ticker {
+func NewTicker(minTime, maxTime time.Duration) *Ticker {
 	ticker := &Ticker{
 		C:    make(chan time.Time),
 		done: make(chan chan struct{}),
-		min:  min.Nanoseconds(),
-		max:  max.Nanoseconds(),
+		min:  minTime.Nanoseconds(),
+		max:  maxTime.Nanoseconds(),
 		ctx:  context.Background(),
 	}
 	go ticker.run()

@@ -155,7 +155,7 @@ func indexFunction(v reflect.Value) func(i int) reflect.Value {
 			return v.MapIndex(keys[i])
 		}
 	}
-	return func(i int) reflect.Value { return reflect.Value{} }
+	return func(_ int) reflect.Value { return reflect.Value{} }
 }
 
 func mergeValue(values []reflect.Value) reflect.Value {

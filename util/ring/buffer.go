@@ -10,10 +10,11 @@ import (
 
 // Buffer is ring buffer
 type Buffer struct {
-	sync.RWMutex
 	streams map[string]*Stream
 	vals    []*Entry
 	size    int
+
+	sync.RWMutex
 }
 
 // Entry is ring buffer data entry

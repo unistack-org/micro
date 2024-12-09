@@ -7,12 +7,12 @@ type loggerKey struct{}
 // MustContext returns logger from passed context or DefaultLogger if empty
 func MustContext(ctx context.Context) Logger {
 	if ctx == nil {
-		return DefaultLogger
+		return DefaultLogger.Clone()
 	}
 	if l, ok := ctx.Value(loggerKey{}).(Logger); ok && l != nil {
 		return l
 	}
-	return DefaultLogger
+	return DefaultLogger.Clone()
 }
 
 // FromContext returns logger from passed context

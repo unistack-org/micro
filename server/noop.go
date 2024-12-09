@@ -775,13 +775,16 @@ func (s *subscriber) Options() SubscriberOptions {
 }
 
 type subscriber struct {
+	topic string
+
 	typ        reflect.Type
 	subscriber interface{}
-	topic      string
-	endpoints  []*register.Endpoint
-	handlers   []*handler
-	opts       SubscriberOptions
-	rcvr       reflect.Value
+
+	endpoints []*register.Endpoint
+	handlers  []*handler
+
+	rcvr reflect.Value
+	opts SubscriberOptions
 }
 
 type handler struct {

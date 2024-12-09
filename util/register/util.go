@@ -109,12 +109,11 @@ func Merge(olist []*register.Service, nlist []*register.Service) []*register.Ser
 				seen = true
 				srv = append(srv, sp)
 				break
-			} else {
-				sp := &register.Service{}
-				// make copy
-				*sp = *o
-				srv = append(srv, sp)
 			}
+			sp := &register.Service{}
+			// make copy
+			*sp = *o
+			srv = append(srv, sp)
 		}
 		if !seen {
 			srv = append(srv, Copy([]*register.Service{n})...)
@@ -153,14 +152,14 @@ func Remove(old, del []*register.Service) []*register.Service {
 
 // WaitService using register wait for service to appear with min/max interval for check and optional timeout.
 // Timeout can be 0 to wait infinitive.
-func WaitService(ctx context.Context, reg register.Register, name string, min time.Duration, max time.Duration, timeout time.Duration, opts ...register.LookupOption) error {
+func WaitService(ctx context.Context, reg register.Register, name string, minTime time.Duration, maxTime time.Duration, timeout time.Duration, opts ...register.LookupOption) error {
 	if timeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, timeout)
 		defer cancel()
 	}
 
-	ticker := jitter.NewTickerContext(ctx, min, max)
+	ticker := jitter.NewTickerContext(ctx, minTime, maxTime)
 	defer ticker.Stop()
 
 	for {

@@ -12,7 +12,7 @@ import (
 
 // DefaultServer default server
 var (
-	DefaultServer Server = NewServer()
+	DefaultServer = NewServer()
 )
 
 var (

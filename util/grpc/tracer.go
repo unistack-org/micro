@@ -71,7 +71,7 @@ func (h *serverHandler) HandleRPC(ctx context.Context, rs stats.RPCStats) {
 }
 
 // TagConn can attach some information to the given context.
-func (h *serverHandler) TagConn(ctx context.Context, info *stats.ConnTagInfo) context.Context {
+func (h *serverHandler) TagConn(ctx context.Context, _ *stats.ConnTagInfo) context.Context {
 	if span, ok := tracer.SpanFromContext(ctx); ok {
 		attrs := peerAttr(peerFromCtx(ctx))
 		span.AddLabels(attrs...)
@@ -80,7 +80,7 @@ func (h *serverHandler) TagConn(ctx context.Context, info *stats.ConnTagInfo) co
 }
 
 // HandleConn processes the Conn stats.
-func (h *serverHandler) HandleConn(ctx context.Context, info stats.ConnStats) {
+func (h *serverHandler) HandleConn(_ context.Context, _ stats.ConnStats) {
 }
 
 type clientHandler struct {

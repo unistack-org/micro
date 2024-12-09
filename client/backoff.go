@@ -17,13 +17,13 @@ func BackoffExp(_ context.Context, _ Request, attempts int) (time.Duration, erro
 }
 
 // BackoffInterval specifies randomization interval for backoff func
-func BackoffInterval(min time.Duration, max time.Duration) BackoffFunc {
+func BackoffInterval(minTime time.Duration, maxTime time.Duration) BackoffFunc {
 	return func(_ context.Context, _ Request, attempts int) (time.Duration, error) {
 		td := time.Duration(math.Pow(float64(attempts), math.E)) * time.Millisecond * 100
-		if td < min {
-			return min, nil
-		} else if td > max {
-			return max, nil
+		if td < minTime {
+			return minTime, nil
+		} else if td > maxTime {
+			return maxTime, nil
 		}
 		return td, nil
 	}

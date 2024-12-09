@@ -665,12 +665,12 @@ func patParamKeys(pattern string) ([]string, error) {
 // longestPrefix finds the length of the shared prefix
 // of two strings
 func longestPrefix(k1, k2 string) int {
-	max := len(k1)
-	if l := len(k2); l < max {
-		max = l
+	maxLen := len(k1)
+	if l := len(k2); l < maxLen {
+		maxLen = l
 	}
 	var i int
-	for i = 0; i < max; i++ {
+	for i = 0; i < maxLen; i++ {
 		if k1[i] != k2[i] {
 			break
 		}

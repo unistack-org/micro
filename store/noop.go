@@ -12,15 +12,18 @@ import (
 var _ Store = (*noopStore)(nil)
 
 type noopStore struct {
-	mu          sync.Mutex
-	watchers    map[string]Watcher
-	funcRead    FuncRead
-	funcWrite   FuncWrite
-	funcExists  FuncExists
-	funcList    FuncList
-	funcDelete  FuncDelete
+	watchers map[string]Watcher
+
+	funcRead   FuncRead
+	funcWrite  FuncWrite
+	funcExists FuncExists
+	funcList   FuncList
+	funcDelete FuncDelete
+
 	opts        Options
 	isConnected atomic.Int32
+
+	mu sync.Mutex
 }
 
 func (n *noopStore) Live() bool {
@@ -35,7 +38,7 @@ func (n *noopStore) Health() bool {
 	return true
 }
 
-func NewStore(opts ...Option) *noopStore {
+func NewStore(opts ...Option) Store {
 	options := NewOptions(opts...)
 	return &noopStore{opts: options}
 }
@@ -94,7 +97,7 @@ func (n *noopStore) Read(ctx context.Context, key string, val interface{}, opts 
 	return n.funcRead(ctx, key, val, opts...)
 }
 
-func (n *noopStore) fnRead(ctx context.Context, key string, val interface{}, opts ...ReadOption) error {
+func (n *noopStore) fnRead(ctx context.Context, _ string, _ interface{}, _ ...ReadOption) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -112,7 +115,7 @@ func (n *noopStore) Delete(ctx context.Context, key string, opts ...DeleteOption
 	return n.funcDelete(ctx, key, opts...)
 }
 
-func (n *noopStore) fnDelete(ctx context.Context, key string, opts ...DeleteOption) error {
+func (n *noopStore) fnDelete(ctx context.Context, _ string, _ ...DeleteOption) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -130,7 +133,7 @@ func (n *noopStore) Exists(ctx context.Context, key string, opts ...ExistsOption
 	return n.funcExists(ctx, key, opts...)
 }
 
-func (n *noopStore) fnExists(ctx context.Context, key string, opts ...ExistsOption) error {
+func (n *noopStore) fnExists(ctx context.Context, _ string, _ ...ExistsOption) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -148,7 +151,7 @@ func (n *noopStore) Write(ctx context.Context, key string, val interface{}, opts
 	return n.funcWrite(ctx, key, val, opts...)
 }
 
-func (n *noopStore) fnWrite(ctx context.Context, key string, val interface{}, opts ...WriteOption) error {
+func (n *noopStore) fnWrite(ctx context.Context, _ string, _ interface{}, _ ...WriteOption) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -200,13 +203,13 @@ func (n *noopStore) connect(ctx context.Context) error {
 }
 
 type watcher struct {
+	opts WatchOptions
+	ch   chan Event
 	exit chan bool
 	id   string
-	ch   chan Event
-	opts WatchOptions
 }
 
-func (m *noopStore) Watch(ctx context.Context, opts ...WatchOption) (Watcher, error) {
+func (n *noopStore) Watch(_ context.Context, opts ...WatchOption) (Watcher, error) {
 	id, err := id.New()
 	if err != nil {
 		return nil, err
@@ -223,9 +226,9 @@ func (m *noopStore) Watch(ctx context.Context, opts ...WatchOption) (Watcher, er
 		opts: wo,
 	}
 
-	m.mu.Lock()
-	m.watchers[w.id] = w
-	m.mu.Unlock()
+	n.mu.Lock()
+	n.watchers[w.id] = w
+	n.mu.Unlock()
 
 	return w, nil
 }

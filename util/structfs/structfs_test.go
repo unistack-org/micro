@@ -93,7 +93,7 @@ func TestAll(t *testing.T) {
 		in  string
 		out string
 	}{
-		{"http://127.0.0.1:8080/metadata/v1/", "droplet_id\nhostname\nvendor_data\npublic_keys\nregion\ninterfaces\nfloating_ip\ndns\nfeatures"},
+		{"http://127.0.0.1:8080/metadata/v1/", "features\nhostname\nvendor_data\nregion\npublic_keys\ndns\ninterfaces\ndroplet_id\nfloating_ip"},
 		{"http://127.0.0.1:8080/metadata/v1/droplet_id", "2756294"},
 		{"http://127.0.0.1:8080/metadata/v1/dns/", "nameservers"},
 		{"http://127.0.0.1:8080/metadata/v1/dns/nameservers", "2001:4860:4860::8844\n2001:4860:4860::8888\n8.8.8.8"},

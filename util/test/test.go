@@ -78,8 +78,8 @@ var (
 			for _, se := range st.Details() {
 				switch ne := se.(type) {
 				case proto.Message:
-					buf, err := testCodec.Marshal(ne)
-					if err != nil {
+					var buf []byte
+					if buf, err = testCodec.Marshal(ne); err != nil {
 						return fmt.Errorf("failed to marshal err: %w", err)
 					}
 					if err = testCodec.Unmarshal(buf, &testMap); err != nil {
@@ -438,10 +438,10 @@ func Run(ctx context.Context, c client.Client, m sqlmock.Sqlmock, dir string, ex
 }
 
 type Case struct {
-	dbfiles []string
 	reqfile string
 	rspfile string
 	errfile string
+	dbfiles []string
 }
 
 func GetCases(dir string, exts []string) ([]Case, error) {

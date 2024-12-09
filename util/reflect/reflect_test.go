@@ -130,16 +130,16 @@ func TestMergeString(t *testing.T) {
 
 func TestMergeNested(t *testing.T) {
 	type CallReqNested struct {
+		Nested     *CallReqNested `json:"nested2"`
 		StringArgs []string       `json:"string_args"`
 		Uint64Args []uint64       `json:"uint64_args"`
-		Nested     *CallReqNested `json:"nested2"`
 	}
 
 	type CallReq struct {
+		Nested *CallReqNested `json:"nested"`
 		Name   string         `json:"name"`
 		Req    string         `json:"req"`
 		Arg2   int            `json:"arg2"`
-		Nested *CallReqNested `json:"nested"`
 	}
 
 	dst := &CallReq{

@@ -24,36 +24,11 @@ type Option func(*Options)
 
 // Options server struct
 type Options struct {
-	// Context holds the external options and can be used for server shutdown
-	Context context.Context
-	// Broker holds the server broker
-	Broker broker.Broker
-	// Register holds the register
-	Register register.Register
-	// Tracer holds the tracer
-	Tracer tracer.Tracer
-	// Logger holds the logger
-	Logger logger.Logger
-	// Meter holds the meter
-	Meter meter.Meter
-
-	/*
-		// Router for requests
-		Router Router
-	*/
-
-	// Listener may be passed if already created
-	Listener net.Listener
-	// Wait group
-	Wait *msync.WaitGroup
-	// TLSConfig specifies tls.Config for secure serving
-	TLSConfig *tls.Config
-	// Metadata holds the server metadata
-	Metadata metadata.Metadata
-	// RegisterCheck run before register server
-	RegisterCheck func(context.Context) error
 	// Codecs map to handle content-type
 	Codecs map[string]codec.Codec
+	// Metadata holds the server metadata
+	Metadata metadata.Metadata
+
 	// ID holds the id of the server
 	ID string
 	// Namespace for te server
@@ -66,21 +41,46 @@ type Options struct {
 	Advertise string
 	// Version holds the server version
 	Version string
-	// RegisterAttempts holds the number of register attempts before error
-	RegisterAttempts int
+
+	// Context holds the external options and can be used for server shutdown
+	Context context.Context
+	// Broker holds the server broker
+	Broker broker.Broker
+	// Register holds the register
+	Register register.Register
+	// Tracer holds the tracer
+	Tracer tracer.Tracer
+	// Logger holds the logger
+	Logger logger.Logger
+	// Meter holds the meter
+	Meter meter.Meter
+	// Listener may be passed if already created
+	Listener net.Listener
+
+	// TLSConfig specifies tls.Config for secure serving
+	TLSConfig *tls.Config
+	// Wait group
+	Wait *msync.WaitGroup
+
+	// RegisterCheck run before register server
+	RegisterCheck func(context.Context) error
+
+	// Hooks may contains hook actions that performs before/after server handler
+	// or server subscriber handler
+	Hooks options.Hooks
+
 	// RegisterInterval holds he interval for re-register
 	RegisterInterval time.Duration
 	// RegisterTTL specifies TTL for register record
 	RegisterTTL time.Duration
+	// GracefulTimeout timeout for graceful stop server
+	GracefulTimeout time.Duration
 	// MaxConn limits number of connections
 	MaxConn int
 	// DeregisterAttempts holds the number of deregister attempts before error
 	DeregisterAttempts int
-	// Hooks may contains hook actions that performs before/after server handler
-	// or server subscriber handler
-	Hooks options.Hooks
-	// GracefulTimeout timeout for graceful stop server
-	GracefulTimeout time.Duration
+	// RegisterAttempts holds the number of register attempts before error
+	RegisterAttempts int
 }
 
 // NewOptions returns new options struct with default or passed values
@@ -318,14 +318,14 @@ type SubscriberOptions struct {
 	Context context.Context
 	// Queue holds the subscription queue
 	Queue string
+	// BatchWait flag specifies max wait time for batch filling
+	BatchWait time.Duration
+	// BatchSize flag specifies max size of batch
+	BatchSize int
 	// AutoAck flag for auto ack messages after processing
 	AutoAck bool
 	// BodyOnly flag specifies that message without headers
 	BodyOnly bool
-	// BatchSize flag specifies max size of batch
-	BatchSize int
-	// BatchWait flag specifies max wait time for batch filling
-	BatchWait time.Duration
 }
 
 // NewSubscriberOptions create new SubscriberOptions
