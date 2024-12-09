@@ -17,12 +17,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+    - name: checkout
+      uses: actions/checkout@v4
+      with:
+        filter: 'blob:none'
     - name: setup-go
       uses: actions/setup-go@v5
       with:
         go-version: 'stable'
-    - name: checkout
-      uses: actions/checkout@v3
     - name: deps
       run: go get -v -d ./...
     - name: test
