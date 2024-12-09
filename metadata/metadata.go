@@ -4,6 +4,7 @@ package metadata
 import (
 	"net/textproto"
 	"sort"
+	"strings"
 )
 
 var (
@@ -73,6 +74,9 @@ func (md Metadata) Get(key string) (string, bool) {
 	if !ok {
 		// slow path
 		val, ok = md[textproto.CanonicalMIMEHeaderKey(key)]
+		if !ok {
+			val, ok = md[strings.ToLower(key)]
+		}
 	}
 	return val, ok
 }
@@ -94,6 +98,8 @@ func (md Metadata) Del(keys ...string) {
 		delete(md, key)
 		// slow path
 		delete(md, textproto.CanonicalMIMEHeaderKey(key))
+		// very slow path
+		delete(md, strings.ToLower(key))
 	}
 }
 
