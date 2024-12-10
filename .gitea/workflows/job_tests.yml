@@ -17,10 +17,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+    - name: go work
+      run: go work init
     - name: checkout
       uses: actions/checkout@v4
       with:
         filter: 'blob:none'
+    - name: go work use
+      run: go work use .
     - name: checkout tests
       uses: actions/checkout@v4
       with:
@@ -28,6 +32,8 @@ jobs:
         filter: 'blob:none'
         repository: unistack-org/micro-tests
         path: micro-tests
+    - name: go work use
+      run: go work use micro-tests
     - name: setup-go
       uses: actions/setup-go@v5
       with:
@@ -35,14 +41,9 @@ jobs:
         go-version: 'stable'
     - name: deps
       run: go get -v ./...
-    - name: workflow
-      run: |
-        cd ../
-        ls | grep -v go | xargs go work init
     - name: test
       env:
         INTEGRATION_TESTS: yes
       run: |
         cd micro-tests
-        cat ../go.work >&2
         go test -mod readonly -v ./...
