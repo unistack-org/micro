@@ -17,18 +17,18 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: checkout
+    - name: checkout code
       uses: actions/checkout@v4
       with:
         filter: 'blob:none'
-    - name: setup-go
+    - name: setup go
       uses: actions/setup-go@v5
       with:
         cache-dependency-path: "**/*.sum"
         go-version: 'stable'
-    - name: deps
+    - name: setup deps
       run: go get -v ./...
-    - name: test
+    - name: run test
       env:
         INTEGRATION_TESTS: yes
       run: go test -mod readonly -v ./...

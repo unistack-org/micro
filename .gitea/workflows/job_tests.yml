@@ -17,7 +17,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: checkout
+    - name: checkout code
       uses: actions/checkout@v4
       with:
         filter: 'blob:none'
@@ -28,22 +28,26 @@ jobs:
         filter: 'blob:none'
         repository: unistack-org/micro-tests
         path: micro-tests
-    - name: setup-go
+    - name: setup go
       uses: actions/setup-go@v5
       with:
         cache-dependency-path: "**/*.sum"
         go-version: 'stable'
-    - name: go work
+    - name: setup go work
       env:
-        GOWORK=${{ github.workspace }}/go.work
+        GOWORK: ${{ github.workspace }}/go.work
       run: |
+        cd ../
         go work init
         ls | grep -v go | xargs go work use
-    - name: deps
+    - name: setup deps
+      env:
+        GOWORK: ${{ github.workspace }}/go.work
       run: go get -v ./...
-    - name: test
+    - name: run tests
       env:
         INTEGRATION_TESTS: yes
+        GOWORK: ${{ github.workspace }}/go.work
       run: |
         cd micro-tests
         go test -mod readonly -v ./...
