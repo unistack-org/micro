@@ -45,4 +45,5 @@ jobs:
         INTEGRATION_TESTS: yes
       run: |
         cd micro-tests
+        cat ../go.work
         go test -mod readonly -v ./...
