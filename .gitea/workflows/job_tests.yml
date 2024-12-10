@@ -1,0 +1,41 @@
+name: test
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+    - master
+    - v3
+    - v4
+  push:
+    branches:
+    - master
+    - v3
+    - v4
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+      with:
+        filter: 'blob:none'
+    - name: checkout tests
+      uses: actions/checkout@v4
+      with:
+        filter: 'blob:none'
+        repository: unistack-org/micro-tests
+        path: micro-tests
+    - name: setup-go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 'stable'
+    - name: deps
+      run: go get -v -d ./...
+    - name: workflow
+      run: go work init . ./micro-tests
+    - name: test
+      env:
+        INTEGRATION_TESTS: yes
+      run: cd micro-tests && go test -mod readonly -v ./...
