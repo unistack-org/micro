@@ -38,12 +38,10 @@ jobs:
     - name: workflow
       run: |
         cd ../
-        go work init
-        go work use $(ls | grep -v go)
+        ls | grep -v go | xargs go work init
     - name: test
       env:
         INTEGRATION_TESTS: yes
       run: |
         cd micro-tests
-        cat ../go.work
         go test -mod readonly -v ./...
