@@ -24,6 +24,8 @@ jobs:
     - name: checkout tests
       uses: actions/checkout@v4
       with:
+        ref: master
+        fetch-depth: 1
         filter: 'blob:none'
         repository: unistack-org/micro-tests
         path: micro-tests
