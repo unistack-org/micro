@@ -25,7 +25,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: master
-        fetch-depth: 1
         filter: 'blob:none'
         repository: unistack-org/micro-tests
         path: micro-tests
@@ -36,8 +35,13 @@ jobs:
     - name: deps
       run: go get -v -d ./...
     - name: workflow
-      run: go work init . ./micro-tests
+      run: |
+        cd ../
+        go work init
+        go work use *
     - name: test
       env:
         INTEGRATION_TESTS: yes
-      run: cd micro-tests && go test -mod readonly -v ./...
+      run: |
+        cd micro-tests
+        go test -mod readonly -v ./...
