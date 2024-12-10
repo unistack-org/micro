@@ -40,6 +40,7 @@ jobs:
         cd ../
         go work init
         ls | grep -v go | xargs go work use
+        cat go.work
     - name: setup deps
       env:
         GOWORK: ${{ github.workspace }}/go.work
