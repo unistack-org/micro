@@ -31,14 +31,15 @@ jobs:
     - name: setup-go
       uses: actions/setup-go@v5
       with:
+        cache-dependency-path: "**/*.sum"
         go-version: 'stable'
     - name: deps
-      run: go get -v -d ./...
+      run: go get -v ./...
     - name: workflow
       run: |
         cd ../
         go work init
-        go work use *
+        go work use $(ls | grep -v go)
     - name: test
       env:
         INTEGRATION_TESTS: yes
