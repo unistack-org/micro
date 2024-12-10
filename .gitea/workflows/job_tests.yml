@@ -27,7 +27,7 @@ jobs:
         ref: master
         filter: 'blob:none'
         repository: unistack-org/micro-tests
-        path: micro-tests
+        path: /workspace/${{ github.repository_owner }}/micro-tests
     - name: setup go
       uses: actions/setup-go@v5
       with:
@@ -40,8 +40,6 @@ jobs:
         cd ../
         go work init
         ls | grep -v go | xargs go work use
-        cat /workspace/${{ github.repository_owner }}/go.work
-        go env
     - name: setup deps
       env:
         GOWORK: /workspace/${{ github.repository_owner }}/go.work
