@@ -34,8 +34,10 @@ jobs:
         cache-dependency-path: "**/*.sum"
         go-version: 'stable'
     - name: go work
+      env:
+        GOWORK=${{ github.workspace }}/go.work
       run: |
-        pushd && go work init && popd
+        go work init
         ls | grep -v go | xargs go work use
     - name: deps
       run: go get -v ./...
