@@ -15,7 +15,29 @@ import (
 	"go.unistack.org/micro/v3/metadata"
 )
 
-func TestWithDuplicate(t *testing.T) {
+func TestWithFields(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.InfoLevel), logger.WithOutput(buf),
+		WithHandlerFunc(slog.NewTextHandler),
+		logger.WithDedupKeys(true),
+	)
+	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Info(ctx, "msg1")
+
+	l = l.Fields("key1", "val2")
+
+	l.Info(ctx, "msg2")
+
+	if !bytes.Contains(buf.Bytes(), []byte(`msg=msg2 key1=val1`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+}
+
+func TestWithDedupKeysWithAddFields(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(logger.WithLevel(logger.InfoLevel), logger.WithOutput(buf),
