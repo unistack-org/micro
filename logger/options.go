@@ -5,6 +5,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"slices"
 	"time"
 
 	"go.unistack.org/micro/v3/meter"
@@ -52,6 +53,8 @@ type Options struct {
 	AddSource bool
 	// AddStacktrace controls writing of stacktaces on error
 	AddStacktrace bool
+	// DedupKeys deduplicate keys in log output
+	DedupKeys bool
 }
 
 // NewOptions creates new options struct
@@ -83,10 +86,30 @@ func WithContextAttrFuncs(fncs ...ContextAttrFunc) Option {
 	}
 }
 
+// WithDedupKeys dont log duplicate keys
+func WithDedupKeys(b bool) Option {
+	return func(o *Options) {
+		o.DedupKeys = b
+	}
+}
+
 // WithAddFields add fields for the logger
 func WithAddFields(fields ...interface{}) Option {
 	return func(o *Options) {
-		o.Fields = append(o.Fields, fields...)
+		if o.DedupKeys {
+			for i := 0; i < len(o.Fields); i += 2 {
+				for j := 0; j < len(fields); j += 2 {
+					iv, iok := o.Fields[i].(string)
+					jv, jok := fields[j].(string)
+					if iok && jok && iv == jv {
+						fields = slices.Delete(fields, j, j+2)
+					}
+				}
+			}
+			o.Fields = append(o.Fields, fields...)
+		} else {
+			o.Fields = append(o.Fields, fields...)
+		}
 	}
 }
 

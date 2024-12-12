@@ -1,7 +1,6 @@
 package sort
 
 import (
-	"fmt"
 	"sort"
 )
 
@@ -9,7 +8,7 @@ import (
 type byKey []interface{}
 
 func (k byKey) Len() int           { return len(k) / 2 }
-func (k byKey) Less(i, j int) bool { return fmt.Sprintf("%s", k[i*2]) < fmt.Sprintf("%s", k[j*2]) }
+func (k byKey) Less(i, j int) bool { return k[i*2].(string) < k[j*2].(string) }
 func (k byKey) Swap(i, j int) {
 	k[i*2], k[j*2] = k[j*2], k[i*2]
 	k[i*2+1], k[j*2+1] = k[j*2+1], k[i*2+1]
