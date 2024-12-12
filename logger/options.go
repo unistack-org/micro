@@ -106,7 +106,9 @@ func WithAddFields(fields ...interface{}) Option {
 					}
 				}
 			}
-			o.Fields = append(o.Fields, fields...)
+			if len(fields) > 0 {
+				o.Fields = append(o.Fields, fields...)
+			}
 		} else {
 			o.Fields = append(o.Fields, fields...)
 		}

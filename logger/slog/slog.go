@@ -142,6 +142,7 @@ func (s *slogLogger) Fields(fields ...interface{}) logger.Logger {
 	s.mu.RUnlock()
 
 	l := &slogLogger{opts: options}
+	logger.WithAddFields(fields...)(&l.opts)
 
 	if len(options.ContextAttrFuncs) == 0 {
 		options.ContextAttrFuncs = logger.DefaultContextAttrFuncs
