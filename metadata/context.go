@@ -11,6 +11,34 @@ type (
 	mdKey         struct{}
 )
 
+// MustIncomingContext returns metadata from incoming ctx
+// returned metadata shoud not be modified or race condition happens.
+// If metadata not exists panics.
+func MustIncomingContext(ctx context.Context) Metadata {
+	if ctx == nil {
+		panic("missing metadata")
+	}
+	md, ok := ctx.Value(mdIncomingKey{}).(*rawMetadata)
+	if !ok {
+		panic("missing metadata")
+	}
+	return md.md
+}
+
+// MustOutgoingContext returns metadata from outgoing ctx
+// returned metadata shoud not be modified or race condition happens.
+// If metadata not exists panics.
+func MustOutgoingContext(ctx context.Context) Metadata {
+	if ctx == nil {
+		panic("missing metadata")
+	}
+	md, ok := ctx.Value(mdOutgoingKey{}).(*rawMetadata)
+	if !ok {
+		panic("missing metadata")
+	}
+	return md.md
+}
+
 // FromIncomingContext returns metadata from incoming ctx
 // returned metadata shoud not be modified or race condition happens
 func FromIncomingContext(ctx context.Context) (Metadata, bool) {
