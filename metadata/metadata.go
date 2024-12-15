@@ -67,6 +67,22 @@ func (md Metadata) Iterator() *Iterator {
 	return iter
 }
 
+func (md Metadata) MustGet(key string) string {
+	// fast path
+	val, ok := md[key]
+	if !ok {
+		// slow path
+		val, ok = md[textproto.CanonicalMIMEHeaderKey(key)]
+		if !ok {
+			val, ok = md[strings.ToLower(key)]
+		}
+	}
+	if !ok {
+		panic("missing metadata key")
+	}
+	return val
+}
+
 // Get returns value from metadata by key
 func (md Metadata) Get(key string) (string, bool) {
 	// fast path
