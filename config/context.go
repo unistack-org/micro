@@ -15,6 +15,15 @@ func FromContext(ctx context.Context) (Config, bool) {
 	return c, ok
 }
 
+// MustContext returns store from context
+func MustContext(ctx context.Context) Config {
+	c, ok := FromContext(ctx)
+	if !ok {
+		panic("missing config")
+	}
+	return c
+}
+
 // NewContext put store in context
 func NewContext(ctx context.Context, c Config) context.Context {
 	if ctx == nil {

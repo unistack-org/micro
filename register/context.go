@@ -15,6 +15,15 @@ func FromContext(ctx context.Context) (Register, bool) {
 	return c, ok
 }
 
+// MustContext get register from context
+func MustContext(ctx context.Context) Register {
+	r, ok := FromContext(ctx)
+	if !ok {
+		panic("missing register")
+	}
+	return r
+}
+
 // NewContext put register in context
 func NewContext(ctx context.Context, c Register) context.Context {
 	if ctx == nil {

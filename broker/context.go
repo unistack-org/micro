@@ -15,6 +15,15 @@ func FromContext(ctx context.Context) (Broker, bool) {
 	return c, ok
 }
 
+// MustContext returns broker from passed context
+func MustContext(ctx context.Context) Broker {
+	b, ok := FromContext(ctx)
+	if !ok {
+		panic("missing broker")
+	}
+	return b
+}
+
 // NewContext savess broker in context
 func NewContext(ctx context.Context, s Broker) context.Context {
 	if ctx == nil {

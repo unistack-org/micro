@@ -15,6 +15,15 @@ func FromContext(ctx context.Context) (Server, bool) {
 	return c, ok
 }
 
+// MustContext returns Server from context
+func MustContext(ctx context.Context) Server {
+	s, ok := FromContext(ctx)
+	if !ok {
+		panic("missing server")
+	}
+	return s
+}
+
 // NewContext stores Server to context
 func NewContext(ctx context.Context, s Server) context.Context {
 	if ctx == nil {

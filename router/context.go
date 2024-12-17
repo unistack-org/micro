@@ -15,6 +15,15 @@ func FromContext(ctx context.Context) (Router, bool) {
 	return c, ok
 }
 
+// MustContext get router from context
+func MustContext(ctx context.Context) Router {
+	r, ok := FromContext(ctx)
+	if !ok {
+		panic("missing router")
+	}
+	return r
+}
+
 // NewContext put router in context
 func NewContext(ctx context.Context, c Router) context.Context {
 	if ctx == nil {

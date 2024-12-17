@@ -15,6 +15,15 @@ func FromContext(ctx context.Context) (Client, bool) {
 	return c, ok
 }
 
+// MustContext get client from context
+func MustContext(ctx context.Context) Client {
+	c, ok := FromContext(ctx)
+	if !ok {
+		panic("missing client")
+	}
+	return c
+}
+
 // NewContext put client in context
 func NewContext(ctx context.Context, c Client) context.Context {
 	if ctx == nil {
