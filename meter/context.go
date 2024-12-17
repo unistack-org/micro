@@ -15,6 +15,15 @@ func FromContext(ctx context.Context) (Meter, bool) {
 	return c, ok
 }
 
+// MustContext get meter from context
+func MustContext(ctx context.Context) Meter {
+	m, ok := FromContext(ctx)
+	if !ok {
+		panic("missing meter")
+	}
+	return m
+}
+
 // NewContext put meter in context
 func NewContext(ctx context.Context, c Meter) context.Context {
 	if ctx == nil {

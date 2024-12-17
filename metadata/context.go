@@ -11,34 +11,6 @@ type (
 	mdKey         struct{}
 )
 
-// MustIncomingContext returns metadata from incoming ctx
-// returned metadata shoud not be modified or race condition happens.
-// If metadata not exists panics.
-func MustIncomingContext(ctx context.Context) Metadata {
-	if ctx == nil {
-		panic("missing metadata")
-	}
-	md, ok := ctx.Value(mdIncomingKey{}).(*rawMetadata)
-	if !ok {
-		panic("missing metadata")
-	}
-	return md.md
-}
-
-// MustOutgoingContext returns metadata from outgoing ctx
-// returned metadata shoud not be modified or race condition happens.
-// If metadata not exists panics.
-func MustOutgoingContext(ctx context.Context) Metadata {
-	if ctx == nil {
-		panic("missing metadata")
-	}
-	md, ok := ctx.Value(mdOutgoingKey{}).(*rawMetadata)
-	if !ok {
-		panic("missing metadata")
-	}
-	return md.md
-}
-
 // FromIncomingContext returns metadata from incoming ctx
 // returned metadata shoud not be modified or race condition happens
 func FromIncomingContext(ctx context.Context) (Metadata, bool) {
@@ -50,6 +22,17 @@ func FromIncomingContext(ctx context.Context) (Metadata, bool) {
 		return nil, false
 	}
 	return md.md, ok
+}
+
+// MustIncomingContext returns metadata from incoming ctx
+// returned metadata shoud not be modified or race condition happens.
+// If metadata not exists panics.
+func MustIncomingContext(ctx context.Context) Metadata {
+	md, ok := FromIncomingContext(ctx)
+	if !ok {
+		panic("missing metadata")
+	}
+	return md
 }
 
 // FromOutgoingContext returns metadata from outgoing ctx
@@ -65,6 +48,17 @@ func FromOutgoingContext(ctx context.Context) (Metadata, bool) {
 	return md.md, ok
 }
 
+// MustOutgoingContext returns metadata from outgoing ctx
+// returned metadata shoud not be modified or race condition happens.
+// If metadata not exists panics.
+func MustOutgoingContext(ctx context.Context) Metadata {
+	md, ok := FromOutgoingContext(ctx)
+	if !ok {
+		panic("missing metadata")
+	}
+	return md
+}
+
 // FromContext returns metadata from the given context
 // returned metadata shoud not be modified or race condition happens
 func FromContext(ctx context.Context) (Metadata, bool) {
@@ -76,6 +70,16 @@ func FromContext(ctx context.Context) (Metadata, bool) {
 		return nil, false
 	}
 	return md.md, ok
+}
+
+// MustContext returns metadata from the given context
+// returned metadata shoud not be modified or race condition happens
+func MustContext(ctx context.Context) Metadata {
+	md, ok := FromContext(ctx)
+	if !ok {
+		panic("missing metadata")
+	}
+	return md
 }
 
 // NewContext creates a new context with the given metadata
@@ -139,7 +143,7 @@ func AppendOutgoingContext(ctx context.Context, kv ...string) context.Context {
 	for k, v := range md {
 		omd.Set(k, v)
 	}
-	return NewOutgoingContext(ctx, omd)
+	return ctx
 }
 
 // AppendIncomingContext apends new md to context
@@ -155,5 +159,21 @@ func AppendIncomingContext(ctx context.Context, kv ...string) context.Context {
 	for k, v := range md {
 		omd.Set(k, v)
 	}
-	return NewIncomingContext(ctx, omd)
+	return ctx
+}
+
+// AppendContext apends new md to context
+func AppendContext(ctx context.Context, kv ...string) context.Context {
+	md, ok := Pairs(kv...)
+	if !ok {
+		return ctx
+	}
+	omd, ok := FromContext(ctx)
+	if !ok {
+		return NewContext(ctx, md)
+	}
+	for k, v := range md {
+		omd.Set(k, v)
+	}
+	return ctx
 }

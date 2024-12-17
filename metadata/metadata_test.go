@@ -32,8 +32,8 @@ func TestMultipleUsage(t *testing.T) {
 		m.Del("key1_3")
 		return ctx
 	}(ctx)
-	t.Logf("imd %#+v", imd)
-	t.Logf("omd %#+v", omd)
+	_ = imd
+	_ = omd
 }
 
 func TestMetadataSetMultiple(t *testing.T) {

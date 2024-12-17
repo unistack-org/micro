@@ -18,6 +18,15 @@ func FromContext(ctx context.Context) (Tracer, bool) {
 	return nil, false
 }
 
+// MustContext returns a tracer from context
+func MustContext(ctx context.Context) Tracer {
+	t, ok := FromContext(ctx)
+	if !ok {
+		panic("missing tracer")
+	}
+	return t
+}
+
 // NewContext saves the tracer in the context
 func NewContext(ctx context.Context, tracer Tracer) context.Context {
 	if ctx == nil {

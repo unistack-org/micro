@@ -4,17 +4,6 @@ import "context"
 
 type loggerKey struct{}
 
-// MustContext returns logger from passed context or DefaultLogger if empty
-func MustContext(ctx context.Context) Logger {
-	if ctx == nil {
-		return DefaultLogger.Clone()
-	}
-	if l, ok := ctx.Value(loggerKey{}).(Logger); ok && l != nil {
-		return l
-	}
-	return DefaultLogger.Clone()
-}
-
 // FromContext returns logger from passed context
 func FromContext(ctx context.Context) (Logger, bool) {
 	if ctx == nil {
@@ -22,6 +11,15 @@ func FromContext(ctx context.Context) (Logger, bool) {
 	}
 	l, ok := ctx.Value(loggerKey{}).(Logger)
 	return l, ok
+}
+
+// MustContext returns logger from passed context or DefaultLogger if empty
+func MustContext(ctx context.Context) Logger {
+	l, ok := FromContext(ctx)
+	if !ok {
+		panic("missing logger")
+	}
+	return l
 }
 
 // NewContext stores logger into passed context

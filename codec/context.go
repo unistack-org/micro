@@ -15,6 +15,15 @@ func FromContext(ctx context.Context) (Codec, bool) {
 	return c, ok
 }
 
+// MustContext returns codec from context
+func MustContext(ctx context.Context) Codec {
+	c, ok := FromContext(ctx)
+	if !ok {
+		panic("missing codec")
+	}
+	return c
+}
+
 // NewContext put codec in context
 func NewContext(ctx context.Context, c Codec) context.Context {
 	if ctx == nil {
