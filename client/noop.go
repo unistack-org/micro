@@ -194,7 +194,7 @@ func (n *noopClient) Init(opts ...Option) error {
 	n.funcPublish = n.fnPublish
 	n.funcBatchPublish = n.fnBatchPublish
 
-	n.opts.Hooks.EachNext(func(hook options.Hook) {
+	n.opts.Hooks.EachPrev(func(hook options.Hook) {
 		switch h := hook.(type) {
 		case HookCall:
 			n.funcCall = h(n.funcCall)

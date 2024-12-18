@@ -9,6 +9,7 @@ import (
 	"go.unistack.org/micro/v3/client"
 	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/options"
 	"go.unistack.org/micro/v3/server"
 )
 
@@ -83,4 +84,41 @@ func TestNoopSub(t *testing.T) {
 			t.Fatal(err)
 		}
 	}()
+}
+
+func TestHooks_Wrap(t *testing.T) {
+	n := 5
+	fn1 := func(next server.FuncSubHandler) server.FuncSubHandler {
+		return func(ctx context.Context, msg server.Message) (err error) {
+			n *= 2
+			return next(ctx, msg)
+		}
+	}
+	fn2 := func(next server.FuncSubHandler) server.FuncSubHandler {
+		return func(ctx context.Context, msg server.Message) (err error) {
+			n -= 10
+			return next(ctx, msg)
+		}
+	}
+
+	hs := &options.Hooks{}
+	hs.Append(server.HookSubHandler(fn1), server.HookSubHandler(fn2))
+
+	var fn = func(ctx context.Context, msg server.Message) error {
+		return nil
+	}
+
+	hs.EachPrev(func(hook options.Hook) {
+		if h, ok := hook.(server.HookSubHandler); ok {
+			fn = h(fn)
+		}
+	})
+
+	if err := fn(nil, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	if n != 0 {
+		t.Fatalf("uncorrected hooks call")
+	}
 }

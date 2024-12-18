@@ -123,7 +123,7 @@ func (m *memoryStore) Init(opts ...store.Option) error {
 	m.funcList = m.fnList
 	m.funcDelete = m.fnDelete
 
-	m.opts.Hooks.EachNext(func(hook options.Hook) {
+	m.opts.Hooks.EachPrev(func(hook options.Hook) {
 		switch h := hook.(type) {
 		case store.HookRead:
 			m.funcRead = h(m.funcRead)

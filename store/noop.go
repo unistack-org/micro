@@ -54,7 +54,7 @@ func (n *noopStore) Init(opts ...Option) error {
 	n.funcList = n.fnList
 	n.funcDelete = n.fnDelete
 
-	n.opts.Hooks.EachNext(func(hook options.Hook) {
+	n.opts.Hooks.EachPrev(func(hook options.Hook) {
 		switch h := hook.(type) {
 		case HookRead:
 			n.funcRead = h(n.funcRead)

@@ -59,7 +59,7 @@ func (b *NoopBroker) Init(opts ...Option) error {
 	b.funcSubscribe = b.fnSubscribe
 	b.funcBatchSubscribe = b.fnBatchSubscribe
 
-	b.opts.Hooks.EachNext(func(hook options.Hook) {
+	b.opts.Hooks.EachPrev(func(hook options.Hook) {
 		switch h := hook.(type) {
 		case HookPublish:
 			b.funcPublish = h(b.funcPublish)

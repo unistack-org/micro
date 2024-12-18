@@ -723,7 +723,7 @@ func (n *noopServer) createSubHandler(sb *subscriber, opts Options) broker.Handl
 				return nil
 			}
 
-			opts.Hooks.EachNext(func(hook options.Hook) {
+			opts.Hooks.EachPrev(func(hook options.Hook) {
 				if h, ok := hook.(HookSubHandler); ok {
 					fn = h(fn)
 				}

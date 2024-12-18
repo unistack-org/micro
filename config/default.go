@@ -37,7 +37,7 @@ func (c *defaultConfig) Init(opts ...Option) error {
 	c.funcLoad = c.fnLoad
 	c.funcSave = c.fnSave
 
-	c.opts.Hooks.EachNext(func(hook options.Hook) {
+	c.opts.Hooks.EachPrev(func(hook options.Hook) {
 		switch h := hook.(type) {
 		case HookLoad:
 			c.funcLoad = h(c.funcLoad)

@@ -109,7 +109,7 @@ func (m *memoryBroker) Init(opts ...broker.Option) error {
 	m.funcSubscribe = m.fnSubscribe
 	m.funcBatchSubscribe = m.fnBatchSubscribe
 
-	m.opts.Hooks.EachNext(func(hook options.Hook) {
+	m.opts.Hooks.EachPrev(func(hook options.Hook) {
 		switch h := hook.(type) {
 		case broker.HookPublish:
 			m.funcPublish = h(m.funcPublish)
