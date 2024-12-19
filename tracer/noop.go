@@ -2,6 +2,7 @@ package tracer
 
 import (
 	"context"
+	"time"
 
 	"go.unistack.org/micro/v3/util/id"
 )
@@ -20,18 +21,18 @@ func (t *noopTracer) Spans() []Span {
 func (t *noopTracer) Start(ctx context.Context, name string, opts ...SpanOption) (context.Context, Span) {
 	options := NewSpanOptions(opts...)
 	span := &noopSpan{
-		name:   name,
-		ctx:    ctx,
-		tracer: t,
-		labels: options.Labels,
-		kind:   options.Kind,
+		name:      name,
+		ctx:       ctx,
+		tracer:    t,
+		startTime: time.Now(),
+		labels:    options.Labels,
+		kind:      options.Kind,
 	}
 	span.spanID.s, _ = id.New()
 	span.traceID.s, _ = id.New()
 	if span.ctx == nil {
 		span.ctx = context.Background()
 	}
-	t.spans = append(t.spans, span)
 	return NewSpanContext(ctx, span), span
 }
 
@@ -58,23 +59,18 @@ func (t *noopTracer) Name() string {
 	return t.opts.Name
 }
 
-type noopEvent struct {
-	name   string
-	labels []interface{}
-}
-
 type noopSpan struct {
-	ctx       context.Context
-	tracer    Tracer
-	name      string
-	statusMsg string
-	traceID   noopStringer
-	spanID    noopStringer
-	events    []*noopEvent
-	labels    []interface{}
-	logs      []interface{}
-	kind      SpanKind
-	status    SpanStatus
+	ctx        context.Context
+	tracer     Tracer
+	name       string
+	statusMsg  string
+	startTime  time.Time
+	finishTime time.Time
+	traceID    noopStringer
+	spanID     noopStringer
+	labels     []interface{}
+	kind       SpanKind
+	status     SpanStatus
 }
 
 func (s *noopSpan) TraceID() string {
@@ -86,6 +82,7 @@ func (s *noopSpan) SpanID() string {
 }
 
 func (s *noopSpan) Finish(_ ...SpanOption) {
+	s.finishTime = time.Now()
 }
 
 func (s *noopSpan) Context() context.Context {
@@ -97,8 +94,6 @@ func (s *noopSpan) Tracer() Tracer {
 }
 
 func (s *noopSpan) AddEvent(name string, opts ...EventOption) {
-	options := NewEventOptions(opts...)
-	s.events = append(s.events, &noopEvent{name: name, labels: options.Labels})
 }
 
 func (s *noopSpan) SetName(name string) {
@@ -106,7 +101,6 @@ func (s *noopSpan) SetName(name string) {
 }
 
 func (s *noopSpan) AddLogs(kv ...interface{}) {
-	s.logs = append(s.logs, kv...)
 }
 
 func (s *noopSpan) AddLabels(kv ...interface{}) {

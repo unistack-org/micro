@@ -38,6 +38,15 @@ func NewContext(ctx context.Context, tracer Tracer) context.Context {
 type spanKey struct{}
 
 // SpanFromContext returns a span from context
+func SpanMustContext(ctx context.Context) Span {
+	sp, ok := SpanFromContext(ctx)
+	if !ok {
+		panic("missing span")
+	}
+	return sp
+}
+
+// SpanFromContext returns a span from context
 func SpanFromContext(ctx context.Context) (Span, bool) {
 	if ctx == nil {
 		return nil, false
