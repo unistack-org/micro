@@ -9,7 +9,7 @@ import (
 
 var (
 	// HeaderTopic is the header name that contains topic name
-	//	HeaderTopic = "Micro-Topic"
+	HeaderTopic = "Micro-Topic"
 	// HeaderContentType specifies content type of message
 	HeaderContentType = "Content-Type"
 	// HeaderEndpoint specifies endpoint in service
