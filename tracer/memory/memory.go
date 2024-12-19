@@ -25,6 +25,7 @@ func (t *Tracer) Start(ctx context.Context, name string, opts ...tracer.SpanOpti
 		name:      name,
 		ctx:       ctx,
 		tracer:    t,
+		labels:    options.Labels,
 		kind:      options.Kind,
 		startTime: time.Now(),
 	}
@@ -35,6 +36,14 @@ func (t *Tracer) Start(ctx context.Context, name string, opts ...tracer.SpanOpti
 	}
 	t.spans = append(t.spans, span)
 	return tracer.NewSpanContext(ctx, span), span
+}
+
+type memoryStringer struct {
+	s string
+}
+
+func (s memoryStringer) String() string {
+	return s.s
 }
 
 func (t *Tracer) Flush(_ context.Context) error {
@@ -52,14 +61,6 @@ func (t *Tracer) Name() string {
 	return t.opts.Name
 }
 
-type noopStringer struct {
-	s string
-}
-
-func (s noopStringer) String() string {
-	return s.s
-}
-
 type Span struct {
 	ctx        context.Context
 	tracer     tracer.Tracer
@@ -67,8 +68,8 @@ type Span struct {
 	statusMsg  string
 	startTime  time.Time
 	finishTime time.Time
-	traceID    noopStringer
-	spanID     noopStringer
+	traceID    memoryStringer
+	spanID     memoryStringer
 	events     []*Event
 	labels     []interface{}
 	logs       []interface{}
