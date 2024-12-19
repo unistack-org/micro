@@ -68,15 +68,7 @@ func (md Metadata) Iterator() *Iterator {
 }
 
 func (md Metadata) MustGet(key string) string {
-	// fast path
-	val, ok := md[key]
-	if !ok {
-		// slow path
-		val, ok = md[textproto.CanonicalMIMEHeaderKey(key)]
-		if !ok {
-			val, ok = md[strings.ToLower(key)]
-		}
-	}
+	val, ok := md.Get(key)
 	if !ok {
 		panic("missing metadata key")
 	}
@@ -120,10 +112,17 @@ func (md Metadata) Del(keys ...string) {
 }
 
 // Copy makes a copy of the metadata
+func (md Metadata) CopyTo(dst Metadata) {
+	for k, v := range md {
+		dst[k] = v
+	}
+}
+
+// Copy makes a copy of the metadata
 func Copy(md Metadata, exclude ...string) Metadata {
 	nmd := New(len(md))
-	for key, val := range md {
-		nmd.Set(key, val)
+	for k, v := range md {
+		nmd[k] = v
 	}
 	nmd.Del(exclude...)
 	return nmd
@@ -147,7 +146,7 @@ func Merge(omd Metadata, mmd Metadata, overwrite bool) Metadata {
 		case ok && !overwrite:
 			continue
 		case val != "":
-			nmd.Set(key, val)
+			nmd[key] = val
 		case ok && val == "":
 			nmd.Del(key)
 		}
@@ -161,6 +160,8 @@ func Pairs(kv ...string) (Metadata, bool) {
 		return nil, false
 	}
 	md := New(len(kv) / 2)
-	md.Set(kv...)
+	for idx := 0; idx < len(kv); idx += 2 {
+		md[kv[idx]] = kv[idx+1]
+	}
 	return md, true
 }
