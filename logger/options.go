@@ -30,7 +30,6 @@ type Options struct {
 	StacktraceKey string
 	// Name holds the logger name
 	Name string
-
 	// Out holds the output writer
 	Out io.Writer
 	// Context holds exernal options
@@ -39,12 +38,10 @@ type Options struct {
 	Meter meter.Meter
 	// TimeFunc used to obtain current time
 	TimeFunc func() time.Time
-
 	// Fields holds additional metadata
 	Fields []interface{}
 	// ContextAttrFuncs contains funcs that executed before log func on context
 	ContextAttrFuncs []ContextAttrFunc
-
 	// callerSkipCount number of frmaes to skip
 	CallerSkipCount int
 	// The logging level the logger should log

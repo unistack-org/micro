@@ -80,7 +80,7 @@ func Name(n string) Option {
 // NewOptions returns router default options
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		ID:       id.Must(),
+		ID:       id.MustNew(),
 		Network:  DefaultNetwork,
 		Register: register.DefaultRegister,
 		Logger:   logger.DefaultLogger,

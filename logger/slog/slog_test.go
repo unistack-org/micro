@@ -15,6 +15,24 @@ import (
 	"go.unistack.org/micro/v3/metadata"
 )
 
+func TestStacktrace(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf),
+		WithHandlerFunc(slog.NewTextHandler),
+		logger.WithAddStacktrace(true),
+	)
+	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Error(ctx, "msg1", errors.New("err"))
+
+	if !bytes.Contains(buf.Bytes(), []byte(`slog_test.go:29`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+}
+
 func TestWithFields(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)

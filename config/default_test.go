@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"go.unistack.org/micro/v3/config"
-	mid "go.unistack.org/micro/v3/util/id"
 	mtime "go.unistack.org/micro/v3/util/time"
 )
 
@@ -115,8 +114,6 @@ func TestDefault(t *testing.T) {
 
 	if conf.IDValue == "" {
 		t.Fatalf("id value empty")
-	} else if len(conf.IDValue) != mid.DefaultSize {
-		t.Fatalf("id value invalid: %s", conf.IDValue)
 	}
 	_ = conf
 	// t.Logf("%#+v\n", conf)

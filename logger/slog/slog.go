@@ -2,6 +2,7 @@ package slog
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"os"
 	"reflect"
@@ -10,6 +11,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/semconv"
@@ -224,6 +226,10 @@ func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}
 
 func (s *slogLogger) Fatal(ctx context.Context, msg string, attrs ...interface{}) {
 	s.printLog(ctx, logger.FatalLevel, msg, attrs...)
+	if closer, ok := s.opts.Out.(io.Closer); ok {
+		closer.Close()
+	}
+	time.Sleep(1 * time.Second)
 	os.Exit(1)
 }
 
@@ -270,7 +276,7 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 		}
 	}
 
-	if s.opts.AddStacktrace && lvl == logger.ErrorLevel {
+	if (s.opts.AddStacktrace || lvl == logger.FatalLevel) || (s.opts.AddStacktrace && lvl == logger.ErrorLevel) {
 		stackInfo := make([]byte, 1024*1024)
 		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
 			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)

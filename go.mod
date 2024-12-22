@@ -1,14 +1,14 @@
 module go.unistack.org/micro/v3
 
-go 1.22.0
-
-toolchain go1.23.4
+go 1.23.4
 
 require (
 	dario.cat/mergo v1.0.1
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/KimMachineGun/automemlimit v0.6.1
+	github.com/ash3in/uuidv8 v1.0.1
 	github.com/google/uuid v1.6.0
+	github.com/matoous/go-nanoid v1.5.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/silas/dag v0.0.0-20220518035006-a7e85ada93c5
 	go.uber.org/automaxprocs v1.6.0

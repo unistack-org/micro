@@ -100,7 +100,7 @@ func NewOptions(opts ...Option) Options {
 		Address:          DefaultAddress,
 		Name:             DefaultName,
 		Version:          DefaultVersion,
-		ID:               id.Must(),
+		ID:               id.MustNew(),
 		Namespace:        DefaultNamespace,
 		GracefulTimeout:  DefaultGracefulTimeout,
 	}

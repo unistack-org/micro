@@ -1,112 +1,154 @@
 package id
 
 import (
-	"context"
 	"crypto/rand"
+	"encoding/binary"
 	"errors"
-	"math"
+	"fmt"
+	"time"
 
-	"go.unistack.org/micro/v3/logger"
+	uuidv8 "github.com/ash3in/uuidv8"
+	nanoid "github.com/matoous/go-nanoid"
 )
 
-// DefaultAlphabet is the alphabet used for ID characters by default
-var DefaultAlphabet = []rune("6789BCDFGHJKLMNPQRTWbcdfghjkmnpqrtwz")
+var generatedNode [6]byte
 
-// DefaultSize is the size used for ID by default
-// To get uuid like collision specify 21
-var DefaultSize = 16
-
-// getMask generates bit mask used to obtain bits from the random bytes that are used to get index of random character
-// from the alphabet. Example: if the alphabet has 6 = (110)_2 characters it is sufficient to use mask 7 = (111)_2
-func getMask(alphabetSize int) int {
-	for i := 1; i <= 8; i++ {
-		mask := (2 << uint(i)) - 1
-		if mask >= alphabetSize-1 {
-			return mask
-		}
+func init() {
+	if _, err := rand.Read(generatedNode[:]); err != nil {
+		panic(err)
 	}
-	return 0
+}
+
+type Type int
+
+const (
+	TypeUnspecified Type = iota
+	TypeNanoid
+	TypeUUIDv8
+)
+
+// DefaultNanoidAlphabet is the alphabet used for ID characters by default
+var DefaultNanoidAlphabet = "6789BCDFGHJKLMNPQRTWbcdfghjkmnpqrtwz"
+
+// DefaultNanoidSize is the size used for ID by default
+// To get uuid like collision specify 21
+var DefaultNanoidSize = 16
+
+type Generator struct {
+	opts Options
+}
+
+func (g *Generator) MustNew() string {
+	id, err := g.New()
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
+func (g *Generator) New() (string, error) {
+	switch g.opts.Type {
+	case TypeNanoid:
+		if len(g.opts.NanoidAlphabet) == 0 || len(g.opts.NanoidAlphabet) > 255 {
+			return "", errors.New("invalid option, NanoidAlphabet must not be empty and contain no more than 255 chars")
+		}
+		if g.opts.NanoidSize <= 0 {
+			return "", errors.New("invalid option, NanoidSize must be positive integer")
+		}
+
+		return nanoid.Generate(g.opts.NanoidAlphabet, g.opts.NanoidSize)
+	case TypeUUIDv8:
+		timestamp := uint64(time.Now().UnixNano())
+		clockSeq := make([]byte, 2)
+		if _, err := rand.Read(clockSeq); err != nil {
+			return "", fmt.Errorf("failed to generate random clock sequence: %w", err)
+		}
+		clockSeqValue := binary.BigEndian.Uint16(clockSeq) & 0x0FFF // Mask to 12 bits
+		return uuidv8.NewWithParams(timestamp, clockSeqValue, g.opts.UUIDNode[:], uuidv8.TimestampBits48)
+	}
+	return "", errors.New("invalid option, Type unspecified")
 }
 
 // New returns new id or error
 func New(opts ...Option) (string, error) {
 	options := NewOptions(opts...)
 
-	if len(options.Alphabet) == 0 || len(options.Alphabet) > 255 {
-		return "", errors.New("alphabet must not be empty and contain no more than 255 chars")
-	}
-	if options.Size <= 0 {
-		return "", errors.New("size must be positive integer")
-	}
-
-	chars := options.Alphabet
-
-	mask := getMask(len(chars))
-	// estimate how many random bytes we will need for the ID, we might actually need more but this is tradeoff
-	// between average case and worst case
-	ceilArg := 1.6 * float64(mask*options.Size) / float64(len(options.Alphabet))
-	step := int(math.Ceil(ceilArg))
-
-	id := make([]rune, options.Size)
-	bytes := make([]byte, step)
-	for j := 0; ; {
-		_, err := rand.Read(bytes)
-		if err != nil {
-			return "", err
+	switch options.Type {
+	case TypeNanoid:
+		if len(options.NanoidAlphabet) == 0 || len(options.NanoidAlphabet) > 255 {
+			return "", errors.New("invalid option, NanoidAlphabet must not be empty and contain no more than 255 chars")
 		}
-		for i := 0; i < step; i++ {
-			currByte := bytes[i] & byte(mask)
-			if currByte < byte(len(chars)) {
-				id[j] = chars[currByte]
-				j++
-				if j == options.Size {
-					return string(id[:options.Size]), nil
-				}
-			}
+		if options.NanoidSize <= 0 {
+			return "", errors.New("invalid option, NanoidSize must be positive integer")
 		}
+
+		return nanoid.Generate(options.NanoidAlphabet, options.NanoidSize)
+	case TypeUUIDv8:
+		timestamp := uint64(time.Now().UnixNano())
+		clockSeq := make([]byte, 2)
+		if _, err := rand.Read(clockSeq); err != nil {
+			return "", fmt.Errorf("failed to generate random clock sequence: %w", err)
+		}
+		clockSeqValue := binary.BigEndian.Uint16(clockSeq) & 0x0FFF // Mask to 12 bits
+		return uuidv8.NewWithParams(timestamp, clockSeqValue, options.UUIDNode[:], uuidv8.TimestampBits48)
 	}
+
+	return "", errors.New("invalid option, Type unspecified")
 }
 
 // Must is the same as New but fatals on error
-func Must(opts ...Option) string {
+func MustNew(opts ...Option) string {
 	id, err := New(opts...)
 	if err != nil {
-		logger.DefaultLogger.Fatal(context.TODO(), "Must call is failed", err)
+		panic(err)
 	}
 	return id
 }
 
 // Options contains id deneration options
 type Options struct {
-	Alphabet []rune
-	Size     int
+	Type           Type
+	NanoidAlphabet string
+	NanoidSize     int
+	UUIDNode       [6]byte
 }
 
 // Option func signature
 type Option func(*Options)
 
-// Alphabet specifies alphabet to use
-func Alphabet(alphabet string) Option {
+// WithNanoidAlphabet specifies alphabet to use
+func WithNanoidAlphabet(alphabet string) Option {
 	return func(o *Options) {
-		o.Alphabet = []rune(alphabet)
+		o.NanoidAlphabet = alphabet
 	}
 }
 
-// Size specifies id size
-func Size(size int) Option {
+// WithNanoidSize specifies generated id size
+func WithNanoidSize(size int) Option {
 	return func(o *Options) {
-		o.Size = size
+		o.NanoidSize = size
+	}
+}
+
+// WithUUIDNode specifies node component for UUIDv8
+func WithUUIDNode(node [6]byte) Option {
+	return func(o *Options) {
+		o.UUIDNode = node
 	}
 }
 
 // NewOptions returns new Options struct filled by opts
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Alphabet: DefaultAlphabet,
-		Size:     DefaultSize,
+		Type:           TypeUUIDv8,
+		NanoidAlphabet: DefaultNanoidAlphabet,
+		NanoidSize:     DefaultNanoidSize,
+		UUIDNode:       generatedNode,
 	}
+
 	for _, o := range opts {
 		o(&options)
 	}
+
 	return options
 }

@@ -113,7 +113,7 @@ func (b *Buffer) Stream() (<-chan *Entry, chan bool) {
 	defer b.Unlock()
 
 	entries := make(chan *Entry, 128)
-	id := id.Must()
+	id := id.MustNew()
 	stop := make(chan bool)
 
 	b.streams[id] = &Stream{

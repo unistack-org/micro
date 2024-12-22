@@ -119,7 +119,7 @@ func Tracer(t tracer.Tracer) Option {
 // NewOptions returns network default options
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		ID:      id.Must(),
+		ID:      id.MustNew(),
 		Name:    "go.micro",
 		Address: ":0",
 		Logger:  logger.DefaultLogger,

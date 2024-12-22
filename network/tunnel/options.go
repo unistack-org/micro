@@ -164,7 +164,7 @@ func DialWait(b bool) DialOption {
 // NewOptions returns router default options with filled values
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		ID:      id.Must(),
+		ID:      id.MustNew(),
 		Address: DefaultAddress,
 		Token:   DefaultToken,
 		Logger:  logger.DefaultLogger,
