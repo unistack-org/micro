@@ -7,5 +7,14 @@ func TestUUIDv8(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("xxx %s\n", id)
+	_ = id
+}
+
+func TestToUUID(t *testing.T) {
+	id, err := New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	u := ToUUID(id)
+	_ = u
 }

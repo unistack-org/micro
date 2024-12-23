@@ -8,6 +8,7 @@ import (
 	"time"
 
 	uuidv8 "github.com/ash3in/uuidv8"
+	"github.com/google/uuid"
 	nanoid "github.com/matoous/go-nanoid"
 )
 
@@ -94,6 +95,10 @@ func New(opts ...Option) (string, error) {
 	}
 
 	return "", errors.New("invalid option, Type unspecified")
+}
+
+func ToUUID(s string) uuid.UUID {
+	return uuid.MustParse(s)
 }
 
 // Must is the same as New but fatals on error
