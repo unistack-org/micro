@@ -20,6 +20,16 @@ func (m *Frame) UnmarshalJSON(data []byte) error {
 	return m.Unmarshal(data)
 }
 
+// MarshalYAML returns frame data
+func (m *Frame) MarshalYAML() ([]byte, error) {
+	return m.Marshal()
+}
+
+// UnmarshalYAML set frame data
+func (m *Frame) UnmarshalYAML(data []byte) error {
+	return m.Unmarshal(data)
+}
+
 // ProtoMessage noop func
 func (m *Frame) ProtoMessage() {}
 
