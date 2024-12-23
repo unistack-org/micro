@@ -1,5 +1,7 @@
 package codec
 
+import "gopkg.in/yaml.v3"
+
 // Frame gives us the ability to define raw data to send over the pipes
 type Frame struct {
 	Data []byte
@@ -26,8 +28,9 @@ func (m *Frame) MarshalYAML() ([]byte, error) {
 }
 
 // UnmarshalYAML set frame data
-func (m *Frame) UnmarshalYAML(data []byte) error {
-	return m.Unmarshal(data)
+func (m *Frame) UnmarshalYAML(n *yaml.Node) error {
+	m.Data = []byte(n.Value)
+	return nil
 }
 
 // ProtoMessage noop func
