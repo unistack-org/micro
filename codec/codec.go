@@ -54,3 +54,22 @@ func (m *RawMessage) UnmarshalJSON(data []byte) error {
 	*m = append((*m)[0:0], data...)
 	return nil
 }
+
+// MarshalYAML returns m as the JSON encoding of m.
+func (m *RawMessage) MarshalYAML() ([]byte, error) {
+	if m == nil {
+		return []byte("null"), nil
+	} else if len(*m) == 0 {
+		return []byte("null"), nil
+	}
+	return *m, nil
+}
+
+// UnmarshalYAML sets *m to a copy of data.
+func (m *RawMessage) UnmarshalYAML(data []byte) error {
+	if m == nil {
+		return errors.New("RawMessage UnmarshalYAML on nil pointer")
+	}
+	*m = append((*m)[0:0], data...)
+	return nil
+}
