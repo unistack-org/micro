@@ -22,6 +22,7 @@ const (
 	badKey = "!BADKEY"
 	// defaultCallerSkipCount used by logger
 	defaultCallerSkipCount = 3
+	timeFormat             = "2006-01-02T15:04:05.000000000Z07:00"
 )
 
 var reTrace = regexp.MustCompile(`.*/slog/logger\.go.*\n`)
@@ -64,6 +65,7 @@ func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 		a.Key = s.opts.SourceKey
 	case slog.TimeKey:
 		a.Key = s.opts.TimeKey
+		a.Value = slog.StringValue(a.Value.Time().Format(timeFormat))
 	case slog.MessageKey:
 		a.Key = s.opts.MessageKey
 	case slog.LevelKey:

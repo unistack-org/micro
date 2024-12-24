@@ -9,11 +9,33 @@ import (
 	"log/slog"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/metadata"
 )
+
+func TestTime(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf),
+		WithHandlerFunc(slog.NewTextHandler),
+		logger.WithAddStacktrace(true),
+		logger.WithTimeFunc(func() time.Time {
+			return time.Unix(0, 0)
+		}),
+	)
+	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Error(ctx, "msg1", errors.New("err"))
+
+	if !bytes.Contains(buf.Bytes(), []byte(`timestamp=1970-01-01T03:00:00.000000000+03:00`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+}
 
 func TestStacktrace(t *testing.T) {
 	ctx := context.TODO()
@@ -28,7 +50,7 @@ func TestStacktrace(t *testing.T) {
 
 	l.Error(ctx, "msg1", errors.New("err"))
 
-	if !bytes.Contains(buf.Bytes(), []byte(`slog_test.go:29`)) {
+	if !bytes.Contains(buf.Bytes(), []byte(`slog_test.go:51`)) {
 		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
 	}
 }
