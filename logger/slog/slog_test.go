@@ -50,7 +50,7 @@ func TestStacktrace(t *testing.T) {
 
 	l.Error(ctx, "msg1", errors.New("err"))
 
-	if !bytes.Contains(buf.Bytes(), []byte(`slog_test.go:29`)) {
+	if !bytes.Contains(buf.Bytes(), []byte(`slog_test.go:51`)) {
 		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
 	}
 }
