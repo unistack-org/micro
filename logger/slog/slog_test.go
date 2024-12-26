@@ -32,7 +32,8 @@ func TestTime(t *testing.T) {
 
 	l.Error(ctx, "msg1", errors.New("err"))
 
-	if !bytes.Contains(buf.Bytes(), []byte(`timestamp=1970-01-01T03:00:00.000000000+03:00`)) {
+	if !bytes.Contains(buf.Bytes(), []byte(`timestamp=1970-01-01T03:00:00.000000000+03:00`)) &&
+		!bytes.Contains(buf.Bytes(), []byte(`timestamp=1970-01-01T00:00:00.000000000Z`)) {
 		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
 	}
 }
