@@ -1,6 +1,6 @@
 module go.unistack.org/micro/v3
 
-go 1.22.10
+go 1.22.2
 
 require (
 	dario.cat/mergo v1.0.1
