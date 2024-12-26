@@ -7,7 +7,6 @@ import (
 
 	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/metadata"
-	"go.unistack.org/micro/v3/register"
 )
 
 // DefaultServer default server
@@ -170,7 +169,6 @@ type Stream interface {
 type Handler interface {
 	Name() string
 	Handler() interface{}
-	Endpoints() []*register.Endpoint
 	Options() HandlerOptions
 }
 
@@ -180,6 +178,5 @@ type Handler interface {
 type Subscriber interface {
 	Topic() string
 	Subscriber() interface{}
-	Endpoints() []*register.Endpoint
 	Options() SubscriberOptions
 }

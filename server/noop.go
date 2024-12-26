@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 	"runtime/debug"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -32,38 +31,21 @@ const (
 )
 
 type rpcHandler struct {
-	opts      HandlerOptions
-	handler   interface{}
-	name      string
-	endpoints []*register.Endpoint
+	opts    HandlerOptions
+	handler interface{}
+	name    string
 }
 
 func newRPCHandler(handler interface{}, opts ...HandlerOption) Handler {
 	options := NewHandlerOptions(opts...)
 
-	typ := reflect.TypeOf(handler)
 	hdlr := reflect.ValueOf(handler)
 	name := reflect.Indirect(hdlr).Type().Name()
 
-	var endpoints []*register.Endpoint
-
-	for m := 0; m < typ.NumMethod(); m++ {
-		if e := register.ExtractEndpoint(typ.Method(m)); e != nil {
-			e.Name = name + "." + e.Name
-
-			for k, v := range options.Metadata[e.Name] {
-				e.Metadata[k] = v
-			}
-
-			endpoints = append(endpoints, e)
-		}
-	}
-
 	return &rpcHandler{
-		name:      name,
-		handler:   handler,
-		endpoints: endpoints,
-		opts:      options,
+		name:    name,
+		handler: handler,
+		opts:    options,
 	}
 }
 
@@ -73,10 +55,6 @@ func (r *rpcHandler) Name() string {
 
 func (r *rpcHandler) Handler() interface{} {
 	return r.handler
-}
-
-func (r *rpcHandler) Endpoints() []*register.Endpoint {
-	return r.endpoints
 }
 
 func (r *rpcHandler) Options() HandlerOptions {
@@ -248,35 +226,6 @@ func (n *noopServer) Register() error {
 	if err != nil {
 		return err
 	}
-
-	n.RLock()
-	handlerList := make([]string, 0, len(n.handlers))
-	for n := range n.handlers {
-		handlerList = append(handlerList, n)
-	}
-
-	sort.Strings(handlerList)
-
-	subscriberList := make([]*subscriber, 0, len(n.subscribers))
-	for e := range n.subscribers {
-		subscriberList = append(subscriberList, e)
-	}
-	sort.Slice(subscriberList, func(i, j int) bool {
-		return subscriberList[i].topic > subscriberList[j].topic
-	})
-
-	endpoints := make([]*register.Endpoint, 0, len(handlerList)+len(subscriberList))
-	for _, h := range handlerList {
-		endpoints = append(endpoints, n.handlers[h].Endpoints()...)
-	}
-	for _, e := range subscriberList {
-		endpoints = append(endpoints, e.Endpoints()...)
-	}
-	n.RUnlock()
-
-	service.Nodes[0].Metadata["protocol"] = "noop"
-	service.Nodes[0].Metadata["transport"] = service.Nodes[0].Metadata["protocol"]
-	service.Endpoints = endpoints
 
 	n.RLock()
 	registered := n.registered
@@ -576,7 +525,6 @@ func (n *noopServer) Stop() error {
 }
 
 func newSubscriber(topic string, sub interface{}, opts ...SubscriberOption) Subscriber {
-	var endpoints []*register.Endpoint
 	var handlers []*handler
 
 	options := NewSubscriberOptions(opts...)
@@ -595,18 +543,7 @@ func newSubscriber(topic string, sub interface{}, opts ...SubscriberOption) Subs
 		}
 
 		handlers = append(handlers, h)
-		ep := &register.Endpoint{
-			Name:     "Func",
-			Request:  register.ExtractSubValue(typ),
-			Metadata: metadata.New(2),
-		}
-		ep.Metadata.Set("topic", topic)
-		ep.Metadata.Set("subscriber", "true")
-		endpoints = append(endpoints, ep)
 	} else {
-		hdlr := reflect.ValueOf(sub)
-		name := reflect.Indirect(hdlr).Type().Name()
-
 		for m := 0; m < typ.NumMethod(); m++ {
 			method := typ.Method(m)
 			h := &handler{
@@ -622,14 +559,6 @@ func newSubscriber(topic string, sub interface{}, opts ...SubscriberOption) Subs
 			}
 
 			handlers = append(handlers, h)
-			ep := &register.Endpoint{
-				Name:     name + "." + method.Name,
-				Request:  register.ExtractSubValue(method.Type),
-				Metadata: metadata.New(2),
-			}
-			ep.Metadata.Set("topic", topic)
-			ep.Metadata.Set("subscriber", "true")
-			endpoints = append(endpoints, ep)
 		}
 	}
 
@@ -639,7 +568,6 @@ func newSubscriber(topic string, sub interface{}, opts ...SubscriberOption) Subs
 		topic:      topic,
 		subscriber: sub,
 		handlers:   handlers,
-		endpoints:  endpoints,
 		opts:       options,
 	}
 }
@@ -766,10 +694,6 @@ func (s *subscriber) Subscriber() interface{} {
 	return s.subscriber
 }
 
-func (s *subscriber) Endpoints() []*register.Endpoint {
-	return s.endpoints
-}
-
 func (s *subscriber) Options() SubscriberOptions {
 	return s.opts
 }
@@ -780,8 +704,7 @@ type subscriber struct {
 	typ        reflect.Type
 	subscriber interface{}
 
-	endpoints []*register.Endpoint
-	handlers  []*handler
+	handlers []*handler
 
 	rcvr reflect.Value
 	opts SubscriberOptions

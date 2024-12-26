@@ -1,12 +1,12 @@
 module go.unistack.org/micro/v3
 
-go 1.22.2
+go 1.22.0
 
 require (
 	dario.cat/mergo v1.0.1
-	github.com/DATA-DOG/go-sqlmock v1.5.0
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/KimMachineGun/automemlimit v0.6.1
-	github.com/ash3in/uuidv8 v1.0.1
+	github.com/ash3in/uuidv8 v1.2.0
 	github.com/google/uuid v1.6.0
 	github.com/matoous/go-nanoid v1.5.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible

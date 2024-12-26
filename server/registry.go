@@ -17,7 +17,7 @@ var (
 
 		opts := []register.RegisterOption{
 			register.RegisterTTL(config.RegisterTTL),
-			register.RegisterDomain(config.Namespace),
+			register.RegisterNamespace(config.Namespace),
 		}
 
 		for i := 0; i <= config.RegisterAttempts; i++ {
@@ -36,7 +36,7 @@ var (
 		var err error
 
 		opts := []register.DeregisterOption{
-			register.DeregisterDomain(config.Namespace),
+			register.DeregisterNamespace(config.Namespace),
 		}
 
 		for i := 0; i <= config.DeregisterAttempts; i++ {
@@ -82,9 +82,8 @@ func NewRegisterService(s Server) (*register.Service, error) {
 	node.Metadata["register"] = opts.Register.String()
 
 	return &register.Service{
-		Name:     opts.Name,
-		Version:  opts.Version,
-		Nodes:    []*register.Node{node},
-		Metadata: metadata.New(0),
+		Name:    opts.Name,
+		Version: opts.Version,
+		Nodes:   []*register.Node{node},
 	}, nil
 }
