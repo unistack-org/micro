@@ -71,14 +71,6 @@ func CopyService(service *register.Service) *register.Service {
 	}
 	s.Nodes = nodes
 
-	// copy endpoints
-	eps := make([]*register.Endpoint, len(service.Endpoints))
-	for j, ep := range service.Endpoints {
-		e := &register.Endpoint{}
-		*e = *ep
-		eps[j] = e
-	}
-	s.Endpoints = eps
 	return s
 }
 

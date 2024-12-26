@@ -9,12 +9,12 @@ import (
 )
 
 const (
-	// WildcardDomain indicates any domain
-	WildcardDomain = "*"
+	// WildcardNamespace indicates any Namespace
+	WildcardNamespace = "*"
 )
 
-// DefaultDomain to use if none was provided in options
-var DefaultDomain = "micro"
+// DefaultNamespace to use if none was provided in options
+var DefaultNamespace = "micro"
 
 var (
 	// DefaultRegister is the global default register
@@ -59,26 +59,17 @@ type Register interface {
 
 // Service holds service register info
 type Service struct {
-	Name      string            `json:"name"`
-	Version   string            `json:"version"`
-	Metadata  metadata.Metadata `json:"metadata"`
-	Endpoints []*Endpoint       `json:"endpoints"`
-	Nodes     []*Node           `json:"nodes"`
+	Name      string  `json:"name,omitempty"`
+	Version   string  `json:"version,omitempty"`
+	Nodes     []*Node `json:"nodes,omitempty"`
+	Namespace string  `json:"namespace,omitempty"`
 }
 
 // Node holds node register info
 type Node struct {
-	Metadata metadata.Metadata `json:"metadata"`
-	ID       string            `json:"id"`
-	Address  string            `json:"address"`
-}
-
-// Endpoint holds endpoint register info
-type Endpoint struct {
-	Request  string            `json:"request"`
-	Response string            `json:"response"`
-	Metadata metadata.Metadata `json:"metadata"`
-	Name     string            `json:"name"`
+	Metadata metadata.Metadata `json:"metadata,omitempty"`
+	ID       string            `json:"id,omitempty"`
+	Address  string            `json:"address,omitempty"`
 }
 
 // Option func signature

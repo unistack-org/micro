@@ -46,17 +46,17 @@ func NewOptions(opts ...Option) Options {
 
 // RegisterOptions holds options for register method
 type RegisterOptions struct { // nolint: golint,revive
-	Context  context.Context
-	Domain   string
-	TTL      time.Duration
-	Attempts int
+	Context   context.Context
+	Namespace string
+	TTL       time.Duration
+	Attempts  int
 }
 
 // NewRegisterOptions returns register options struct filled by opts
 func NewRegisterOptions(opts ...RegisterOption) RegisterOptions {
 	options := RegisterOptions{
-		Domain:  DefaultDomain,
-		Context: context.Background(),
+		Namespace: DefaultNamespace,
+		Context:   context.Background(),
 	}
 	for _, o := range opts {
 		o(&options)
@@ -72,15 +72,15 @@ type WatchOptions struct {
 	// Other options for implementations of the interface
 	// can be stored in a context
 	Context context.Context
-	// Domain to watch
-	Domain string
+	// Namespace to watch
+	Namespace string
 }
 
 // NewWatchOptions returns watch options filled by opts
 func NewWatchOptions(opts ...WatchOption) WatchOptions {
 	options := WatchOptions{
-		Domain:  DefaultDomain,
-		Context: context.Background(),
+		Namespace: DefaultNamespace,
+		Context:   context.Background(),
 	}
 	for _, o := range opts {
 		o(&options)
@@ -91,8 +91,8 @@ func NewWatchOptions(opts ...WatchOption) WatchOptions {
 // DeregisterOptions holds options for deregister method
 type DeregisterOptions struct {
 	Context context.Context
-	// Domain the service was registered in
-	Domain string
+	// Namespace the service was registered in
+	Namespace string
 	// Atempts specify max attempts for deregister
 	Attempts int
 }
@@ -100,8 +100,8 @@ type DeregisterOptions struct {
 // NewDeregisterOptions returns options for deregister filled by opts
 func NewDeregisterOptions(opts ...DeregisterOption) DeregisterOptions {
 	options := DeregisterOptions{
-		Domain:  DefaultDomain,
-		Context: context.Background(),
+		Namespace: DefaultNamespace,
+		Context:   context.Background(),
 	}
 	for _, o := range opts {
 		o(&options)
@@ -112,15 +112,15 @@ func NewDeregisterOptions(opts ...DeregisterOption) DeregisterOptions {
 // LookupOptions holds lookup options
 type LookupOptions struct {
 	Context context.Context
-	// Domain to scope the request to
-	Domain string
+	// Namespace to scope the request to
+	Namespace string
 }
 
 // NewLookupOptions returns lookup options filled by opts
 func NewLookupOptions(opts ...LookupOption) LookupOptions {
 	options := LookupOptions{
-		Domain:  DefaultDomain,
-		Context: context.Background(),
+		Namespace: DefaultNamespace,
+		Context:   context.Background(),
 	}
 	for _, o := range opts {
 		o(&options)
@@ -131,15 +131,15 @@ func NewLookupOptions(opts ...LookupOption) LookupOptions {
 // ListOptions holds the list options for list method
 type ListOptions struct {
 	Context context.Context
-	// Domain to scope the request to
-	Domain string
+	// Namespace to scope the request to
+	Namespace string
 }
 
 // NewListOptions returns list options filled by opts
 func NewListOptions(opts ...ListOption) ListOptions {
 	options := ListOptions{
-		Domain:  DefaultDomain,
-		Context: context.Background(),
+		Namespace: DefaultNamespace,
+		Context:   context.Background(),
 	}
 	for _, o := range opts {
 		o(&options)
@@ -217,10 +217,10 @@ func RegisterContext(ctx context.Context) RegisterOption { // nolint: golint,rev
 	}
 }
 
-// RegisterDomain secifies register domain
-func RegisterDomain(d string) RegisterOption { // nolint: golint,revive
+// RegisterNamespace secifies register Namespace
+func RegisterNamespace(d string) RegisterOption { // nolint: golint,revive
 	return func(o *RegisterOptions) {
-		o.Domain = d
+		o.Namespace = d
 	}
 }
 
@@ -238,10 +238,10 @@ func WatchContext(ctx context.Context) WatchOption {
 	}
 }
 
-// WatchDomain sets the domain for watch
-func WatchDomain(d string) WatchOption {
+// WatchNamespace sets the Namespace for watch
+func WatchNamespace(d string) WatchOption {
 	return func(o *WatchOptions) {
-		o.Domain = d
+		o.Namespace = d
 	}
 }
 
@@ -259,10 +259,10 @@ func DeregisterContext(ctx context.Context) DeregisterOption {
 	}
 }
 
-// DeregisterDomain specifies deregister domain
-func DeregisterDomain(d string) DeregisterOption {
+// DeregisterNamespace specifies deregister Namespace
+func DeregisterNamespace(d string) DeregisterOption {
 	return func(o *DeregisterOptions) {
-		o.Domain = d
+		o.Namespace = d
 	}
 }
 
@@ -273,10 +273,10 @@ func LookupContext(ctx context.Context) LookupOption {
 	}
 }
 
-// LookupDomain sets the domain for lookup
-func LookupDomain(d string) LookupOption {
+// LookupNamespace sets the Namespace for lookup
+func LookupNamespace(d string) LookupOption {
 	return func(o *LookupOptions) {
-		o.Domain = d
+		o.Namespace = d
 	}
 }
 
@@ -287,10 +287,10 @@ func ListContext(ctx context.Context) ListOption {
 	}
 }
 
-// ListDomain sets the domain for list method
-func ListDomain(d string) ListOption {
+// ListNamespace sets the Namespace for list method
+func ListNamespace(d string) ListOption {
 	return func(o *ListOptions) {
-		o.Domain = d
+		o.Namespace = d
 	}
 }
 
