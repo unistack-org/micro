@@ -16,6 +16,25 @@ import (
 	"go.unistack.org/micro/v3/metadata"
 )
 
+// always first to have proper check
+func TestStacktrace(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf),
+		WithHandlerFunc(slog.NewTextHandler),
+		logger.WithAddStacktrace(true),
+	)
+	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Error(ctx, "msg1", errors.New("err"))
+
+	if !bytes.Contains(buf.Bytes(), []byte(`slog_test.go:31`)) {
+		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+}
+
 func TestTime(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
@@ -34,24 +53,6 @@ func TestTime(t *testing.T) {
 
 	if !bytes.Contains(buf.Bytes(), []byte(`timestamp=1970-01-01T03:00:00.000000000+03:00`)) &&
 		!bytes.Contains(buf.Bytes(), []byte(`timestamp=1970-01-01T00:00:00.000000000Z`)) {
-		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
-	}
-}
-
-func TestStacktrace(t *testing.T) {
-	ctx := context.TODO()
-	buf := bytes.NewBuffer(nil)
-	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf),
-		WithHandlerFunc(slog.NewTextHandler),
-		logger.WithAddStacktrace(true),
-	)
-	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
-		t.Fatal(err)
-	}
-
-	l.Error(ctx, "msg1", errors.New("err"))
-
-	if !bytes.Contains(buf.Bytes(), []byte(`slog_test.go:51`)) {
 		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
 	}
 }
