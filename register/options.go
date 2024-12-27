@@ -138,8 +138,6 @@ type ListOptions struct {
 	Context context.Context
 	// Namespace to scope the request to
 	Namespace string
-	// Name filter services by name
-	Name string
 }
 
 // NewListOptions returns list options filled by opts
@@ -301,21 +299,12 @@ func ListNamespace(d string) ListOption {
 	}
 }
 
-// ListName sets the name for list method to filter needed services
-func ListName(n string) ListOption {
-	return func(o *ListOptions) {
-		o.Name = n
-	}
-}
-
 // Name sets the name
 func Name(n string) Option {
 	return func(o *Options) {
 		o.Name = n
 	}
 }
-
-type codecKey struct{}
 
 func Codec(c codec.Codec) Option {
 	return func(o *Options) {
