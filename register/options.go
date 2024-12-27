@@ -130,9 +130,12 @@ func NewLookupOptions(opts ...LookupOption) LookupOptions {
 
 // ListOptions holds the list options for list method
 type ListOptions struct {
+	// Context used to store additional options
 	Context context.Context
 	// Namespace to scope the request to
 	Namespace string
+	// Name filter services by name
+	Name string
 }
 
 // NewListOptions returns list options filled by opts
@@ -291,6 +294,13 @@ func ListContext(ctx context.Context) ListOption {
 func ListNamespace(d string) ListOption {
 	return func(o *ListOptions) {
 		o.Namespace = d
+	}
+}
+
+// ListName sets the name for list method to filter needed services
+func ListName(n string) ListOption {
+	return func(o *ListOptions) {
+		o.Name = n
 	}
 }
 
