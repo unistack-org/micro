@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"time"
 
+	"go.unistack.org/micro/v3/codec"
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/meter"
 	"go.unistack.org/micro/v3/tracer"
@@ -26,6 +27,8 @@ type Options struct {
 	Name string
 	// Addrs specifies register addrs
 	Addrs []string
+	// Codec used to marshal/unmarshal data in register
+	Codec codec.Codec
 	// Timeout specifies timeout
 	Timeout time.Duration
 }
@@ -37,6 +40,7 @@ func NewOptions(opts ...Option) Options {
 		Meter:   meter.DefaultMeter,
 		Tracer:  tracer.DefaultTracer,
 		Context: context.Background(),
+		Codec:   codec.NewCodec(),
 	}
 	for _, o := range opts {
 		o(&options)
@@ -308,5 +312,13 @@ func ListName(n string) ListOption {
 func Name(n string) Option {
 	return func(o *Options) {
 		o.Name = n
+	}
+}
+
+type codecKey struct{}
+
+func Codec(c codec.Codec) Option {
+	return func(o *Options) {
+		o.Codec = c
 	}
 }
