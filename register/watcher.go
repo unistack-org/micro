@@ -15,31 +15,31 @@ type Watcher interface {
 // the watcher. Actions can be create, update, delete
 type Result struct {
 	// Service holds register service
-	Service *Service
+	Service *Service `json:"service,omitempty"`
 	// Action holds the action
-	Action string
+	Action EventType `json:"action,omitempty"`
 }
 
 // EventType defines register event type
 type EventType int
 
 const (
-	// Create is emitted when a new service is registered
-	Create EventType = iota
-	// Delete is emitted when an existing service is deregistered
-	Delete
-	// Update is emitted when an existing service is updated
-	Update
+	// EventCreate is emitted when a new service is registered
+	EventCreate EventType = iota
+	// EventDelete is emitted when an existing service is deregistered
+	EventDelete
+	// EventUpdate is emitted when an existing service is updated
+	EventUpdate
 )
 
 // String returns human readable event type
 func (t EventType) String() string {
 	switch t {
-	case Create:
+	case EventCreate:
 		return "create"
-	case Delete:
+	case EventDelete:
 		return "delete"
-	case Update:
+	case EventUpdate:
 		return "update"
 	default:
 		return "unknown"
@@ -49,11 +49,11 @@ func (t EventType) String() string {
 // Event is register event
 type Event struct {
 	// Timestamp is event timestamp
-	Timestamp time.Time
+	Timestamp time.Time `json:"timestamp,omitempty"`
 	// Service is register service
-	Service *Service
+	Service *Service `json:"service,omitempty"`
 	// ID is register id
-	ID string
+	ID string `json:"id,omitempty"`
 	// Type defines type of event
-	Type EventType
+	Type EventType `json:"type,omitempty"`
 }
