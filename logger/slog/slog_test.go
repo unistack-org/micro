@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v3/util/buffer"
 )
 
 // always first to have proper check
@@ -30,8 +31,27 @@ func TestStacktrace(t *testing.T) {
 
 	l.Error(ctx, "msg1", errors.New("err"))
 
-	if !bytes.Contains(buf.Bytes(), []byte(`slog_test.go:31`)) {
+	if !bytes.Contains(buf.Bytes(), []byte(`slog_test.go:32`)) {
 		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	}
+}
+
+func TestDelayedBuffer(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	dbuf := buffer.NewDelayedBuffer(100, 100*time.Millisecond, buf)
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(dbuf),
+		WithHandlerFunc(slog.NewTextHandler),
+		logger.WithAddStacktrace(true),
+	)
+	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Error(ctx, "msg1", errors.New("err"))
+	time.Sleep(120 * time.Millisecond)
+	if !bytes.Contains(buf.Bytes(), []byte(`key1=val1`)) {
+		t.Fatalf("logger delayed buffer not works, buf contains: %s", buf.Bytes())
 	}
 }
 
