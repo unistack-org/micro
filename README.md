@@ -1,5 +1,5 @@
 # Micro 
-![Coverage](https://img.shields.io/badge/Coverage-44.8%25-yellow)
+![Coverage](https://img.shields.io/badge/Coverage-44.7%25-yellow)
 
 Micro is a standard library for microservices.
 
