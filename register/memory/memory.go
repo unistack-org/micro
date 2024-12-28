@@ -149,7 +149,7 @@ func (m *memory) Register(_ context.Context, s *register.Service, opts ...regist
 			m.opts.Logger.Debug(m.opts.Context, fmt.Sprintf("Register added new service: %s, version: %s", s.Name, s.Version))
 		}
 		m.records[options.Namespace] = srvs
-		go m.sendEvent(&register.Result{Action: "create", Service: s})
+		go m.sendEvent(&register.Result{Action: register.EventCreate, Service: s})
 	}
 
 	var addedNodes bool
@@ -185,7 +185,7 @@ func (m *memory) Register(_ context.Context, s *register.Service, opts ...regist
 		if m.opts.Logger.V(logger.DebugLevel) {
 			m.opts.Logger.Debug(m.opts.Context, fmt.Sprintf("Register added new node to service: %s, version: %s", s.Name, s.Version))
 		}
-		go m.sendEvent(&register.Result{Action: "update", Service: s})
+		go m.sendEvent(&register.Result{Action: register.EventUpdate, Service: s})
 	} else {
 		// refresh TTL and timestamp
 		for _, n := range s.Nodes {
@@ -238,7 +238,7 @@ func (m *memory) Deregister(ctx context.Context, s *register.Service, opts ...re
 	// is cleanup
 	if len(version.Nodes) > 0 {
 		m.records[options.Namespace][s.Name][s.Version] = version
-		go m.sendEvent(&register.Result{Action: "update", Service: s})
+		go m.sendEvent(&register.Result{Action: register.EventUpdate, Service: s})
 		return nil
 	}
 
@@ -246,7 +246,7 @@ func (m *memory) Deregister(ctx context.Context, s *register.Service, opts ...re
 	// register and exit
 	if len(versions) == 1 {
 		delete(m.records[options.Namespace], s.Name)
-		go m.sendEvent(&register.Result{Action: "delete", Service: s})
+		go m.sendEvent(&register.Result{Action: register.EventDelete, Service: s})
 
 		if m.opts.Logger.V(logger.DebugLevel) {
 			m.opts.Logger.Debug(m.opts.Context, fmt.Sprintf("Register removed service: %s", s.Name))
@@ -256,7 +256,7 @@ func (m *memory) Deregister(ctx context.Context, s *register.Service, opts ...re
 
 	// there are other versions of the service running, so only remove this version of it
 	delete(m.records[options.Namespace][s.Name], s.Version)
-	go m.sendEvent(&register.Result{Action: "delete", Service: s})
+	go m.sendEvent(&register.Result{Action: register.EventDelete, Service: s})
 	if m.opts.Logger.V(logger.DebugLevel) {
 		m.opts.Logger.Debug(m.opts.Context, fmt.Sprintf("Register removed service: %s, version: %s", s.Name, s.Version))
 	}
