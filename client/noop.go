@@ -588,7 +588,6 @@ func (n *noopClient) publish(ctx context.Context, ps []Message, opts ...PublishO
 
 	for _, p := range ps {
 		md := metadata.Copy(omd)
-		md[metadata.HeaderContentType] = p.ContentType()
 		topic := p.Topic()
 		if len(exchange) > 0 {
 			topic = exchange
@@ -599,6 +598,8 @@ func (n *noopClient) publish(ctx context.Context, ps []Message, opts ...PublishO
 		for iter.Next(&k, &v) {
 			md.Set(k, v)
 		}
+
+		md[metadata.HeaderContentType] = p.ContentType()
 
 		var body []byte
 
