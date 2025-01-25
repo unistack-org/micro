@@ -5,10 +5,10 @@ import (
 	"context"
 	"sync"
 
-	"go.unistack.org/micro/v3/client"
-	"go.unistack.org/micro/v3/codec"
-	"go.unistack.org/micro/v3/metadata"
-	"go.unistack.org/micro/v3/server"
+	"go.unistack.org/micro/v4/client"
+	"go.unistack.org/micro/v4/codec"
+	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/server"
 )
 
 // Stream interface

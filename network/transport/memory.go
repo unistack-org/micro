@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	maddr "go.unistack.org/micro/v3/util/addr"
-	mnet "go.unistack.org/micro/v3/util/net"
-	"go.unistack.org/micro/v3/util/rand"
+	maddr "go.unistack.org/micro/v4/util/addr"
+	mnet "go.unistack.org/micro/v4/util/net"
+	"go.unistack.org/micro/v4/util/rand"
 )
 
 type memorySocket struct {

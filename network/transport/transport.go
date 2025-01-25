@@ -5,7 +5,7 @@ import (
 	"context"
 	"time"
 
-	"go.unistack.org/micro/v3/metadata"
+	"go.unistack.org/micro/v4/metadata"
 )
 
 var (

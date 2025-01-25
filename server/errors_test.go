@@ -3,7 +3,7 @@ package server
 import (
 	"testing"
 
-	"go.unistack.org/micro/v3/errors"
+	"go.unistack.org/micro/v4/errors"
 )
 
 func TestError(t *testing.T) {

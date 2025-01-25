@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"go.unistack.org/micro/v3/register"
+	"go.unistack.org/micro/v4/register"
 )
 
 var testData = map[string][]*register.Service{

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"go.unistack.org/micro/v3/config"
-	mtime "go.unistack.org/micro/v3/util/time"
+	"go.unistack.org/micro/v4/config"
+	mtime "go.unistack.org/micro/v4/util/time"
 )
 
 type cfg struct {

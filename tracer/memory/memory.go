@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"go.unistack.org/micro/v3/tracer"
-	"go.unistack.org/micro/v3/util/id"
+	"go.unistack.org/micro/v4/tracer"
+	"go.unistack.org/micro/v4/util/id"
 )
 
 var _ tracer.Tracer = (*Tracer)(nil)

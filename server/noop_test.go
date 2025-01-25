@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	"go.unistack.org/micro/v3/broker"
-	"go.unistack.org/micro/v3/client"
-	"go.unistack.org/micro/v3/codec"
-	"go.unistack.org/micro/v3/logger"
-	"go.unistack.org/micro/v3/options"
-	"go.unistack.org/micro/v3/server"
+	"go.unistack.org/micro/v4/broker"
+	"go.unistack.org/micro/v4/client"
+	"go.unistack.org/micro/v4/codec"
+	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/options"
+	"go.unistack.org/micro/v4/server"
 )
 
 type TestHandler struct {

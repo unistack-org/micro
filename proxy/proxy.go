@@ -4,7 +4,7 @@ package proxy
 import (
 	"context"
 
-	"go.unistack.org/micro/v3/server"
+	"go.unistack.org/micro/v4/server"
 )
 
 // DefaultEndpoint holds default proxy address

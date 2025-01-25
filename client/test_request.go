@@ -1,7 +1,7 @@
 package client
 
 import (
-	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v4/codec"
 )
 
 type testRequest struct {

@@ -5,11 +5,11 @@ import (
 	"context"
 	"fmt"
 
-	"go.unistack.org/micro/v3/broker"
-	"go.unistack.org/micro/v3/logger"
-	"go.unistack.org/micro/v3/metadata"
-	"go.unistack.org/micro/v3/network/transport"
-	"go.unistack.org/micro/v3/network/tunnel"
+	"go.unistack.org/micro/v4/broker"
+	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/network/transport"
+	"go.unistack.org/micro/v4/network/tunnel"
 )
 
 type tunBroker struct {

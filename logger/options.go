@@ -8,7 +8,7 @@ import (
 	"slices"
 	"time"
 
-	"go.unistack.org/micro/v3/meter"
+	"go.unistack.org/micro/v4/meter"
 )
 
 // Option func signature

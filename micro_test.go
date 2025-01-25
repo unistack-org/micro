@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	"go.unistack.org/micro/v3/broker"
-	"go.unistack.org/micro/v3/fsm"
+	"go.unistack.org/micro/v4/broker"
+	"go.unistack.org/micro/v4/fsm"
 )
 
 func TestAs(t *testing.T) {

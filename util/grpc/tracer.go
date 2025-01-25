@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"go.unistack.org/micro/v3/tracer"
+	"go.unistack.org/micro/v4/tracer"
 	grpc_codes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/stats"

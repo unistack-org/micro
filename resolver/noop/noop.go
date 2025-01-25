@@ -2,7 +2,7 @@
 package noop
 
 import (
-	"go.unistack.org/micro/v3/resolver"
+	"go.unistack.org/micro/v4/resolver"
 )
 
 // Resolver contains noop resolver

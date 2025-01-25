@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"go.unistack.org/micro/v3/store"
+	"go.unistack.org/micro/v4/store"
 )
 
 type testHook struct {

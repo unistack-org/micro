@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	"go.unistack.org/micro/v3/network/transport"
-	"go.unistack.org/micro/v3/network/tunnel"
+	"go.unistack.org/micro/v4/network/transport"
+	"go.unistack.org/micro/v4/network/tunnel"
 )
 
 type tunTransport struct {

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"go.unistack.org/micro/v3/util/id"
+	"go.unistack.org/micro/v4/util/id"
 )
 
 // Buffer is ring buffer

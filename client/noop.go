@@ -7,14 +7,14 @@ import (
 	"strconv"
 	"time"
 
-	"go.unistack.org/micro/v3/broker"
-	"go.unistack.org/micro/v3/codec"
-	"go.unistack.org/micro/v3/errors"
-	"go.unistack.org/micro/v3/metadata"
-	"go.unistack.org/micro/v3/options"
-	"go.unistack.org/micro/v3/selector"
-	"go.unistack.org/micro/v3/semconv"
-	"go.unistack.org/micro/v3/tracer"
+	"go.unistack.org/micro/v4/broker"
+	"go.unistack.org/micro/v4/codec"
+	"go.unistack.org/micro/v4/errors"
+	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/options"
+	"go.unistack.org/micro/v4/selector"
+	"go.unistack.org/micro/v4/semconv"
+	"go.unistack.org/micro/v4/tracer"
 )
 
 // DefaultCodecs will be used to encode/decode data

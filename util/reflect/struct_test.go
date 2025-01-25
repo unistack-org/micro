@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	rutil "go.unistack.org/micro/v3/util/reflect"
+	rutil "go.unistack.org/micro/v4/util/reflect"
 )
 
 func TestStructFields(t *testing.T) {

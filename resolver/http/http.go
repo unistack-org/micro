@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"go.unistack.org/micro/v3/resolver"
+	"go.unistack.org/micro/v4/resolver"
 )
 
 // nolint: golint,revive

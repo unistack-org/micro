@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"go.unistack.org/micro/v3/options"
+	"go.unistack.org/micro/v4/options"
 )
 
 type NoopBroker struct {

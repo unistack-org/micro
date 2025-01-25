@@ -5,8 +5,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"go.unistack.org/micro/v3/options"
-	"go.unistack.org/micro/v3/util/id"
+	"go.unistack.org/micro/v4/options"
+	"go.unistack.org/micro/v4/util/id"
 )
 
 var _ Store = (*noopStore)(nil)

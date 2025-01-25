@@ -1,8 +1,8 @@
 package roundrobin
 
 import (
-	"go.unistack.org/micro/v3/selector"
-	"go.unistack.org/micro/v3/util/rand"
+	"go.unistack.org/micro/v4/selector"
+	"go.unistack.org/micro/v4/util/rand"
 )
 
 // NewSelector returns an initialised round robin selector

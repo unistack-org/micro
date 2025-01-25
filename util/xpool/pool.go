@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"go.unistack.org/micro/v3/meter"
-	"go.unistack.org/micro/v3/semconv"
+	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/semconv"
 )
 
 var (

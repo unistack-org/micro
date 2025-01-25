@@ -2,8 +2,8 @@
 package network
 
 import (
-	"go.unistack.org/micro/v3/client"
-	"go.unistack.org/micro/v3/server"
+	"go.unistack.org/micro/v4/client"
+	"go.unistack.org/micro/v4/server"
 )
 
 // Error is network node errors

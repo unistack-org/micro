@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"go.unistack.org/micro/v3/util/rand"
+	"go.unistack.org/micro/v4/util/rand"
 )
 
 // Ticker is similar to time.Ticker but ticks at random intervals between

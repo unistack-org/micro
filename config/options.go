@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"go.unistack.org/micro/v3/codec"
-	"go.unistack.org/micro/v3/logger"
-	"go.unistack.org/micro/v3/meter"
-	"go.unistack.org/micro/v3/options"
-	"go.unistack.org/micro/v3/tracer"
+	"go.unistack.org/micro/v4/codec"
+	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/options"
+	"go.unistack.org/micro/v4/tracer"
 )
 
 // Options hold the config options

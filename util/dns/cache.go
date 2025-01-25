@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"go.unistack.org/micro/v3/meter"
-	"go.unistack.org/micro/v3/semconv"
+	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v4/semconv"
 )
 
 // DialFunc is a [net.Resolver.Dial] function.

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"go.unistack.org/micro/v3/logger"
-	"go.unistack.org/micro/v3/logger/slog"
-	"go.unistack.org/micro/v3/tracer"
+	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/logger/slog"
+	"go.unistack.org/micro/v4/tracer"
 )
 
 func TestLoggerWithTracer(t *testing.T) {
