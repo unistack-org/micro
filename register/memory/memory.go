@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/metadata"
 	"go.unistack.org/micro/v4/register"
 	"go.unistack.org/micro/v4/util/id"
 )
@@ -23,10 +24,9 @@ type node struct {
 }
 
 type record struct {
-	Name     string
-	Version  string
-	Metadata map[string]string
-	Nodes    map[string]*node
+	Name    string
+	Version string
+	Nodes   map[string]*node
 }
 
 type memory struct {
@@ -160,19 +160,14 @@ func (m *memory) Register(_ context.Context, s *register.Service, opts ...regist
 			continue
 		}
 
-		metadata := make(map[string]string, len(n.Metadata))
-
-		// make copy of metadata
-		for k, v := range n.Metadata {
-			metadata[k] = v
-		}
+		md := metadata.Copy(n.Metadata)
 
 		// add the node
 		srvs[s.Name][s.Version].Nodes[n.ID] = &node{
 			Node: &register.Node{
 				ID:       n.ID,
 				Address:  n.Address,
-				Metadata: metadata,
+				Metadata: md,
 			},
 			TTL:      options.TTL,
 			LastSeen: time.Now(),
@@ -452,23 +447,15 @@ func serviceToRecord(s *register.Service, ttl time.Duration) *record {
 }
 
 func recordToService(r *record, namespace string) *register.Service {
-	metadata := make(map[string]string, len(r.Metadata))
-	for k, v := range r.Metadata {
-		metadata[k] = v
-	}
-
 	nodes := make([]*register.Node, len(r.Nodes))
 	i := 0
 	for _, n := range r.Nodes {
-		md := make(map[string]string, len(n.Metadata))
-		for k, v := range n.Metadata {
-			md[k] = v
-		}
+		nmd := metadata.Copy(n.Metadata)
 
 		nodes[i] = &register.Node{
 			ID:       n.ID,
 			Address:  n.Address,
-			Metadata: md,
+			Metadata: nmd,
 		}
 		i++
 	}

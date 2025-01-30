@@ -18,6 +18,10 @@ var (
 	ErrNotConnected = errors.New("broker not connected")
 	// ErrDisconnected returns when broker disconnected
 	ErrDisconnected = errors.New("broker disconnected")
+	// ErrInvalidMessage returns when invalid Message passed
+	ErrInvalidMessage = errors.New("invalid message")
+	// ErrInvalidHandler returns when subscriber passed to Subscribe
+	ErrInvalidHandler = errors.New("invalid handler")
 	// DefaultGracefulTimeout
 	DefaultGracefulTimeout = 5 * time.Second
 )
@@ -36,14 +40,12 @@ type Broker interface {
 	Connect(ctx context.Context) error
 	// Disconnect disconnect from broker
 	Disconnect(ctx context.Context) error
+	// NewMessage create new broker message to publish.
+	NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...PublishOption) (Message, error)
 	// Publish message to broker topic
-	Publish(ctx context.Context, topic string, msg *Message, opts ...PublishOption) error
+	Publish(ctx context.Context, topic string, messages ...Message) error
 	// Subscribe subscribes to topic message via handler
-	Subscribe(ctx context.Context, topic string, h Handler, opts ...SubscribeOption) (Subscriber, error)
-	// BatchPublish messages to broker with multiple topics
-	BatchPublish(ctx context.Context, msgs []*Message, opts ...PublishOption) error
-	// BatchSubscribe subscribes to topic messages via handler
-	BatchSubscribe(ctx context.Context, topic string, h BatchHandler, opts ...SubscribeOption) (Subscriber, error)
+	Subscribe(ctx context.Context, topic string, handler interface{}, opts ...SubscribeOption) (Subscriber, error)
 	// String type of broker
 	String() string
 	// Live returns broker liveness
@@ -55,72 +57,27 @@ type Broker interface {
 }
 
 type (
-	FuncPublish        func(ctx context.Context, topic string, msg *Message, opts ...PublishOption) error
-	HookPublish        func(next FuncPublish) FuncPublish
-	FuncBatchPublish   func(ctx context.Context, msgs []*Message, opts ...PublishOption) error
-	HookBatchPublish   func(next FuncBatchPublish) FuncBatchPublish
-	FuncSubscribe      func(ctx context.Context, topic string, h Handler, opts ...SubscribeOption) (Subscriber, error)
-	HookSubscribe      func(next FuncSubscribe) FuncSubscribe
-	FuncBatchSubscribe func(ctx context.Context, topic string, h BatchHandler, opts ...SubscribeOption) (Subscriber, error)
-	HookBatchSubscribe func(next FuncBatchSubscribe) FuncBatchSubscribe
+	FuncPublish   func(ctx context.Context, topic string, messages ...Message) error
+	HookPublish   func(next FuncPublish) FuncPublish
+	FuncSubscribe func(ctx context.Context, topic string, handler interface{}, opts ...SubscribeOption) (Subscriber, error)
+	HookSubscribe func(next FuncSubscribe) FuncSubscribe
 )
 
-// Handler is used to process messages via a subscription of a topic.
-type Handler func(Event) error
-
-// Events contains multiple events
-type Events []Event
-
-// Ack try to ack all events and return
-func (evs Events) Ack() error {
-	var err error
-	for _, ev := range evs {
-		if err = ev.Ack(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// SetError sets error on event
-func (evs Events) SetError(err error) {
-	for _, ev := range evs {
-		ev.SetError(err)
-	}
-}
-
-// BatchHandler is used to process messages in batches via a subscription of a topic.
-type BatchHandler func(Events) error
-
-// Event is given to a subscription handler for processing
-type Event interface {
-	// Context return context.Context for event
+// Message is given to a subscription handler for processing
+type Message interface {
+	// Context for the message.
 	Context() context.Context
-	// Topic returns event topic
+	// Topic returns message destination topic.
 	Topic() string
-	// Message returns broker message
-	Message() *Message
-	// Ack acknowledge message
+	// Header returns message headers.
+	Header() metadata.Metadata
+	// Body returns broker message []byte slice
+	Body() []byte
+	// Unmarshal try to decode message body to dst.
+	// This is helper method that uses codec.Unmarshal.
+	Unmarshal(dst interface{}, opts ...codec.Option) error
+	// Ack acknowledge message if supported.
 	Ack() error
-	// Error returns message error (like decoding errors or some other)
-	Error() error
-	// SetError set event processing error
-	SetError(err error)
-}
-
-// Message is used to transfer data
-type Message struct {
-	// Header contains message metadata
-	Header metadata.Metadata
-	// Body contains message body
-	Body codec.RawMessage
-}
-
-// NewMessage create broker message with topic filled
-func NewMessage(topic string) *Message {
-	m := &Message{Header: metadata.New(2)}
-	m.Header.Set(metadata.HeaderTopic, topic)
-	return m
 }
 
 // Subscriber is a convenience return type for the Subscribe method

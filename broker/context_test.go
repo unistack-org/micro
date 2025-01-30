@@ -49,17 +49,6 @@ func TestSetSubscribeOption(t *testing.T) {
 	}
 }
 
-func TestSetPublishOption(t *testing.T) {
-	type key struct{}
-	o := SetPublishOption(key{}, "test")
-	opts := &PublishOptions{}
-	o(opts)
-
-	if v, ok := opts.Context.Value(key{}).(string); !ok || v == "" {
-		t.Fatal("SetPublishOption not works")
-	}
-}
-
 func TestSetOption(t *testing.T) {
 	type key struct{}
 	o := SetOption(key{}, "test")

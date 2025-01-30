@@ -23,8 +23,8 @@ type Options struct {
 	Tracer tracer.Tracer
 	// Register can be used for clustering
 	Register register.Register
-	// Codec holds the codec for marshal/unmarshal
-	Codec codec.Codec
+	// Codecs holds the codecs for marshal/unmarshal based on content-type
+	Codecs map[string]codec.Codec
 	// Logger used for logging
 	Logger logger.Logger
 	// Meter used for metrics
@@ -36,11 +36,6 @@ type Options struct {
 	Wait *sync.WaitGroup
 	// TLSConfig holds tls.TLSConfig options
 	TLSConfig *tls.Config
-
-	// ErrorHandler used when broker can't unmarshal incoming message
-	ErrorHandler Handler
-	// BatchErrorHandler used when broker can't unmashal incoming messages
-	BatchErrorHandler BatchHandler
 
 	// Addrs holds the broker address
 	Addrs []string
@@ -59,10 +54,11 @@ func NewOptions(opts ...Option) Options {
 		Logger:          logger.DefaultLogger,
 		Context:         context.Background(),
 		Meter:           meter.DefaultMeter,
-		Codec:           codec.DefaultCodec,
+		Codecs:          make(map[string]codec.Codec),
 		Tracer:          tracer.DefaultTracer,
 		GracefulTimeout: DefaultGracefulTimeout,
 	}
+
 	for _, o := range opts {
 		o(&options)
 	}
@@ -78,17 +74,16 @@ func Context(ctx context.Context) Option {
 
 // PublishOptions struct
 type PublishOptions struct {
-	// Context holds external options
-	Context context.Context
-	// BodyOnly flag says the message contains raw body bytes
+	// ContentType for message body
+	ContentType string
+	// BodyOnly flag says the message contains raw body bytes and don't need
+	// codec Marshal method
 	BodyOnly bool
 }
 
 // NewPublishOptions creates PublishOptions struct
 func NewPublishOptions(opts ...PublishOption) PublishOptions {
-	options := PublishOptions{
-		Context: context.Background(),
-	}
+	options := PublishOptions{}
 	for _, o := range opts {
 		o(&options)
 	}
@@ -99,10 +94,6 @@ func NewPublishOptions(opts ...PublishOption) PublishOptions {
 type SubscribeOptions struct {
 	// Context holds external options
 	Context context.Context
-	// ErrorHandler used when broker can't unmarshal incoming message
-	ErrorHandler Handler
-	// BatchErrorHandler used when broker can't unmashal incoming messages
-	BatchErrorHandler BatchHandler
 	// Group holds consumer group
 	Group string
 	// AutoAck flag specifies auto ack of incoming message when no error happens
@@ -121,17 +112,17 @@ type Option func(*Options)
 // PublishOption func
 type PublishOption func(*PublishOptions)
 
+// PublishContentType sets message content-type that used to Marshal
+func PublishContentType(ct string) PublishOption {
+	return func(o *PublishOptions) {
+		o.ContentType = ct
+	}
+}
+
 // PublishBodyOnly publish only body of the message
 func PublishBodyOnly(b bool) PublishOption {
 	return func(o *PublishOptions) {
 		o.BodyOnly = b
-	}
-}
-
-// PublishContext sets the context
-func PublishContext(ctx context.Context) PublishOption {
-	return func(o *PublishOptions) {
-		o.Context = ctx
 	}
 }
 
@@ -142,51 +133,10 @@ func Addrs(addrs ...string) Option {
 	}
 }
 
-// Codec sets the codec used for encoding/decoding used where
-// a broker does not support headers
-func Codec(c codec.Codec) Option {
+// Codec sets the codec used for encoding/decoding messages
+func Codec(ct string, c codec.Codec) Option {
 	return func(o *Options) {
-		o.Codec = c
-	}
-}
-
-// ErrorHandler will catch all broker errors that cant be handled
-// in normal way, for example Codec errors
-func ErrorHandler(h Handler) Option {
-	return func(o *Options) {
-		o.ErrorHandler = h
-	}
-}
-
-// BatchErrorHandler will catch all broker errors that cant be handled
-// in normal way, for example Codec errors
-func BatchErrorHandler(h BatchHandler) Option {
-	return func(o *Options) {
-		o.BatchErrorHandler = h
-	}
-}
-
-// SubscribeErrorHandler will catch all broker errors that cant be handled
-// in normal way, for example Codec errors
-func SubscribeErrorHandler(h Handler) SubscribeOption {
-	return func(o *SubscribeOptions) {
-		o.ErrorHandler = h
-	}
-}
-
-// SubscribeBatchErrorHandler will catch all broker errors that cant be handled
-// in normal way, for example Codec errors
-func SubscribeBatchErrorHandler(h BatchHandler) SubscribeOption {
-	return func(o *SubscribeOptions) {
-		o.BatchErrorHandler = h
-	}
-}
-
-// Queue sets the subscribers queue
-// Deprecated
-func Queue(name string) SubscribeOption {
-	return func(o *SubscribeOptions) {
-		o.Group = name
+		o.Codecs[ct] = c
 	}
 }
 
@@ -250,14 +200,6 @@ func Hooks(h ...options.Hook) Option {
 func SubscribeContext(ctx context.Context) SubscribeOption {
 	return func(o *SubscribeOptions) {
 		o.Context = ctx
-	}
-}
-
-// DisableAutoAck disables auto ack
-// Deprecated
-func DisableAutoAck() SubscribeOption {
-	return func(o *SubscribeOptions) {
-		o.AutoAck = false
 	}
 }
 

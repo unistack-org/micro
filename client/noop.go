@@ -3,11 +3,9 @@ package client
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"time"
 
-	"go.unistack.org/micro/v4/broker"
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/errors"
 	"go.unistack.org/micro/v4/metadata"
@@ -23,17 +21,9 @@ var DefaultCodecs = map[string]codec.Codec{
 }
 
 type noopClient struct {
-	funcPublish      FuncPublish
-	funcBatchPublish FuncBatchPublish
-	funcCall         FuncCall
-	funcStream       FuncStream
-	opts             Options
-}
-
-type noopMessage struct {
-	topic   string
-	payload interface{}
-	opts    MessageOptions
+	funcCall   FuncCall
+	funcStream FuncStream
+	opts       Options
 }
 
 type noopRequest struct {
@@ -52,8 +42,6 @@ func NewClient(opts ...Option) Client {
 
 	n.funcCall = n.fnCall
 	n.funcStream = n.fnStream
-	n.funcPublish = n.fnPublish
-	n.funcBatchPublish = n.fnBatchPublish
 
 	return n
 }
@@ -158,32 +146,6 @@ func (n *noopStream) CloseSend() error {
 	return n.err
 }
 
-func (n *noopMessage) Topic() string {
-	return n.topic
-}
-
-func (n *noopMessage) Payload() interface{} {
-	return n.payload
-}
-
-func (n *noopMessage) ContentType() string {
-	return n.opts.ContentType
-}
-
-func (n *noopMessage) Metadata() metadata.Metadata {
-	return n.opts.Metadata
-}
-
-func (n *noopClient) newCodec(contentType string) (codec.Codec, error) {
-	if cf, ok := n.opts.Codecs[contentType]; ok {
-		return cf, nil
-	}
-	if cf, ok := DefaultCodecs[contentType]; ok {
-		return cf, nil
-	}
-	return nil, codec.ErrUnknownContentType
-}
-
 func (n *noopClient) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&n.opts)
@@ -191,8 +153,6 @@ func (n *noopClient) Init(opts ...Option) error {
 
 	n.funcCall = n.fnCall
 	n.funcStream = n.fnStream
-	n.funcPublish = n.fnPublish
-	n.funcBatchPublish = n.fnBatchPublish
 
 	n.opts.Hooks.EachPrev(func(hook options.Hook) {
 		switch h := hook.(type) {
@@ -200,10 +160,6 @@ func (n *noopClient) Init(opts ...Option) error {
 			n.funcCall = h(n.funcCall)
 		case HookStream:
 			n.funcStream = h(n.funcStream)
-		case HookPublish:
-			n.funcPublish = h(n.funcPublish)
-		case HookBatchPublish:
-			n.funcBatchPublish = h(n.funcBatchPublish)
 		}
 	})
 
@@ -376,11 +332,6 @@ func (n *noopClient) NewRequest(service, endpoint string, _ interface{}, _ ...Re
 	return &noopRequest{service: service, endpoint: endpoint}
 }
 
-func (n *noopClient) NewMessage(topic string, msg interface{}, opts ...MessageOption) Message {
-	options := NewMessageOptions(append([]MessageOption{MessageContentType(n.opts.ContentType)}, opts...)...)
-	return &noopMessage{topic: topic, payload: msg, opts: options}
-}
-
 func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error) {
 	ts := time.Now()
 	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", req.Endpoint()).Inc()
@@ -548,91 +499,4 @@ func (n *noopClient) fnStream(ctx context.Context, req Request, opts ...CallOpti
 
 func (n *noopClient) stream(ctx context.Context, _ string, _ Request, _ CallOptions) (Stream, error) {
 	return &noopStream{ctx: ctx}, nil
-}
-
-func (n *noopClient) BatchPublish(ctx context.Context, ps []Message, opts ...PublishOption) error {
-	return n.funcBatchPublish(ctx, ps, opts...)
-}
-
-func (n *noopClient) fnBatchPublish(ctx context.Context, ps []Message, opts ...PublishOption) error {
-	return n.publish(ctx, ps, opts...)
-}
-
-func (n *noopClient) Publish(ctx context.Context, p Message, opts ...PublishOption) error {
-	return n.funcPublish(ctx, p, opts...)
-}
-
-func (n *noopClient) fnPublish(ctx context.Context, p Message, opts ...PublishOption) error {
-	return n.publish(ctx, []Message{p}, opts...)
-}
-
-func (n *noopClient) publish(ctx context.Context, ps []Message, opts ...PublishOption) error {
-	options := NewPublishOptions(opts...)
-
-	msgs := make([]*broker.Message, 0, len(ps))
-
-	// get proxy
-	exchange := ""
-	if v, ok := os.LookupEnv("MICRO_PROXY"); ok {
-		exchange = v
-	}
-	// get the exchange
-	if len(options.Exchange) > 0 {
-		exchange = options.Exchange
-	}
-
-	omd, ok := metadata.FromOutgoingContext(ctx)
-	if !ok {
-		omd = metadata.New(0)
-	}
-
-	for _, p := range ps {
-		md := metadata.Copy(omd)
-		topic := p.Topic()
-		if len(exchange) > 0 {
-			topic = exchange
-		}
-		md[metadata.HeaderTopic] = topic
-		iter := p.Metadata().Iterator()
-		var k, v string
-		for iter.Next(&k, &v) {
-			md.Set(k, v)
-		}
-
-		md[metadata.HeaderContentType] = p.ContentType()
-
-		var body []byte
-
-		// passed in raw data
-		if d, ok := p.Payload().(*codec.Frame); ok {
-			body = d.Data
-		} else {
-			// use codec for payload
-			cf, err := n.newCodec(p.ContentType())
-			if err != nil {
-				return errors.InternalServerError("go.micro.client", "%s", err)
-			}
-
-			// set the body
-			b, err := cf.Marshal(p.Payload())
-			if err != nil {
-				return errors.InternalServerError("go.micro.client", "%s", err)
-			}
-			body = b
-		}
-
-		msgs = append(msgs, &broker.Message{Header: md, Body: body})
-	}
-
-	if len(msgs) == 1 {
-		return n.opts.Broker.Publish(ctx, msgs[0].Header[metadata.HeaderTopic], msgs[0],
-			broker.PublishContext(options.Context),
-			broker.PublishBodyOnly(options.BodyOnly),
-		)
-	}
-
-	return n.opts.Broker.BatchPublish(ctx, msgs,
-		broker.PublishContext(options.Context),
-		broker.PublishBodyOnly(options.BodyOnly),
-	)
 }

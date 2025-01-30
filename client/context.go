@@ -32,16 +32,6 @@ func NewContext(ctx context.Context, c Client) context.Context {
 	return context.WithValue(ctx, clientKey{}, c)
 }
 
-// SetPublishOption returns a function to setup a context with given value
-func SetPublishOption(k, v interface{}) PublishOption {
-	return func(o *PublishOptions) {
-		if o.Context == nil {
-			o.Context = context.Background()
-		}
-		o.Context = context.WithValue(o.Context, k, v)
-	}
-}
-
 // SetCallOption returns a function to setup a context with given value
 func SetCallOption(k, v interface{}) CallOption {
 	return func(o *CallOptions) {

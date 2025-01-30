@@ -2,9 +2,11 @@ package broker
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"go.unistack.org/micro/v4/broker"
+	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/metadata"
 	"go.unistack.org/micro/v4/options"
@@ -14,54 +16,90 @@ import (
 	"go.unistack.org/micro/v4/util/rand"
 )
 
-type memoryBroker struct {
-	funcPublish        broker.FuncPublish
-	funcBatchPublish   broker.FuncBatchPublish
-	funcSubscribe      broker.FuncSubscribe
-	funcBatchSubscribe broker.FuncBatchSubscribe
-	subscribers        map[string][]*memorySubscriber
-	addr               string
-	opts               broker.Options
+type Broker struct {
+	funcPublish   broker.FuncPublish
+	funcSubscribe broker.FuncSubscribe
+	subscribers   map[string][]*Subscriber
+	addr          string
+	opts          broker.Options
 	sync.RWMutex
 	connected bool
 }
 
-type memoryEvent struct {
-	err     error
-	message interface{}
+type memoryMessage struct {
+	c     codec.Codec
+	topic string
+	ctx   context.Context
+	body  []byte
+	hdr   metadata.Metadata
+	opts  broker.PublishOptions
+}
+
+func (m *memoryMessage) Ack() error {
+	return nil
+}
+
+func (m *memoryMessage) Body() []byte {
+	return m.body
+}
+
+func (m *memoryMessage) Header() metadata.Metadata {
+	return m.hdr
+}
+
+func (m *memoryMessage) Context() context.Context {
+	return m.ctx
+}
+
+func (m *memoryMessage) Topic() string {
+	return ""
+}
+
+func (m *memoryMessage) Unmarshal(dst interface{}, opts ...codec.Option) error {
+	return m.c.Unmarshal(m.body, dst)
+}
+
+type Subscriber struct {
+	ctx     context.Context
+	exit    chan bool
+	handler interface{}
+	id      string
 	topic   string
-	opts    broker.Options
+	opts    broker.SubscribeOptions
 }
 
-type memorySubscriber struct {
-	ctx          context.Context
-	exit         chan bool
-	handler      broker.Handler
-	batchhandler broker.BatchHandler
-	id           string
-	topic        string
-	opts         broker.SubscribeOptions
+func (b *Broker) newCodec(ct string) (codec.Codec, error) {
+	if idx := strings.IndexRune(ct, ';'); idx >= 0 {
+		ct = ct[:idx]
+	}
+	b.RLock()
+	c, ok := b.opts.Codecs[ct]
+	b.RUnlock()
+	if ok {
+		return c, nil
+	}
+	return nil, codec.ErrUnknownContentType
 }
 
-func (m *memoryBroker) Options() broker.Options {
-	return m.opts
+func (b *Broker) Options() broker.Options {
+	return b.opts
 }
 
-func (m *memoryBroker) Address() string {
-	return m.addr
+func (b *Broker) Address() string {
+	return b.addr
 }
 
-func (m *memoryBroker) Connect(ctx context.Context) error {
+func (b *Broker) Connect(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
 	}
 
-	m.Lock()
-	defer m.Unlock()
+	b.Lock()
+	defer b.Unlock()
 
-	if m.connected {
+	if b.connected {
 		return nil
 	}
 
@@ -75,154 +113,126 @@ func (m *memoryBroker) Connect(ctx context.Context) error {
 	// set addr with port
 	addr = mnet.HostPort(addr, 10000+i)
 
-	m.addr = addr
-	m.connected = true
+	b.addr = addr
+	b.connected = true
 
 	return nil
 }
 
-func (m *memoryBroker) Disconnect(ctx context.Context) error {
+func (b *Broker) Disconnect(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
 	}
 
-	m.Lock()
-	defer m.Unlock()
+	b.Lock()
+	defer b.Unlock()
 
-	if !m.connected {
+	if !b.connected {
 		return nil
 	}
 
-	m.connected = false
+	b.connected = false
 	return nil
 }
 
-func (m *memoryBroker) Init(opts ...broker.Option) error {
+func (b *Broker) Init(opts ...broker.Option) error {
 	for _, o := range opts {
-		o(&m.opts)
+		o(&b.opts)
 	}
 
-	m.funcPublish = m.fnPublish
-	m.funcBatchPublish = m.fnBatchPublish
-	m.funcSubscribe = m.fnSubscribe
-	m.funcBatchSubscribe = m.fnBatchSubscribe
+	b.funcPublish = b.fnPublish
+	b.funcSubscribe = b.fnSubscribe
 
-	m.opts.Hooks.EachPrev(func(hook options.Hook) {
+	b.opts.Hooks.EachPrev(func(hook options.Hook) {
 		switch h := hook.(type) {
 		case broker.HookPublish:
-			m.funcPublish = h(m.funcPublish)
-		case broker.HookBatchPublish:
-			m.funcBatchPublish = h(m.funcBatchPublish)
+			b.funcPublish = h(b.funcPublish)
 		case broker.HookSubscribe:
-			m.funcSubscribe = h(m.funcSubscribe)
-		case broker.HookBatchSubscribe:
-			m.funcBatchSubscribe = h(m.funcBatchSubscribe)
+			b.funcSubscribe = h(b.funcSubscribe)
 		}
 	})
 
 	return nil
 }
 
-func (m *memoryBroker) Publish(ctx context.Context, topic string, msg *broker.Message, opts ...broker.PublishOption) error {
-	return m.funcPublish(ctx, topic, msg, opts...)
+func (b *Broker) NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...broker.PublishOption) (broker.Message, error) {
+	options := broker.NewPublishOptions(opts...)
+	m := &memoryMessage{ctx: ctx, hdr: hdr, opts: options}
+	c, err := b.newCodec(m.opts.ContentType)
+	if err == nil {
+		m.body, err = c.Marshal(body)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return m, nil
 }
 
-func (m *memoryBroker) fnPublish(ctx context.Context, topic string, msg *broker.Message, opts ...broker.PublishOption) error {
-	msg.Header.Set(metadata.HeaderTopic, topic)
-	return m.publish(ctx, []*broker.Message{msg}, opts...)
+func (b *Broker) Publish(ctx context.Context, topic string, messages ...broker.Message) error {
+	return b.funcPublish(ctx, topic, messages...)
 }
 
-func (m *memoryBroker) BatchPublish(ctx context.Context, msgs []*broker.Message, opts ...broker.PublishOption) error {
-	return m.funcBatchPublish(ctx, msgs, opts...)
+func (b *Broker) fnPublish(ctx context.Context, topic string, messages ...broker.Message) error {
+	return b.publish(ctx, topic, messages...)
 }
 
-func (m *memoryBroker) fnBatchPublish(ctx context.Context, msgs []*broker.Message, opts ...broker.PublishOption) error {
-	return m.publish(ctx, msgs, opts...)
-}
-
-func (m *memoryBroker) publish(ctx context.Context, msgs []*broker.Message, opts ...broker.PublishOption) error {
-	m.RLock()
-	if !m.connected {
-		m.RUnlock()
+func (b *Broker) publish(ctx context.Context, topic string, messages ...broker.Message) error {
+	b.RLock()
+	if !b.connected {
+		b.RUnlock()
 		return broker.ErrNotConnected
 	}
-	m.RUnlock()
-
-	var err error
+	b.RUnlock()
 
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
-		options := broker.NewPublishOptions(opts...)
+	}
 
-		msgTopicMap := make(map[string]broker.Events)
-		for _, v := range msgs {
-			p := &memoryEvent{opts: m.opts}
+	b.RLock()
+	subs, ok := b.subscribers[topic]
+	b.RUnlock()
+	if !ok {
+		return nil
+	}
 
-			if m.opts.Codec == nil || options.BodyOnly {
-				p.topic, _ = v.Header.Get(metadata.HeaderTopic)
-				p.message = v.Body
-			} else {
-				p.topic, _ = v.Header.Get(metadata.HeaderTopic)
-				p.message, err = m.opts.Codec.Marshal(v)
-				if err != nil {
-					return err
-				}
+	var err error
+
+	for _, sub := range subs {
+		switch s := sub.handler.(type) {
+		default:
+			if b.opts.Logger.V(logger.ErrorLevel) {
+				b.opts.Logger.Error(ctx, "broker  handler error", broker.ErrInvalidHandler)
 			}
-			msgTopicMap[p.topic] = append(msgTopicMap[p.topic], p)
-		}
-
-		beh := m.opts.BatchErrorHandler
-		eh := m.opts.ErrorHandler
-
-		for t, ms := range msgTopicMap {
-			m.RLock()
-			subs, ok := m.subscribers[t]
-			m.RUnlock()
-			if !ok {
-				continue
-			}
-
-			for _, sub := range subs {
-				if sub.opts.BatchErrorHandler != nil {
-					beh = sub.opts.BatchErrorHandler
-				}
-				if sub.opts.ErrorHandler != nil {
-					eh = sub.opts.ErrorHandler
-				}
-
-				switch {
-				// batch processing
-				case sub.batchhandler != nil:
-					if err = sub.batchhandler(ms); err != nil {
-						ms.SetError(err)
-						if beh != nil {
-							_ = beh(ms)
-						} else if m.opts.Logger.V(logger.ErrorLevel) {
-							m.opts.Logger.Error(m.opts.Context, err.Error())
-						}
-					} else if sub.opts.AutoAck {
-						if err = ms.Ack(); err != nil {
-							m.opts.Logger.Error(m.opts.Context, "broker ack error", err)
-						}
+		case func(broker.Message) error:
+			for _, message := range messages {
+				msg, ok := message.(*memoryMessage)
+				if !ok {
+					if b.opts.Logger.V(logger.ErrorLevel) {
+						b.opts.Logger.Error(ctx, "broker handler error", broker.ErrInvalidMessage)
 					}
-					// single processing
-				case sub.handler != nil:
-					for _, p := range ms {
-						if err = sub.handler(p); err != nil {
-							p.SetError(err)
-							if eh != nil {
-								_ = eh(p)
-							} else if m.opts.Logger.V(logger.ErrorLevel) {
-								m.opts.Logger.Error(m.opts.Context, "broker handler error", err)
-							}
-						} else if sub.opts.AutoAck {
-							if err = p.Ack(); err != nil {
-								m.opts.Logger.Error(m.opts.Context, "broker ack error", err)
-							}
+				}
+				msg.topic = topic
+				if err = s(msg); err == nil && sub.opts.AutoAck {
+					err = msg.Ack()
+				}
+				if err != nil {
+					if b.opts.Logger.V(logger.ErrorLevel) {
+						b.opts.Logger.Error(ctx, "broker handler error", err)
+					}
+				}
+			}
+		case func([]broker.Message) error:
+			if err = s(messages); err == nil && sub.opts.AutoAck {
+				for _, message := range messages {
+					err = message.Ack()
+					if err != nil {
+						if b.opts.Logger.V(logger.ErrorLevel) {
+							b.opts.Logger.Error(ctx, "broker handler error", err)
 						}
 					}
 				}
@@ -233,17 +243,21 @@ func (m *memoryBroker) publish(ctx context.Context, msgs []*broker.Message, opts
 	return nil
 }
 
-func (m *memoryBroker) BatchSubscribe(ctx context.Context, topic string, handler broker.BatchHandler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
-	return m.funcBatchSubscribe(ctx, topic, handler, opts...)
+func (b *Broker) Subscribe(ctx context.Context, topic string, handler interface{}, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
+	return b.funcSubscribe(ctx, topic, handler, opts...)
 }
 
-func (m *memoryBroker) fnBatchSubscribe(ctx context.Context, topic string, handler broker.BatchHandler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
-	m.RLock()
-	if !m.connected {
-		m.RUnlock()
+func (b *Broker) fnSubscribe(ctx context.Context, topic string, handler interface{}, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
+	if err := broker.IsValidHandler(handler); err != nil {
+		return nil, err
+	}
+
+	b.RLock()
+	if !b.connected {
+		b.RUnlock()
 		return nil, broker.ErrNotConnected
 	}
-	m.RUnlock()
+	b.RUnlock()
 
 	sid, err := id.New()
 	if err != nil {
@@ -252,56 +266,7 @@ func (m *memoryBroker) fnBatchSubscribe(ctx context.Context, topic string, handl
 
 	options := broker.NewSubscribeOptions(opts...)
 
-	sub := &memorySubscriber{
-		exit:         make(chan bool, 1),
-		id:           sid,
-		topic:        topic,
-		batchhandler: handler,
-		opts:         options,
-		ctx:          ctx,
-	}
-
-	m.Lock()
-	m.subscribers[topic] = append(m.subscribers[topic], sub)
-	m.Unlock()
-
-	go func() {
-		<-sub.exit
-		m.Lock()
-		newSubscribers := make([]*memorySubscriber, 0, len(m.subscribers)-1)
-		for _, sb := range m.subscribers[topic] {
-			if sb.id == sub.id {
-				continue
-			}
-			newSubscribers = append(newSubscribers, sb)
-		}
-		m.subscribers[topic] = newSubscribers
-		m.Unlock()
-	}()
-
-	return sub, nil
-}
-
-func (m *memoryBroker) Subscribe(ctx context.Context, topic string, handler broker.Handler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
-	return m.funcSubscribe(ctx, topic, handler, opts...)
-}
-
-func (m *memoryBroker) fnSubscribe(ctx context.Context, topic string, handler broker.Handler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
-	m.RLock()
-	if !m.connected {
-		m.RUnlock()
-		return nil, broker.ErrNotConnected
-	}
-	m.RUnlock()
-
-	sid, err := id.New()
-	if err != nil {
-		return nil, err
-	}
-
-	options := broker.NewSubscribeOptions(opts...)
-
-	sub := &memorySubscriber{
+	sub := &Subscriber{
 		exit:    make(chan bool, 1),
 		id:      sid,
 		topic:   topic,
@@ -310,102 +275,64 @@ func (m *memoryBroker) fnSubscribe(ctx context.Context, topic string, handler br
 		ctx:     ctx,
 	}
 
-	m.Lock()
-	m.subscribers[topic] = append(m.subscribers[topic], sub)
-	m.Unlock()
+	b.Lock()
+	b.subscribers[topic] = append(b.subscribers[topic], sub)
+	b.Unlock()
 
 	go func() {
 		<-sub.exit
-		m.Lock()
-		newSubscribers := make([]*memorySubscriber, 0, len(m.subscribers)-1)
-		for _, sb := range m.subscribers[topic] {
+		b.Lock()
+		newSubscribers := make([]*Subscriber, 0, len(b.subscribers)-1)
+		for _, sb := range b.subscribers[topic] {
 			if sb.id == sub.id {
 				continue
 			}
 			newSubscribers = append(newSubscribers, sb)
 		}
-		m.subscribers[topic] = newSubscribers
-		m.Unlock()
+		b.subscribers[topic] = newSubscribers
+		b.Unlock()
 	}()
 
 	return sub, nil
 }
 
-func (m *memoryBroker) String() string {
+func (b *Broker) String() string {
 	return "memory"
 }
 
-func (m *memoryBroker) Name() string {
-	return m.opts.Name
+func (b *Broker) Name() string {
+	return b.opts.Name
 }
 
-func (m *memoryBroker) Live() bool {
+func (b *Broker) Live() bool {
 	return true
 }
 
-func (m *memoryBroker) Ready() bool {
+func (b *Broker) Ready() bool {
 	return true
 }
 
-func (m *memoryBroker) Health() bool {
+func (b *Broker) Health() bool {
 	return true
 }
 
-func (m *memoryEvent) Topic() string {
-	return m.topic
-}
-
-func (m *memoryEvent) Message() *broker.Message {
-	switch v := m.message.(type) {
-	case *broker.Message:
-		return v
-	case []byte:
-		msg := &broker.Message{}
-		if err := m.opts.Codec.Unmarshal(v, msg); err != nil {
-			if m.opts.Logger.V(logger.ErrorLevel) {
-				m.opts.Logger.Error(m.opts.Context, "[memory]: failed to unmarshal: %v", err)
-			}
-			return nil
-		}
-		return msg
-	}
-
-	return nil
-}
-
-func (m *memoryEvent) Ack() error {
-	return nil
-}
-
-func (m *memoryEvent) Error() error {
-	return m.err
-}
-
-func (m *memoryEvent) SetError(err error) {
-	m.err = err
-}
-
-func (m *memoryEvent) Context() context.Context {
-	return m.opts.Context
-}
-
-func (m *memorySubscriber) Options() broker.SubscribeOptions {
+func (m *Subscriber) Options() broker.SubscribeOptions {
 	return m.opts
 }
 
-func (m *memorySubscriber) Topic() string {
+func (m *Subscriber) Topic() string {
 	return m.topic
 }
 
-func (m *memorySubscriber) Unsubscribe(ctx context.Context) error {
+func (m *Subscriber) Unsubscribe(ctx context.Context) error {
 	m.exit <- true
 	return nil
 }
 
 // NewBroker return new memory broker
 func NewBroker(opts ...broker.Option) broker.Broker {
-	return &memoryBroker{
+	return &Broker{
 		opts:        broker.NewOptions(opts...),
-		subscribers: make(map[string][]*memorySubscriber),
+		subscribers: make(map[string][]*Subscriber),
 	}
 }

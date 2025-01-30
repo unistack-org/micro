@@ -10,9 +10,9 @@ type testHook struct {
 }
 
 func (t *testHook) Publish1(fn FuncPublish) FuncPublish {
-	return func(ctx context.Context, topic string, msg *Message, opts ...PublishOption) error {
+	return func(ctx context.Context, topic string, messages ...Message) error {
 		t.f = true
-		return fn(ctx, topic, msg, opts...)
+		return fn(ctx, topic, messages...)
 	}
 }
 

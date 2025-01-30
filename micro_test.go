@@ -8,6 +8,7 @@ import (
 
 	"go.unistack.org/micro/v4/broker"
 	"go.unistack.org/micro/v4/fsm"
+	"go.unistack.org/micro/v4/metadata"
 )
 
 func TestAs(t *testing.T) {
@@ -61,6 +62,8 @@ func TestAs(t *testing.T) {
 	}
 }
 
+var _ broker.Broker = (*bro)(nil)
+
 type bro struct {
 	name string
 }
@@ -87,23 +90,18 @@ func (p *bro) Connect(_ context.Context) error { return nil }
 // Disconnect disconnect from broker
 func (p *bro) Disconnect(_ context.Context) error { return nil }
 
-// Publish message, msg can be single broker.Message or []broker.Message
-func (p *bro) Publish(_ context.Context, _ string, _ *broker.Message, _ ...broker.PublishOption) error {
-	return nil
-}
-
-// BatchPublish messages to broker with multiple topics
-func (p *bro) BatchPublish(_ context.Context, _ []*broker.Message, _ ...broker.PublishOption) error {
-	return nil
-}
-
-// BatchSubscribe subscribes to topic messages via handler
-func (p *bro) BatchSubscribe(_ context.Context, _ string, _ broker.BatchHandler, _ ...broker.SubscribeOption) (broker.Subscriber, error) {
+// NewMessage creates new message
+func (p *bro) NewMessage(_ context.Context, _ metadata.Metadata, _ interface{}, _ ...broker.PublishOption) (broker.Message, error) {
 	return nil, nil
 }
 
+// Publish message, msg can be single broker.Message or []broker.Message
+func (p *bro) Publish(_ context.Context, _ string, _ ...broker.Message) error {
+	return nil
+}
+
 // Subscribe subscribes to topic message via handler
-func (p *bro) Subscribe(_ context.Context, _ string, _ broker.Handler, _ ...broker.SubscribeOption) (broker.Subscriber, error) {
+func (p *bro) Subscribe(_ context.Context, _ string, _ interface{}, _ ...broker.SubscribeOption) (broker.Subscriber, error) {
 	return nil, nil
 }
 

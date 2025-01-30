@@ -5,10 +5,21 @@ import (
 	"testing"
 )
 
+/*
+func TestAppendOutgoingContextModify(t *testing.T) {
+	md := Pairs("key1", "val1")
+	ctx := NewOutgoingContext(context.TODO(), md)
+	nctx := AppendOutgoingContext(ctx, "key1", "val3", "key2", "val2")
+	_ = nctx
+	omd := MustOutgoingContext(nctx)
+	fmt.Printf("%#+v\n", omd)
+}
+*/
+
 func TestLowercase(t *testing.T) {
 	md := New(1)
-	md["x-request-id"] = "12345"
-	v, ok := md.Get("X-Request-Id")
+	md["x-request-id"] = []string{"12345"}
+	v, ok := md.GetJoined("X-Request-Id")
 	if !ok || v == "" {
 		t.Fatalf("metadata invalid %#+v", md)
 	}
@@ -38,15 +49,12 @@ func TestMultipleUsage(t *testing.T) {
 
 func TestMetadataSetMultiple(t *testing.T) {
 	md := New(4)
-	md.Set("key1", "val1", "key2", "val2", "key3")
+	md.Set("key1", "val1", "key2", "val2")
 
-	if v, ok := md.Get("key1"); !ok || v != "val1" {
+	if v, ok := md.GetJoined("key1"); !ok || v != "val1" {
 		t.Fatalf("invalid kv %#+v", md)
 	}
-	if v, ok := md.Get("key2"); !ok || v != "val2" {
-		t.Fatalf("invalid kv %#+v", md)
-	}
-	if _, ok := md.Get("key3"); ok {
+	if v, ok := md.GetJoined("key2"); !ok || v != "val2" {
 		t.Fatalf("invalid kv %#+v", md)
 	}
 }
@@ -64,20 +72,10 @@ func TestAppend(t *testing.T) {
 }
 
 func TestPairs(t *testing.T) {
-	md, ok := Pairs("key1", "val1", "key2", "val2")
-	if !ok {
-		t.Fatal("odd number of kv")
-	}
-	if _, ok = md.Get("key1"); !ok {
+	md := Pairs("key1", "val1", "key2", "val2")
+	if _, ok := md.Get("key1"); !ok {
 		t.Fatal("key1 not found")
 	}
-}
-
-func testCtx(ctx context.Context) {
-	md := New(2)
-	md.Set("Key1", "Val1_new")
-	md.Set("Key3", "Val3")
-	SetOutgoingContext(ctx, md)
 }
 
 func TestPassing(t *testing.T) {
@@ -87,69 +85,62 @@ func TestPassing(t *testing.T) {
 	md1.Set("Key2", "Val2")
 
 	ctx = NewIncomingContext(ctx, md1)
-	testCtx(ctx)
+
 	_, ok := FromOutgoingContext(ctx)
 	if ok {
 		t.Fatalf("create outgoing context")
 	}
 
-	ctx = NewOutgoingContext(ctx, New(1))
-	testCtx(ctx)
+	ctx = NewOutgoingContext(ctx, md1)
+
 	md, ok := FromOutgoingContext(ctx)
 	if !ok {
 		t.Fatalf("missing metadata from outgoing context")
 	}
-	if v, ok := md.Get("Key1"); !ok || v != "Val1_new" {
+	if v, ok := md.Get("Key1"); !ok || v[0] != "Val1" {
 		t.Fatalf("invalid metadata value %#+v", md)
 	}
 }
 
-func TestMerge(t *testing.T) {
-	omd := Metadata{
-		"key1": "val1",
-	}
-	mmd := Metadata{
-		"key2": "val2",
-	}
-
-	nmd := Merge(omd, mmd, true)
-	if len(nmd) != 2 {
-		t.Fatalf("merge failed: %v", nmd)
-	}
-}
-
-func TestIterator(_ *testing.T) {
-	md := Metadata{
-		"1Last":   "last",
-		"2First":  "first",
-		"3Second": "second",
-	}
+func TestIterator(t *testing.T) {
+	md := Pairs(
+		"1Last", "last",
+		"2First", "first",
+		"3Second", "second",
+	)
 
 	iter := md.Iterator()
-	var k, v string
-
+	var k string
+	var v []string
+	chk := New(3)
 	for iter.Next(&k, &v) {
-		// fmt.Printf("k: %s, v: %s\n", k, v)
+		chk[k] = v
+	}
+
+	for k, v := range chk {
+		if cv, ok := md[k]; !ok || len(cv) != len(v) || cv[0] != v[0] {
+			t.Fatalf("XXXX %#+v %#+v", chk, md)
+		}
 	}
 }
 
 func TestMedataCanonicalKey(t *testing.T) {
 	md := New(1)
 	md.Set("x-request-id", "12345")
-	v, ok := md.Get("x-request-id")
+	v, ok := md.GetJoined("x-request-id")
 	if !ok {
 		t.Fatalf("failed to get x-request-id")
 	} else if v != "12345" {
 		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
 	}
 
-	v, ok = md.Get("X-Request-Id")
+	v, ok = md.GetJoined("X-Request-Id")
 	if !ok {
 		t.Fatalf("failed to get x-request-id")
 	} else if v != "12345" {
 		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
 	}
-	v, ok = md.Get("X-Request-ID")
+	v, ok = md.GetJoined("X-Request-ID")
 	if !ok {
 		t.Fatalf("failed to get x-request-id")
 	} else if v != "12345" {
@@ -162,7 +153,7 @@ func TestMetadataSet(t *testing.T) {
 
 	md.Set("Key", "val")
 
-	val, ok := md.Get("Key")
+	val, ok := md.GetJoined("Key")
 	if !ok {
 		t.Fatal("key Key not found")
 	}
@@ -173,8 +164,8 @@ func TestMetadataSet(t *testing.T) {
 
 func TestMetadataDelete(t *testing.T) {
 	md := Metadata{
-		"Foo": "bar",
-		"Baz": "empty",
+		"Foo": []string{"bar"},
+		"Baz": []string{"empty"},
 	}
 
 	md.Del("Baz")
@@ -184,25 +175,16 @@ func TestMetadataDelete(t *testing.T) {
 	}
 }
 
-func TestNilContext(t *testing.T) {
-	var ctx context.Context
-
-	_, ok := FromContext(ctx)
-	if ok {
-		t.Fatal("nil context")
-	}
-}
-
 func TestMetadataCopy(t *testing.T) {
 	md := Metadata{
-		"Foo": "bar",
-		"Bar": "baz",
+		"Foo": []string{"bar"},
+		"Bar": []string{"baz"},
 	}
 
 	cp := Copy(md)
 
 	for k, v := range md {
-		if cv := cp[k]; cv != v {
+		if cv := cp[k]; cv[0] != v[0] {
 			t.Fatalf("Got %s:%s for %s:%s", k, cv, k, v)
 		}
 	}
@@ -210,7 +192,7 @@ func TestMetadataCopy(t *testing.T) {
 
 func TestMetadataContext(t *testing.T) {
 	md := Metadata{
-		"Foo": "bar",
+		"Foo": []string{"bar"},
 	}
 
 	ctx := NewContext(context.TODO(), md)
@@ -220,7 +202,7 @@ func TestMetadataContext(t *testing.T) {
 		t.Errorf("Unexpected error retrieving metadata, got %t", ok)
 	}
 
-	if emd["Foo"] != md["Foo"] {
+	if emd["Foo"][0] != md["Foo"][0] {
 		t.Errorf("Expected key: %s val: %s, got key: %s val: %s", "Foo", md["Foo"], "Foo", emd["Foo"])
 	}
 
@@ -229,13 +211,88 @@ func TestMetadataContext(t *testing.T) {
 	}
 }
 
-func TestCopy(t *testing.T) {
-	md := New(2)
-	md.Set("key1", "val1", "key2", "val2")
-	nmd := Copy(md, "key2")
-	if len(nmd) != 1 {
-		t.Fatal("Copy exclude not works")
-	} else if nmd["Key1"] != "val1" {
-		t.Fatal("Copy exclude not works")
+func TestFromContext(t *testing.T) {
+	ctx := context.WithValue(context.TODO(), metadataCurrentKey{}, rawMetadata{md: New(0)})
+
+	c, ok := FromContext(ctx)
+	if c == nil || !ok {
+		t.Fatal("FromContext not works")
+	}
+}
+
+func TestNewContext(t *testing.T) {
+	ctx := NewContext(context.TODO(), New(0))
+
+	c, ok := FromContext(ctx)
+	if c == nil || !ok {
+		t.Fatal("NewContext not works")
+	}
+}
+
+func TestFromIncomingContext(t *testing.T) {
+	ctx := context.WithValue(context.TODO(), metadataIncomingKey{}, rawMetadata{md: New(0)})
+
+	c, ok := FromIncomingContext(ctx)
+	if c == nil || !ok {
+		t.Fatal("FromIncomingContext not works")
+	}
+}
+
+func TestFromOutgoingContext(t *testing.T) {
+	ctx := context.WithValue(context.TODO(), metadataOutgoingKey{}, rawMetadata{md: New(0)})
+
+	c, ok := FromOutgoingContext(ctx)
+	if c == nil || !ok {
+		t.Fatal("FromOutgoingContext not works")
+	}
+}
+
+func TestNewIncomingContext(t *testing.T) {
+	md := New(1)
+	md.Set("key", "val")
+	ctx := NewIncomingContext(context.TODO(), md)
+
+	c, ok := FromIncomingContext(ctx)
+	if c == nil || !ok {
+		t.Fatal("NewIncomingContext not works")
+	}
+}
+
+func TestNewOutgoingContext(t *testing.T) {
+	md := New(1)
+	md.Set("key", "val")
+	ctx := NewOutgoingContext(context.TODO(), md)
+
+	c, ok := FromOutgoingContext(ctx)
+	if c == nil || !ok {
+		t.Fatal("NewOutgoingContext not works")
+	}
+}
+
+func TestAppendIncomingContext(t *testing.T) {
+	md := New(1)
+	md.Set("key1", "val1")
+	ctx := AppendIncomingContext(context.TODO(), "key2", "val2")
+
+	nmd, ok := FromIncomingContext(ctx)
+	if nmd == nil || !ok {
+		t.Fatal("AppendIncomingContext not works")
+	}
+	if v, ok := nmd.GetJoined("key2"); !ok || v != "val2" {
+		t.Fatal("AppendIncomingContext not works")
+	}
+}
+
+func TestAppendOutgoingContext(t *testing.T) {
+	md := New(1)
+	md.Set("key1", "val1")
+	ctx := AppendOutgoingContext(context.TODO(), "key2", "val2")
+
+	nmd, ok := FromOutgoingContext(ctx)
+	if nmd == nil || !ok {
+		t.Fatal("AppendOutgoingContext not works")
+	}
+	if v, ok := nmd.GetJoined("key2"); !ok || v != "val2" {
+		t.Fatal("AppendOutgoingContext not works")
 	}
 }

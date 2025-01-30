@@ -29,39 +29,23 @@ var (
 )
 
 // Client is the interface used to make requests to services.
-// It supports Request/Response via Transport and Publishing via the Broker.
 // It also supports bidirectional streaming of requests.
 type Client interface {
 	Name() string
 	Init(opts ...Option) error
 	Options() Options
-	NewMessage(topic string, msg interface{}, opts ...MessageOption) Message
 	NewRequest(service string, endpoint string, req interface{}, opts ...RequestOption) Request
 	Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error
 	Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error)
-	Publish(ctx context.Context, msg Message, opts ...PublishOption) error
-	BatchPublish(ctx context.Context, msg []Message, opts ...PublishOption) error
 	String() string
 }
 
 type (
-	FuncCall         func(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error
-	HookCall         func(next FuncCall) FuncCall
-	FuncStream       func(ctx context.Context, req Request, opts ...CallOption) (Stream, error)
-	HookStream       func(next FuncStream) FuncStream
-	FuncPublish      func(ctx context.Context, msg Message, opts ...PublishOption) error
-	HookPublish      func(next FuncPublish) FuncPublish
-	FuncBatchPublish func(ctx context.Context, msg []Message, opts ...PublishOption) error
-	HookBatchPublish func(next FuncBatchPublish) FuncBatchPublish
+	FuncCall   func(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error
+	HookCall   func(next FuncCall) FuncCall
+	FuncStream func(ctx context.Context, req Request, opts ...CallOption) (Stream, error)
+	HookStream func(next FuncStream) FuncStream
 )
-
-// Message is the interface for publishing asynchronously
-type Message interface {
-	Topic() string
-	Payload() interface{}
-	ContentType() string
-	Metadata() metadata.Metadata
-}
 
 // Request is the interface for a synchronous request used by Call or Stream
 type Request interface {
@@ -120,12 +104,6 @@ type Option func(*Options)
 
 // CallOption used by Call or Stream
 type CallOption func(*CallOptions)
-
-// PublishOption used by Publish
-type PublishOption func(*PublishOptions)
-
-// MessageOption used by NewMessage
-type MessageOption func(*MessageOptions)
 
 // RequestOption used by NewRequest
 type RequestOption func(*RequestOptions)

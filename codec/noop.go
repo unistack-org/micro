@@ -3,7 +3,7 @@ package codec
 import (
 	"encoding/json"
 
-	codecpb "go.unistack.org/micro-proto/v3/codec"
+	codecpb "go.unistack.org/micro-proto/v4/codec"
 )
 
 type noopCodec struct {

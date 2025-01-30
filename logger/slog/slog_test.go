@@ -412,9 +412,10 @@ func Test_WithContextAttrFunc(t *testing.T) {
 			}
 			attrs := make([]interface{}, 0, 10)
 			for k, v := range md {
-				switch k {
-				case "X-Request-Id", "Phone", "External-Id", "Source-Service", "X-App-Install-Id", "Client-Id", "Client-Ip":
-					attrs = append(attrs, strings.ToLower(k), v)
+				key := strings.ToLower(k)
+				switch key {
+				case "x-request-id", "phone", "external-Id", "source-service", "x-app-install-id", "client-id", "client-ip":
+					attrs = append(attrs, key, v[0])
 				}
 			}
 			return attrs

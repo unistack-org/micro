@@ -3,6 +3,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"go.unistack.org/micro/v4/codec"
@@ -51,10 +52,6 @@ type Server interface {
 	Handle(h Handler) error
 	// Create a new handler
 	NewHandler(h interface{}, opts ...HandlerOption) Handler
-	// Create a new subscriber
-	NewSubscriber(topic string, h interface{}, opts ...SubscriberOption) Subscriber
-	// Register a subscriber
-	Subscribe(s Subscriber) error
 	// Start the server
 	Start() error
 	// Stop the server
@@ -70,35 +67,9 @@ type Server interface {
 }
 
 type (
-	FuncSubHandler func(ctx context.Context, ms Message) error
-	HookSubHandler func(next FuncSubHandler) FuncSubHandler
-	FuncHandler    func(ctx context.Context, req Request, rsp interface{}) error
-	HookHandler    func(next FuncHandler) FuncHandler
+	FuncHandler func(ctx context.Context, req Request, rsp interface{}) error
+	HookHandler func(next FuncHandler) FuncHandler
 )
-
-/*
-// Router handle serving messages
-type Router interface {
-	// ProcessMessage processes a message
-	ProcessMessage(ctx context.Context, msg Message) error
-	// ServeRequest processes a request to completion
-	ServeRequest(ctx context.Context, req Request, rsp Response) error
-}
-*/
-
-// Message is an async message interface
-type Message interface {
-	// Topic of the message
-	Topic() string
-	// The decoded payload value
-	Body() interface{}
-	// The content type of the payload
-	ContentType() string
-	// The raw headers of the message
-	Header() metadata.Metadata
-	// Codec used to decode the message
-	Codec() codec.Codec
-}
 
 // Request is a synchronous request interface
 type Request interface {
@@ -172,11 +143,20 @@ type Handler interface {
 	Options() HandlerOptions
 }
 
-// Subscriber interface represents a subscription to a given topic using
-// a specific subscriber function or object with endpoints. It mirrors
-// the handler in its behaviour.
-type Subscriber interface {
-	Topic() string
-	Subscriber() interface{}
-	Options() SubscriberOptions
+type serverHeaderKey struct{}
+
+func ResponseMetadata(ctx context.Context, md *metadata.Metadata) context.Context {
+	return context.WithValue(ctx, serverHeaderKey{}, md)
+}
+
+func SetResponseMetadata(ctx context.Context, md metadata.Metadata) error {
+	if md.Len() == 0 {
+		return nil
+	}
+	h, ok := ctx.Value(serverHeaderKey{}).(*metadata.Metadata)
+	if !ok || h == nil {
+		return errors.New("missing metadata")
+	}
+	md.CopyTo(*h)
+	return nil
 }

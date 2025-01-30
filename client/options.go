@@ -137,43 +137,6 @@ func Context(ctx context.Context) Option {
 	}
 }
 
-// NewPublishOptions create new PublishOptions struct from option
-func NewPublishOptions(opts ...PublishOption) PublishOptions {
-	options := PublishOptions{}
-	for _, o := range opts {
-		o(&options)
-	}
-	return options
-}
-
-// PublishOptions holds publish options
-type PublishOptions struct {
-	// Context used for external options
-	Context context.Context
-	// Exchange topic exchange name
-	Exchange string
-	// BodyOnly will publish only message body
-	BodyOnly bool
-}
-
-// NewMessageOptions creates message options struct
-func NewMessageOptions(opts ...MessageOption) MessageOptions {
-	options := MessageOptions{Metadata: metadata.New(1)}
-	for _, o := range opts {
-		o(&options)
-	}
-	return options
-}
-
-// MessageOptions holds client message options
-type MessageOptions struct {
-	// Metadata additional metadata
-	Metadata metadata.Metadata
-	// ContentType specify content-type of message
-	// deprecated
-	ContentType string
-}
-
 // NewRequestOptions creates new RequestOptions struct
 func NewRequestOptions(opts ...RequestOption) RequestOptions {
 	options := RequestOptions{}
@@ -374,43 +337,6 @@ func DialTimeout(d time.Duration) Option {
 	}
 }
 
-// WithExchange sets the exchange to route a message through
-// Deprecated
-func WithExchange(e string) PublishOption {
-	return func(o *PublishOptions) {
-		o.Exchange = e
-	}
-}
-
-// PublishExchange sets the exchange to route a message through
-func PublishExchange(e string) PublishOption {
-	return func(o *PublishOptions) {
-		o.Exchange = e
-	}
-}
-
-// WithBodyOnly publish only message body
-// DERECATED
-func WithBodyOnly(b bool) PublishOption {
-	return func(o *PublishOptions) {
-		o.BodyOnly = b
-	}
-}
-
-// PublishBodyOnly publish only message body
-func PublishBodyOnly(b bool) PublishOption {
-	return func(o *PublishOptions) {
-		o.BodyOnly = b
-	}
-}
-
-// PublishContext sets the context in publish options
-func PublishContext(ctx context.Context) PublishOption {
-	return func(o *PublishOptions) {
-		o.Context = ctx
-	}
-}
-
 // WithContextDialer pass ContextDialer to client call
 func WithContextDialer(fn func(context.Context, string) (net.Conn, error)) CallOption {
 	return func(o *CallOptions) {
@@ -519,30 +445,6 @@ func WithSelector(s selector.Selector) CallOption {
 func WithSelectOptions(sops ...selector.SelectOption) CallOption {
 	return func(o *CallOptions) {
 		o.SelectOptions = sops
-	}
-}
-
-// WithMessageContentType sets the message content type
-// Deprecated
-func WithMessageContentType(ct string) MessageOption {
-	return func(o *MessageOptions) {
-		o.Metadata.Set(metadata.HeaderContentType, ct)
-		o.ContentType = ct
-	}
-}
-
-// MessageContentType sets the message content type
-func MessageContentType(ct string) MessageOption {
-	return func(o *MessageOptions) {
-		o.Metadata.Set(metadata.HeaderContentType, ct)
-		o.ContentType = ct
-	}
-}
-
-// MessageMetadata sets the message metadata
-func MessageMetadata(k, v string) MessageOption {
-	return func(o *MessageOptions) {
-		o.Metadata.Set(k, v)
 	}
 }
 
