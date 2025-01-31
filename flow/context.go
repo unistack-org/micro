@@ -15,15 +15,6 @@ func FromContext(ctx context.Context) (Flow, bool) {
 	return c, ok
 }
 
-// MustContext returns Flow from context
-func MustContext(ctx context.Context) Flow {
-	f, ok := FromContext(ctx)
-	if !ok {
-		panic("missing flow")
-	}
-	return f
-}
-
 // NewContext stores Flow to context
 func NewContext(ctx context.Context, f Flow) context.Context {
 	if ctx == nil {
