@@ -278,7 +278,7 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 		}
 	}
 
-	if (s.opts.AddStacktrace || lvl == logger.FatalLevel) || (s.opts.AddStacktrace && lvl == logger.ErrorLevel) {
+	if s.opts.AddStacktrace && (lvl == logger.FatalLevel || lvl == logger.ErrorLevel) {
 		stackInfo := make([]byte, 1024*1024)
 		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
 			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)

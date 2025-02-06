@@ -21,7 +21,7 @@ import (
 func TestStacktrace(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf),
+	l := NewLogger(logger.WithLevel(logger.DebugLevel), logger.WithOutput(buf),
 		WithHandlerFunc(slog.NewTextHandler),
 		logger.WithAddStacktrace(true),
 	)
