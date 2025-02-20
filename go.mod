@@ -8,10 +8,10 @@ require (
 	github.com/KimMachineGun/automemlimit v0.7.0
 	github.com/ash3in/uuidv8 v1.2.0
 	github.com/google/uuid v1.6.0
-	github.com/heimdalr/dag v1.5.0
 	github.com/matoous/go-nanoid v1.5.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/silas/dag v0.0.0-20220518035006-a7e85ada93c5
+	github.com/spf13/cast v1.7.1
 	go.uber.org/atomic v1.11.0
 	go.uber.org/automaxprocs v1.6.0
 	go.unistack.org/micro-proto/v4 v4.1.0
@@ -23,8 +23,6 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/kr/pretty v0.3.1 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect

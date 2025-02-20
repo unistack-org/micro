@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/spf13/cast"
-	mreflect "go.unistack.org/micro/v3/util/reflect"
+	mreflect "go.unistack.org/micro/v4/util/reflect"
 )
 
 // Options interface must be used by all options
