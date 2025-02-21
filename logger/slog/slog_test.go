@@ -124,7 +124,7 @@ func TestWithDedupKeysWithAddFields(t *testing.T) {
 
 	l.Info(ctx, "msg3")
 
-	if !bytes.Contains(buf.Bytes(), []byte(`msg=msg3 key1=val1 key2=val2`)) {
+	if !bytes.Contains(buf.Bytes(), []byte(`msg=msg3 key1=val4 key2=val3`)) {
 		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
 	}
 }
