@@ -2,7 +2,6 @@ package logger
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -100,11 +99,8 @@ func WithAddFields(fields ...interface{}) Option {
 					iv, iok := o.Fields[i].(string)
 					jv, jok := fields[j].(string)
 					if iok && jok && iv == jv {
-						fmt.Printf("AAAA o.Fields:%v old:%v new:%v\n", o.Fields[i], o.Fields[i+1], fields[j+1])
 						o.Fields[i+1] = fields[j+1]
-						fmt.Printf("BBBB o.Fields:%v old:%v new:%v\n", o.Fields[i], o.Fields[i+1], fields[j+1])
 						fields = slices.Delete(fields, j, j+2)
-
 					}
 				}
 			}
