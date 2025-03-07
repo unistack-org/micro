@@ -21,7 +21,7 @@ var (
 	// ErrInvalidMessage returns when invalid Message passed
 	ErrInvalidMessage = errors.New("invalid message")
 	// ErrInvalidHandler returns when subscriber passed to Subscribe
-	ErrInvalidHandler = errors.New("invalid handler")
+	ErrInvalidHandler = errors.New("invalid handler, ony func(Message) error and func([]Message) error supported")
 	// DefaultGracefulTimeout
 	DefaultGracefulTimeout = 5 * time.Second
 )
