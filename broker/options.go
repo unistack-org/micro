@@ -79,11 +79,15 @@ type PublishOptions struct {
 	// BodyOnly flag says the message contains raw body bytes and don't need
 	// codec Marshal method
 	BodyOnly bool
+	// Context holds custom options
+	Context context.Context
 }
 
 // NewPublishOptions creates PublishOptions struct
 func NewPublishOptions(opts ...PublishOption) PublishOptions {
-	options := PublishOptions{}
+	options := PublishOptions{
+		Context: context.Background(),
+	}
 	for _, o := range opts {
 		o(&options)
 	}
