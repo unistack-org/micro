@@ -78,4 +78,6 @@ type Span interface {
 	TraceID() string
 	// SpanID returns span id
 	SpanID() string
+	// IsRecording returns the recording state of the Span.
+	IsRecording() bool
 }

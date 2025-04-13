@@ -120,6 +120,10 @@ func (s *noopSpan) SetStatus(st SpanStatus, msg string) {
 	s.statusMsg = msg
 }
 
+func (s *noopSpan) IsRecording() bool {
+	return false
+}
+
 // NewTracer returns new memory tracer
 func NewTracer(opts ...Option) Tracer {
 	return &noopTracer{
