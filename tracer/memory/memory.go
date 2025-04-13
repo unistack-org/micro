@@ -89,6 +89,10 @@ func (s *Span) Tracer() tracer.Tracer {
 	return s.tracer
 }
 
+func (s *Span) IsRecording() bool {
+	return true
+}
+
 type Event struct {
 	name   string
 	labels []interface{}
