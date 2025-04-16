@@ -1,6 +1,7 @@
 module go.unistack.org/micro/v3
 
 go 1.22.0
+toolchain go1.24.1
 
 require (
 	dario.cat/mergo v1.0.1
@@ -36,8 +37,8 @@ require (
 	github.com/stretchr/testify v1.10.0 // indirect
 	go.uber.org/goleak v1.3.0 // indirect
 	golang.org/x/exp v0.0.0-20241210194714-1829a127f884 // indirect
-	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241216192217-9240e9c98484 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
