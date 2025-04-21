@@ -40,7 +40,7 @@ jobs:
       with:
         commit_message: Apply Code Coverage Badge
         skip_fetch: false
-        skip_checkout: true
+        skip_checkout: false
         file_pattern: ./README.md
 
     - name: push
