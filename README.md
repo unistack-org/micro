@@ -22,7 +22,7 @@ level config from any source such as env vars, cmdline, file, consul, vault, etc
 s3. State and persistence becomes a core requirement beyond prototyping and Micro looks to build that into the framework.
 
 - **Service Discovery** - Automatic service registration and name resolution. Service discovery is at the core of micro service 
-development. When service A needs to speak to service B it needs the location of that service.
+development.
 
 - **Message Encoding** - Dynamic message encoding based on content-type. The client and server will use codecs along with content-type 
 to seamlessly encode and decode Go types for you. Any variety of messages could be encoded and sent from different clients. The client 
