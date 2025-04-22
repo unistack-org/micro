@@ -13,7 +13,7 @@ Micro provides the core requirements for distributed systems development includi
 
 ## Features
 
-Micro abstracts away the details of distributed systems. Here are the main features.
+Micro abstracts away the details of distributed systems. Main features:
 
 - **Dynamic Config** - Load and hot reload dynamic config from anywhere. The config interface provides a way to load application 
 level config from any source such as env vars, cmdline, file, consul, vault... You can merge the sources and even define fallbacks.
