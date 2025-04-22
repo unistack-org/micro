@@ -9,7 +9,7 @@ Micro is a standard library for microservices.
 
 ## Overview
 
-Micro provides the core requirements for distributed systems development including RPC and Event driven communication. 
+Micro provides the core requirements for distributed systems development including SYNC and ASYNC communication. 
 
 ## Features
 
