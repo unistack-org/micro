@@ -16,7 +16,7 @@ Micro provides the core requirements for distributed systems development includi
 Micro abstracts away the details of distributed systems. Main features:
 
 - **Dynamic Config** - Load and hot reload dynamic config from anywhere. The config interface provides a way to load application 
-level config from any source such as env vars, cmdline, file, consul, vault... You can merge the sources and even define fallbacks.
+level config from any source such as env vars, cmdline, file, consul, vault, etc... You can merge the sources and even define fallbacks.
 
 - **Data Storage** - A simple data store interface to read, write and delete records. It includes support for memory, file and 
 s3. State and persistence becomes a core requirement beyond prototyping and Micro looks to build that into the framework.
