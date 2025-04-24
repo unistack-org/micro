@@ -69,6 +69,15 @@ func (md Metadata) Copy() Metadata {
 	return out
 }
 
+// AsMap returns a copy of Metadata with map[string]string.
+func (md Metadata) AsMap() map[string]string {
+	out := make(map[string]string, len(md))
+	for k, v := range md {
+		out[k] = strings.Join(v, ",")
+	}
+	return out
+}
+
 // AsHTTP1 returns a copy of Metadata
 // with CanonicalMIMEHeaderKey.
 func (md Metadata) AsHTTP1() map[string][]string {
