@@ -99,6 +99,7 @@ type service struct {
 	done chan struct{}
 	opts Options
 	sync.RWMutex
+	stopped bool
 }
 
 // NewService creates and returns a new Service based on the packages within.
@@ -424,7 +425,7 @@ func (s *service) Stop() error {
 		}
 	}
 
-	close(s.done)
+	s.notifyShutdown()
 
 	return nil
 }
@@ -448,10 +449,23 @@ func (s *service) Run() error {
 		return err
 	}
 
-	// wait on context cancel
 	<-s.done
 
-	return s.Stop()
+	return nil
+}
+
+// notifyShutdown marks the service as stopped and closes the done channel.
+// It ensures the channel is closed only once, preventing multiple closures.
+func (s *service) notifyShutdown() {
+	s.Lock()
+	if s.stopped {
+		s.Unlock()
+		return
+	}
+	s.stopped = true
+	s.Unlock()
+
+	close(s.done)
 }
 
 type Namer interface {
