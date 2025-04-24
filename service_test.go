@@ -4,7 +4,9 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"time"
 
+	"github.com/stretchr/testify/require"
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/client"
 	"go.unistack.org/micro/v3/config"
@@ -773,3 +775,41 @@ func Test_getNameIndex(t *testing.T) {
 	}
 }
 */
+
+func TestServiceShutdown(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("service shutdown failed: %v", r)
+		}
+	}()
+
+	s, ok := NewService().(*service)
+	require.NotNil(t, s)
+	require.True(t, ok)
+
+	require.NoError(t, s.Start())
+	require.False(t, s.stopped)
+
+	require.NoError(t, s.Stop())
+	require.True(t, s.stopped)
+}
+
+func TestServiceMultipleShutdowns(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("service shutdown failed: %v", r)
+		}
+	}()
+
+	s := NewService()
+
+	go func() {
+		time.Sleep(10 * time.Millisecond)
+		// first call
+		require.NoError(t, s.Stop())
+		// duplicate call
+		require.NoError(t, s.Stop())
+	}()
+
+	require.NoError(t, s.Run())
+}
