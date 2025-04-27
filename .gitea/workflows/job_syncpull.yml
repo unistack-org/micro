@@ -14,13 +14,13 @@ jobs:
       run: git clone --bare --filter=tree:0 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
 
     - name: track master
-      run: git --git-dir=repo remote add --no-tags --fetch --track master upstream-master ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+      run: git --git-dir=repo remote add --no-tags --fetch --track master upstream-master ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
 
     - name: track v3
-      run: git --git-dir=repo remote add --no-tags --fetch --track v3 upstream-v3 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+      run: git --git-dir=repo remote add --no-tags --fetch --track v3 upstream-v3 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
 
     - name: track v4
-      run: git --git-dir=repo remote add --no-tags --fetch --track v4 upstream-v4 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+      run: git --git-dir=repo remote add --no-tags --fetch --track v4 upstream-v4 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
     
     - name: push
       run: git push --progress
