@@ -1,0 +1,26 @@
+name: syncpull
+
+on:
+  schedule:
+    - cron: '* * * * *'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      run: git clone --bare --filter=tree:0 ${GITHUB_REPOSITORY} repo
+
+    - name: track master
+      run: git --git-dir=repo remote add --no-tags --fetch --track master upstream-master ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+
+    - name: track v3
+      run: git --git-dir=repo remote add --no-tags --fetch --track v3 upstream-v3 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+
+    - name: track v4
+      run: git --git-dir=repo remote add --no-tags --fetch --track v4 upstream-v4 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+    
+    - name: push
+      run: git push --progress
