@@ -2,7 +2,12 @@ name: sync
 
 on:
   schedule:
-    - cron: '* * * * *'
+    - cron: '*/5 * * * *'
+  push:
+    branches: [ master, v3, v4 ]
+    paths-ignore:
+      - '.github/**'
+      - '.gitea/**'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -17,9 +22,8 @@ jobs:
         git config --global user.name "github-actions[bot]"
         echo "machine git.unistack.org login vtolstov password ${{ secrets.TOKEN_GITEA }}" | tee -a /root/.netrc
         echo "machine github.com login vtolstov password ${{ secrets.TOKEN_GITHUB }}" | tee -a /root/.netrc
-        env
 
-    - name: track master
+    - name: sync master
       run: |
         git clone --depth=10 --branch master --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
@@ -31,7 +35,7 @@ jobs:
         cd ../
         rm -rf repo
 
-    - name: track v3
+    - name: sync v3
       run: |
         git clone --depth=10 --branch v3 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
@@ -43,7 +47,7 @@ jobs:
         cd ../
         rm -rf repo
 
-    - name: track v4
+    - name: sync v4
       run: |
         git clone --depth=10 --branch v4 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
