@@ -23,6 +23,7 @@ jobs:
         git remote add --no-tags --fetch --track master upstream-master https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/master"
         git push --progress
+        cd ../
         rm -rf repo
 
     - name: track v3
@@ -32,6 +33,7 @@ jobs:
         git remote add --no-tags --fetch --track v3 upstream-v3 https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/v3"
         git push --progress
+        cd ../
         rm -rf repo
 
     - name: track v4
@@ -41,4 +43,5 @@ jobs:
         git remote add --no-tags --fetch --track v4 upstream-v4 https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/v4"
         git push --progress
+        cd ../
         rm -rf repo
