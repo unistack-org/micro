@@ -489,35 +489,74 @@ func URLMap(query string) (map[string]interface{}, error) {
 	return mp.(map[string]interface{}), nil
 }
 
-// FlattenMap expand key.subkey to nested map
-func FlattenMap(a map[string]interface{}) map[string]interface{} {
-	// preprocess map
-	nb := make(map[string]interface{}, len(a))
-	for k, v := range a {
-		ps := strings.Split(k, ".")
-		if len(ps) == 1 {
-			nb[k] = v
+// FlattenMap flattens a nested map into a single-level map using dot notation for nested keys.
+// In case of key conflicts, all nested levels will be discarded in favor of the first-level key.
+//
+// Example #1:
+//
+//	Input:
+//	  {
+//	    "user.name": "alex",
+//	    "user.document.id": "document_id"
+//	    "user.document.number": "document_number"
+//	  }
+//	Output:
+//	  {
+//	    "user": {
+//	      "name": "alex",
+//	      "document": {
+//	        "id": "document_id"
+//	        "number": "document_number"
+//	      }
+//	    }
+//	  }
+//
+// Example #2 (with conflicts):
+//
+//	Input:
+//	  {
+//	    "user": "alex",
+//	    "user.document.id": "document_id"
+//	    "user.document.number": "document_number"
+//	  }
+//	Output:
+//	  {
+//	    "user": "alex"
+//	  }
+func FlattenMap(input map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	for k, v := range input {
+		parts := strings.Split(k, ".")
+
+		if len(parts) == 1 {
+			result[k] = v
 			continue
 		}
-		em := make(map[string]interface{})
-		em[ps[len(ps)-1]] = v
-		for i := len(ps) - 2; i > 0; i-- {
-			nm := make(map[string]interface{})
-			nm[ps[i]] = em
-			em = nm
-		}
-		if vm, ok := nb[ps[0]]; ok {
-			// nested map
-			nm := vm.(map[string]interface{})
-			for vk, vv := range em {
-				nm[vk] = vv
+
+		current := result
+
+		for i, part := range parts {
+			// last element in the path
+			if i == len(parts)-1 {
+				current[part] = v
+				break
 			}
-			nb[ps[0]] = nm
-		} else {
-			nb[ps[0]] = em
+
+			// initialize map for current level if not exist
+			if _, ok := current[part]; !ok {
+				current[part] = make(map[string]interface{})
+			}
+
+			if nested, ok := current[part].(map[string]interface{}); ok {
+				current = nested // continue to the nested map
+			} else {
+				break // if current element is not a map, ignore it
+			}
 		}
 	}
-	return nb
+
+	return result
 }
 
 /*

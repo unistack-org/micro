@@ -11,6 +11,7 @@ require (
 	github.com/matoous/go-nanoid v1.5.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/silas/dag v0.0.0-20220518035006-a7e85ada93c5
+	github.com/stretchr/testify v1.10.0
 	go.uber.org/automaxprocs v1.6.0
 	go.unistack.org/micro-proto/v3 v3.4.1
 	golang.org/x/sync v0.10.0
@@ -33,7 +34,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/stretchr/testify v1.10.0 // indirect
 	go.uber.org/goleak v1.3.0 // indirect
 	golang.org/x/exp v0.0.0-20241210194714-1829a127f884 // indirect
 	golang.org/x/net v0.33.0 // indirect
