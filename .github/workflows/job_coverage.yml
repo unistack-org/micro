@@ -25,7 +25,7 @@ jobs:
       uses: actions/setup-go@v5
       with:
         cache-dependency-path: "**/*.sum"
-        go-version: 'stable' 
+        go-version: 'stable'
 
     - name: test coverage
       run: |
@@ -42,8 +42,8 @@ jobs:
       name: autocommit
       with:
         commit_message: Apply Code Coverage Badge
-        skip_fetch: true
-        skip_checkout: true
+        skip_fetch: false
+        skip_checkout: false
         file_pattern: ./README.md
 
     - name: push
