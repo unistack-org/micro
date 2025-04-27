@@ -14,7 +14,7 @@ jobs:
       run: |
         git config --global user.email "vtolstov <vtolstov@users.noreply.github.com>"
         git config --global user.name "github-actions[bot]"
-        git config --global url."https://vtolstov:${TOKEN}@git.unistack.org/".insteadOf "https://git.unistack.org/"
+        git config --global url."https://vtolstov:${ACTIONS_RUNTIME_TOKEN}@git.unistack.org/".insteadOf "https://git.unistack.org/"
 
     - name: track master
       run: |
