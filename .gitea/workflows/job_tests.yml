@@ -3,15 +3,12 @@ name: test
 on:
   pull_request:
     types: [opened, reopened, synchronize]
-    branches:
-    - master
-    - v3
-    - v4
+    branches: [ master, v3, v4 ]
   push:
-    branches:
-    - master
-    - v3
-    - v4
+    branches: [ master, v3, v4 ]
+    paths-ignore:
+      - '.github/**'
+      - '.gitea/**'
 
 jobs:
   test:
