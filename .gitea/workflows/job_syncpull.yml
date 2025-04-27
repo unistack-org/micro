@@ -15,6 +15,7 @@ jobs:
         git config --global user.email "vtolstov <vtolstov@users.noreply.github.com>"
         git config --global user.name "github-actions[bot]"
         echo "machine git.unistack.org login vtolstov password ${{ secrets.TOKEN_GITEA }}" | tee -a /root/.netrc
+        echo "machine github.com login vtolstov password ${{ secrets.TOKEN_GITHUB }}" | tee -a /root/.netrc
 
     - name: track master
       run: |
