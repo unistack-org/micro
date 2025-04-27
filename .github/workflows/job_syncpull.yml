@@ -1,4 +1,4 @@
-name: syncpull
+name: sync
 
 on:
   schedule:
@@ -7,7 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  pull:
+  sync:
+    if: env.GITHUB_ACTION == 0
     runs-on: ubuntu-latest
     steps:
     - name: init
