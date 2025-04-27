@@ -489,38 +489,7 @@ func URLMap(query string) (map[string]interface{}, error) {
 	return mp.(map[string]interface{}), nil
 }
 
-// FlattenMap expand key.subkey to nested map
-func FlattenMap(a map[string]interface{}) map[string]interface{} {
-	// preprocess map
-	nb := make(map[string]interface{}, len(a))
-	for k, v := range a {
-		ps := strings.Split(k, ".")
-		if len(ps) == 1 {
-			nb[k] = v
-			continue
-		}
-		em := make(map[string]interface{})
-		em[ps[len(ps)-1]] = v
-		for i := len(ps) - 2; i > 0; i-- {
-			nm := make(map[string]interface{})
-			nm[ps[i]] = em
-			em = nm
-		}
-		if vm, ok := nb[ps[0]]; ok {
-			// nested map
-			nm := vm.(map[string]interface{})
-			for vk, vv := range em {
-				nm[vk] = vv
-			}
-			nb[ps[0]] = nm
-		} else {
-			nb[ps[0]] = em
-		}
-	}
-	return nb
-}
-
-// FlattenMapFixed flattens a nested map into a single-level map using dot notation for nested keys.
+// FlattenMap flattens a nested map into a single-level map using dot notation for nested keys.
 // In case of key conflicts, all nested levels will be discarded in favor of the first-level key.
 //
 // Example #1:
@@ -554,7 +523,7 @@ func FlattenMap(a map[string]interface{}) map[string]interface{} {
 //	  {
 //	    "user": "alex"
 //	  }
-func FlattenMapFixed(input map[string]interface{}) map[string]interface{} {
+func FlattenMap(input map[string]interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
 
 	for k, v := range input {
