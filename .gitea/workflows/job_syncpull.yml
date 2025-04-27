@@ -21,7 +21,7 @@ jobs:
         git clone --depth=10 --branch master --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
         git remote add --no-tags --fetch --track master upstream https://github.com/${GITHUB_REPOSITORY}
-        git push upstream master
+        git push -u upstream master
         git merge --allow-unrelated-histories "upstream/master"
         git push --progress
         cd ../
@@ -32,7 +32,7 @@ jobs:
         git clone --depth=10 --branch v3 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
         git remote add --no-tags --fetch --track v3 upstream https://github.com/${GITHUB_REPOSITORY}
-        git push upstream v3
+        git push -u upstream v3
         git merge --allow-unrelated-histories "upstream/v3"
         git push --progress
         cd ../
@@ -43,7 +43,7 @@ jobs:
         git clone --depth=10 --branch v4 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
         git remote add --no-tags --fetch --track v4 upstream https://github.com/${GITHUB_REPOSITORY}
-        git push upstream v4
+        git push -u upstream v4
         git merge --allow-unrelated-histories "upstream/v4"
         git push --progress
         cd ../
