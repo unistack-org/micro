@@ -23,4 +23,4 @@ jobs:
       run: git --git-dir=repo remote add --no-tags --fetch --track v4 upstream-v4 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
     
     - name: push
-      run: git push --progress
+      run: git --git-dir=repo push --progress
