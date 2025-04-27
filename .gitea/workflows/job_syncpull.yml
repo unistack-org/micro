@@ -14,12 +14,11 @@ jobs:
       run: |
         git config --global user.email "vtolstov <vtolstov@users.noreply.github.com>"
         git config --global user.name "github-actions[bot]"
-        echo $(id)
-        echo "machine git.unistack.org login vtolstov password ${TOKEN}" > /root/.netrc
+        git config --global url."https://vtolstov:${TOKEN}@git.unistack.org/".insteadOf "https://git.unistack.org/""
 
     - name: track master
       run: |
-        git clone --branch master --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
+        git clone --depth=10 --branch master --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
         git remote add --no-tags --fetch --track master upstream-master https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/master"
@@ -28,16 +27,18 @@ jobs:
 
     - name: track v3
       run: |
-        git clone --branch v3 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
+        git clone --depth=10 --branch v3 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
         git remote add --no-tags --fetch --track v3 upstream-v3 https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/v3"
         git push --progress
+        rm -rf repo
 
     - name: track v4
       run: |
-        git clone --branch v4 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
+        git clone --depth=10 --branch v4 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
         git remote add --no-tags --fetch --track v4 upstream-v4 https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/v4"
         git push --progress
+        rm -rf repo
