@@ -19,19 +19,19 @@ jobs:
     - name: track master
       run: |
         cd repo
-        git remote add --no-tags --fetch --track master upstream-master ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
+        git remote add --no-tags --fetch --track master upstream-master https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/master"
 
     - name: track v3
       run: |
         cd repo
-        git remote add --no-tags --fetch --track v3 upstream-v3 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
+        git remote add --no-tags --fetch --track v3 upstream-v3 https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/v3"
 
     - name: track v4
       run: |
         cd repo
-        git remote add --no-tags --fetch --track v4 upstream-v4 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
+        git remote add --no-tags --fetch --track v4 upstream-v4 https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/v4"
     
     - name: push
