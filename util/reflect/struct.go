@@ -520,6 +520,76 @@ func FlattenMap(a map[string]interface{}) map[string]interface{} {
 	return nb
 }
 
+// FlattenMapFixed flattens a nested map into a single-level map using dot notation for nested keys.
+// In case of key conflicts, all nested levels will be discarded in favor of the first-level key.
+//
+// Example #1:
+//
+//	Input:
+//	  {
+//	    "user.name": "alex",
+//	    "user.document.id": "document_id"
+//	    "user.document.number": "document_number"
+//	  }
+//	Output:
+//	  {
+//	    "user": {
+//	      "name": "alex",
+//	      "document": {
+//	        "id": "document_id"
+//	        "number": "document_number"
+//	      }
+//	    }
+//	  }
+//
+// Example #2 (with conflicts):
+//
+//	Input:
+//	  {
+//	    "user": "alex",
+//	    "user.document.id": "document_id"
+//	    "user.document.number": "document_number"
+//	  }
+//	Output:
+//	  {
+//	    "user": "alex"
+//	  }
+func FlattenMapFixed(input map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	for k, v := range input {
+		parts := strings.Split(k, ".")
+
+		if len(parts) == 1 {
+			result[k] = v
+			continue
+		}
+
+		current := result
+
+		for i, part := range parts {
+			// last element in the path
+			if i == len(parts)-1 {
+				current[part] = v
+				break
+			}
+
+			// initialize map for current level if not exist
+			if _, ok := current[part]; !ok {
+				current[part] = make(map[string]interface{})
+			}
+
+			if nested, ok := current[part].(map[string]interface{}); ok {
+				current = nested // continue to the nested map
+			} else {
+				break // if current element is not a map, ignore it
+			}
+		}
+	}
+
+	return result
+}
+
 /*
 	case reflect.String:
 		fn := func(c rune) bool { return c == ',' || c == ';' || c == ' ' }
