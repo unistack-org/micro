@@ -22,7 +22,7 @@ jobs:
         cd repo
         git remote add --no-tags --fetch --track master upstream-master https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/master"
-        git push --progress
+        GIT_CURL_VERBOSE=1 GIT_TRACE=1 git push --progress
         rm -rf repo
 
     - name: track v3
