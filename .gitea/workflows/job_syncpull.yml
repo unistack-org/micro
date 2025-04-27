@@ -20,8 +20,8 @@ jobs:
       run: |
         git clone --depth=10 --branch master --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
-        git remote add --no-tags --fetch --track master upstream-master https://github.com/${GITHUB_REPOSITORY}
-        git merge --allow-unrelated-histories "upstream-master/master"
+        git remote add --no-tags --fetch --track master upstream https://github.com/${GITHUB_REPOSITORY}
+        git merge --allow-unrelated-histories "upstream/master"
         git push --progress
         cd ../
         rm -rf repo
@@ -30,8 +30,8 @@ jobs:
       run: |
         git clone --depth=10 --branch v3 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
-        git remote add --no-tags --fetch --track v3 upstream-v3 https://github.com/${GITHUB_REPOSITORY}
-        git merge --allow-unrelated-histories "upstream-master/v3"
+        git remote add --no-tags --fetch --track v3 upstream https://github.com/${GITHUB_REPOSITORY}
+        git merge --allow-unrelated-histories "upstream/v3"
         git push --progress
         cd ../
         rm -rf repo
@@ -40,8 +40,8 @@ jobs:
       run: |
         git clone --depth=10 --branch v4 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
-        git remote add --no-tags --fetch --track v4 upstream-v4 https://github.com/${GITHUB_REPOSITORY}
-        git merge --allow-unrelated-histories "upstream-master/v4"
+        git remote add --no-tags --fetch --track v4 upstream https://github.com/${GITHUB_REPOSITORY}
+        git merge --allow-unrelated-histories "upstream/v4"
         git push --progress
         cd ../
         rm -rf repo
