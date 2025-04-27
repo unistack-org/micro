@@ -11,22 +11,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: checkout
-      run: git clone --bare --filter=tree:0 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
+      run: git clone --depth=10 --filter=tree:0 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
 
     - name: track master
       run: |
-        git --git-dir=repo remote add --no-tags --fetch --track master upstream-master ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
-        git --git-dir=repo merge --allow-unrelated-histories "upstream-master/master"
+        cd repo
+        git remote add --no-tags --fetch --track master upstream-master ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
+        git merge --allow-unrelated-histories "upstream-master/master"
 
     - name: track v3
       run: |
-        git --git-dir=repo remote add --no-tags --fetch --track v3 upstream-v3 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
-        git --git-dir=repo merge --allow-unrelated-histories "upstream-master/v3"
+        cd repo
+        git remote add --no-tags --fetch --track v3 upstream-v3 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
+        git merge --allow-unrelated-histories "upstream-master/v3"
 
     - name: track v4
       run: |
-        git --git-dir=repo remote add --no-tags --fetch --track v4 upstream-v4 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
-        git --git-dir=repo merge --allow-unrelated-histories "upstream-master/v4"
+        cd repo
+        git remote add --no-tags --fetch --track v4 upstream-v4 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
+        git merge --allow-unrelated-histories "upstream-master/v4"
     
     - name: push
-      run: git --git-dir=repo push --all --progress
+      run: |
+        cd repo
+        git push --all --progress
