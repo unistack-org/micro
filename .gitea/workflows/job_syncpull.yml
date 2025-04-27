@@ -14,28 +14,28 @@ jobs:
       run: |
         git config --global user.email "vtolstov <vtolstov@users.noreply.github.com>"
         git config --global user.name "github-actions[bot]"
-        git clone --depth=10 --filter=tree:0 ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
 
     - name: track master
       run: |
+        git clone --branch master --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
-        git checkout -b master origin/master || true
         git remote add --no-tags --fetch --track master upstream-master https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/master"
         git push --progress
+        rm -rf repo
 
     - name: track v3
       run: |
+        git clone --branch v3 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
-        git checkout -b v3 origin/v3 || true
         git remote add --no-tags --fetch --track v3 upstream-v3 https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/v3"
         git push --progress
 
     - name: track v4
       run: |
+        git clone --branch v4 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
-        git checkout -b v4 origin/v4 || true
         git remote add --no-tags --fetch --track v4 upstream-v4 https://github.com/${GITHUB_REPOSITORY}
         git merge --allow-unrelated-histories "upstream-master/v4"
         git push --progress
