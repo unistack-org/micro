@@ -40,7 +40,7 @@ jobs:
         cd repo
         git remote add --no-tags --fetch --track v3 upstream https://github.com/${GITHUB_REPOSITORY}
         git pull --rebase upstream v3
-        git push upstream v3
+        git push upstream v3 --progress
         git push origin v3 --progress
         cd ../
         rm -rf repo
@@ -51,7 +51,7 @@ jobs:
         cd repo
         git remote add --no-tags --fetch --track v4 upstream https://github.com/${GITHUB_REPOSITORY}
         git pull --rebase upstream v4
-        git push upstream v4
+        git push upstream v4 --progress
         git push origin v4 --progress
         cd ../
         rm -rf repo
