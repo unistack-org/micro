@@ -112,7 +112,7 @@ func (md Metadata) Get(k string) []string {
 		v, ok = md[strings.ToLower(k)]
 	}
 	if !ok {
-		v, ok = md[textproto.CanonicalMIMEHeaderKey(k)]
+		v = md[textproto.CanonicalMIMEHeaderKey(k)]
 	}
 	return v
 }
@@ -124,22 +124,11 @@ func (md Metadata) GetJoined(k string) string {
 }
 
 // Set sets the value of a given key with a slice of values.
-func (md Metadata) Add(key string, vals ...string) {
+func (md Metadata) Set(key string, vals ...string) {
 	if len(vals) == 0 {
 		return
 	}
 	md[key] = vals
-}
-
-// Set sets the value of a given key with a slice of values.
-func (md Metadata) Set(kvs ...string) {
-	if len(kvs)%2 == 1 {
-		panic(fmt.Sprintf("metadata: Set got an odd number of input pairs for metadata: %d", len(kvs)))
-	}
-
-	for i := 0; i < len(kvs); i += 2 {
-		md[kvs[i]] = append(md[kvs[i]], kvs[i+1])
-	}
 }
 
 // Append adds the values to key k, not overwriting what was already stored at

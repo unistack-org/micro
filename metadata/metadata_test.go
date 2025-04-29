@@ -5,6 +5,15 @@ import (
 	"testing"
 )
 
+func TesSet(t *testing.T) {
+	md := Pairs("key1", "val1", "key2", "val2")
+	md.Set("key1", "val2", "val3")
+	v := md.GetJoined("X-Request-Id")
+	if v != "val2, val3" {
+		t.Fatal("set not works")
+	}
+}
+
 /*
 func TestAppendOutgoingContextModify(t *testing.T) {
 	md := Pairs("key1", "val1")
@@ -45,18 +54,6 @@ func TestMultipleUsage(t *testing.T) {
 	}(ctx)
 	_ = imd
 	_ = omd
-}
-
-func TestMetadataSetMultiple(t *testing.T) {
-	md := New(4)
-	md.Set("key1", "val1", "key2", "val2")
-
-	if v := md.GetJoined("key1"); v != "val1" {
-		t.Fatalf("invalid kv %#+v", md)
-	}
-	if v := md.GetJoined("key2"); v != "val2" {
-		t.Fatalf("invalid kv %#+v", md)
-	}
 }
 
 func TestPairs(t *testing.T) {
