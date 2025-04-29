@@ -59,18 +59,6 @@ func TestMetadataSetMultiple(t *testing.T) {
 	}
 }
 
-func TestAppend(t *testing.T) {
-	ctx := context.Background()
-	ctx = AppendIncomingContext(ctx, "key1", "val1", "key2", "val2")
-	md, ok := FromIncomingContext(ctx)
-	if !ok {
-		t.Fatal("metadata empty")
-	}
-	if v := md.Get("key1"); v == nil {
-		t.Fatal("key1 not found")
-	}
-}
-
 func TestPairs(t *testing.T) {
 	md := Pairs("key1", "val1", "key2", "val2")
 	if v := md.Get("key1"); v == nil {
@@ -266,20 +254,6 @@ func TestNewOutgoingContext(t *testing.T) {
 	c, ok := FromOutgoingContext(ctx)
 	if c == nil || !ok {
 		t.Fatal("NewOutgoingContext not works")
-	}
-}
-
-func TestAppendIncomingContext(t *testing.T) {
-	md := New(1)
-	md.Set("key1", "val1")
-	ctx := AppendIncomingContext(context.TODO(), "key2", "val2")
-
-	nmd, ok := FromIncomingContext(ctx)
-	if nmd == nil || !ok {
-		t.Fatal("AppendIncomingContext not works")
-	}
-	if v := nmd.GetJoined("key2"); v != "val2" {
-		t.Fatal("AppendIncomingContext not works")
 	}
 }
 

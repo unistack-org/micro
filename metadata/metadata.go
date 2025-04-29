@@ -218,24 +218,6 @@ func AppendContext(ctx context.Context, kv ...string) context.Context {
 	return context.WithValue(ctx, metadataCurrentKey{}, rawMetadata{md: md.md, added: added})
 }
 
-// AppendIncomingContext returns a new context with the provided kv merged
-// with any existing metadata in the context. Please refer to the documentation
-// of Pairs for a description of kv.
-func AppendIncomingContext(ctx context.Context, kv ...string) context.Context {
-	if len(kv)%2 == 1 {
-		panic(fmt.Sprintf("metadata: AppendIncomingContext got an odd number of input pairs for metadata: %d", len(kv)))
-	}
-	md, _ := ctx.Value(metadataIncomingKey{}).(rawMetadata)
-	added := make([][]string, len(md.added)+1)
-	copy(added, md.added)
-	kvCopy := make([]string, 0, len(kv))
-	for i := 0; i < len(kv); i += 2 {
-		kvCopy = append(kvCopy, strings.ToLower(kv[i]), kv[i+1])
-	}
-	added[len(added)-1] = kvCopy
-	return context.WithValue(ctx, metadataIncomingKey{}, rawMetadata{md: md.md, added: added})
-}
-
 // AppendOutgoingContext returns a new context with the provided kv merged
 // with any existing metadata in the context. Please refer to the documentation
 // of Pairs for a description of kv.

@@ -406,7 +406,7 @@ func TestLogger(t *testing.T) {
 func Test_WithContextAttrFunc(t *testing.T) {
 	loggerContextAttrFuncs := []logger.ContextAttrFunc{
 		func(ctx context.Context) []interface{} {
-			md, ok := metadata.FromIncomingContext(ctx)
+			md, ok := metadata.FromOutgoingContext(ctx)
 			if !ok {
 				return nil
 			}
@@ -425,7 +425,7 @@ func Test_WithContextAttrFunc(t *testing.T) {
 	logger.DefaultContextAttrFuncs = append(logger.DefaultContextAttrFuncs, loggerContextAttrFuncs...)
 
 	ctx := context.TODO()
-	ctx = metadata.AppendIncomingContext(ctx, "X-Request-Id", uuid.New().String(),
+	ctx = metadata.AppendOutgoingContext(ctx, "X-Request-Id", uuid.New().String(),
 		"Source-Service", "Test-System")
 
 	buf := bytes.NewBuffer(nil)
@@ -445,9 +445,9 @@ func Test_WithContextAttrFunc(t *testing.T) {
 		t.Fatalf("logger info, buf %s", buf.Bytes())
 	}
 	buf.Reset()
-	imd, _ := metadata.FromIncomingContext(ctx)
+	omd, _ := metadata.FromOutgoingContext(ctx)
 	l.Info(ctx, "test message1")
-	imd.Set("Source-Service", "Test-System2")
+	omd.Set("Source-Service", "Test-System2")
 	l.Info(ctx, "test message2")
 
 	// t.Logf("xxx %s", buf.Bytes())
