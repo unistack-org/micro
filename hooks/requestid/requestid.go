@@ -38,18 +38,16 @@ var DefaultMetadataFunc = func(ctx context.Context) (context.Context, error) {
 
 	if xid == "" {
 		var ids []string
-		if ids, iok = imd.Get(DefaultMetadataKey); iok {
-			for i := range ids {
-				if ids[i] != "" {
-					xid = ids[i]
-				}
+
+		for i := range imd.Get(DefaultMetadataKey) {
+			if ids[i] != "" {
+				xid = ids[i]
 			}
 		}
-		if ids, ook = omd.Get(DefaultMetadataKey); ook {
-			for i := range ids {
-				if ids[i] != "" {
-					xid = ids[i]
-				}
+
+		for i := range omd.Get(DefaultMetadataKey) {
+			if ids[i] != "" {
+				xid = ids[i]
 			}
 		}
 	}

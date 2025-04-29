@@ -2,6 +2,7 @@ package requestid
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"go.unistack.org/micro/v4/metadata"
@@ -24,10 +25,10 @@ func TestDefaultMetadataFunc(t *testing.T) {
 		t.Fatalf("md missing in outgoing context")
 	}
 
-	_, iok := imd.Get(DefaultMetadataKey)
-	_, ook := omd.Get(DefaultMetadataKey)
+	iv := imd.Get(DefaultMetadataKey)
+	ov := omd.Get(DefaultMetadataKey)
 
-	if !iok || !ook {
-		t.Fatalf("missing metadata key value")
+	if !slices.Equal(iv, ov) {
+		t.Fatalf("missing metadata key value %v != %v", iv, ov)
 	}
 }

@@ -36,7 +36,7 @@ func NewClientCallWrapper(keys ...string) client.CallWrapper {
 					omd = metadata.New(len(imd))
 				}
 				for _, k := range keys {
-					if v, ok := imd.Get(k); ok {
+					if v := imd.Get(k); v != nil {
 						omd.Add(k, v...)
 					}
 				}
@@ -59,7 +59,7 @@ func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{},
 			omd = metadata.New(len(imd))
 		}
 		for _, k := range w.keys {
-			if v, ok := imd.Get(k); ok {
+			if v := imd.Get(k); v != nil {
 				omd.Add(k, v...)
 			}
 		}
@@ -80,7 +80,7 @@ func (w *wrapper) Stream(ctx context.Context, req client.Request, opts ...client
 			omd = metadata.New(len(imd))
 		}
 		for _, k := range w.keys {
-			if v, ok := imd.Get(k); ok {
+			if v := imd.Get(k); v != nil {
 				omd.Add(k, v...)
 			}
 		}
@@ -103,7 +103,7 @@ func NewServerHandlerWrapper(keys ...string) server.HandlerWrapper {
 					omd = metadata.New(len(imd))
 				}
 				for _, k := range keys {
-					if v, ok := imd.Get(k); ok {
+					if v := imd.Get(k); v != nil {
 						omd.Add(k, v...)
 					}
 				}
