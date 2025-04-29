@@ -19,8 +19,8 @@ func TestAppendOutgoingContextModify(t *testing.T) {
 func TestLowercase(t *testing.T) {
 	md := New(1)
 	md["x-request-id"] = []string{"12345"}
-	v, ok := md.GetJoined("X-Request-Id")
-	if !ok || v == "" {
+	v := md.GetJoined("X-Request-Id")
+	if v == "" {
 		t.Fatalf("metadata invalid %#+v", md)
 	}
 }
@@ -51,10 +51,10 @@ func TestMetadataSetMultiple(t *testing.T) {
 	md := New(4)
 	md.Set("key1", "val1", "key2", "val2")
 
-	if v, ok := md.GetJoined("key1"); !ok || v != "val1" {
+	if v := md.GetJoined("key1"); v != "val1" {
 		t.Fatalf("invalid kv %#+v", md)
 	}
-	if v, ok := md.GetJoined("key2"); !ok || v != "val2" {
+	if v := md.GetJoined("key2"); v != "val2" {
 		t.Fatalf("invalid kv %#+v", md)
 	}
 }
@@ -66,14 +66,14 @@ func TestAppend(t *testing.T) {
 	if !ok {
 		t.Fatal("metadata empty")
 	}
-	if _, ok := md.Get("key1"); !ok {
+	if v := md.Get("key1"); v == nil {
 		t.Fatal("key1 not found")
 	}
 }
 
 func TestPairs(t *testing.T) {
 	md := Pairs("key1", "val1", "key2", "val2")
-	if _, ok := md.Get("key1"); !ok {
+	if v := md.Get("key1"); v == nil {
 		t.Fatal("key1 not found")
 	}
 }
@@ -97,7 +97,7 @@ func TestPassing(t *testing.T) {
 	if !ok {
 		t.Fatalf("missing metadata from outgoing context")
 	}
-	if v, ok := md.Get("Key1"); !ok || v[0] != "Val1" {
+	if v := md.Get("Key1"); v == nil || v[0] != "Val1" {
 		t.Fatalf("invalid metadata value %#+v", md)
 	}
 }
@@ -127,21 +127,21 @@ func TestIterator(t *testing.T) {
 func TestMedataCanonicalKey(t *testing.T) {
 	md := New(1)
 	md.Set("x-request-id", "12345")
-	v, ok := md.GetJoined("x-request-id")
-	if !ok {
+	v := md.GetJoined("x-request-id")
+	if v == "" {
 		t.Fatalf("failed to get x-request-id")
 	} else if v != "12345" {
 		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
 	}
 
-	v, ok = md.GetJoined("X-Request-Id")
-	if !ok {
+	v = md.GetJoined("X-Request-Id")
+	if v == "" {
 		t.Fatalf("failed to get x-request-id")
 	} else if v != "12345" {
 		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
 	}
-	v, ok = md.GetJoined("X-Request-ID")
-	if !ok {
+	v = md.GetJoined("X-Request-ID")
+	if v == "" {
 		t.Fatalf("failed to get x-request-id")
 	} else if v != "12345" {
 		t.Fatalf("invalid metadata value: %s != %s", "12345", v)
@@ -153,8 +153,8 @@ func TestMetadataSet(t *testing.T) {
 
 	md.Set("Key", "val")
 
-	val, ok := md.GetJoined("Key")
-	if !ok {
+	val := md.GetJoined("Key")
+	if val == "" {
 		t.Fatal("key Key not found")
 	}
 	if val != "val" {
@@ -169,8 +169,8 @@ func TestMetadataDelete(t *testing.T) {
 	}
 
 	md.Del("Baz")
-	_, ok := md.Get("Baz")
-	if ok {
+	v := md.Get("Baz")
+	if v != nil {
 		t.Fatal("key Baz not deleted")
 	}
 }
@@ -278,7 +278,7 @@ func TestAppendIncomingContext(t *testing.T) {
 	if nmd == nil || !ok {
 		t.Fatal("AppendIncomingContext not works")
 	}
-	if v, ok := nmd.GetJoined("key2"); !ok || v != "val2" {
+	if v := nmd.GetJoined("key2"); v != "val2" {
 		t.Fatal("AppendIncomingContext not works")
 	}
 }
@@ -292,7 +292,7 @@ func TestAppendOutgoingContext(t *testing.T) {
 	if nmd == nil || !ok {
 		t.Fatal("AppendOutgoingContext not works")
 	}
-	if v, ok := nmd.GetJoined("key2"); !ok || v != "val2" {
+	if v := nmd.GetJoined("key2"); v != "val2" {
 		t.Fatal("AppendOutgoingContext not works")
 	}
 }

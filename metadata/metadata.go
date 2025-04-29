@@ -106,16 +106,7 @@ func (md Metadata) CopyTo(out Metadata) {
 }
 
 // Get obtains the values for a given key.
-func (md Metadata) MustGet(k string) []string {
-	v, ok := md.Get(k)
-	if !ok {
-		panic("missing metadata key")
-	}
-	return v
-}
-
-// Get obtains the values for a given key.
-func (md Metadata) Get(k string) ([]string, bool) {
+func (md Metadata) Get(k string) []string {
 	v, ok := md[k]
 	if !ok {
 		v, ok = md[strings.ToLower(k)]
@@ -123,27 +114,13 @@ func (md Metadata) Get(k string) ([]string, bool) {
 	if !ok {
 		v, ok = md[textproto.CanonicalMIMEHeaderKey(k)]
 	}
-	return v, ok
-}
-
-// MustGetJoined obtains the values for a given key
-// with joined values with "," symbol
-func (md Metadata) MustGetJoined(k string) string {
-	v, ok := md.GetJoined(k)
-	if !ok {
-		panic("missing metadata key")
-	}
 	return v
 }
 
 // GetJoined obtains the values for a given key
 // with joined values with "," symbol
-func (md Metadata) GetJoined(k string) (string, bool) {
-	v, ok := md.Get(k)
-	if !ok {
-		return "", ok
-	}
-	return strings.Join(v, ","), true
+func (md Metadata) GetJoined(k string) string {
+	return strings.Join(md.Get(k), ",")
 }
 
 // Set sets the value of a given key with a slice of values.
