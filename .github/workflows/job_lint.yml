@@ -20,7 +20,7 @@ jobs:
       uses: actions/setup-go@v5
       with:
         cache-dependency-path: "**/*.sum"
-        go-version: 'stable' 
+        go-version: 'stable'
     - name: setup deps
       run: go get -v ./...
     - name: run lint
