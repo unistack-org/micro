@@ -3,11 +3,6 @@ name: sync
 on:
   schedule:
     - cron: '*/5 * * * *'
-#  push:
-#    branches: [ master, v3, v4 ]
-#    paths-ignore:
-#      - '.github/**'
-#      - '.gitea/**'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
