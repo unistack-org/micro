@@ -3,14 +3,16 @@ name: coverage
 on:
   push:
     branches: [ main, v3, v4 ]
+    paths-ignore:
+      - '.github/**'
+      - '.gitea/**'
   pull_request:
     branches: [ main, v3, v4 ]
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
 
 jobs:
 
   build:
+    if: github.server_url != 'https://github.com'
     runs-on: ubuntu-latest
     steps:
     - name: checkout code
@@ -22,7 +24,7 @@ jobs:
       uses: actions/setup-go@v5
       with:
         cache-dependency-path: "**/*.sum"
-        go-version: 'stable' 
+        go-version: 'stable'
 
     - name: test coverage
       run: |
