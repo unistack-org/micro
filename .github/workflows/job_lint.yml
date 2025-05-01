@@ -3,27 +3,27 @@ name: lint
 on:
   pull_request:
     types: [opened, reopened, synchronize]
-    branches:
-      - master
-      - v3
-      - v4
+    branches: [ master, v3, v4 ]
+    paths-ignore:
+      - '.github/**'
+      - '.gitea/**'
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout code
-        uses: actions/checkout@v4
-        with:
-          filter: 'blob:none'
-      - name: setup go
-        uses: actions/setup-go@v5
-        with:
-          cache-dependency-path: "**/*.sum"
-          go-version: 'stable'
-      - name: setup deps
-        run: go get -v ./...
-      - name: run lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: 'latest'
+    - name: checkout code
+      uses: actions/checkout@v4
+      with:
+        filter: 'blob:none'
+    - name: setup go
+      uses: actions/setup-go@v5
+      with:
+        cache-dependency-path: "**/*.sum"
+        go-version: 'stable'
+    - name: setup deps
+      run: go get -v ./...
+    - name: run lint
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: 'latest'
