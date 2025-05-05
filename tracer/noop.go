@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"go.unistack.org/micro/v4/util/id"
+	"github.com/google/uuid"
 )
 
 var _ Tracer = (*noopTracer)(nil)
@@ -18,6 +18,8 @@ func (t *noopTracer) Spans() []Span {
 	return t.spans
 }
 
+var uuidNil = uuid.Nil.String()
+
 func (t *noopTracer) Start(ctx context.Context, name string, opts ...SpanOption) (context.Context, Span) {
 	options := NewSpanOptions(opts...)
 	span := &noopSpan{
@@ -28,8 +30,8 @@ func (t *noopTracer) Start(ctx context.Context, name string, opts ...SpanOption)
 		labels:    options.Labels,
 		kind:      options.Kind,
 	}
-	span.spanID.s, _ = id.New()
-	span.traceID.s, _ = id.New()
+	span.spanID.s = uuidNil
+	span.traceID.s = uuidNil
 	if span.ctx == nil {
 		span.ctx = context.Background()
 	}
