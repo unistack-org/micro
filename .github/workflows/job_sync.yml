@@ -18,7 +18,21 @@ jobs:
         echo "machine git.unistack.org login vtolstov password ${{ secrets.TOKEN_GITEA }}" >> /root/.netrc
         echo "machine github.com login vtolstov password ${{ secrets.TOKEN_GITHUB }}" >> /root/.netrc
 
+    - name: check master
+      id: check_master
+      run: |
+        src_hash=$(git ls-remote https://github.com/${GITHUB_REPOSITORY} refs/heads/master | cut -f1)
+        dst_hash=$(git ls-remote ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} refs/heads/master | cut -f1)
+        echo "src_hash=$src_hash"
+        echo "dst_hash=$dst_hash"
+        if [ "$src_hash" != "$dst_hash" ]; then
+          echo "sync_needed=true" >> $GITHUB_OUTPUT
+        else
+          echo "sync_needed=false" >> $GITHUB_OUTPUT
+        fi
+
     - name: sync master
+      if: steps.check_master.outputs.sync_needed == 'true'
       run: |
         git clone --filter=blob:none --filter=tree:0 --branch master --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
@@ -29,7 +43,21 @@ jobs:
         cd ../
         rm -rf repo
 
+    - name: check v3
+      id: check_v3
+      run: |
+        src_hash=$(git ls-remote https://github.com/${GITHUB_REPOSITORY} refs/heads/v3 | cut -f1)
+        dst_hash=$(git ls-remote ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} refs/heads/v3 | cut -f1)
+        echo "src_hash=$src_hash"
+        echo "dst_hash=$dst_hash"
+        if [ "$src_hash" != "$dst_hash" ]; then
+          echo "sync_needed=true" >> $GITHUB_OUTPUT
+        else
+          echo "sync_needed=false" >> $GITHUB_OUTPUT
+        fi
+
     - name: sync v3
+      if: steps.check_v3.outputs.sync_needed == 'true'
       run: |
         git clone --filter=blob:none --filter=tree:0 --branch v3 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
@@ -40,7 +68,21 @@ jobs:
         cd ../
         rm -rf repo
 
+    - name: check v4
+      id: check_v4
+      run: |
+        src_hash=$(git ls-remote https://github.com/${GITHUB_REPOSITORY} refs/heads/v4 | cut -f1)
+        dst_hash=$(git ls-remote ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} refs/heads/v4 | cut -f1)
+        echo "src_hash=$src_hash"
+        echo "dst_hash=$dst_hash"
+        if [ "$src_hash" != "$dst_hash" ]; then
+          echo "sync_needed=true" >> $GITHUB_OUTPUT
+        else
+          echo "sync_needed=false" >> $GITHUB_OUTPUT
+        fi
+
     - name: sync v4
+      if: steps.check_v4.outputs.sync_needed == 'true'
       run: |
         git clone --filter=blob:none --filter=tree:0 --branch v4 --single-branch ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} repo
         cd repo
