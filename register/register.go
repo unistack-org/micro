@@ -69,7 +69,8 @@ type Service struct {
 type Node struct {
 	Metadata metadata.Metadata `json:"metadata,omitempty"`
 	ID       string            `json:"id,omitempty"`
-	Address  string            `json:"address,omitempty"`
+	// Address also prefixed with scheme like grpc://xx.xx.xx.xx:1234
+	Address string `json:"address,omitempty"`
 }
 
 // Option func signature
