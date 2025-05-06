@@ -36,6 +36,24 @@ func TestStacktrace(t *testing.T) {
 	}
 }
 
+func TestNoneLevel(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.NoneLevel), logger.WithOutput(buf),
+		WithHandlerFunc(slog.NewTextHandler),
+		logger.WithAddStacktrace(true),
+	)
+	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Error(ctx, "msg1", errors.New("err"))
+
+	if buf.Len() != 0 {
+		t.Fatalf("logger none level not works, buf contains: %s", buf.Bytes())
+	}
+}
+
 func TestDelayedBuffer(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)

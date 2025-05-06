@@ -34,6 +34,7 @@ var (
 	warnValue  = slog.StringValue("warn")
 	errorValue = slog.StringValue("error")
 	fatalValue = slog.StringValue("fatal")
+	noneValue  = slog.StringValue("none")
 )
 
 type wrapper struct {
@@ -85,6 +86,8 @@ func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 			a.Value = errorValue
 		case lvl >= logger.FatalLevel:
 			a.Value = fatalValue
+		case lvl >= logger.NoneLevel:
+			a.Value = noneValue
 		default:
 			a.Value = infoValue
 		}
@@ -316,6 +319,8 @@ func loggerToSlogLevel(level logger.Level) slog.Level {
 		return slog.LevelDebug - 1
 	case logger.FatalLevel:
 		return slog.LevelError + 1
+	case logger.NoneLevel:
+		return slog.LevelError + 2
 	default:
 		return slog.LevelInfo
 	}
@@ -333,6 +338,8 @@ func slogToLoggerLevel(level slog.Level) logger.Level {
 		return logger.TraceLevel
 	case slog.LevelError + 1:
 		return logger.FatalLevel
+	case slog.LevelError + 2:
+		return logger.NoneLevel
 	default:
 		return logger.InfoLevel
 	}
