@@ -12,10 +12,10 @@ import (
 //
 // 1. Incoming Context
 //
-// This context comes from an external system and should not be changed.
-// The idea is to read everything you need from it, check the data,
-// and move it into the current context.
-// After that, only use the current context throughout the code.
+// This context is provided by an external system and populated by the server or broker of the micro framework.
+// It should not be modified. The idea is to extract all necessary data from it,
+// validate the data, and transfer it into the current context.
+// After that, only the current context should be used throughout the code.
 //
 // 2. Current Context
 //
@@ -29,7 +29,7 @@ import (
 // But it’s usually better to build and prepare this context right before making the external call,
 // instead of changing it in many places.
 //
-// 									Execution Flow:
+// Execution Flow:
 //
 // [External System]
 //       ↓
