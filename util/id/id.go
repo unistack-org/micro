@@ -2,12 +2,8 @@ package id
 
 import (
 	"crypto/rand"
-	"encoding/binary"
 	"errors"
-	"fmt"
-	"time"
 
-	uuidv8 "github.com/ash3in/uuidv8"
 	"github.com/google/uuid"
 	nanoid "github.com/matoous/go-nanoid"
 )
@@ -25,6 +21,7 @@ type Type int
 const (
 	TypeUnspecified Type = iota
 	TypeNanoid
+	TypeUUIDv7
 	TypeUUIDv8
 )
 
@@ -58,14 +55,14 @@ func (g *Generator) New() (string, error) {
 		}
 
 		return nanoid.Generate(g.opts.NanoidAlphabet, g.opts.NanoidSize)
-	case TypeUUIDv8:
-		timestamp := uint64(time.Now().UnixNano())
-		clockSeq := make([]byte, 2)
-		if _, err := rand.Read(clockSeq); err != nil {
-			return "", fmt.Errorf("failed to generate random clock sequence: %w", err)
+	case TypeUUIDv7:
+		uid, err := uuid.NewV7()
+		if err != nil {
+			return "", err
 		}
-		clockSeqValue := binary.BigEndian.Uint16(clockSeq) & 0x0FFF // Mask to 12 bits
-		return uuidv8.NewWithParams(timestamp, clockSeqValue, g.opts.UUIDNode[:], uuidv8.TimestampBits48)
+		return uid.String(), nil
+	case TypeUUIDv8:
+		return "", errors.New("unsupported uuid version v8")
 	}
 	return "", errors.New("invalid option, Type unspecified")
 }
@@ -82,16 +79,15 @@ func New(opts ...Option) (string, error) {
 		if options.NanoidSize <= 0 {
 			return "", errors.New("invalid option, NanoidSize must be positive integer")
 		}
-
 		return nanoid.Generate(options.NanoidAlphabet, options.NanoidSize)
-	case TypeUUIDv8:
-		timestamp := uint64(time.Now().UnixNano())
-		clockSeq := make([]byte, 2)
-		if _, err := rand.Read(clockSeq); err != nil {
-			return "", fmt.Errorf("failed to generate random clock sequence: %w", err)
+	case TypeUUIDv7:
+		uid, err := uuid.NewV7()
+		if err != nil {
+			return "", err
 		}
-		clockSeqValue := binary.BigEndian.Uint16(clockSeq) & 0x0FFF // Mask to 12 bits
-		return uuidv8.NewWithParams(timestamp, clockSeqValue, options.UUIDNode[:], uuidv8.TimestampBits48)
+		return uid.String(), nil
+	case TypeUUIDv8:
+		return "", errors.New("unsupported uuid version v8")
 	}
 
 	return "", errors.New("invalid option, Type unspecified")
@@ -145,7 +141,7 @@ func WithUUIDNode(node [6]byte) Option {
 // NewOptions returns new Options struct filled by opts
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Type:           TypeUUIDv8,
+		Type:           TypeUUIDv7,
 		NanoidAlphabet: DefaultNanoidAlphabet,
 		NanoidSize:     DefaultNanoidSize,
 		UUIDNode:       generatedNode,
