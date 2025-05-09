@@ -128,6 +128,9 @@ func (m *noopMessage) Unmarshal(dst interface{}, opts ...codec.Option) error {
 
 func (b *NoopBroker) NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...PublishOption) (Message, error) {
 	options := NewPublishOptions(opts...)
+	if options.ContentType == "" {
+		options.ContentType = b.opts.ContentType
+	}
 	m := &noopMessage{ctx: ctx, hdr: hdr, opts: options}
 	c, err := b.newCodec(m.opts.ContentType)
 	if err == nil {

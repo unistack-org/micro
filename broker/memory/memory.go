@@ -159,6 +159,9 @@ func (b *Broker) Init(opts ...broker.Option) error {
 
 func (b *Broker) NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...broker.PublishOption) (broker.Message, error) {
 	options := broker.NewPublishOptions(opts...)
+	if options.ContentType == "" {
+		options.ContentType = b.opts.ContentType
+	}
 	m := &memoryMessage{ctx: ctx, hdr: hdr, opts: options}
 	c, err := b.newCodec(m.opts.ContentType)
 	if err == nil {
