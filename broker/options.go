@@ -45,6 +45,9 @@ type Options struct {
 
 	// GracefulTimeout contains time to wait to finish in flight requests
 	GracefulTimeout time.Duration
+
+	// ContentType will be used if no content-type set when creating message
+	ContentType string
 }
 
 // NewOptions create new Options
@@ -57,18 +60,30 @@ func NewOptions(opts ...Option) Options {
 		Codecs:          make(map[string]codec.Codec),
 		Tracer:          tracer.DefaultTracer,
 		GracefulTimeout: DefaultGracefulTimeout,
+		ContentType:     DefaultContentType,
 	}
 
 	for _, o := range opts {
 		o(&options)
 	}
+
 	return options
 }
+
+// DefaultContentType is the default content-type if not specified
+var DefaultContentType = ""
 
 // Context sets the context option
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
 		o.Context = ctx
+	}
+}
+
+// ContentType used by default if not specified
+func ContentType(ct string) Option {
+	return func(o *Options) {
+		o.ContentType = ct
 	}
 }
 
