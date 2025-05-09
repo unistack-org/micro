@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 type Duration int64
@@ -58,9 +58,9 @@ func (d Duration) MarshalYAML() (interface{}, error) {
 	return time.Duration(d).String(), nil
 }
 
-func (d *Duration) UnmarshalYAML(n *yaml.Node) error {
+func (d *Duration) UnmarshalYAML(data []byte) error {
 	var v interface{}
-	if err := yaml.Unmarshal([]byte(n.Value), &v); err != nil {
+	if err := yaml.Unmarshal(data, &v); err != nil {
 		return err
 	}
 	switch value := v.(type) {

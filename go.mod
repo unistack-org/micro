@@ -6,6 +6,7 @@ require (
 	dario.cat/mergo v1.0.1
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/KimMachineGun/automemlimit v0.7.0
+	github.com/goccy/go-yaml v1.17.1
 	github.com/google/uuid v1.6.0
 	github.com/matoous/go-nanoid v1.5.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -18,7 +19,6 @@ require (
 	golang.org/x/sync v0.10.0
 	google.golang.org/grpc v1.69.4
 	google.golang.org/protobuf v1.36.3
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -30,4 +30,5 @@ require (
 	golang.org/x/sys v0.29.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241216192217-9240e9c98484 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

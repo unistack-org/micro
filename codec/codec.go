@@ -3,8 +3,6 @@ package codec
 
 import (
 	"errors"
-
-	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -68,10 +66,10 @@ func (m *RawMessage) MarshalYAML() ([]byte, error) {
 }
 
 // UnmarshalYAML sets *m to a copy of data.
-func (m *RawMessage) UnmarshalYAML(n *yaml.Node) error {
+func (m *RawMessage) UnmarshalYAML(data []byte) error {
 	if m == nil {
 		return errors.New("RawMessage UnmarshalYAML on nil pointer")
 	}
-	*m = append((*m)[0:0], []byte(n.Value)...)
+	*m = append((*m)[0:0], data...)
 	return nil
 }
