@@ -67,6 +67,12 @@ func (b *SeekerBuffer) Close() error {
 	return nil
 }
 
+// Reset clears all the data out of the buffer and sets the read position to 0.
+func (b *SeekerBuffer) Reset() {
+	b.data = nil
+	b.pos = 0
+}
+
 // Len returns the length of data remaining to be read.
 func (b *SeekerBuffer) Len() int {
 	return len(b.data[b.pos:])
