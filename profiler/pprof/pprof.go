@@ -17,7 +17,7 @@ type profiler struct {
 	cpuFile *os.File
 	memFile *os.File
 	opts    profile.Options
-	sync.Mutex
+	mu      sync.Mutex
 	running bool
 }
 
@@ -39,8 +39,8 @@ func (p *profiler) writeHeap(f *os.File) {
 }
 
 func (p *profiler) Start() error {
-	p.Lock()
-	defer p.Unlock()
+	p.mu.Lock()
+	defer p.mu.Unlock()
 
 	if p.running {
 		return nil
@@ -86,8 +86,8 @@ func (p *profiler) Start() error {
 }
 
 func (p *profiler) Stop() error {
-	p.Lock()
-	defer p.Unlock()
+	p.mu.Lock()
+	defer p.mu.Unlock()
 
 	select {
 	case <-p.exit:

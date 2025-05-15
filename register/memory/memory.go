@@ -33,7 +33,7 @@ type memory struct {
 	records  map[string]services
 	watchers map[string]*watcher
 	opts     register.Options
-	sync.RWMutex
+	mu       sync.RWMutex
 }
 
 // services is a KV map with service name as the key and a map of records as the value
@@ -57,7 +57,7 @@ func (m *memory) ttlPrune() {
 	defer prune.Stop()
 
 	for range prune.C {
-		m.Lock()
+		m.mu.Lock()
 		for namespace, services := range m.records {
 			for service, versions := range services {
 				for version, record := range versions {
@@ -72,24 +72,24 @@ func (m *memory) ttlPrune() {
 				}
 			}
 		}
-		m.Unlock()
+		m.mu.Unlock()
 	}
 }
 
 func (m *memory) sendEvent(r *register.Result) {
-	m.RLock()
+	m.mu.RLock()
 	watchers := make([]*watcher, 0, len(m.watchers))
 	for _, w := range m.watchers {
 		watchers = append(watchers, w)
 	}
-	m.RUnlock()
+	m.mu.RUnlock()
 
 	for _, w := range watchers {
 		select {
 		case <-w.exit:
-			m.Lock()
+			m.mu.Lock()
 			delete(m.watchers, w.id)
-			m.Unlock()
+			m.mu.Unlock()
 		default:
 			select {
 			case w.res <- r:
@@ -113,8 +113,8 @@ func (m *memory) Init(opts ...register.Option) error {
 	}
 
 	// add services
-	m.Lock()
-	defer m.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	return nil
 }
@@ -124,8 +124,8 @@ func (m *memory) Options() register.Options {
 }
 
 func (m *memory) Register(_ context.Context, s *register.Service, opts ...register.RegisterOption) error {
-	m.Lock()
-	defer m.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	options := register.NewRegisterOptions(opts...)
 
@@ -197,8 +197,8 @@ func (m *memory) Register(_ context.Context, s *register.Service, opts ...regist
 }
 
 func (m *memory) Deregister(ctx context.Context, s *register.Service, opts ...register.DeregisterOption) error {
-	m.Lock()
-	defer m.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	options := register.NewDeregisterOptions(opts...)
 
@@ -264,9 +264,9 @@ func (m *memory) LookupService(ctx context.Context, name string, opts ...registe
 
 	// if it's a wildcard domain, return from all domains
 	if options.Namespace == register.WildcardNamespace {
-		m.RLock()
+		m.mu.RLock()
 		recs := m.records
-		m.RUnlock()
+		m.mu.RUnlock()
 
 		var services []*register.Service
 
@@ -286,8 +286,8 @@ func (m *memory) LookupService(ctx context.Context, name string, opts ...registe
 		return services, nil
 	}
 
-	m.RLock()
-	defer m.RUnlock()
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 
 	// check the domain exists
 	services, ok := m.records[options.Namespace]
@@ -319,9 +319,9 @@ func (m *memory) ListServices(ctx context.Context, opts ...register.ListOption) 
 
 	// if it's a wildcard domain, list from all domains
 	if options.Namespace == register.WildcardNamespace {
-		m.RLock()
+		m.mu.RLock()
 		recs := m.records
-		m.RUnlock()
+		m.mu.RUnlock()
 
 		var services []*register.Service
 
@@ -336,8 +336,8 @@ func (m *memory) ListServices(ctx context.Context, opts ...register.ListOption) 
 		return services, nil
 	}
 
-	m.RLock()
-	defer m.RUnlock()
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 
 	// ensure the domain exists
 	services, ok := m.records[options.Namespace]
@@ -371,9 +371,9 @@ func (m *memory) Watch(ctx context.Context, opts ...register.WatchOption) (regis
 		wo:   wo,
 	}
 
-	m.Lock()
+	m.mu.Lock()
 	m.watchers[w.id] = w
-	m.Unlock()
+	m.mu.Unlock()
 
 	return w, nil
 }

@@ -52,7 +52,7 @@ type clientTracer struct {
 	tr          tracer.Tracer
 	activeHooks map[string]context.Context
 	root        tracer.Span
-	mtx         sync.Mutex
+	mu          sync.Mutex
 }
 
 func NewClientTrace(ctx context.Context, tr tracer.Tracer) *httptrace.ClientTrace {
@@ -83,8 +83,8 @@ func NewClientTrace(ctx context.Context, tr tracer.Tracer) *httptrace.ClientTrac
 }
 
 func (ct *clientTracer) start(hook, spanName string, attrs ...interface{}) {
-	ct.mtx.Lock()
-	defer ct.mtx.Unlock()
+	ct.mu.Lock()
+	defer ct.mu.Unlock()
 
 	if hookCtx, found := ct.activeHooks[hook]; !found {
 		var sp tracer.Span
@@ -104,8 +104,8 @@ func (ct *clientTracer) start(hook, spanName string, attrs ...interface{}) {
 }
 
 func (ct *clientTracer) end(hook string, err error, attrs ...interface{}) {
-	ct.mtx.Lock()
-	defer ct.mtx.Unlock()
+	ct.mu.Lock()
+	defer ct.mu.Unlock()
 	if ctx, ok := ct.activeHooks[hook]; ok { // nolint:nestif
 		if span, ok := tracer.SpanFromContext(ctx); ok {
 			if err != nil {
@@ -136,8 +136,8 @@ func (ct *clientTracer) getParentContext(hook string) context.Context {
 }
 
 func (ct *clientTracer) span(hook string) (tracer.Span, bool) {
-	ct.mtx.Lock()
-	defer ct.mtx.Unlock()
+	ct.mu.Lock()
+	defer ct.mu.Unlock()
 	if ctx, ok := ct.activeHooks[hook]; ok {
 		return tracer.SpanFromContext(ctx)
 	}

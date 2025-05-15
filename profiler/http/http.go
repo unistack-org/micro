@@ -11,8 +11,8 @@ import (
 )
 
 type httpProfile struct {
-	server *http.Server
-	sync.Mutex
+	server  *http.Server
+	mu      sync.Mutex
 	running bool
 }
 
@@ -21,8 +21,8 @@ var DefaultAddress = ":6060"
 
 // Start the profiler
 func (h *httpProfile) Start() error {
-	h.Lock()
-	defer h.Unlock()
+	h.mu.Lock()
+	defer h.mu.Unlock()
 
 	if h.running {
 		return nil
@@ -30,9 +30,9 @@ func (h *httpProfile) Start() error {
 
 	go func() {
 		if err := h.server.ListenAndServe(); err != nil {
-			h.Lock()
+			h.mu.Lock()
 			h.running = false
-			h.Unlock()
+			h.mu.Unlock()
 		}
 	}()
 
@@ -43,8 +43,8 @@ func (h *httpProfile) Start() error {
 
 // Stop the profiler
 func (h *httpProfile) Stop() error {
-	h.Lock()
-	defer h.Unlock()
+	h.mu.Lock()
+	defer h.mu.Unlock()
 
 	if !h.running {
 		return nil

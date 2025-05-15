@@ -14,7 +14,7 @@ type Buffer struct {
 	vals    []*Entry
 	size    int
 
-	sync.RWMutex
+	mu sync.RWMutex
 }
 
 // Entry is ring buffer data entry
@@ -35,8 +35,8 @@ type Stream struct {
 
 // Put adds a new value to ring buffer
 func (b *Buffer) Put(v interface{}) {
-	b.Lock()
-	defer b.Unlock()
+	b.mu.Lock()
+	defer b.mu.Unlock()
 
 	// append to values
 	entry := &Entry{
@@ -63,8 +63,8 @@ func (b *Buffer) Put(v interface{}) {
 
 // Get returns the last n entries
 func (b *Buffer) Get(n int) []*Entry {
-	b.RLock()
-	defer b.RUnlock()
+	b.mu.RLock()
+	defer b.mu.RUnlock()
 
 	// reset any invalid values
 	if n > len(b.vals) || n < 0 {
@@ -80,8 +80,8 @@ func (b *Buffer) Get(n int) []*Entry {
 
 // Since returns the entries since a specific time
 func (b *Buffer) Since(t time.Time) []*Entry {
-	b.RLock()
-	defer b.RUnlock()
+	b.mu.RLock()
+	defer b.mu.RUnlock()
 
 	// return all the values
 	if t.IsZero() {
@@ -109,8 +109,8 @@ func (b *Buffer) Since(t time.Time) []*Entry {
 // Stream logs from the buffer
 // Close the channel when you want to stop
 func (b *Buffer) Stream() (<-chan *Entry, chan bool) {
-	b.Lock()
-	defer b.Unlock()
+	b.mu.Lock()
+	defer b.mu.Unlock()
 
 	entries := make(chan *Entry, 128)
 	id := id.MustNew()
