@@ -9,7 +9,7 @@ type memorySync struct {
 	locks   map[string]*memoryLock
 	options Options
 
-	mtx gosync.RWMutex
+	mu gosync.RWMutex
 }
 
 type memoryLock struct {
@@ -74,7 +74,7 @@ func (m *memorySync) Options() Options {
 
 func (m *memorySync) Lock(id string, opts ...LockOption) error {
 	// lock our access
-	m.mtx.Lock()
+	m.mu.Lock()
 
 	var options LockOptions
 	for _, o := range opts {
@@ -90,11 +90,11 @@ func (m *memorySync) Lock(id string, opts ...LockOption) error {
 			release: make(chan bool),
 		}
 		// unlock
-		m.mtx.Unlock()
+		m.mu.Unlock()
 		return nil
 	}
 
-	m.mtx.Unlock()
+	m.mu.Unlock()
 
 	// set wait time
 	var wait <-chan time.Time
@@ -124,12 +124,12 @@ lockLoop:
 		// wait for the lock to be released
 		select {
 		case <-lk.release:
-			m.mtx.Lock()
+			m.mu.Lock()
 
 			// someone locked before us
 			lk, ok = m.locks[id]
 			if ok {
-				m.mtx.Unlock()
+				m.mu.Unlock()
 				continue
 			}
 
@@ -141,7 +141,7 @@ lockLoop:
 				release: make(chan bool),
 			}
 
-			m.mtx.Unlock()
+			m.mu.Unlock()
 
 			break lockLoop
 		case <-ttl:
@@ -160,8 +160,8 @@ lockLoop:
 }
 
 func (m *memorySync) Unlock(id string) error {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	lk, ok := m.locks[id]
 	// no lock exists

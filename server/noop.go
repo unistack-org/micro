@@ -51,13 +51,13 @@ func (r *rpcHandler) Options() HandlerOptions {
 }
 
 type noopServer struct {
-	h        Handler
-	wg       *sync.WaitGroup
-	rsvc     *register.Service
-	handlers map[string]Handler
-	exit     chan chan error
-	opts     Options
-	sync.RWMutex
+	h          Handler
+	wg         *sync.WaitGroup
+	rsvc       *register.Service
+	handlers   map[string]Handler
+	exit       chan chan error
+	opts       Options
+	mu         sync.RWMutex
 	registered bool
 	started    bool
 }
@@ -125,10 +125,10 @@ func (n *noopServer) String() string {
 
 //nolint:gocyclo
 func (n *noopServer) Register() error {
-	n.RLock()
+	n.mu.RLock()
 	rsvc := n.rsvc
 	config := n.opts
-	n.RUnlock()
+	n.mu.RUnlock()
 
 	// if service already filled, reuse it and return early
 	if rsvc != nil {
@@ -144,9 +144,9 @@ func (n *noopServer) Register() error {
 		return err
 	}
 
-	n.RLock()
+	n.mu.RLock()
 	registered := n.registered
-	n.RUnlock()
+	n.mu.RUnlock()
 
 	if !registered {
 		if config.Logger.V(logger.InfoLevel) {
@@ -164,8 +164,8 @@ func (n *noopServer) Register() error {
 		return nil
 	}
 
-	n.Lock()
-	defer n.Unlock()
+	n.mu.Lock()
+	defer n.mu.Unlock()
 
 	n.registered = true
 	if cacheService {
@@ -178,9 +178,9 @@ func (n *noopServer) Register() error {
 func (n *noopServer) Deregister() error {
 	var err error
 
-	n.RLock()
+	n.mu.RLock()
 	config := n.opts
-	n.RUnlock()
+	n.mu.RUnlock()
 
 	service, err := NewRegisterService(n)
 	if err != nil {
@@ -195,29 +195,29 @@ func (n *noopServer) Deregister() error {
 		return err
 	}
 
-	n.Lock()
+	n.mu.Lock()
 	n.rsvc = nil
 
 	if !n.registered {
-		n.Unlock()
+		n.mu.Unlock()
 		return nil
 	}
 
 	n.registered = false
 
-	n.Unlock()
+	n.mu.Unlock()
 	return nil
 }
 
 //nolint:gocyclo
 func (n *noopServer) Start() error {
-	n.RLock()
+	n.mu.RLock()
 	if n.started {
-		n.RUnlock()
+		n.mu.RUnlock()
 		return nil
 	}
 	config := n.Options()
-	n.RUnlock()
+	n.mu.RUnlock()
 
 	// use 127.0.0.1 to avoid scan of all network interfaces
 	addr, err := maddr.Extract("127.0.0.1")
@@ -235,11 +235,11 @@ func (n *noopServer) Start() error {
 		config.Logger.Info(n.opts.Context, "server [noop] Listening on "+config.Address)
 	}
 
-	n.Lock()
+	n.mu.Lock()
 	if len(config.Advertise) == 0 {
 		config.Advertise = config.Address
 	}
-	n.Unlock()
+	n.mu.Unlock()
 
 	// use RegisterCheck func before register
 	// nolint: nestif
@@ -273,9 +273,9 @@ func (n *noopServer) Start() error {
 			select {
 			// register self on interval
 			case <-t.C:
-				n.RLock()
+				n.mu.RLock()
 				registered := n.registered
-				n.RUnlock()
+				n.mu.RUnlock()
 				rerr := config.RegisterCheck(config.Context)
 				// nolint: nestif
 				if rerr != nil && registered {
@@ -332,29 +332,29 @@ func (n *noopServer) Start() error {
 	}()
 
 	// mark the server as started
-	n.Lock()
+	n.mu.Lock()
 	n.started = true
-	n.Unlock()
+	n.mu.Unlock()
 
 	return nil
 }
 
 func (n *noopServer) Stop() error {
-	n.RLock()
+	n.mu.RLock()
 	if !n.started {
-		n.RUnlock()
+		n.mu.RUnlock()
 		return nil
 	}
-	n.RUnlock()
+	n.mu.RUnlock()
 
 	ch := make(chan error)
 	n.exit <- ch
 
 	err := <-ch
-	n.Lock()
+	n.mu.Lock()
 	n.rsvc = nil
 	n.started = false
-	n.Unlock()
+	n.mu.Unlock()
 
 	return err
 }

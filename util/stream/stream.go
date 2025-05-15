@@ -24,7 +24,7 @@ type stream struct {
 	err     error
 	request *request
 
-	sync.RWMutex
+	mu sync.RWMutex
 }
 
 type request struct {
@@ -57,9 +57,9 @@ func (s *stream) Request() server.Request {
 func (s *stream) Send(v interface{}) error {
 	err := s.Stream.SendMsg(v)
 	if err != nil {
-		s.Lock()
+		s.mu.Lock()
 		s.err = err
-		s.Unlock()
+		s.mu.Unlock()
 	}
 	return err
 }
@@ -68,17 +68,17 @@ func (s *stream) Send(v interface{}) error {
 func (s *stream) Recv(v interface{}) error {
 	err := s.Stream.RecvMsg(v)
 	if err != nil {
-		s.Lock()
+		s.mu.Lock()
 		s.err = err
-		s.Unlock()
+		s.mu.Unlock()
 	}
 	return err
 }
 
 // Error returns error that stream holds
 func (s *stream) Error() error {
-	s.RLock()
-	defer s.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.err
 }
 

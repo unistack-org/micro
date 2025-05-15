@@ -137,7 +137,7 @@ type cache struct {
 
 	opts Options
 
-	sync.RWMutex
+	mu sync.RWMutex
 }
 
 type cacheEntry struct {
@@ -171,7 +171,7 @@ func (c *cache) put(req string, res string) {
 		ttl = c.opts.MaxCacheTTL
 	}
 
-	c.Lock()
+	c.mu.Lock()
 	if c.entries == nil {
 		c.entries = make(map[string]cacheEntry)
 	}
@@ -207,7 +207,7 @@ func (c *cache) put(req string, res string) {
 	}
 
 	c.opts.Meter.Counter(semconv.CacheItemsTotal, "type", "dns").Inc()
-	c.Unlock()
+	c.mu.Unlock()
 }
 
 func (c *cache) get(req string) (res string) {
@@ -219,8 +219,8 @@ func (c *cache) get(req string) (res string) {
 		return ""
 	}
 
-	c.RLock()
-	defer c.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	if c.entries == nil {
 		return ""

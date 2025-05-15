@@ -96,9 +96,9 @@ func RegisterHandler(s server.Server, h interface{}, opts ...server.HandlerOptio
 }
 
 type service struct {
-	done chan struct{}
-	opts Options
-	sync.RWMutex
+	done    chan struct{}
+	opts    Options
+	mu      sync.RWMutex
 	stopped bool
 }
 
@@ -321,9 +321,9 @@ func (s *service) Health() bool {
 func (s *service) Start() error {
 	var err error
 
-	s.RLock()
+	s.mu.RLock()
 	config := s.opts
-	s.RUnlock()
+	s.mu.RUnlock()
 
 	for _, cfg := range s.opts.Configs {
 		if cfg.Options().Struct == nil {
@@ -380,9 +380,9 @@ func (s *service) Start() error {
 }
 
 func (s *service) Stop() error {
-	s.RLock()
+	s.mu.RLock()
 	config := s.opts
-	s.RUnlock()
+	s.mu.RUnlock()
 
 	if config.Loggers[0].V(logger.InfoLevel) {
 		config.Loggers[0].Info(s.opts.Context, fmt.Sprintf("stoppping [service] %s", s.Name()))
@@ -457,13 +457,13 @@ func (s *service) Run() error {
 // notifyShutdown marks the service as stopped and closes the done channel.
 // It ensures the channel is closed only once, preventing multiple closures.
 func (s *service) notifyShutdown() {
-	s.Lock()
+	s.mu.Lock()
 	if s.stopped {
-		s.Unlock()
+		s.mu.Unlock()
 		return
 	}
 	s.stopped = true
-	s.Unlock()
+	s.mu.Unlock()
 
 	close(s.done)
 }
