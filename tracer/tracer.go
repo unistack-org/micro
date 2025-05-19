@@ -51,6 +51,8 @@ type Tracer interface {
 	// Extract(ctx context.Context)
 	// Flush flushes spans
 	Flush(ctx context.Context) error
+	// Enabled returns tracer status
+	Enabled() bool
 }
 
 type Span interface {

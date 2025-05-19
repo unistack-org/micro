@@ -46,6 +46,10 @@ func (s memoryStringer) String() string {
 	return s.s
 }
 
+func (t *Tracer) Enabled() bool {
+	return t.opts.Enabled
+}
+
 func (t *Tracer) Flush(_ context.Context) error {
 	return nil
 }
