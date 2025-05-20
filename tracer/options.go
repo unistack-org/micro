@@ -142,6 +142,8 @@ type Options struct {
 	Name string
 	// ContextAttrFuncs contains funcs that provides tracing
 	ContextAttrFuncs []ContextAttrFunc
+	// Enabled specify trace status
+	Enabled bool
 }
 
 // Option func signature
@@ -181,6 +183,7 @@ func NewOptions(opts ...Option) Options {
 		Logger:           logger.DefaultLogger,
 		Context:          context.Background(),
 		ContextAttrFuncs: DefaultContextAttrFuncs,
+		Enabled:          true,
 	}
 	for _, o := range opts {
 		o(&options)
@@ -192,5 +195,12 @@ func NewOptions(opts ...Option) Options {
 func Name(n string) Option {
 	return func(o *Options) {
 		o.Name = n
+	}
+}
+
+// Disabled disable tracer
+func Disabled(b bool) Option {
+	return func(o *Options) {
+		o.Enabled = !b
 	}
 }

@@ -18,6 +18,10 @@ func (t *noopTracer) Spans() []Span {
 	return t.spans
 }
 
+func (t *noopTracer) Enabled() bool {
+	return t.opts.Enabled
+}
+
 func (t *noopTracer) Start(ctx context.Context, name string, opts ...SpanOption) (context.Context, Span) {
 	options := NewSpanOptions(opts...)
 	span := &noopSpan{
