@@ -14,16 +14,16 @@ type NoopBroker struct {
 	funcPublish   FuncPublish
 	funcSubscribe FuncSubscribe
 	opts          Options
-	sync.RWMutex
+	mu            sync.RWMutex
 }
 
 func (b *NoopBroker) newCodec(ct string) (codec.Codec, error) {
 	if idx := strings.IndexRune(ct, ';'); idx >= 0 {
 		ct = ct[:idx]
 	}
-	b.RLock()
+	b.mu.RLock()
 	c, ok := b.opts.Codecs[ct]
-	b.RUnlock()
+	b.mu.RUnlock()
 	if ok {
 		return c, nil
 	}
