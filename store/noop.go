@@ -6,7 +6,6 @@ import (
 	"sync/atomic"
 
 	"go.unistack.org/micro/v4/options"
-	"go.unistack.org/micro/v4/store"
 	"go.unistack.org/micro/v4/util/id"
 )
 
@@ -140,7 +139,7 @@ func (n *noopStore) fnExists(ctx context.Context, _ string, _ ...ExistsOption) e
 		return ctx.Err()
 	default:
 	}
-	return store.ErrNotFound
+	return ErrNotFound
 }
 
 func (n *noopStore) Write(ctx context.Context, key string, val interface{}, opts ...WriteOption) error {
