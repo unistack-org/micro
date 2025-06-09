@@ -99,7 +99,7 @@ type noopMessage struct {
 	ctx  context.Context
 	body []byte
 	hdr  metadata.Metadata
-	opts PublishOptions
+	opts MessageOptions
 }
 
 func (m *noopMessage) Ack() error {
@@ -126,8 +126,8 @@ func (m *noopMessage) Unmarshal(dst interface{}, opts ...codec.Option) error {
 	return m.c.Unmarshal(m.body, dst)
 }
 
-func (b *NoopBroker) NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...PublishOption) (Message, error) {
-	options := NewPublishOptions(opts...)
+func (b *NoopBroker) NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...MessageOption) (Message, error) {
+	options := NewMessageOptions(opts...)
 	if options.ContentType == "" {
 		options.ContentType = b.opts.ContentType
 	}

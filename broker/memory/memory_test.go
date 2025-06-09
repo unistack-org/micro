@@ -49,7 +49,7 @@ func TestMemoryBroker(t *testing.T) {
 				"id", fmt.Sprintf("%d", i),
 			),
 			[]byte(`"hello world"`),
-			broker.PublishContentType("application/octet-stream"),
+			broker.MessageContentType("application/octet-stream"),
 		)
 		if err != nil {
 			t.Fatal(err)

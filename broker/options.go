@@ -87,8 +87,8 @@ func ContentType(ct string) Option {
 	}
 }
 
-// PublishOptions struct
-type PublishOptions struct {
+// MessageOptions struct
+type MessageOptions struct {
 	// ContentType for message body
 	ContentType string
 	// BodyOnly flag says the message contains raw body bytes and don't need
@@ -98,9 +98,9 @@ type PublishOptions struct {
 	Context context.Context
 }
 
-// NewPublishOptions creates PublishOptions struct
-func NewPublishOptions(opts ...PublishOption) PublishOptions {
-	options := PublishOptions{
+// NewMessageOptions creates MessageOptions struct
+func NewMessageOptions(opts ...MessageOption) MessageOptions {
+	options := MessageOptions{
 		Context: context.Background(),
 	}
 	for _, o := range opts {
@@ -128,19 +128,19 @@ type SubscribeOptions struct {
 // Option func
 type Option func(*Options)
 
-// PublishOption func
-type PublishOption func(*PublishOptions)
+// MessageOption func
+type MessageOption func(*MessageOptions)
 
-// PublishContentType sets message content-type that used to Marshal
-func PublishContentType(ct string) PublishOption {
-	return func(o *PublishOptions) {
+// MessageContentType sets message content-type that used to Marshal
+func MessageContentType(ct string) MessageOption {
+	return func(o *MessageOptions) {
 		o.ContentType = ct
 	}
 }
 
-// PublishBodyOnly publish only body of the message
-func PublishBodyOnly(b bool) PublishOption {
-	return func(o *PublishOptions) {
+// MessageBodyOnly publish only body of the message
+func MessageBodyOnly(b bool) MessageOption {
+	return func(o *MessageOptions) {
 		o.BodyOnly = b
 	}
 }

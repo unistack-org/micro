@@ -32,7 +32,7 @@ type memoryMessage struct {
 	ctx   context.Context
 	body  []byte
 	hdr   metadata.Metadata
-	opts  broker.PublishOptions
+	opts  broker.MessageOptions
 }
 
 func (m *memoryMessage) Ack() error {
@@ -157,8 +157,8 @@ func (b *Broker) Init(opts ...broker.Option) error {
 	return nil
 }
 
-func (b *Broker) NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...broker.PublishOption) (broker.Message, error) {
-	options := broker.NewPublishOptions(opts...)
+func (b *Broker) NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...broker.MessageOption) (broker.Message, error) {
+	options := broker.NewMessageOptions(opts...)
 	if options.ContentType == "" {
 		options.ContentType = b.opts.ContentType
 	}

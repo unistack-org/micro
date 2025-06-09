@@ -42,9 +42,9 @@ func SetSubscribeOption(k, v interface{}) SubscribeOption {
 	}
 }
 
-// SetPublishOption returns a function to setup a context with given value
-func SetPublishOption(k, v interface{}) PublishOption {
-	return func(o *PublishOptions) {
+// SetMessageOption returns a function to setup a context with given value
+func SetMessageOption(k, v interface{}) MessageOption {
+	return func(o *MessageOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()
 		}

@@ -41,7 +41,7 @@ type Broker interface {
 	// Disconnect disconnect from broker
 	Disconnect(ctx context.Context) error
 	// NewMessage create new broker message to publish.
-	NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...PublishOption) (Message, error)
+	NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...MessageOption) (Message, error)
 	// Publish message to broker topic
 	Publish(ctx context.Context, topic string, messages ...Message) error
 	// Subscribe subscribes to topic message via handler
