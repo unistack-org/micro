@@ -91,7 +91,7 @@ func (p *bro) Connect(_ context.Context) error { return nil }
 func (p *bro) Disconnect(_ context.Context) error { return nil }
 
 // NewMessage creates new message
-func (p *bro) NewMessage(_ context.Context, _ metadata.Metadata, _ interface{}, _ ...broker.PublishOption) (broker.Message, error) {
+func (p *bro) NewMessage(_ context.Context, _ metadata.Metadata, _ interface{}, _ ...broker.MessageOption) (broker.Message, error) {
 	return nil, nil
 }
 
