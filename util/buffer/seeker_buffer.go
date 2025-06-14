@@ -82,7 +82,7 @@ func (b *SeekerBuffer) Seek(offset int64, whence int) (int64, error) {
 	return b.pos, nil
 }
 
-// Rewind resets the read pointer to 0.
+// Rewind resets the read position to 0.
 func (b *SeekerBuffer) Rewind() error {
 	if _, err := b.Seek(0, io.SeekStart); err != nil {
 		return err
