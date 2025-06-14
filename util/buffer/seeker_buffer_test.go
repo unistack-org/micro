@@ -282,3 +282,11 @@ func TestSeekerBuffer_Close(t *testing.T) {
 	require.Nil(t, buf.data)
 	require.Equal(t, int64(0), buf.pos)
 }
+
+func TestSeekerBuffer_Reset(t *testing.T) {
+	buf := NewSeekerBuffer([]byte("hello world"))
+	buf.pos = 2
+	buf.Reset()
+	require.Nil(t, buf.data)
+	require.Equal(t, int64(0), buf.pos)
+}
