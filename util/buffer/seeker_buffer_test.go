@@ -97,3 +97,68 @@ func TestSeekerBuffer_Read(t *testing.T) {
 		})
 	}
 }
+
+func TestSeekerBuffer_Write(t *testing.T) {
+	tests := []struct {
+		name         string
+		initialData  []byte
+		initialPos   int64
+		writeData    []byte
+		expectedData []byte
+		expectedN    int
+	}{
+		{
+			name:         "write empty slice",
+			initialData:  []byte("data"),
+			initialPos:   0,
+			writeData:    []byte{},
+			expectedData: []byte("data"),
+			expectedN:    0,
+		},
+		{
+			name:         "write nil slice",
+			initialData:  []byte("data"),
+			initialPos:   0,
+			writeData:    nil,
+			expectedData: []byte("data"),
+			expectedN:    0,
+		},
+		{
+			name:         "write to empty buffer",
+			initialData:  nil,
+			initialPos:   0,
+			writeData:    []byte("abc"),
+			expectedData: []byte("abc"),
+			expectedN:    3,
+		},
+		{
+			name:         "write to existing buffer",
+			initialData:  []byte("hello"),
+			initialPos:   0,
+			writeData:    []byte(" world"),
+			expectedData: []byte("hello world"),
+			expectedN:    6,
+		},
+		{
+			name:         "write after read",
+			initialData:  []byte("abc"),
+			initialPos:   2,
+			writeData:    []byte("XYZ"),
+			expectedData: []byte("abcXYZ"),
+			expectedN:    3,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sb := NewSeekerBuffer(tt.initialData)
+			sb.pos = tt.initialPos
+
+			n, err := sb.Write(tt.writeData)
+			require.NoError(t, err)
+			require.Equal(t, tt.expectedN, n)
+			require.Equal(t, tt.expectedData, sb.data)
+			require.Equal(t, tt.initialPos, sb.pos)
+		})
+	}
+}
