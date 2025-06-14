@@ -1,13 +1,19 @@
 package buffer
 
-import "io"
+import (
+	"errors"
+	"fmt"
+	"io"
+)
+
+var ErrNegativePosition = errors.New("position can't be negative")
 
 var _ interface {
 	io.ReadCloser
 	io.ReadSeeker
 } = (*SeekerBuffer)(nil)
 
-// Buffer is a ReadWriteCloser that supports seeking. It's intended to
+// SeekerBuffer is a ReadWriteCloser that supports seeking. It's intended to
 // replicate the functionality of bytes.Buffer that I use in my projects.
 //
 // Note that the seeking is limited to the read marker; all writes are
@@ -23,13 +29,19 @@ func NewSeekerBuffer(data []byte) *SeekerBuffer {
 	}
 }
 
+// Read reads up to len(p) bytes into p from the current read position.
 func (b *SeekerBuffer) Read(p []byte) (int, error) {
+	if b.pos < 0 {
+		return 0, fmt.Errorf("%w: seeker position out of range — %d", ErrNegativePosition, b.pos)
+	}
+
 	if b.pos >= int64(len(b.data)) {
 		return 0, io.EOF
 	}
 
 	n := copy(p, b.data[b.pos:])
 	b.pos += int64(n)
+
 	return n, nil
 }
 

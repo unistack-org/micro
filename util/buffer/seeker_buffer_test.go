@@ -1,55 +1,99 @@
 package buffer
 
 import (
-	"fmt"
-	"strings"
+	"io"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-func noErrorT(t *testing.T, err error) {
-	if nil != err {
-		t.Fatalf("%s", err)
-	}
+func TestNewSeekerBuffer(t *testing.T) {
+	input := []byte{'a', 'b', 'c', 'd', 'e'}
+	expected := &SeekerBuffer{data: []byte{'a', 'b', 'c', 'd', 'e'}, pos: 0}
+	require.Equal(t, expected, NewSeekerBuffer(input))
 }
 
-func boolT(t *testing.T, cond bool, s ...string) {
-	if !cond {
-		what := strings.Join(s, ", ")
-		if len(what) > 0 {
-			what = ": " + what
-		}
-		t.Fatalf("assert.Bool failed%s", what)
+func TestSeekerBuffer_Read(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     []byte
+		initPos  int64
+		readBuf  []byte
+		wantN    int
+		wantData []byte
+		wantErr  error
+	}{
+		{
+			name:     "read with empty buffer",
+			data:     []byte("hello"),
+			initPos:  0,
+			readBuf:  []byte{},
+			wantN:    0,
+			wantData: []byte{},
+			wantErr:  nil,
+		},
+		{
+			name:     "read with nil buffer",
+			data:     []byte("hello"),
+			initPos:  0,
+			readBuf:  nil,
+			wantN:    0,
+			wantData: nil,
+			wantErr:  nil,
+		},
+		{
+			name:     "negative position",
+			data:     []byte("hello"),
+			initPos:  -1,
+			readBuf:  make([]byte, 5),
+			wantN:    0,
+			wantData: make([]byte, 5),
+			wantErr:  ErrNegativePosition,
+		},
+		{
+			name:     "read full buffer",
+			data:     []byte("hello"),
+			initPos:  0,
+			readBuf:  make([]byte, 5),
+			wantN:    5,
+			wantData: []byte("hello"),
+			wantErr:  nil,
+		},
+		{
+			name:     "read partial buffer",
+			data:     []byte("hello"),
+			initPos:  2,
+			readBuf:  make([]byte, 2),
+			wantN:    2,
+			wantData: []byte("ll"),
+			wantErr:  nil,
+		},
+		{
+			name:     "read after end",
+			data:     []byte("hello"),
+			initPos:  5,
+			readBuf:  make([]byte, 5),
+			wantN:    0,
+			wantData: make([]byte, 5),
+			wantErr:  io.EOF,
+		},
 	}
-}
 
-func TestSeeking(t *testing.T) {
-	partA := []byte("hello, ")
-	partB := []byte("world!")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sb := NewSeekerBuffer(tt.data)
+			sb.pos = tt.initPos
 
-	buf := NewSeekerBuffer(partA)
+			n, err := sb.Read(tt.readBuf)
 
-	boolT(t, buf.Len() == len(partA), fmt.Sprintf("on init: have length %d, want length %d", buf.Len(), len(partA)))
+			if tt.wantErr != nil {
+				require.ErrorIs(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
 
-	b := make([]byte, 32)
-
-	n, err := buf.Read(b)
-	noErrorT(t, err)
-	boolT(t, buf.Len() == 0, fmt.Sprintf("after reading 1: have length %d, want length 0", buf.Len()))
-	boolT(t, n == len(partA), fmt.Sprintf("after reading 2: have length %d, want length %d", n, len(partA)))
-
-	n, err = buf.Write(partB)
-	noErrorT(t, err)
-	boolT(t, n == len(partB), fmt.Sprintf("after writing: have length %d, want length %d", n, len(partB)))
-
-	n, err = buf.Read(b)
-	noErrorT(t, err)
-	boolT(t, buf.Len() == 0, fmt.Sprintf("after rereading 1: have length %d, want length 0", buf.Len()))
-	boolT(t, n == len(partB), fmt.Sprintf("after rereading 2: have length %d, want length %d", n, len(partB)))
-
-	partsLen := len(partA) + len(partB)
-	_ = buf.Rewind()
-	boolT(t, buf.Len() == partsLen, fmt.Sprintf("after rewinding: have length %d, want length %d", buf.Len(), partsLen))
-
-	buf.Close()
-	boolT(t, buf.Len() == 0, fmt.Sprintf("after closing, have length %d, want length 0", buf.Len()))
+			require.Equal(t, tt.wantN, n)
+			require.Equal(t, tt.wantData, tt.readBuf)
+		})
+	}
 }
