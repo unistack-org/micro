@@ -45,8 +45,7 @@ func (b *SeekerBuffer) Read(p []byte) (int, error) {
 	return n, nil
 }
 
-// Write appends the contents of p to the end of the buffer.
-// It does not affect the read position.
+// Write appends the contents of p to the end of the buffer. It does not affect the read position.
 func (b *SeekerBuffer) Write(p []byte) (int, error) {
 	if len(p) == 0 {
 		return 0, nil
