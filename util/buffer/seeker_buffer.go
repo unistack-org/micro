@@ -1,12 +1,9 @@
 package buffer
 
 import (
-	"errors"
 	"fmt"
 	"io"
 )
-
-var ErrNegativePosition = errors.New("position can't be negative")
 
 var _ interface {
 	io.ReadCloser
@@ -32,7 +29,7 @@ func NewSeekerBuffer(data []byte) *SeekerBuffer {
 // Read reads up to len(p) bytes into p from the current read position.
 func (b *SeekerBuffer) Read(p []byte) (int, error) {
 	if b.pos < 0 {
-		return 0, fmt.Errorf("%w: seeker position out of range — %d", ErrNegativePosition, b.pos)
+		return 0, fmt.Errorf("seeker position out of range: %d", b.pos)
 	}
 
 	if b.pos >= int64(len(b.data)) {
@@ -56,17 +53,32 @@ func (b *SeekerBuffer) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// Seek sets the read pointer to pos.
+// Seek sets the offset for the next Read operation.
+// The offset is interpreted according to whence:
+// - io.SeekStart: relative to the beginning of the buffer
+// - io.SeekCurrent: relative to the current position
+// - io.SeekEnd: relative to the end of the buffer
+//
+// Returns an error if the resulting position is negative or if whence is invalid.
 func (b *SeekerBuffer) Seek(offset int64, whence int) (int64, error) {
+	var newPos int64
+
 	switch whence {
 	case io.SeekStart:
-		b.pos = offset
+		newPos = offset
 	case io.SeekEnd:
-		b.pos = int64(len(b.data)) + offset
+		newPos = int64(len(b.data)) + offset
 	case io.SeekCurrent:
-		b.pos += offset
+		newPos = b.pos + offset
+	default:
+		return 0, fmt.Errorf("invalid whence: %d", whence)
 	}
 
+	if newPos < 0 {
+		return 0, fmt.Errorf("invalid seek: resulting position %d is negative", newPos)
+	}
+
+	b.pos = newPos
 	return b.pos, nil
 }
 

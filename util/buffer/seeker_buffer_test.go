@@ -1,6 +1,7 @@
 package buffer
 
 import (
+	"fmt"
 	"io"
 	"testing"
 
@@ -15,67 +16,67 @@ func TestNewSeekerBuffer(t *testing.T) {
 
 func TestSeekerBuffer_Read(t *testing.T) {
 	tests := []struct {
-		name     string
-		data     []byte
-		initPos  int64
-		readBuf  []byte
-		wantN    int
-		wantData []byte
-		wantErr  error
+		name         string
+		data         []byte
+		initPos      int64
+		readBuf      []byte
+		expectedN    int
+		expectedData []byte
+		expectedErr  error
 	}{
 		{
-			name:     "read with empty buffer",
-			data:     []byte("hello"),
-			initPos:  0,
-			readBuf:  []byte{},
-			wantN:    0,
-			wantData: []byte{},
-			wantErr:  nil,
+			name:         "read with empty buffer",
+			data:         []byte("hello"),
+			initPos:      0,
+			readBuf:      []byte{},
+			expectedN:    0,
+			expectedData: []byte{},
+			expectedErr:  nil,
 		},
 		{
-			name:     "read with nil buffer",
-			data:     []byte("hello"),
-			initPos:  0,
-			readBuf:  nil,
-			wantN:    0,
-			wantData: nil,
-			wantErr:  nil,
+			name:         "read with nil buffer",
+			data:         []byte("hello"),
+			initPos:      0,
+			readBuf:      nil,
+			expectedN:    0,
+			expectedData: nil,
+			expectedErr:  nil,
 		},
 		{
-			name:     "negative position",
-			data:     []byte("hello"),
-			initPos:  -1,
-			readBuf:  make([]byte, 5),
-			wantN:    0,
-			wantData: make([]byte, 5),
-			wantErr:  ErrNegativePosition,
+			name:         "negative position",
+			data:         []byte("hello"),
+			initPos:      -1,
+			readBuf:      make([]byte, 5),
+			expectedN:    0,
+			expectedData: make([]byte, 5),
+			expectedErr:  fmt.Errorf("seeker position out of range: %d", -1),
 		},
 		{
-			name:     "read full buffer",
-			data:     []byte("hello"),
-			initPos:  0,
-			readBuf:  make([]byte, 5),
-			wantN:    5,
-			wantData: []byte("hello"),
-			wantErr:  nil,
+			name:         "read full buffer",
+			data:         []byte("hello"),
+			initPos:      0,
+			readBuf:      make([]byte, 5),
+			expectedN:    5,
+			expectedData: []byte("hello"),
+			expectedErr:  nil,
 		},
 		{
-			name:     "read partial buffer",
-			data:     []byte("hello"),
-			initPos:  2,
-			readBuf:  make([]byte, 2),
-			wantN:    2,
-			wantData: []byte("ll"),
-			wantErr:  nil,
+			name:         "read partial buffer",
+			data:         []byte("hello"),
+			initPos:      2,
+			readBuf:      make([]byte, 2),
+			expectedN:    2,
+			expectedData: []byte("ll"),
+			expectedErr:  nil,
 		},
 		{
-			name:     "read after end",
-			data:     []byte("hello"),
-			initPos:  5,
-			readBuf:  make([]byte, 5),
-			wantN:    0,
-			wantData: make([]byte, 5),
-			wantErr:  io.EOF,
+			name:         "read after end",
+			data:         []byte("hello"),
+			initPos:      5,
+			readBuf:      make([]byte, 5),
+			expectedN:    0,
+			expectedData: make([]byte, 5),
+			expectedErr:  io.EOF,
 		},
 	}
 
@@ -86,14 +87,14 @@ func TestSeekerBuffer_Read(t *testing.T) {
 
 			n, err := sb.Read(tt.readBuf)
 
-			if tt.wantErr != nil {
-				require.ErrorIs(t, err, tt.wantErr)
+			if tt.expectedErr != nil {
+				require.Equal(t, err, tt.expectedErr)
 			} else {
 				require.NoError(t, err)
 			}
 
-			require.Equal(t, tt.wantN, n)
-			require.Equal(t, tt.wantData, tt.readBuf)
+			require.Equal(t, tt.expectedN, n)
+			require.Equal(t, tt.expectedData, tt.readBuf)
 		})
 	}
 }
@@ -159,6 +160,108 @@ func TestSeekerBuffer_Write(t *testing.T) {
 			require.Equal(t, tt.expectedN, n)
 			require.Equal(t, tt.expectedData, sb.data)
 			require.Equal(t, tt.initialPos, sb.pos)
+		})
+	}
+}
+
+func TestSeekerBuffer_Seek(t *testing.T) {
+	tests := []struct {
+		name        string
+		initialData []byte
+		initialPos  int64
+		offset      int64
+		whence      int
+		expectedPos int64
+		expectErr   bool
+	}{
+		{
+			name:        "seek with invalid whence",
+			initialData: []byte("abcdef"),
+			initialPos:  0,
+			offset:      1,
+			whence:      12345,
+			expectedPos: 0,
+			expectErr:   true,
+		},
+		{
+			name:        "seek negative from start",
+			initialData: []byte("abcdef"),
+			initialPos:  0,
+			offset:      -1,
+			whence:      io.SeekStart,
+			expectedPos: 0,
+			expectErr:   true,
+		},
+		{
+			name:        "seek from start to 0",
+			initialData: []byte("abcdef"),
+			initialPos:  0,
+			offset:      0,
+			whence:      io.SeekStart,
+			expectedPos: 0,
+			expectErr:   false,
+		},
+		{
+			name:        "seek from start to 3",
+			initialData: []byte("abcdef"),
+			initialPos:  0,
+			offset:      3,
+			whence:      io.SeekStart,
+			expectedPos: 3,
+			expectErr:   false,
+		},
+		{
+			name:        "seek from end to -1 (last byte)",
+			initialData: []byte("abcdef"),
+			initialPos:  0,
+			offset:      -1,
+			whence:      io.SeekEnd,
+			expectedPos: 5,
+			expectErr:   false,
+		},
+		{
+			name:        "seek from current forward",
+			initialData: []byte("abcdef"),
+			initialPos:  2,
+			offset:      2,
+			whence:      io.SeekCurrent,
+			expectedPos: 4,
+			expectErr:   false,
+		},
+		{
+			name:        "seek from current backward",
+			initialData: []byte("abcdef"),
+			initialPos:  4,
+			offset:      -2,
+			whence:      io.SeekCurrent,
+			expectedPos: 2,
+			expectErr:   false,
+		},
+		{
+			name:        "seek to end exactly",
+			initialData: []byte("abcdef"),
+			initialPos:  0,
+			offset:      0,
+			whence:      io.SeekEnd,
+			expectedPos: 6,
+			expectErr:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sb := NewSeekerBuffer(tt.initialData)
+			sb.pos = tt.initialPos
+
+			newPos, err := sb.Seek(tt.offset, tt.whence)
+
+			if tt.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expectedPos, newPos)
+				require.Equal(t, tt.expectedPos, sb.pos)
+			}
 		})
 	}
 }
