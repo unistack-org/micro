@@ -105,6 +105,9 @@ func (b *SeekerBuffer) Reset() {
 
 // Len returns the length of data remaining to be read.
 func (b *SeekerBuffer) Len() int {
+	if b.pos >= int64(len(b.data)) {
+		return 0
+	}
 	return len(b.data[b.pos:])
 }
 

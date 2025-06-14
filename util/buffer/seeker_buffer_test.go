@@ -290,3 +290,45 @@ func TestSeekerBuffer_Reset(t *testing.T) {
 	require.Nil(t, buf.data)
 	require.Equal(t, int64(0), buf.pos)
 }
+
+func TestSeekerBuffer_Len(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     []byte
+		pos      int64
+		expected int
+	}{
+		{
+			name:     "full buffer",
+			data:     []byte("abcde"),
+			pos:      0,
+			expected: 5,
+		},
+		{
+			name:     "partial read",
+			data:     []byte("abcde"),
+			pos:      2,
+			expected: 3,
+		},
+		{
+			name:     "fully read",
+			data:     []byte("abcde"),
+			pos:      5,
+			expected: 0,
+		},
+		{
+			name:     "pos > len",
+			data:     []byte("abcde"),
+			pos:      10,
+			expected: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			buf := NewSeekerBuffer(tt.data)
+			buf.pos = tt.pos
+			require.Equal(t, tt.expected, buf.Len())
+		})
+	}
+}
