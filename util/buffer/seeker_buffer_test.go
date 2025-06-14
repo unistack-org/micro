@@ -274,3 +274,11 @@ func TestSeekerBuffer_Rewind(t *testing.T) {
 	require.Equal(t, []byte("hello world"), buf.data)
 	require.Equal(t, int64(0), buf.pos)
 }
+
+func TestSeekerBuffer_Close(t *testing.T) {
+	buf := NewSeekerBuffer([]byte("hello world"))
+	buf.pos = 2
+	require.NoError(t, buf.Close())
+	require.Nil(t, buf.data)
+	require.Equal(t, int64(0), buf.pos)
+}
