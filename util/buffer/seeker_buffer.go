@@ -1,13 +1,16 @@
 package buffer
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 var _ interface {
 	io.ReadCloser
 	io.ReadSeeker
 } = (*SeekerBuffer)(nil)
 
-// Buffer is a ReadWriteCloser that supports seeking. It's intended to
+// SeekerBuffer is a ReadWriteCloser that supports seeking. It's intended to
 // replicate the functionality of bytes.Buffer that I use in my projects.
 //
 // Note that the seeking is limited to the read marker; all writes are
@@ -23,36 +26,63 @@ func NewSeekerBuffer(data []byte) *SeekerBuffer {
 	}
 }
 
+// Read reads up to len(p) bytes into p from the current read position.
 func (b *SeekerBuffer) Read(p []byte) (int, error) {
+	if b.pos < 0 {
+		return 0, fmt.Errorf("seeker position out of range: %d", b.pos)
+	}
+
 	if b.pos >= int64(len(b.data)) {
 		return 0, io.EOF
 	}
 
 	n := copy(p, b.data[b.pos:])
 	b.pos += int64(n)
+
 	return n, nil
 }
 
+// Write appends the contents of p to the end of the buffer. It does not affect the read position.
 func (b *SeekerBuffer) Write(p []byte) (int, error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
+
 	b.data = append(b.data, p...)
+
 	return len(p), nil
 }
 
-// Seek sets the read pointer to pos.
+// Seek sets the offset for the next Read operation.
+// The offset is interpreted according to whence:
+// - io.SeekStart: relative to the beginning of the buffer
+// - io.SeekCurrent: relative to the current position
+// - io.SeekEnd: relative to the end of the buffer
+//
+// Returns an error if the resulting position is negative or if whence is invalid.
 func (b *SeekerBuffer) Seek(offset int64, whence int) (int64, error) {
+	var newPos int64
+
 	switch whence {
 	case io.SeekStart:
-		b.pos = offset
+		newPos = offset
 	case io.SeekEnd:
-		b.pos = int64(len(b.data)) + offset
+		newPos = int64(len(b.data)) + offset
 	case io.SeekCurrent:
-		b.pos += offset
+		newPos = b.pos + offset
+	default:
+		return 0, fmt.Errorf("invalid whence: %d", whence)
 	}
 
+	if newPos < 0 {
+		return 0, fmt.Errorf("invalid seek: resulting position %d is negative", newPos)
+	}
+
+	b.pos = newPos
 	return b.pos, nil
 }
 
-// Rewind resets the read pointer to 0.
+// Rewind resets the read position to 0.
 func (b *SeekerBuffer) Rewind() error {
 	if _, err := b.Seek(0, io.SeekStart); err != nil {
 		return err
@@ -75,10 +105,16 @@ func (b *SeekerBuffer) Reset() {
 
 // Len returns the length of data remaining to be read.
 func (b *SeekerBuffer) Len() int {
+	if b.pos >= int64(len(b.data)) {
+		return 0
+	}
 	return len(b.data[b.pos:])
 }
 
 // Bytes returns the underlying bytes from the current position.
 func (b *SeekerBuffer) Bytes() []byte {
+	if b.pos >= int64(len(b.data)) {
+		return []byte{}
+	}
 	return b.data[b.pos:]
 }
