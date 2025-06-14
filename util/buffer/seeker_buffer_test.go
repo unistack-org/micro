@@ -332,3 +332,45 @@ func TestSeekerBuffer_Len(t *testing.T) {
 		})
 	}
 }
+
+func TestSeekerBuffer_Bytes(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     []byte
+		pos      int64
+		expected []byte
+	}{
+		{
+			name:     "start of buffer",
+			data:     []byte("abcde"),
+			pos:      0,
+			expected: []byte("abcde"),
+		},
+		{
+			name:     "middle of buffer",
+			data:     []byte("abcde"),
+			pos:      2,
+			expected: []byte("cde"),
+		},
+		{
+			name:     "end of buffer",
+			data:     []byte("abcde"),
+			pos:      5,
+			expected: []byte{},
+		},
+		{
+			name:     "pos beyond end",
+			data:     []byte("abcde"),
+			pos:      10,
+			expected: []byte{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			buf := NewSeekerBuffer(tt.data)
+			buf.pos = tt.pos
+			require.Equal(t, tt.expected, buf.Bytes())
+		})
+	}
+}

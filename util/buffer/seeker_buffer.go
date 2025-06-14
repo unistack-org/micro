@@ -113,5 +113,8 @@ func (b *SeekerBuffer) Len() int {
 
 // Bytes returns the underlying bytes from the current position.
 func (b *SeekerBuffer) Bytes() []byte {
+	if b.pos >= int64(len(b.data)) {
+		return []byte{}
+	}
 	return b.data[b.pos:]
 }
