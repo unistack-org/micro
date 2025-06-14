@@ -189,7 +189,7 @@ func TestSeekerBuffer_Seek(t *testing.T) {
 			offset:      1,
 			whence:      12345,
 			expectedPos: 0,
-			expectedErr: fmt.Errorf("seeker position out of range: %d", 12345),
+			expectedErr: fmt.Errorf("invalid whence: %d", 12345),
 		},
 		{
 			name:        "seek negative from start",
