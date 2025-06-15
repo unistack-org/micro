@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"testing"
 )
 
@@ -25,7 +26,8 @@ func TestHook(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := s.Exists(context.TODO(), "test"); err != nil {
+	err := s.Exists(context.TODO(), "test")
+	if !errors.Is(err, ErrNotFound) {
 		t.Fatal(err)
 	}
 

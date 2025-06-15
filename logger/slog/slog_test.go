@@ -80,7 +80,7 @@ func TestTime(t *testing.T) {
 		WithHandlerFunc(slog.NewTextHandler),
 		logger.WithAddStacktrace(true),
 		logger.WithTimeFunc(func() time.Time {
-			return time.Unix(0, 0)
+			return time.Unix(0, 0).UTC()
 		}),
 	)
 	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
@@ -89,8 +89,7 @@ func TestTime(t *testing.T) {
 
 	l.Error(ctx, "msg1", errors.New("err"))
 
-	if !bytes.Contains(buf.Bytes(), []byte(`timestamp=1970-01-01T03:00:00.000000000+03:00`)) &&
-		!bytes.Contains(buf.Bytes(), []byte(`timestamp=1970-01-01T00:00:00.000000000Z`)) {
+	if !bytes.Contains(buf.Bytes(), []byte(`timestamp=1970-01-01T00:00:00.000000000Z`)) {
 		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
 	}
 }
