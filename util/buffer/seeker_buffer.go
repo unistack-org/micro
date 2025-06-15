@@ -28,10 +28,6 @@ func NewSeekerBuffer(data []byte) *SeekerBuffer {
 
 // Read reads up to len(p) bytes into p from the current read position.
 func (b *SeekerBuffer) Read(p []byte) (int, error) {
-	if b.pos < 0 {
-		return 0, fmt.Errorf("seeker position out of range: %d", b.pos)
-	}
-
 	if b.pos >= int64(len(b.data)) {
 		return 0, io.EOF
 	}

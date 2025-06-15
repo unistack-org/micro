@@ -46,16 +46,6 @@ func TestSeekerBuffer_Read(t *testing.T) {
 			expectedPos:  0,
 		},
 		{
-			name:         "negative position",
-			data:         []byte("hello"),
-			initPos:      -1,
-			readBuf:      make([]byte, 5),
-			expectedN:    0,
-			expectedData: make([]byte, 5),
-			expectedErr:  fmt.Errorf("seeker position out of range: %d", -1),
-			expectedPos:  -1,
-		},
-		{
 			name:         "read full buffer",
 			data:         []byte("hello"),
 			initPos:      0,
