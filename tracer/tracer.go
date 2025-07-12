@@ -29,10 +29,10 @@ type ContextAttrFunc func(ctx context.Context) []interface{}
 func init() {
 	logger.DefaultContextAttrFuncs = append(logger.DefaultContextAttrFuncs,
 		func(ctx context.Context) []interface{} {
-			if span, ok := SpanFromContext(ctx); ok {
+			if sp, ok := SpanFromContext(ctx); ok && sp != nil && sp.IsRecording() {
 				return []interface{}{
-					TraceIDKey, span.TraceID(),
-					SpanIDKey, span.SpanID(),
+					TraceIDKey, sp.TraceID(),
+					SpanIDKey, sp.SpanID(),
 				}
 			}
 			return nil
