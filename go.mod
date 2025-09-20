@@ -1,6 +1,6 @@
 module go.unistack.org/micro/v4
 
-go 1.22.0
+go 1.24
 
 require (
 	dario.cat/mergo v1.0.1
@@ -17,6 +17,7 @@ require (
 	go.uber.org/automaxprocs v1.6.0
 	go.unistack.org/micro-proto/v4 v4.1.0
 	golang.org/x/sync v0.10.0
+	golang.yandex/hasql/v2 v2.1.0
 	google.golang.org/grpc v1.69.4
 	google.golang.org/protobuf v1.36.3
 )
