@@ -28,6 +28,10 @@ func (r *noopMeter) Name() string {
 	return r.opts.Name
 }
 
+func (r *noopMeter) Unregister(name string, labels ...string) bool {
+	return true
+}
+
 // Init initialize options
 func (r *noopMeter) Init(opts ...Option) error {
 	for _, o := range opts {

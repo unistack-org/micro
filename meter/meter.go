@@ -59,6 +59,8 @@ type Meter interface {
 	Options() Options
 	// String return meter type
 	String() string
+	// Unregister metric name and drop all data
+	Unregister(name string, labels ...string) bool
 }
 
 // Counter is a counter
