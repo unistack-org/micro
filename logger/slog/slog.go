@@ -4,14 +4,12 @@ import (
 	"context"
 	"io"
 	"log/slog"
-	"os"
 	"reflect"
 	"regexp"
 	"runtime"
 	"strconv"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/semconv"
@@ -234,8 +232,9 @@ func (s *slogLogger) Fatal(ctx context.Context, msg string, attrs ...interface{}
 	if closer, ok := s.opts.Out.(io.Closer); ok {
 		closer.Close()
 	}
-	time.Sleep(1 * time.Second)
-	os.Exit(1)
+	for _, fn := range s.opts.FatalFinalizers {
+		fn(ctx)
+	}
 }
 
 func (s *slogLogger) Warn(ctx context.Context, msg string, attrs ...interface{}) {
