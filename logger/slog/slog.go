@@ -229,11 +229,11 @@ func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}
 
 func (s *slogLogger) Fatal(ctx context.Context, msg string, attrs ...interface{}) {
 	s.printLog(ctx, logger.FatalLevel, msg, attrs...)
-	if closer, ok := s.opts.Out.(io.Closer); ok {
-		closer.Close()
-	}
 	for _, fn := range s.opts.FatalFinalizers {
 		fn(ctx)
+	}
+	if closer, ok := s.opts.Out.(io.Closer); ok {
+		closer.Close()
 	}
 }
 

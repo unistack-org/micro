@@ -84,7 +84,7 @@ func NewOptions(opts ...Option) Options {
 }
 
 // WithFatalFinalizers set logger.Fatal finalizers
-func WithFatalFinalizers(fncs []func(context.Context)) Option {
+func WithFatalFinalizers(fncs ...func(context.Context)) Option {
 	return func(o *Options) {
 		o.FatalFinalizers = fncs
 	}
