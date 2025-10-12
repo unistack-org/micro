@@ -49,9 +49,11 @@ type Meter interface {
 	Set(opts ...Option) Meter
 	// Histogram get or create histogram
 	Histogram(name string, labels ...string) Histogram
+	// HistogramExt get or create histogram with specified quantiles
+	HistogramExt(name string, quantiles []float64, labels ...string) Histogram
 	// Summary get or create summary
 	Summary(name string, labels ...string) Summary
-	// SummaryExt get or create summary with spcified quantiles and window time
+	// SummaryExt get or create summary with specified quantiles and window time
 	SummaryExt(name string, window time.Duration, quantiles []float64, labels ...string) Summary
 	// Write writes metrics to io.Writer
 	Write(w io.Writer, opts ...Option) error

@@ -70,6 +70,11 @@ func (r *noopMeter) Histogram(_ string, labels ...string) Histogram {
 	return &noopHistogram{labels: labels}
 }
 
+// HistogramExt implements the Meter interface
+func (r *noopMeter) HistogramExt(_ string, quantiles []float64, labels ...string) Histogram {
+	return &noopHistogram{labels: labels}
+}
+
 // Set implements the Meter interface
 func (r *noopMeter) Set(opts ...Option) Meter {
 	m := &noopMeter{opts: r.opts}
