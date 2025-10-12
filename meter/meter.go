@@ -82,7 +82,11 @@ type FloatCounter interface {
 
 // Gauge is a float64 gauge
 type Gauge interface {
+	Add(float64)
 	Get() float64
+	Set(float64)
+	Dec()
+	Inc()
 }
 
 // Histogram is a histogram for non-negative values with automatically created buckets

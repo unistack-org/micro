@@ -136,6 +136,18 @@ type noopGauge struct {
 	labels []string
 }
 
+func (r *noopGauge) Add(float64) {
+}
+
+func (r *noopGauge) Set(float64) {
+}
+
+func (r *noopGauge) Inc() {
+}
+
+func (r *noopGauge) Dec() {
+}
+
 func (r *noopGauge) Get() float64 {
 	return 0
 }
