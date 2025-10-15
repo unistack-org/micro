@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 	"testing"
+
+	"go.unistack.org/micro/v3/codec"
 )
 
 type testHook struct {
@@ -19,7 +21,7 @@ func (t *testHook) Publish(fn FuncPublish) FuncPublish {
 func TestNoopHook(t *testing.T) {
 	h := &testHook{}
 
-	c := NewClient(Hooks(HookPublish(h.Publish)))
+	c := NewClient(Codec("application/octet-stream", codec.NewCodec()), Hooks(HookPublish(h.Publish)))
 
 	if err := c.Init(); err != nil {
 		t.Fatal(err)

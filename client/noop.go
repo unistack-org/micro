@@ -17,11 +17,6 @@ import (
 	"go.unistack.org/micro/v3/tracer"
 )
 
-// DefaultCodecs will be used to encode/decode data
-var DefaultCodecs = map[string]codec.Codec{
-	"application/octet-stream": codec.NewCodec(),
-}
-
 type noopClient struct {
 	funcPublish      FuncPublish
 	funcBatchPublish FuncBatchPublish
@@ -176,9 +171,6 @@ func (n *noopMessage) Metadata() metadata.Metadata {
 
 func (n *noopClient) newCodec(contentType string) (codec.Codec, error) {
 	if cf, ok := n.opts.Codecs[contentType]; ok {
-		return cf, nil
-	}
-	if cf, ok := DefaultCodecs[contentType]; ok {
 		return cf, nil
 	}
 	return nil, codec.ErrUnknownContentType

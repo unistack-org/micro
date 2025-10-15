@@ -198,7 +198,7 @@ func NewOptions(opts ...Option) Options {
 	options := Options{
 		Context:     context.Background(),
 		ContentType: DefaultContentType,
-		Codecs:      DefaultCodecs,
+		Codecs:      make(map[string]codec.Codec),
 		CallOptions: CallOptions{
 			Context:        context.Background(),
 			Backoff:        DefaultBackoff,
