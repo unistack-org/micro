@@ -21,11 +21,6 @@ import (
 	"go.unistack.org/micro/v3/util/rand"
 )
 
-// DefaultCodecs will be used to encode/decode
-var DefaultCodecs = map[string]codec.Codec{
-	"application/octet-stream": codec.NewCodec(),
-}
-
 const (
 	defaultContentType = "application/json"
 )
@@ -91,9 +86,6 @@ func NewServer(opts ...Option) Server {
 
 func (n *noopServer) newCodec(contentType string) (codec.Codec, error) {
 	if cf, ok := n.opts.Codecs[contentType]; ok {
-		return cf, nil
-	}
-	if cf, ok := DefaultCodecs[contentType]; ok {
 		return cf, nil
 	}
 	return nil, codec.ErrUnknownContentType
