@@ -15,11 +15,6 @@ import (
 	"go.unistack.org/micro/v4/tracer"
 )
 
-// DefaultCodecs will be used to encode/decode data
-var DefaultCodecs = map[string]codec.Codec{
-	"application/octet-stream": codec.NewCodec(),
-}
-
 type noopClient struct {
 	funcCall   FuncCall
 	funcStream FuncStream
