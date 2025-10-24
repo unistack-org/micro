@@ -28,6 +28,10 @@ func (r *noopMeter) Name() string {
 	return r.opts.Name
 }
 
+func (r *noopMeter) Unregister(name string, labels ...string) bool {
+	return true
+}
+
 // Init initialize options
 func (r *noopMeter) Init(opts ...Option) error {
 	for _, o := range opts {
@@ -63,6 +67,11 @@ func (r *noopMeter) SummaryExt(_ string, _ time.Duration, _ []float64, labels ..
 
 // Histogram implements the Meter interface
 func (r *noopMeter) Histogram(_ string, labels ...string) Histogram {
+	return &noopHistogram{labels: labels}
+}
+
+// HistogramExt implements the Meter interface
+func (r *noopMeter) HistogramExt(_ string, quantiles []float64, labels ...string) Histogram {
 	return &noopHistogram{labels: labels}
 }
 
@@ -130,6 +139,18 @@ func (r *noopFloatCounter) Sub(float64) {
 
 type noopGauge struct {
 	labels []string
+}
+
+func (r *noopGauge) Add(float64) {
+}
+
+func (r *noopGauge) Set(float64) {
+}
+
+func (r *noopGauge) Inc() {
+}
+
+func (r *noopGauge) Dec() {
 }
 
 func (r *noopGauge) Get() float64 {

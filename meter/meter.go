@@ -4,8 +4,8 @@ package meter
 import (
 	"io"
 	"sort"
-	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -49,9 +49,11 @@ type Meter interface {
 	Set(opts ...Option) Meter
 	// Histogram get or create histogram
 	Histogram(name string, labels ...string) Histogram
+	// HistogramExt get or create histogram with specified quantiles
+	HistogramExt(name string, quantiles []float64, labels ...string) Histogram
 	// Summary get or create summary
 	Summary(name string, labels ...string) Summary
-	// SummaryExt get or create summary with spcified quantiles and window time
+	// SummaryExt get or create summary with specified quantiles and window time
 	SummaryExt(name string, window time.Duration, quantiles []float64, labels ...string) Summary
 	// Write writes metrics to io.Writer
 	Write(w io.Writer, opts ...Option) error
@@ -59,6 +61,8 @@ type Meter interface {
 	Options() Options
 	// String return meter type
 	String() string
+	// Unregister metric name and drop all data
+	Unregister(name string, labels ...string) bool
 }
 
 // Counter is a counter
@@ -80,7 +84,11 @@ type FloatCounter interface {
 
 // Gauge is a float64 gauge
 type Gauge interface {
+	Add(float64)
 	Get() float64
+	Set(float64)
+	Dec()
+	Inc()
 }
 
 // Histogram is a histogram for non-negative values with automatically created buckets
@@ -117,6 +125,39 @@ func BuildLabels(labels ...string) []string {
 	return labels
 }
 
+var spool = newStringsPool(500)
+
+type stringsPool struct {
+	p *sync.Pool
+	c int
+}
+
+func newStringsPool(size int) *stringsPool {
+	p := &stringsPool{c: size}
+	p.p = &sync.Pool{
+		New: func() interface{} {
+			return &strings.Builder{}
+		},
+	}
+	return p
+}
+
+func (p *stringsPool) Cap() int {
+	return p.c
+}
+
+func (p *stringsPool) Get() *strings.Builder {
+	return p.p.Get().(*strings.Builder)
+}
+
+func (p *stringsPool) Put(b *strings.Builder) {
+	if b.Cap() > p.c {
+		return
+	}
+	b.Reset()
+	p.p.Put(b)
+}
+
 // BuildName used to combine metric with labels.
 // If labels count is odd, drop last element
 func BuildName(name string, labels ...string) string {
@@ -125,8 +166,6 @@ func BuildName(name string, labels ...string) string {
 	}
 
 	if len(labels) > 2 {
-		sort.Sort(byKey(labels))
-
 		idx := 0
 		for {
 			if labels[idx] == labels[idx+2] {
@@ -141,7 +180,9 @@ func BuildName(name string, labels ...string) string {
 		}
 	}
 
-	var b strings.Builder
+	b := spool.Get()
+	defer spool.Put(b)
+
 	_, _ = b.WriteString(name)
 	_, _ = b.WriteRune('{')
 	for idx := 0; idx < len(labels); idx += 2 {
@@ -149,8 +190,9 @@ func BuildName(name string, labels ...string) string {
 			_, _ = b.WriteRune(',')
 		}
 		_, _ = b.WriteString(labels[idx])
-		_, _ = b.WriteString(`=`)
-		_, _ = b.WriteString(strconv.Quote(labels[idx+1]))
+		_, _ = b.WriteString(`="`)
+		_, _ = b.WriteString(labels[idx+1])
+		_, _ = b.WriteRune('"')
 	}
 	_, _ = b.WriteRune('}')
 

@@ -36,6 +36,24 @@ func TestStacktrace(t *testing.T) {
 	}
 }
 
+func TestNoneLevel(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.NoneLevel), logger.WithOutput(buf),
+		WithHandlerFunc(slog.NewTextHandler),
+		logger.WithAddStacktrace(true),
+	)
+	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Error(ctx, "msg1", errors.New("err"))
+
+	if buf.Len() != 0 {
+		t.Fatalf("logger none level not works, buf contains: %s", buf.Bytes())
+	}
+}
+
 func TestDelayedBuffer(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
@@ -405,15 +423,16 @@ func TestLogger(t *testing.T) {
 func Test_WithContextAttrFunc(t *testing.T) {
 	loggerContextAttrFuncs := []logger.ContextAttrFunc{
 		func(ctx context.Context) []interface{} {
-			md, ok := metadata.FromIncomingContext(ctx)
+			md, ok := metadata.FromOutgoingContext(ctx)
 			if !ok {
 				return nil
 			}
 			attrs := make([]interface{}, 0, 10)
 			for k, v := range md {
-				switch k {
-				case "X-Request-Id", "Phone", "External-Id", "Source-Service", "X-App-Install-Id", "Client-Id", "Client-Ip":
-					attrs = append(attrs, strings.ToLower(k), v)
+				key := strings.ToLower(k)
+				switch key {
+				case "x-request-id", "phone", "external-Id", "source-service", "x-app-install-id", "client-id", "client-ip":
+					attrs = append(attrs, key, v)
 				}
 			}
 			return attrs
@@ -423,7 +442,7 @@ func Test_WithContextAttrFunc(t *testing.T) {
 	logger.DefaultContextAttrFuncs = append(logger.DefaultContextAttrFuncs, loggerContextAttrFuncs...)
 
 	ctx := context.TODO()
-	ctx = metadata.AppendIncomingContext(ctx, "X-Request-Id", uuid.New().String(),
+	ctx = metadata.AppendOutgoingContext(ctx, "X-Request-Id", uuid.New().String(),
 		"Source-Service", "Test-System")
 
 	buf := bytes.NewBuffer(nil)
@@ -436,17 +455,39 @@ func Test_WithContextAttrFunc(t *testing.T) {
 	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"info"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"test message"`))) {
 		t.Fatalf("logger info, buf %s", buf.Bytes())
 	}
-	if !(bytes.Contains(buf.Bytes(), []byte(`"x-request-id":"`))) {
+	if !(bytes.Contains(buf.Bytes(), []byte(`"x-request-id":`))) {
 		t.Fatalf("logger info, buf %s", buf.Bytes())
 	}
 	if !(bytes.Contains(buf.Bytes(), []byte(`"source-service":"Test-System"`))) {
 		t.Fatalf("logger info, buf %s", buf.Bytes())
 	}
 	buf.Reset()
-	imd, _ := metadata.FromIncomingContext(ctx)
+	omd, _ := metadata.FromOutgoingContext(ctx)
 	l.Info(ctx, "test message1")
-	imd.Set("Source-Service", "Test-System2")
+	omd.Set("Source-Service", "Test-System2")
 	l.Info(ctx, "test message2")
 
 	// t.Logf("xxx %s", buf.Bytes())
+}
+
+func TestFatalFinalizers(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(
+		logger.WithLevel(logger.TraceLevel),
+		logger.WithOutput(buf),
+	)
+	if err := l.Init(
+		logger.WithFatalFinalizers(func(ctx context.Context) {
+			l.Info(ctx, "fatal finalizer")
+		})); err != nil {
+		t.Fatal(err)
+	}
+	l.Fatal(ctx, "info_msg1")
+	if !bytes.Contains(buf.Bytes(), []byte("fatal finalizer")) {
+		t.Fatalf("logger dont have fatal message, buf %s", buf.Bytes())
+	}
+	if !bytes.Contains(buf.Bytes(), []byte("info_msg1")) {
+		t.Fatalf("logger dont have info_msg1 message, buf %s", buf.Bytes())
+	}
 }

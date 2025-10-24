@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v4/codec"
 )
 
 func TestUnwrap(t *testing.T) {

@@ -50,11 +50,12 @@ func TestBuildName(t *testing.T) {
 	data := map[string][]string{
 		`my_metric{firstlabel="value2",zerolabel="value3"}`: {
 			"my_metric",
-			"zerolabel", "value3", "firstlabel", "value2",
+			"firstlabel", "value2",
+			"zerolabel", "value3",
 		},
 		`my_metric{broker="broker2",register="mdns",server="tcp"}`: {
 			"my_metric",
-			"broker", "broker1", "broker", "broker2", "server", "http", "server", "tcp", "register", "mdns",
+			"broker", "broker1", "broker", "broker2", "register", "mdns", "server", "http", "server", "tcp",
 		},
 		`my_metric{aaa="aaa"}`: {
 			"my_metric",

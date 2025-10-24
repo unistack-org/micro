@@ -4,18 +4,20 @@ package logger
 type Level int8
 
 const (
-	// TraceLevel level usually used to find bugs, very verbose
+	// TraceLevel usually used to find bugs, very verbose
 	TraceLevel Level = iota - 2
-	// DebugLevel level used only when enabled debugging
+	// DebugLevel used only when enabled debugging
 	DebugLevel
-	// InfoLevel level used for general info about what's going on inside the application
+	// InfoLevel used for general info about what's going on inside the application
 	InfoLevel
-	// WarnLevel level used for non-critical entries
+	// WarnLevel used for non-critical entries
 	WarnLevel
-	// ErrorLevel level used for errors that should definitely be noted
+	// ErrorLevel used for errors that should definitely be noted
 	ErrorLevel
-	// FatalLevel level used for critical errors and then calls `os.Exit(1)`
+	// FatalLevel used for critical errors and then calls `os.Exit(1)`
 	FatalLevel
+	// NoneLevel used to disable logging
+	NoneLevel
 )
 
 // String returns logger level string representation
@@ -33,6 +35,8 @@ func (l Level) String() string {
 		return "error"
 	case FatalLevel:
 		return "fatal"
+	case NoneLevel:
+		return "none"
 	}
 	return "info"
 }
@@ -58,6 +62,8 @@ func ParseLevel(lvl string) Level {
 		return ErrorLevel
 	case FatalLevel.String():
 		return FatalLevel
+	case NoneLevel.String():
+		return NoneLevel
 	}
 	return InfoLevel
 }

@@ -4,14 +4,12 @@ import (
 	"context"
 	"io"
 	"log/slog"
-	"os"
 	"reflect"
 	"regexp"
 	"runtime"
 	"strconv"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/semconv"
@@ -34,6 +32,7 @@ var (
 	warnValue  = slog.StringValue("warn")
 	errorValue = slog.StringValue("error")
 	fatalValue = slog.StringValue("fatal")
+	noneValue  = slog.StringValue("none")
 )
 
 type wrapper struct {
@@ -85,6 +84,8 @@ func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 			a.Value = errorValue
 		case lvl >= logger.FatalLevel:
 			a.Value = fatalValue
+		case lvl >= logger.NoneLevel:
+			a.Value = noneValue
 		default:
 			a.Value = infoValue
 		}
@@ -228,11 +229,12 @@ func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}
 
 func (s *slogLogger) Fatal(ctx context.Context, msg string, attrs ...interface{}) {
 	s.printLog(ctx, logger.FatalLevel, msg, attrs...)
+	for _, fn := range s.opts.FatalFinalizers {
+		fn(ctx)
+	}
 	if closer, ok := s.opts.Out.(io.Closer); ok {
 		closer.Close()
 	}
-	time.Sleep(1 * time.Second)
-	os.Exit(1)
 }
 
 func (s *slogLogger) Warn(ctx context.Context, msg string, attrs ...interface{}) {
@@ -316,6 +318,8 @@ func loggerToSlogLevel(level logger.Level) slog.Level {
 		return slog.LevelDebug - 1
 	case logger.FatalLevel:
 		return slog.LevelError + 1
+	case logger.NoneLevel:
+		return slog.LevelError + 2
 	default:
 		return slog.LevelInfo
 	}
@@ -333,6 +337,8 @@ func slogToLoggerLevel(level slog.Level) logger.Level {
 		return logger.TraceLevel
 	case slog.LevelError + 1:
 		return logger.FatalLevel
+	case slog.LevelError + 2:
+		return logger.NoneLevel
 	default:
 		return logger.InfoLevel
 	}

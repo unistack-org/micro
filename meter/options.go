@@ -4,6 +4,8 @@ import (
 	"context"
 )
 
+var DefaultQuantiles = []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10}
+
 // Option powers the configuration for metrics implementations:
 type Option func(*Options)
 
@@ -23,6 +25,8 @@ type Options struct {
 	WriteProcessMetrics bool
 	// WriteFDMetrics flag to write fd metrics
 	WriteFDMetrics bool
+	// Quantiles specifies buckets for histogram
+	Quantiles []float64
 }
 
 // NewOptions prepares a set of options:
@@ -61,14 +65,12 @@ func Address(value string) Option {
 	}
 }
 
-/*
-// TimingObjectives defines the desired spread of statistics for histogram / timing metrics:
-func TimingObjectives(value map[float64]float64) Option {
+// Quantiles defines the desired spread of statistics for histogram metrics:
+func Quantiles(quantiles []float64) Option {
 	return func(o *Options) {
-		o.TimingObjectives = value
+		o.Quantiles = quantiles
 	}
 }
-*/
 
 // Labels add the meter labels
 func Labels(ls ...string) Option {
