@@ -25,7 +25,7 @@ jobs:
         dst_hash=$(git ls-remote ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY} refs/heads/master | cut -f1)
         echo "src_hash=$src_hash"
         echo "dst_hash=$dst_hash"
-        if [ "$src_hash" != "$dst_hash" ]; then
+        if [ "$src_hash" != "$dst_hash" -a "$src_hash" != "" -a "$dst_hash" != "" ]; then
           echo "sync_needed=true" >> $GITHUB_OUTPUT
         else
           echo "sync_needed=false" >> $GITHUB_OUTPUT

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/KimMachineGun/automemlimit/memlimit"
-	"go.uber.org/automaxprocs/maxprocs"
 	"go.unistack.org/micro/v4/broker"
 	"go.unistack.org/micro/v4/client"
 	"go.unistack.org/micro/v4/config"
@@ -23,8 +22,8 @@ import (
 )
 
 func init() {
-	_, _ = maxprocs.Set()
 	_, _ = memlimit.SetGoMemLimitWithOpts(
+		memlimit.WithRefreshInterval(1*time.Minute),
 		memlimit.WithRatio(0.9),
 		memlimit.WithProvider(
 			memlimit.ApplyFallback(
