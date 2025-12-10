@@ -80,6 +80,12 @@ func Context(ctx context.Context) Option {
 	}
 }
 
+func GracefulTimeout(t time.Duration) Option {
+	return func(o *Options) {
+		o.GracefulTimeout = t
+	}
+}
+
 // ContentType used by default if not specified
 func ContentType(ct string) Option {
 	return func(o *Options) {
