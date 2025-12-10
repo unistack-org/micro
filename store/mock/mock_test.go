@@ -206,26 +206,115 @@ func TestStoreHealth(t *testing.T) {
 	if !s.Health() {
 		t.Fatal("Expected Health() to return true")
 	}
+
+	// Test that Live, Ready, Health return false when error is set
+	s.SetError(store.ErrNotConnected)
+
+	if s.Live() {
+		t.Fatal("Expected Live() to return false when error is set")
+	}
+
+	if s.Ready() {
+		t.Fatal("Expected Ready() to return false when error is set")
+	}
+
+	if s.Health() {
+		t.Fatal("Expected Health() to return false when error is set")
+	}
+}
+
+func TestStoreSetError(t *testing.T) {
+	s := NewStore()
+
+	// Initially should be healthy
+	if !s.Live() || !s.Ready() || !s.Health() {
+		t.Fatal("Expected store to be healthy initially")
+	}
+
+	// Set error and check health
+	s.SetError(store.ErrNotFound)
+
+	if s.Live() || s.Ready() || s.Health() {
+		t.Fatal("Expected store to be unhealthy when error is set")
+	}
+
+	// Reset error and check health
+	s.SetError(nil)
+
+	if !s.Live() || !s.Ready() || !s.Health() {
+		t.Fatal("Expected store to be healthy after error reset")
+	}
 }
 
 func TestStoreConnectDisconnect(t *testing.T) {
 	s := NewStore()
 
+	// Test Connect with expectation
+	s.ExpectConnect()
 	err := s.Connect(context.Background())
 	if err != nil {
 		t.Fatalf("Connect failed: %v", err)
 	}
 
+	// Test Disconnect with expectation
+	s.ExpectDisconnect()
 	err = s.Disconnect(context.Background())
 	if err != nil {
 		t.Fatalf("Disconnect failed: %v", err)
 	}
 
-	// Test error propagation
-	s.ExpectWrite("test_key").WillReturnError(store.ErrNotConnected)
-	err = s.Write(context.Background(), "test_key", "value")
+	// Test error propagation for Connect
+	s.ExpectConnect().WillReturnError(store.ErrNotConnected)
+	err = s.Connect(context.Background())
 	if err != store.ErrNotConnected {
-		t.Fatalf("Expected store.ErrNotConnected, got %v", err)
+		t.Fatalf("Expected store.ErrNotConnected for Connect, got %v", err)
+	}
+
+	// Test error propagation for Disconnect
+	s.ExpectDisconnect().WillReturnError(store.ErrNotConnected)
+	err = s.Disconnect(context.Background())
+	if err != store.ErrNotConnected {
+		t.Fatalf("Expected store.ErrNotConnected for Disconnect, got %v", err)
+	}
+
+	// Test multiple calls with Times
+	s.ExpectConnect().Times(2)
+	err = s.Connect(context.Background())
+	if err != nil {
+		t.Fatalf("Connect failed: %v", err)
+	}
+	err = s.Connect(context.Background())
+	if err != nil {
+		t.Fatalf("Connect failed: %v", err)
+	}
+
+	// Test behavior when no expectation set but error is set globally
+	s2 := NewStore()
+	s2.SetError(store.ErrNotConnected)
+	err = s2.Connect(context.Background())
+	if err != store.ErrNotConnected {
+		t.Fatalf("Expected store.ErrNotConnected for Connect when global error is set, got %v", err)
+	}
+
+	err = s2.Disconnect(context.Background())
+	if err != store.ErrNotConnected {
+		t.Fatalf("Expected store.ErrNotConnected for Disconnect when global error is set, got %v", err)
+	}
+
+	// Test behavior when no expectation set and no global error
+	s3 := NewStore()
+	err = s3.Connect(context.Background())
+	if err != nil {
+		t.Fatalf("Expected no error for Connect when no expectation and no global error, got %v", err)
+	}
+
+	err = s3.Disconnect(context.Background())
+	if err != nil {
+		t.Fatalf("Expected no error for Disconnect when no expectation and no global error, got %v", err)
+	}
+
+	if err := s.ExpectationsWereMet(); err != nil {
+		t.Fatalf("Expectations not met: %v", err)
 	}
 }
 

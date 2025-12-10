@@ -160,13 +160,67 @@ func (e *ExpectedList) match(opts ...store.ListOption) bool {
 	return true
 }
 
+// ExpectedConnect represents an expected Connect operation
+type ExpectedConnect struct {
+	times  int
+	called int
+	mutex  sync.Mutex
+	err    error
+}
+
+func (e *ExpectedConnect) match() bool {
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
+
+	// Check if we've exceeded the expected times
+	if e.times > 0 && e.called >= e.times {
+		return false
+	}
+
+	// For expectations without Times specified, allow only one call
+	if e.times == 0 && e.called >= 1 {
+		return false
+	}
+
+	e.called++
+	return true
+}
+
+// ExpectedDisconnect represents an expected Disconnect operation
+type ExpectedDisconnect struct {
+	times  int
+	called int
+	mutex  sync.Mutex
+	err    error
+}
+
+func (e *ExpectedDisconnect) match() bool {
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
+
+	// Check if we've exceeded the expected times
+	if e.times > 0 && e.called >= e.times {
+		return false
+	}
+
+	// For expectations without Times specified, allow only one call
+	if e.times == 0 && e.called >= 1 {
+		return false
+	}
+
+	e.called++
+	return true
+}
+
 // Store is a mock implementation of the Store interface for testing
 type Store struct {
-	expectedWrites  []*ExpectedWrite
-	expectedReads   []*ExpectedRead
-	expectedDeletes []*ExpectedDelete
-	expectedExists  []*ExpectedExists
-	expectedLists   []*ExpectedList
+	expectedWrites      []*ExpectedWrite
+	expectedReads       []*ExpectedRead
+	expectedDeletes     []*ExpectedDelete
+	expectedExists      []*ExpectedExists
+	expectedLists       []*ExpectedList
+	expectedConnects    []*ExpectedConnect
+	expectedDisconnects []*ExpectedDisconnect
 
 	data     map[string]interface{}
 	exists   map[string]bool
@@ -236,6 +290,26 @@ func (m *Store) ExpectList() *ExpectedList {
 
 	exp := &ExpectedList{}
 	m.expectedLists = append(m.expectedLists, exp)
+	return exp
+}
+
+// ExpectConnect creates an expectation for a Connect operation
+func (m *Store) ExpectConnect() *ExpectedConnect {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	exp := &ExpectedConnect{}
+	m.expectedConnects = append(m.expectedConnects, exp)
+	return exp
+}
+
+// ExpectDisconnect creates an expectation for a Disconnect operation
+func (m *Store) ExpectDisconnect() *ExpectedDisconnect {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	exp := &ExpectedDisconnect{}
+	m.expectedDisconnects = append(m.expectedDisconnects, exp)
 	return exp
 }
 
@@ -329,6 +403,30 @@ func (e *ExpectedList) WillReturnError(err error) *ExpectedList {
 	return e
 }
 
+// Times sets how many times the expectation should be called
+func (e *ExpectedConnect) Times(n int) *ExpectedConnect {
+	e.times = n
+	return e
+}
+
+// WillReturnError sets an error to return for the expected operation
+func (e *ExpectedConnect) WillReturnError(err error) *ExpectedConnect {
+	e.err = err
+	return e
+}
+
+// Times sets how many times the expectation should be called
+func (e *ExpectedDisconnect) Times(n int) *ExpectedDisconnect {
+	e.times = n
+	return e
+}
+
+// WillReturnError sets an error to return for the expected operation
+func (e *ExpectedDisconnect) WillReturnError(err error) *ExpectedDisconnect {
+	e.err = err
+	return e
+}
+
 // checkTTL checks if a key has expired
 func (m *Store) checkTTL(key string) bool {
 	m.mutex.RLock()
@@ -396,10 +494,23 @@ func (m *Store) Init(opts ...store.Option) error {
 
 // Connect is used when store needs to be connected
 func (m *Store) Connect(ctx context.Context) error {
-	if m.err != nil {
-		return m.err
+	// Find matching expectation
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	for i, exp := range m.expectedConnects {
+		if exp.match() {
+			// Remove the expectation if it has been fully used
+			if exp.times > 0 && exp.called >= exp.times {
+				// Remove this expectation from the list
+				m.expectedConnects = append(m.expectedConnects[:i], m.expectedConnects[i+1:]...)
+			}
+			return exp.err
+		}
 	}
-	return nil
+
+	// If no expectation matched, use default behavior
+	return m.err
 }
 
 // Options returns the current options
@@ -701,10 +812,23 @@ func (m *Store) List(ctx context.Context, opts ...store.ListOption) ([]string, e
 
 // Disconnect disconnects the mock store
 func (m *Store) Disconnect(ctx context.Context) error {
-	if m.err != nil {
-		return m.err
+	// Find matching expectation
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	for i, exp := range m.expectedDisconnects {
+		if exp.match() {
+			// Remove the expectation if it has been fully used
+			if exp.times > 0 && exp.called >= exp.times {
+				// Remove this expectation from the list
+				m.expectedDisconnects = append(m.expectedDisconnects[:i], m.expectedDisconnects[i+1:]...)
+			}
+			return exp.err
+		}
 	}
-	return nil
+
+	// If no expectation matched, use default behavior
+	return m.err
 }
 
 // String returns the name of the implementation
@@ -722,17 +846,30 @@ func (m *Store) Watch(ctx context.Context, opts ...store.WatchOption) (store.Wat
 
 // Live returns store liveness
 func (m *Store) Live() bool {
-	return true
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	return m.err == nil
 }
 
 // Ready returns store readiness
 func (m *Store) Ready() bool {
-	return true
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	return m.err == nil
 }
 
 // Health returns store health
 func (m *Store) Health() bool {
-	return true
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	return m.err == nil
+}
+
+// SetError sets an error that will be returned by all operations
+func (m *Store) SetError(err error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	m.err = err
 }
 
 // ExpectationsWereMet checks that all expected operations were called the expected number of times
