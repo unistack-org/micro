@@ -8,6 +8,7 @@ import (
 	"slices"
 	"time"
 
+	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/meter"
 )
 
@@ -42,8 +43,10 @@ type Options struct {
 	Fields []interface{}
 	// ContextAttrFuncs contains funcs that executed before log func on context
 	ContextAttrFuncs []ContextAttrFunc
-	// callerSkipCount number of frmaes to skip
+	// callerSkipCount number of frames to skip
 	CallerSkipCount int
+	// AddCaller enables to get caller
+	AddCaller bool
 	// The logging level the logger should log
 	Level Level
 	// AddSource enabled writing source file and position in log
@@ -81,6 +84,12 @@ func NewOptions(opts ...Option) Options {
 	}
 
 	return options
+}
+
+func WithCallerEnabled(b bool) logger.Option {
+	return func(o *Options) {
+		o.AddCaller = b
+	}
 }
 
 // WithFatalFinalizers set logger.Fatal finalizers
