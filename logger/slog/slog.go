@@ -37,11 +37,11 @@ var (
 
 type wrapper struct {
 	h     slog.Handler
-	level atomic.Int64
+	level int64
 }
 
 func (h *wrapper) Enabled(ctx context.Context, level slog.Level) bool {
-	return level >= slog.Level(int(h.level.Load()))
+	return level >= slog.Level(atomic.LoadInt64(&h.level))
 }
 
 func (h *wrapper) Handle(ctx context.Context, rec slog.Record) error {
@@ -49,11 +49,17 @@ func (h *wrapper) Handle(ctx context.Context, rec slog.Record) error {
 }
 
 func (h *wrapper) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return h.h.WithAttrs(attrs)
+	return &wrapper{
+		h:     h.h.WithAttrs(attrs),
+		level: atomic.LoadInt64(&h.level),
+	}
 }
 
 func (h *wrapper) WithGroup(name string) slog.Handler {
-	return h.h.WithGroup(name)
+	return &wrapper{
+		h:     h.h.WithGroup(name),
+		level: atomic.LoadInt64(&h.level),
+	}
 }
 
 func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
@@ -115,10 +121,13 @@ func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
 
 	attrs, _ := s.argsAttrs(options.Fields)
 	l := &slogLogger{
-		handler: &wrapper{h: s.handler.h.WithAttrs(attrs)},
-		opts:    options,
+		handler: &wrapper{
+			h:     s.handler.h.WithAttrs(attrs),
+			level: atomic.LoadInt64(&s.handler.level),
+		},
+		opts: options,
 	}
-	l.handler.level.Store(int64(loggerToSlogLevel(options.Level)))
+	atomic.StoreInt64(&l.handler.level, int64(loggerToSlogLevel(options.Level)))
 
 	return l
 }
@@ -131,9 +140,9 @@ func (s *slogLogger) V(level logger.Level) bool {
 }
 
 func (s *slogLogger) Level(level logger.Level) {
+	atomic.StoreInt64(&s.handler.level, int64(loggerToSlogLevel(level)))
 	s.mu.Lock()
 	s.opts.Level = level
-	s.handler.level.Store(int64(loggerToSlogLevel(level)))
 	s.mu.Unlock()
 }
 
@@ -154,8 +163,11 @@ func (s *slogLogger) Fields(fields ...interface{}) logger.Logger {
 	}
 
 	attrs, _ := s.argsAttrs(fields)
-	l.handler = &wrapper{h: s.handler.h.WithAttrs(attrs)}
-	l.handler.level.Store(int64(loggerToSlogLevel(l.opts.Level)))
+	l.handler = &wrapper{
+		h:     s.handler.h.WithAttrs(attrs),
+		level: atomic.LoadInt64(&s.handler.level),
+	}
+	atomic.StoreInt64(&l.handler.level, int64(loggerToSlogLevel(l.opts.Level)))
 
 	return l
 }
@@ -200,8 +212,11 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 		h = slog.NewJSONHandler(s.opts.Out, handleOpt)
 	}
 
-	s.handler = &wrapper{h: h.WithAttrs(attrs)}
-	s.handler.level.Store(int64(loggerToSlogLevel(s.opts.Level)))
+	s.handler = &wrapper{
+		h:     h.WithAttrs(attrs),
+		level: atomic.LoadInt64(&s.handler.level),
+	}
+	atomic.StoreInt64(&s.handler.level, int64(loggerToSlogLevel(s.opts.Level)))
 	s.mu.Unlock()
 
 	return nil
@@ -290,10 +305,17 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 		}
 	}
 
-	var pcs [1]uintptr
-	runtime.Callers(s.opts.CallerSkipCount, pcs[:]) // skip [Callers, printLog, LogLvlMethod]
-	r := slog.NewRecord(s.opts.TimeFunc(), loggerToSlogLevel(lvl), msg, pcs[0])
+	var pcs uintptr
+
+	if s.opts.AddCaller {
+		var caller [1]uintptr
+		runtime.Callers(s.opts.CallerSkipCount, caller[:]) // skip [Callers, printLog, LogLvlMethod]
+		pcs = caller[0]
+	}
+
+	r := slog.NewRecord(s.opts.TimeFunc(), loggerToSlogLevel(lvl), msg, pcs)
 	r.AddAttrs(attrs...)
+
 	_ = s.handler.Handle(ctx, r)
 }
 
