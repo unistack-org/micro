@@ -43,7 +43,7 @@ type Options struct {
 	// ContentType will be used if no content-type set when creating message
 	ContentType string
 	// ErrorHandler specifies handler for all broker errors handling subscriber
-	ErrorHandler any
+	ErrorHandler func(Message) error
 }
 
 // NewOptions create new Options
@@ -90,7 +90,7 @@ func ContentType(ct string) Option {
 }
 
 // ErrorHandler handles errors in broker
-func ErrorHandler(h any) Option {
+func ErrorHandler(h func(Message) error) Option {
 	return func(o *Options) {
 		o.ErrorHandler = h
 	}
