@@ -18,7 +18,6 @@ import (
 type Options struct {
 	// Name holds the broker name
 	Name string
-
 	// Tracer used for tracing
 	Tracer tracer.Tracer
 	// Register can be used for clustering
@@ -31,23 +30,20 @@ type Options struct {
 	Meter meter.Meter
 	// Context holds external options
 	Context context.Context
-
 	// Wait waits for a collection of goroutines to finish
 	Wait *sync.WaitGroup
 	// TLSConfig holds tls.TLSConfig options
 	TLSConfig *tls.Config
-
 	// Addrs holds the broker address
 	Addrs []string
-	// Hooks can be run before broker Publish/BatchPublish and
-	// Subscribe/BatchSubscribe methods
+	// Hooks can be run before broker Publishing and message processing in Subscribe
 	Hooks options.Hooks
-
 	// GracefulTimeout contains time to wait to finish in flight requests
 	GracefulTimeout time.Duration
-
 	// ContentType will be used if no content-type set when creating message
 	ContentType string
+	// ErrorHandler specifies handler for all broker errors handling subscriber
+	ErrorHandler any
 }
 
 // NewOptions create new Options
@@ -90,6 +86,13 @@ func GracefulTimeout(t time.Duration) Option {
 func ContentType(ct string) Option {
 	return func(o *Options) {
 		o.ContentType = ct
+	}
+}
+
+// ErrorHandler handles errors in broker
+func ErrorHandler(h any) Option {
+	return func(o *Options) {
+		o.ErrorHandler = h
 	}
 }
 

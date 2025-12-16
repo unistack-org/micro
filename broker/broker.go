@@ -41,11 +41,11 @@ type Broker interface {
 	// Disconnect disconnect from broker
 	Disconnect(ctx context.Context) error
 	// NewMessage create new broker message to publish.
-	NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...MessageOption) (Message, error)
+	NewMessage(ctx context.Context, hdr metadata.Metadata, body any, opts ...MessageOption) (Message, error)
 	// Publish message to broker topic
 	Publish(ctx context.Context, topic string, messages ...Message) error
 	// Subscribe subscribes to topic message via handler
-	Subscribe(ctx context.Context, topic string, handler interface{}, opts ...SubscribeOption) (Subscriber, error)
+	Subscribe(ctx context.Context, topic string, handler any, opts ...SubscribeOption) (Subscriber, error)
 	// String type of broker
 	String() string
 	// Live returns broker liveness
@@ -59,7 +59,7 @@ type Broker interface {
 type (
 	FuncPublish   func(ctx context.Context, topic string, messages ...Message) error
 	HookPublish   func(next FuncPublish) FuncPublish
-	FuncSubscribe func(ctx context.Context, topic string, handler interface{}, opts ...SubscribeOption) (Subscriber, error)
+	FuncSubscribe func(ctx context.Context, topic string, handler any, opts ...SubscribeOption) (Subscriber, error)
 	HookSubscribe func(next FuncSubscribe) FuncSubscribe
 )
 
@@ -75,7 +75,7 @@ type Message interface {
 	Body() []byte
 	// Unmarshal try to decode message body to dst.
 	// This is helper method that uses codec.Unmarshal.
-	Unmarshal(dst interface{}, opts ...codec.Option) error
+	Unmarshal(dst any, opts ...codec.Option) error
 	// Ack acknowledge message if supported.
 	Ack() error
 }
