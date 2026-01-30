@@ -534,6 +534,10 @@ func newSubscriber(topic string, sub interface{}, opts ...SubscriberOption) Subs
 			h.reqType = typ.In(1)
 		}
 
+		if h.reqType.Kind() == reflect.Interface {
+			panic(fmt.Sprintf("subscriber for %s: request type cannot be interface{} or any", topic))
+		}
+
 		handlers = append(handlers, h)
 	} else {
 		for m := 0; m < typ.NumMethod(); m++ {
@@ -548,6 +552,10 @@ func newSubscriber(topic string, sub interface{}, opts ...SubscriberOption) Subs
 			case 3:
 				h.ctxType = method.Type.In(1)
 				h.reqType = method.Type.In(2)
+			}
+
+			if h.reqType.Kind() == reflect.Interface {
+				panic(fmt.Sprintf("subscriber for %s: request type cannot be interface{} or any", topic))
 			}
 
 			handlers = append(handlers, h)
