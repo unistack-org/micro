@@ -15,10 +15,10 @@ require (
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/atomic v1.11.0
 	go.unistack.org/micro-proto/v4 v4.1.0
-	golang.org/x/sync v0.17.0
+	golang.org/x/sync v0.19.0
 	golang.yandex/hasql/v2 v2.1.0
 	google.golang.org/grpc v1.76.0
-	google.golang.org/protobuf v1.36.10
+	google.golang.org/protobuf v1.36.11
 )
 
 require (

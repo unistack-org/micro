@@ -91,6 +91,12 @@ func WithCallerEnabled(b bool) Option {
 	}
 }
 
+func WithAddCaller(b bool) Option {
+	return func(o *Options) {
+		o.AddCaller = b
+	}
+}
+
 // WithFatalFinalizers set logger.Fatal finalizers
 func WithFatalFinalizers(fncs ...func(context.Context)) Option {
 	return func(o *Options) {
