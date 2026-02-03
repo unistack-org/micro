@@ -6,8 +6,10 @@ import (
 )
 
 var _ interface {
-	io.ReadCloser
-	io.ReadSeeker
+	io.Reader
+	io.Seeker
+	io.Writer
+	io.Closer
 } = (*SeekerBuffer)(nil)
 
 // SeekerBuffer is a ReadWriteCloser that supports seeking. It's intended to
@@ -95,7 +97,7 @@ func (b *SeekerBuffer) Close() error {
 
 // Reset clears all the data out of the buffer and sets the read position to 0.
 func (b *SeekerBuffer) Reset() {
-	b.data = nil
+	b.data = b.data[:0]
 	b.pos = 0
 }
 

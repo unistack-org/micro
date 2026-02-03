@@ -296,7 +296,7 @@ func TestSeekerBuffer_Reset(t *testing.T) {
 	buf.pos = 2
 
 	buf.Reset()
-	require.Nil(t, buf.data)
+	require.Equal(t, []byte{}, buf.data)
 	require.Equal(t, int64(0), buf.pos)
 }
 
