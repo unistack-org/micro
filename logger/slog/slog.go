@@ -213,9 +213,9 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 	}
 
 	s.handler = &wrapper{
-		h:     h.WithAttrs(attrs),
-		level: atomic.LoadInt64(&s.handler.level),
+		h: h.WithAttrs(attrs),
 	}
+
 	atomic.StoreInt64(&s.handler.level, int64(loggerToSlogLevel(s.opts.Level)))
 	s.mu.Unlock()
 

@@ -8,7 +8,6 @@ import (
 	"slices"
 	"time"
 
-	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/meter"
 )
 
@@ -86,7 +85,7 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
-func WithCallerEnabled(b bool) logger.Option {
+func WithCallerEnabled(b bool) Option {
 	return func(o *Options) {
 		o.AddCaller = b
 	}
