@@ -2,7 +2,7 @@ module go.unistack.org/micro/v3
 
 go 1.24.0
 
-retract [v3.11.49]
+retract [v3.0.0, v3.11.49]
 
 require (
 	dario.cat/mergo v1.0.1
