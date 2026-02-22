@@ -2,6 +2,8 @@ module go.unistack.org/micro/v4
 
 go 1.25
 
+retract [v4.1.30]
+
 require (
 	dario.cat/mergo v1.0.2
 	github.com/DATA-DOG/go-sqlmock v1.5.2
