@@ -246,6 +246,12 @@ func Hooks(h ...options.Hook) Option {
 	}
 }
 
+func GracefulTimeout(t time.Duration) Option {
+	return func(o *Options) {
+		o.GracefulTimeout = t
+	}
+}
+
 // SubscribeContext set context
 func SubscribeContext(ctx context.Context) SubscribeOption {
 	return func(o *SubscribeOptions) {
