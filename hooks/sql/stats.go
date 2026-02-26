@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"database/sql"
+	"sync"
 	"time"
 )
 
@@ -11,31 +12,85 @@ type Statser interface {
 }
 
 func NewStatsMeter(ctx context.Context, db Statser, opts ...Option) {
+	if db == nil {
+		return
+	}
+
 	options := NewOptions(opts...)
 
-	go func() {
-		ticker := time.NewTicker(options.MeterStatsInterval)
-		defer ticker.Stop()
+	var (
+		statsMu                                                     sync.Mutex
+		lastUpdated                                                 time.Time
+		maxOpenConnections, openConnections, inUse, idle, waitCount float64
+		maxIdleClosed, maxIdleTimeClosed, maxLifetimeClosed         float64
+		waitDuration                                                float64
+	)
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				if db == nil {
-					return
-				}
-				stats := db.Stats()
-				options.Meter.Counter(MaxOpenConnections).Set(uint64(stats.MaxOpenConnections))
-				options.Meter.Counter(OpenConnections).Set(uint64(stats.OpenConnections))
-				options.Meter.Counter(InuseConnections).Set(uint64(stats.InUse))
-				options.Meter.Counter(IdleConnections).Set(uint64(stats.Idle))
-				options.Meter.Counter(WaitConnections).Set(uint64(stats.WaitCount))
-				options.Meter.FloatCounter(BlockedSeconds).Set(stats.WaitDuration.Seconds())
-				options.Meter.Counter(MaxIdleClosed).Set(uint64(stats.MaxIdleClosed))
-				options.Meter.Counter(MaxIdletimeClosed).Set(uint64(stats.MaxIdleTimeClosed))
-				options.Meter.Counter(MaxLifetimeClosed).Set(uint64(stats.MaxLifetimeClosed))
-			}
+	updateFn := func() {
+		statsMu.Lock()
+		defer statsMu.Unlock()
+
+		if time.Since(lastUpdated) < options.MeterStatsInterval {
+			return
 		}
-	}()
+
+		stats := db.Stats()
+
+		maxOpenConnections = float64(stats.MaxOpenConnections)
+		openConnections = float64(stats.OpenConnections)
+		inUse = float64(stats.InUse)
+		idle = float64(stats.Idle)
+		waitCount = float64(stats.WaitCount)
+		maxIdleClosed = float64(stats.MaxIdleClosed)
+		maxIdleTimeClosed = float64(stats.MaxIdleTimeClosed)
+		maxLifetimeClosed = float64(stats.MaxLifetimeClosed)
+		waitDuration = stats.WaitDuration.Seconds()
+
+		lastUpdated = time.Now()
+	}
+
+	options.Meter.Gauge(MaxOpenConnections, func() float64 {
+		updateFn()
+		return maxOpenConnections
+	})
+
+	options.Meter.Gauge(OpenConnections, func() float64 {
+		updateFn()
+		return openConnections
+	})
+
+	options.Meter.Gauge(InuseConnections, func() float64 {
+		updateFn()
+		return inUse
+	})
+
+	options.Meter.Gauge(IdleConnections, func() float64 {
+		updateFn()
+		return idle
+	})
+
+	options.Meter.Gauge(WaitConnections, func() float64 {
+		updateFn()
+		return waitCount
+	})
+
+	options.Meter.Gauge(BlockedSeconds, func() float64 {
+		updateFn()
+		return waitDuration
+	})
+
+	options.Meter.Gauge(MaxIdleClosed, func() float64 {
+		updateFn()
+		return maxIdleClosed
+	})
+
+	options.Meter.Gauge(MaxIdletimeClosed, func() float64 {
+		updateFn()
+		return maxIdleTimeClosed
+	})
+
+	options.Meter.Gauge(MaxLifetimeClosed, func() float64 {
+		updateFn()
+		return maxLifetimeClosed
+	})
 }
