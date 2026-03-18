@@ -54,12 +54,6 @@ type Options struct {
 	AddStacktrace bool
 	// DedupKeys deduplicate keys in log output
 	DedupKeys bool
-	// FatalFinalizers runs in order in [logger.Fatal] method
-	FatalFinalizers []func(context.Context)
-}
-
-var DefaultFatalFinalizer = func(ctx context.Context) {
-	os.Exit(1)
 }
 
 // NewOptions creates new options struct
@@ -73,7 +67,6 @@ func NewOptions(opts ...Option) Options {
 		AddSource:        true,
 		TimeFunc:         time.Now,
 		Meter:            meter.DefaultMeter,
-		FatalFinalizers:  []func(context.Context){DefaultFatalFinalizer},
 	}
 
 	WithMicroKeys()(&options)
@@ -94,13 +87,6 @@ func WithCallerEnabled(b bool) Option {
 func WithAddCaller(b bool) Option {
 	return func(o *Options) {
 		o.AddCaller = b
-	}
-}
-
-// WithFatalFinalizers set logger.Fatal finalizers
-func WithFatalFinalizers(fncs ...func(context.Context)) Option {
-	return func(o *Options) {
-		o.FatalFinalizers = fncs
 	}
 }
 
