@@ -99,6 +99,16 @@ func Broker(b broker.Broker, opts ...BrokerOption) Option {
 		if len(opts) == 0 {
 			all = true
 		}
+		found := false
+		for _, existing := range o.Brokers {
+			if existing == b {
+				found = true
+				break
+			}
+		}
+		if !found {
+			o.Brokers = append(o.Brokers, b)
+		}
 		for _, srv := range o.Servers {
 			for _, os := range bopts.servers {
 				if srv.Name() == os || all {
