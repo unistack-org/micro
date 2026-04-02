@@ -19,7 +19,7 @@ require (
 	go.unistack.org/micro-proto/v4 v4.1.1
 	golang.org/x/sync v0.19.0
 	golang.yandex/hasql/v2 v2.1.0
-	google.golang.org/grpc v1.79.1
+	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
 )
 
