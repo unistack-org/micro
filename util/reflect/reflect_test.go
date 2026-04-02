@@ -167,7 +167,7 @@ func TestMergeNested(t *testing.T) {
 
 	if dst.Nested == nil || len(dst.Nested.Uint64Args) != 3 ||
 		len(dst.Nested.StringArgs) != 2 || dst.Nested.StringArgs[0] != "args1" ||
-		len(dst.Nested.Uint64Args) != 3 || dst.Nested.Uint64Args[2] != 3 {
+		dst.Nested.Uint64Args[2] != 3 {
 		t.Fatalf("merge error: %#+v", dst.Nested)
 	}
 

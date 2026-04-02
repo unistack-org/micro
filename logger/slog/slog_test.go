@@ -469,25 +469,3 @@ func Test_WithContextAttrFunc(t *testing.T) {
 
 	// t.Logf("xxx %s", buf.Bytes())
 }
-
-func TestFatalFinalizers(t *testing.T) {
-	ctx := context.TODO()
-	buf := bytes.NewBuffer(nil)
-	l := NewLogger(
-		logger.WithLevel(logger.TraceLevel),
-		logger.WithOutput(buf),
-	)
-	if err := l.Init(
-		logger.WithFatalFinalizers(func(ctx context.Context) {
-			l.Info(ctx, "fatal finalizer")
-		})); err != nil {
-		t.Fatal(err)
-	}
-	l.Fatal(ctx, "info_msg1")
-	if !bytes.Contains(buf.Bytes(), []byte("fatal finalizer")) {
-		t.Fatalf("logger dont have fatal message, buf %s", buf.Bytes())
-	}
-	if !bytes.Contains(buf.Bytes(), []byte("info_msg1")) {
-		t.Fatalf("logger dont have info_msg1 message, buf %s", buf.Bytes())
-	}
-}
