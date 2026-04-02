@@ -100,6 +100,7 @@ type noopMessage struct {
 	body []byte
 	hdr  metadata.Metadata
 	opts MessageOptions
+	err  error
 }
 
 func (m *noopMessage) Ack() error {
@@ -124,6 +125,10 @@ func (m *noopMessage) Topic() string {
 
 func (m *noopMessage) Unmarshal(dst interface{}, opts ...codec.Option) error {
 	return m.c.Unmarshal(m.body, dst)
+}
+
+func (m *noopMessage) Error() error {
+	return m.err
 }
 
 func (b *NoopBroker) NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...MessageOption) (Message, error) {

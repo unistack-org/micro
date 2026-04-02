@@ -78,6 +78,8 @@ type Message interface {
 	Unmarshal(dst any, opts ...codec.Option) error
 	// Ack acknowledge message if supported.
 	Ack() error
+
+	Error() error
 }
 
 // Subscriber is a convenience return type for the Subscribe method
