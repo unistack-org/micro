@@ -33,6 +33,7 @@ type memoryMessage struct {
 	body  []byte
 	hdr   metadata.Metadata
 	opts  broker.MessageOptions
+	err   error
 }
 
 func (m *memoryMessage) Ack() error {
@@ -57,6 +58,10 @@ func (m *memoryMessage) Topic() string {
 
 func (m *memoryMessage) Unmarshal(dst interface{}, opts ...codec.Option) error {
 	return m.c.Unmarshal(m.body, dst)
+}
+
+func (m *memoryMessage) Error() error {
+	return m.err
 }
 
 type Subscriber struct {
