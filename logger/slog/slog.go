@@ -25,6 +25,13 @@ const (
 
 var reTrace = regexp.MustCompile(`.*/slog/logger\.go.*\n`)
 
+// pool for slog.Attr slice to reduce allocations
+var recordPool = sync.Pool{
+	New: func() interface{} {
+		return &[]slog.Attr{}
+	},
+}
+
 var (
 	traceValue = slog.StringValue("trace")
 	debugValue = slog.StringValue("debug")
@@ -269,7 +276,11 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 
 	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", lvl.String()).Inc()
 
-	attrs, err := s.argsAttrs(args)
+	attrsPtr := recordPool.Get().(*[]slog.Attr)
+	*attrsPtr = (*attrsPtr)[:0]
+	defer recordPool.Put(attrsPtr)
+
+	attrsFromArgs, err := s.argsAttrs(args)
 	if err != nil {
 		argError = err
 	}
@@ -278,13 +289,14 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 			span.SetStatus(tracer.SpanStatusError, argError.Error())
 		}
 	}
+	*attrsPtr = append(*attrsPtr, attrsFromArgs...)
 
 	for _, fn := range s.opts.ContextAttrFuncs {
 		ctxAttrs, err := s.argsAttrs(fn(ctx))
 		if err != nil {
 			argError = err
 		}
-		attrs = append(attrs, ctxAttrs...)
+		*attrsPtr = append(*attrsPtr, ctxAttrs...)
 	}
 	if argError != nil {
 		if span, ok := tracer.SpanFromContext(ctx); ok {
@@ -297,7 +309,7 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
 			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
 			if len(traceLines) != 0 {
-				attrs = append(attrs, slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1]))
+				*attrsPtr = append(*attrsPtr, slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1]))
 			}
 		}
 	}
@@ -311,7 +323,7 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 	}
 
 	r := slog.NewRecord(s.opts.TimeFunc(), loggerToSlogLevel(lvl), msg, pcs)
-	r.AddAttrs(attrs...)
+	r.AddAttrs(*attrsPtr...)
 
 	_ = s.handler.Handle(ctx, r)
 }
