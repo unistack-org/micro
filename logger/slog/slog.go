@@ -32,6 +32,14 @@ var recordPool = sync.Pool{
 	},
 }
 
+// pool for stack trace buffers to reduce allocations
+var stackPool = sync.Pool{
+	New: func() interface{} {
+		b := make([]byte, 0, 1024*1024)
+		return &b
+	},
+}
+
 var (
 	traceValue = slog.StringValue("trace")
 	debugValue = slog.StringValue("debug")
@@ -127,7 +135,7 @@ func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
 	}
 
 	var attrs []slog.Attr
-	attrs, _ = s.argsAttrs(attrs, options.Fields)
+	attrs, _ = s.argsAttrs(attrs, options.Fields...)
 	l := &slogLogger{
 		handler: &wrapper{
 			h:     s.handler.h.WithAttrs(attrs),
@@ -171,7 +179,7 @@ func (s *slogLogger) Fields(fields ...interface{}) logger.Logger {
 	}
 
 	var attrs []slog.Attr
-	attrs, _ = s.argsAttrs(attrs, fields)
+	attrs, _ = s.argsAttrs(attrs, fields...)
 	l.handler = &wrapper{
 		h:     s.handler.h.WithAttrs(attrs),
 		level: atomic.LoadInt64(&s.handler.level),
@@ -199,7 +207,7 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 	}
 
 	var attrs []slog.Attr
-	attrs, _ = s.argsAttrs(attrs, s.opts.Fields)
+	attrs, _ = s.argsAttrs(attrs, s.opts.Fields...)
 
 	var h slog.Handler
 	if s.opts.Context != nil {
@@ -308,9 +316,11 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 	}
 
 	if s.opts.AddStacktrace && (lvl == logger.FatalLevel || lvl == logger.ErrorLevel) {
-		stackInfo := make([]byte, 1024*1024)
-		if stackSize := runtime.Stack(stackInfo, false); stackSize > 0 {
-			traceLines := reTrace.Split(string(stackInfo[:stackSize]), -1)
+		stackBuf := stackPool.Get().(*[]byte)
+		*stackBuf = (*stackBuf)[:0]
+		defer stackPool.Put(stackBuf)
+		if stackSize := runtime.Stack(*stackBuf, false); stackSize > 0 {
+			traceLines := reTrace.Split(string((*stackBuf)[:stackSize]), -1)
 			if len(traceLines) != 0 {
 				*attrsPtr = append(*attrsPtr, slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1]))
 			}
@@ -378,7 +388,7 @@ func slogToLoggerLevel(level slog.Level) logger.Level {
 	}
 }
 
-func (s *slogLogger) argsAttrs(attrs []slog.Attr, args []interface{}) ([]slog.Attr, error) {
+func (s *slogLogger) argsAttrs(attrs []slog.Attr, args ...interface{}) ([]slog.Attr, error) {
 	var err error
 
 	for idx := 0; idx < len(args); idx++ {
