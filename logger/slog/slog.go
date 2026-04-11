@@ -126,7 +126,8 @@ func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
 		options.ContextAttrFuncs = logger.DefaultContextAttrFuncs
 	}
 
-	attrs, _ := s.argsAttrs(options.Fields)
+	var attrs []slog.Attr
+	attrs, _ = s.argsAttrs(attrs, options.Fields)
 	l := &slogLogger{
 		handler: &wrapper{
 			h:     s.handler.h.WithAttrs(attrs),
@@ -169,7 +170,8 @@ func (s *slogLogger) Fields(fields ...interface{}) logger.Logger {
 		options.ContextAttrFuncs = logger.DefaultContextAttrFuncs
 	}
 
-	attrs, _ := s.argsAttrs(fields)
+	var attrs []slog.Attr
+	attrs, _ = s.argsAttrs(attrs, fields)
 	l.handler = &wrapper{
 		h:     s.handler.h.WithAttrs(attrs),
 		level: atomic.LoadInt64(&s.handler.level),
@@ -196,7 +198,8 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 		AddSource:   s.opts.AddSource,
 	}
 
-	attrs, _ := s.argsAttrs(s.opts.Fields)
+	var attrs []slog.Attr
+	attrs, _ = s.argsAttrs(attrs, s.opts.Fields)
 
 	var h slog.Handler
 	if s.opts.Context != nil {
@@ -280,7 +283,8 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 	*attrsPtr = (*attrsPtr)[:0]
 	defer recordPool.Put(attrsPtr)
 
-	attrsFromArgs, err := s.argsAttrs(args)
+	var err error
+	*attrsPtr, err = s.argsAttrs(*attrsPtr, args)
 	if err != nil {
 		argError = err
 	}
@@ -289,14 +293,13 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 			span.SetStatus(tracer.SpanStatusError, argError.Error())
 		}
 	}
-	*attrsPtr = append(*attrsPtr, attrsFromArgs...)
 
 	for _, fn := range s.opts.ContextAttrFuncs {
-		ctxAttrs, err := s.argsAttrs(fn(ctx))
-		if err != nil {
-			argError = err
+		var ctxErr error
+		*attrsPtr, ctxErr = s.argsAttrs(*attrsPtr, fn(ctx))
+		if ctxErr != nil {
+			argError = ctxErr
 		}
-		*attrsPtr = append(*attrsPtr, ctxAttrs...)
 	}
 	if argError != nil {
 		if span, ok := tracer.SpanFromContext(ctx); ok {
@@ -375,8 +378,7 @@ func slogToLoggerLevel(level slog.Level) logger.Level {
 	}
 }
 
-func (s *slogLogger) argsAttrs(args []interface{}) ([]slog.Attr, error) {
-	attrs := make([]slog.Attr, 0, len(args))
+func (s *slogLogger) argsAttrs(attrs []slog.Attr, args []interface{}) ([]slog.Attr, error) {
 	var err error
 
 	for idx := 0; idx < len(args); idx++ {
