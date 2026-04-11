@@ -14,6 +14,7 @@ import (
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/semconv"
 	"go.unistack.org/micro/v4/tracer"
+	pool "go.unistack.org/micro/v4/util/xpool"
 )
 
 const (
@@ -26,19 +27,12 @@ const (
 var reTrace = regexp.MustCompile(`.*/slog/logger\.go.*\n`)
 
 // pool for slog.Attr slice to reduce allocations
-var recordPool = sync.Pool{
-	New: func() interface{} {
-		return &[]slog.Attr{}
-	},
-}
+var recordPool = pool.NewPool[[]slog.Attr](func() []slog.Attr {
+	return make([]slog.Attr, 0, 32)
+}, 1024)
 
 // pool for stack trace buffers to reduce allocations
-var stackPool = sync.Pool{
-	New: func() interface{} {
-		b := make([]byte, 0, 1024*1024)
-		return &b
-	},
-}
+var stackPool = pool.NewBytePool(1024 * 1024)
 
 var (
 	traceValue = slog.StringValue("trace")
@@ -134,8 +128,11 @@ func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
 		options.ContextAttrFuncs = logger.DefaultContextAttrFuncs
 	}
 
-	var attrs []slog.Attr
-	attrs, _ = s.argsAttrs(attrs, options.Fields...)
+	attrs := recordPool.Get()
+	attrs = attrs[:0]
+	defer recordPool.Put(attrs)
+
+	s.argsAttrs(attrs, options.Fields...)
 	l := &slogLogger{
 		handler: &wrapper{
 			h:     s.handler.h.WithAttrs(attrs),
@@ -178,8 +175,11 @@ func (s *slogLogger) Fields(fields ...interface{}) logger.Logger {
 		options.ContextAttrFuncs = logger.DefaultContextAttrFuncs
 	}
 
-	var attrs []slog.Attr
-	attrs, _ = s.argsAttrs(attrs, fields...)
+	attrs := recordPool.Get()
+	attrs = attrs[:0]
+	defer recordPool.Put(attrs)
+
+	s.argsAttrs(attrs, fields...)
 	l.handler = &wrapper{
 		h:     s.handler.h.WithAttrs(attrs),
 		level: atomic.LoadInt64(&s.handler.level),
@@ -206,8 +206,11 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 		AddSource:   s.opts.AddSource,
 	}
 
-	var attrs []slog.Attr
-	attrs, _ = s.argsAttrs(attrs, s.opts.Fields...)
+	attrs := recordPool.Get()
+	attrs = attrs[:0]
+	defer recordPool.Put(attrs)
+
+	s.argsAttrs(attrs, s.opts.Fields...)
 
 	var h slog.Handler
 	if s.opts.Context != nil {
@@ -287,12 +290,12 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 
 	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", lvl.String()).Inc()
 
-	attrsPtr := recordPool.Get().(*[]slog.Attr)
-	*attrsPtr = (*attrsPtr)[:0]
-	defer recordPool.Put(attrsPtr)
+	attrs := recordPool.Get()
+	attrs = attrs[:0]
+	defer recordPool.Put(attrs)
 
 	var err error
-	*attrsPtr, err = s.argsAttrs(*attrsPtr, args)
+	attrs, err = s.argsAttrs(attrs, args)
 	if err != nil {
 		argError = err
 	}
@@ -304,7 +307,7 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 
 	for _, fn := range s.opts.ContextAttrFuncs {
 		var ctxErr error
-		*attrsPtr, ctxErr = s.argsAttrs(*attrsPtr, fn(ctx))
+		attrs, ctxErr = s.argsAttrs(attrs, fn(ctx))
 		if ctxErr != nil {
 			argError = ctxErr
 		}
@@ -316,13 +319,13 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 	}
 
 	if s.opts.AddStacktrace && (lvl == logger.FatalLevel || lvl == logger.ErrorLevel) {
-		stackBuf := stackPool.Get().(*[]byte)
+		stackBuf := stackPool.Get()
 		*stackBuf = (*stackBuf)[:0]
 		defer stackPool.Put(stackBuf)
 		if stackSize := runtime.Stack(*stackBuf, false); stackSize > 0 {
 			traceLines := reTrace.Split(string((*stackBuf)[:stackSize]), -1)
 			if len(traceLines) != 0 {
-				*attrsPtr = append(*attrsPtr, slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1]))
+				attrs = append(attrs, slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1]))
 			}
 		}
 	}
@@ -336,7 +339,7 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 	}
 
 	r := slog.NewRecord(s.opts.TimeFunc(), loggerToSlogLevel(lvl), msg, pcs)
-	r.AddAttrs(*attrsPtr...)
+	r.AddAttrs(attrs...)
 
 	_ = s.handler.Handle(ctx, r)
 }
