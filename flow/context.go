@@ -6,12 +6,14 @@ import (
 
 type flowKey struct{}
 
+var flowKeyVal = flowKey{}
+
 // FromContext returns Flow from context
 func FromContext(ctx context.Context) (Flow, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	c, ok := ctx.Value(flowKey{}).(Flow)
+	c, ok := ctx.Value(flowKeyVal).(Flow)
 	return c, ok
 }
 
@@ -20,7 +22,7 @@ func NewContext(ctx context.Context, f Flow) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, flowKey{}, f)
+	return context.WithValue(ctx, flowKeyVal, f)
 }
 
 // SetOption returns a function to setup a context with given value

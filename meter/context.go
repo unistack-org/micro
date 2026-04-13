@@ -6,12 +6,14 @@ import (
 
 type meterKey struct{}
 
+var meterKeyVal = meterKey{}
+
 // FromContext get meter from context
 func FromContext(ctx context.Context) (Meter, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	c, ok := ctx.Value(meterKey{}).(Meter)
+	c, ok := ctx.Value(meterKeyVal).(Meter)
 	return c, ok
 }
 
@@ -29,7 +31,7 @@ func NewContext(ctx context.Context, c Meter) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, meterKey{}, c)
+	return context.WithValue(ctx, meterKeyVal, c)
 }
 
 // SetOption returns a function to setup a context with given value

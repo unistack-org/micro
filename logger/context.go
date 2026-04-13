@@ -4,12 +4,14 @@ import "context"
 
 type loggerKey struct{}
 
+var loggerKeyVal = loggerKey{}
+
 // FromContext returns logger from passed context
 func FromContext(ctx context.Context) (Logger, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	l, ok := ctx.Value(loggerKey{}).(Logger)
+	l, ok := ctx.Value(loggerKeyVal).(Logger)
 	return l, ok
 }
 
@@ -27,7 +29,7 @@ func NewContext(ctx context.Context, l Logger) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, loggerKey{}, l)
+	return context.WithValue(ctx, loggerKeyVal, l)
 }
 
 // SetOption returns a function to setup a context with given value

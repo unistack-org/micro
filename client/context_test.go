@@ -6,7 +6,7 @@ import (
 )
 
 func TestFromContext(t *testing.T) {
-	ctx := context.WithValue(context.TODO(), clientKey{}, NewClient())
+	ctx := context.WithValue(context.TODO(), clientKeyVal, NewClient())
 
 	c, ok := FromContext(ctx)
 	if c == nil || !ok {

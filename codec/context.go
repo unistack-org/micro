@@ -6,12 +6,14 @@ import (
 
 type codecKey struct{}
 
+var codecKeyVal = codecKey{}
+
 // FromContext returns codec from context
 func FromContext(ctx context.Context) (Codec, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	c, ok := ctx.Value(codecKey{}).(Codec)
+	c, ok := ctx.Value(codecKeyVal).(Codec)
 	return c, ok
 }
 
@@ -29,7 +31,7 @@ func NewContext(ctx context.Context, c Codec) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, codecKey{}, c)
+	return context.WithValue(ctx, codecKeyVal, c)
 }
 
 // SetOption returns a function to setup a context with given value

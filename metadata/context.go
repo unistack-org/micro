@@ -58,22 +58,28 @@ type (
 	}
 )
 
+var (
+	metadataCurrentKeyVal  = metadataCurrentKey{}
+	metadataIncomingKeyVal = metadataIncomingKey{}
+	metadataOutgoingKeyVal = metadataOutgoingKey{}
+)
+
 // NewContext creates a new context with the provided Metadata attached.
 // The Metadata must not be modified after calling this function.
 func NewContext(ctx context.Context, md Metadata) context.Context {
-	return context.WithValue(ctx, metadataCurrentKey{}, rawMetadata{md: md})
+	return context.WithValue(ctx, metadataCurrentKeyVal, rawMetadata{md: md})
 }
 
 // NewIncomingContext creates a new context with the provided incoming Metadata attached.
 // The Metadata must not be modified after calling this function.
 func NewIncomingContext(ctx context.Context, md Metadata) context.Context {
-	return context.WithValue(ctx, metadataIncomingKey{}, rawMetadata{md: md})
+	return context.WithValue(ctx, metadataIncomingKeyVal, rawMetadata{md: md})
 }
 
 // NewOutgoingContext creates a new context with the provided outgoing Metadata attached.
 // The Metadata must not be modified after calling this function.
 func NewOutgoingContext(ctx context.Context, md Metadata) context.Context {
-	return context.WithValue(ctx, metadataOutgoingKey{}, rawMetadata{md: md})
+	return context.WithValue(ctx, metadataOutgoingKeyVal, rawMetadata{md: md})
 }
 
 // AppendContext returns a new context with the provided key-value pairs (kv)
@@ -83,7 +89,7 @@ func AppendContext(ctx context.Context, kv ...string) context.Context {
 	if len(kv)%2 == 1 {
 		panic(fmt.Sprintf("metadata: AppendContext got an odd number of input pairs for metadata: %d", len(kv)))
 	}
-	md, _ := ctx.Value(metadataCurrentKey{}).(rawMetadata)
+	md, _ := ctx.Value(metadataCurrentKeyVal).(rawMetadata)
 	added := make([][]string, len(md.added)+1)
 	copy(added, md.added)
 	kvCopy := make([]string, 0, len(kv))
@@ -91,7 +97,7 @@ func AppendContext(ctx context.Context, kv ...string) context.Context {
 		kvCopy = append(kvCopy, strings.ToLower(kv[i]), kv[i+1])
 	}
 	added[len(added)-1] = kvCopy
-	return context.WithValue(ctx, metadataCurrentKey{}, rawMetadata{md: md.md, added: added})
+	return context.WithValue(ctx, metadataCurrentKeyVal, rawMetadata{md: md.md, added: added})
 }
 
 // AppendOutgoingContext returns a new context with the provided key-value pairs (kv)
@@ -101,7 +107,7 @@ func AppendOutgoingContext(ctx context.Context, kv ...string) context.Context {
 	if len(kv)%2 == 1 {
 		panic(fmt.Sprintf("metadata: AppendOutgoingContext got an odd number of input pairs for metadata: %d", len(kv)))
 	}
-	md, _ := ctx.Value(metadataOutgoingKey{}).(rawMetadata)
+	md, _ := ctx.Value(metadataOutgoingKeyVal).(rawMetadata)
 	added := make([][]string, len(md.added)+1)
 	copy(added, md.added)
 	kvCopy := make([]string, 0, len(kv))
@@ -109,13 +115,13 @@ func AppendOutgoingContext(ctx context.Context, kv ...string) context.Context {
 		kvCopy = append(kvCopy, strings.ToLower(kv[i]), kv[i+1])
 	}
 	added[len(added)-1] = kvCopy
-	return context.WithValue(ctx, metadataOutgoingKey{}, rawMetadata{md: md.md, added: added})
+	return context.WithValue(ctx, metadataOutgoingKeyVal, rawMetadata{md: md.md, added: added})
 }
 
 // FromContext retrieves a deep copy of the metadata from the context and returns it
 // with a boolean indicating if it was found.
 func FromContext(ctx context.Context) (Metadata, bool) {
-	raw, ok := ctx.Value(metadataCurrentKey{}).(rawMetadata)
+	raw, ok := ctx.Value(metadataCurrentKeyVal).(rawMetadata)
 	if !ok {
 		return nil, false
 	}
@@ -153,7 +159,7 @@ func MustContext(ctx context.Context) Metadata {
 // FromIncomingContext retrieves a deep copy of the metadata from the context and returns it
 // with a boolean indicating if it was found.
 func FromIncomingContext(ctx context.Context) (Metadata, bool) {
-	raw, ok := ctx.Value(metadataIncomingKey{}).(rawMetadata)
+	raw, ok := ctx.Value(metadataIncomingKeyVal).(rawMetadata)
 	if !ok {
 		return nil, false
 	}
@@ -191,7 +197,7 @@ func MustIncomingContext(ctx context.Context) Metadata {
 // FromOutgoingContext retrieves a deep copy of the metadata from the context and returns it
 // with a boolean indicating if it was found.
 func FromOutgoingContext(ctx context.Context) (Metadata, bool) {
-	raw, ok := ctx.Value(metadataOutgoingKey{}).(rawMetadata)
+	raw, ok := ctx.Value(metadataOutgoingKeyVal).(rawMetadata)
 	if !ok {
 		return nil, false
 	}
@@ -230,7 +236,7 @@ func MustOutgoingContext(ctx context.Context) Metadata {
 // ValueFromCurrentContext retrieves a deep copy of the metadata for the given key
 // from the context, performing a case-insensitive search if needed. Returns nil if not found.
 func ValueFromCurrentContext(ctx context.Context, key string) []string {
-	md, ok := ctx.Value(metadataCurrentKey{}).(rawMetadata)
+	md, ok := ctx.Value(metadataCurrentKeyVal).(rawMetadata)
 	if !ok {
 		return nil
 	}
@@ -252,7 +258,7 @@ func ValueFromCurrentContext(ctx context.Context, key string) []string {
 // ValueFromIncomingContext retrieves a deep copy of the metadata for the given key
 // from the context, performing a case-insensitive search if needed. Returns nil if not found.
 func ValueFromIncomingContext(ctx context.Context, key string) []string {
-	raw, ok := ctx.Value(metadataIncomingKey{}).(rawMetadata)
+	raw, ok := ctx.Value(metadataIncomingKeyVal).(rawMetadata)
 	if !ok {
 		return nil
 	}
@@ -274,7 +280,7 @@ func ValueFromIncomingContext(ctx context.Context, key string) []string {
 // ValueFromOutgoingContext retrieves a deep copy of the metadata for the given key
 // from the context, performing a case-insensitive search if needed. Returns nil if not found.
 func ValueFromOutgoingContext(ctx context.Context, key string) []string {
-	md, ok := ctx.Value(metadataOutgoingKey{}).(rawMetadata)
+	md, ok := ctx.Value(metadataOutgoingKeyVal).(rawMetadata)
 	if !ok {
 		return nil
 	}
