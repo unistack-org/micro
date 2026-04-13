@@ -17,7 +17,7 @@ func Write(w http.ResponseWriter, contentType string, status int, body string) {
 	w.Header().Set("Content-Length", fmt.Sprintf("%v", len(body)))
 	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(status)
-	fmt.Fprintf(w, `%v`, body)
+	_, _ = fmt.Fprintf(w, `%v`, body)
 }
 
 // WriteBadRequestError sets a 400 status code

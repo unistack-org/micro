@@ -6,7 +6,7 @@ import (
 )
 
 func TestMergeMapStringInterface(t *testing.T) {
-	var dst interface{} //nolint:gosimple
+	var dst interface{} //nolint:staticcheck
 	dst = map[string]interface{}{
 		"xx": 11,
 	}

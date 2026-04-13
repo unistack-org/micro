@@ -59,7 +59,10 @@ func (r *HTTPResolver) Resolve(name string) ([]*resolver.Record, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rsp.Body.Close()
+	defer func() {
+		_ = rsp.Body.Close()
+	}()
+
 	if rsp.StatusCode != 200 {
 		return nil, errors.New("non 200 response")
 	}

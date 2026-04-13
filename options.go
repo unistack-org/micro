@@ -95,7 +95,7 @@ func Broker(b broker.Broker, opts ...BrokerOption) Option {
 		for _, opt := range opts {
 			opt(&bopts)
 		}
-		all := false
+		var all bool
 		if len(opts) == 0 {
 			all = true
 		}
@@ -220,7 +220,7 @@ func Logger(l logger.Logger, opts ...LoggerOption) Option {
 		for _, opt := range opts {
 			opt(&lopts)
 		}
-		all := false
+		var all bool
 		if len(opts) == 0 {
 			all = true
 		}

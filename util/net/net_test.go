@@ -16,7 +16,9 @@ func TestListen(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer l.Close()
+		defer func() {
+			_ = l.Close()
+		}()
 	}
 
 	// TODO nats case test

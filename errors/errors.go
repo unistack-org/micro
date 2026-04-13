@@ -119,7 +119,7 @@ func BadRequest(id, format string, args ...interface{}) error {
 		ID:     id,
 		Code:   400,
 		Detail: fmt.Sprintf(format, args...),
-		Status: http.StatusText(400),
+		Status: http.StatusText(http.StatusBadRequest),
 	}
 }
 
@@ -129,7 +129,7 @@ func Unauthorized(id, format string, args ...interface{}) error {
 		ID:     id,
 		Code:   401,
 		Detail: fmt.Sprintf(format, args...),
-		Status: http.StatusText(401),
+		Status: http.StatusText(http.StatusUnauthorized),
 	}
 }
 
@@ -139,7 +139,7 @@ func Forbidden(id, format string, args ...interface{}) error {
 		ID:     id,
 		Code:   403,
 		Detail: fmt.Sprintf(format, args...),
-		Status: http.StatusText(403),
+		Status: http.StatusText(http.StatusForbidden),
 	}
 }
 
@@ -149,7 +149,7 @@ func NotFound(id, format string, args ...interface{}) error {
 		ID:     id,
 		Code:   404,
 		Detail: fmt.Sprintf(format, args...),
-		Status: http.StatusText(404),
+		Status: http.StatusText(http.StatusNotFound),
 	}
 }
 
@@ -159,7 +159,7 @@ func MethodNotAllowed(id, format string, args ...interface{}) error {
 		ID:     id,
 		Code:   405,
 		Detail: fmt.Sprintf(format, args...),
-		Status: http.StatusText(405),
+		Status: http.StatusText(http.StatusMethodNotAllowed),
 	}
 }
 
@@ -169,7 +169,7 @@ func Timeout(id, format string, args ...interface{}) error {
 		ID:     id,
 		Code:   408,
 		Detail: fmt.Sprintf(format, args...),
-		Status: http.StatusText(408),
+		Status: http.StatusText(http.StatusRequestTimeout),
 	}
 }
 
@@ -179,7 +179,7 @@ func Conflict(id, format string, args ...interface{}) error {
 		ID:     id,
 		Code:   409,
 		Detail: fmt.Sprintf(format, args...),
-		Status: http.StatusText(409),
+		Status: http.StatusText(http.StatusConflict),
 	}
 }
 
@@ -189,7 +189,7 @@ func InternalServerError(id, format string, args ...interface{}) error {
 		ID:     id,
 		Code:   500,
 		Detail: fmt.Sprintf(format, args...),
-		Status: http.StatusText(500),
+		Status: http.StatusText(http.StatusInternalServerError),
 	}
 }
 
@@ -199,7 +199,7 @@ func NotImplemented(id, format string, args ...interface{}) error {
 		ID:     id,
 		Code:   501,
 		Detail: fmt.Sprintf(format, args...),
-		Status: http.StatusText(501),
+		Status: http.StatusText(http.StatusNotImplemented),
 	}
 }
 
@@ -209,7 +209,7 @@ func BadGateway(id, format string, args ...interface{}) error {
 		ID:     id,
 		Code:   502,
 		Detail: fmt.Sprintf(format, args...),
-		Status: http.StatusText(502),
+		Status: http.StatusText(http.StatusBadGateway),
 	}
 }
 
@@ -219,7 +219,7 @@ func ServiceUnavailable(id, format string, args ...interface{}) error {
 		ID:     id,
 		Code:   503,
 		Detail: fmt.Sprintf(format, args...),
-		Status: http.StatusText(503),
+		Status: http.StatusText(http.StatusServiceUnavailable),
 	}
 }
 
@@ -229,7 +229,7 @@ func GatewayTimeout(id, format string, args ...interface{}) error {
 		ID:     id,
 		Code:   504,
 		Detail: fmt.Sprintf(format, args...),
-		Status: http.StatusText(504),
+		Status: http.StatusText(http.StatusGatewayTimeout),
 	}
 }
 

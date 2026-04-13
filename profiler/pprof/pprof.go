@@ -22,7 +22,9 @@ type profiler struct {
 }
 
 func (p *profiler) writeHeap(f *os.File) {
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	t := time.NewTicker(time.Second * 30)
 	defer t.Stop()
@@ -95,7 +97,7 @@ func (p *profiler) Stop() error {
 	default:
 		close(p.exit)
 		pprof.StopCPUProfile()
-		p.cpuFile.Close()
+		_ = p.cpuFile.Close()
 		p.running = false
 		p.cpuFile = nil
 		p.memFile = nil
