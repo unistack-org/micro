@@ -36,6 +36,24 @@ func TestStacktrace(t *testing.T) {
 	}
 }
 
+func TestSource(t *testing.T) {
+	ctx := context.TODO()
+	buf := bytes.NewBuffer(nil)
+	l := NewLogger(logger.WithLevel(logger.DebugLevel), logger.WithOutput(buf),
+		WithHandlerFunc(slog.NewTextHandler),
+		logger.WithSource(false),
+	)
+	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
+		t.Fatal(err)
+	}
+
+	l.Error(ctx, "msg1", errors.New("err"))
+
+	if bytes.Contains(buf.Bytes(), []byte(`source`)) {
+		t.Fatalf("buf not contains stacktrace: %s", buf.Bytes())
+	}
+}
+
 func TestNoneLevel(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)

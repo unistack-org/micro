@@ -77,6 +77,9 @@ func (h *wrapper) WithGroup(name string) slog.Handler {
 func (s *slogLogger) renameAttr(_ []string, a slog.Attr) slog.Attr {
 	switch a.Key {
 	case slog.SourceKey:
+		if !s.opts.AddSource {
+			return slog.Attr{}
+		}
 		source := a.Value.Any().(*slog.Source)
 		a.Value = slog.StringValue(source.File + ":" + strconv.Itoa(source.Line))
 		a.Key = s.opts.SourceKey
