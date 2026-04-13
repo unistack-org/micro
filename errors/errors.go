@@ -333,14 +333,14 @@ func (e *Error) Unmarshal(data []byte) error {
 			if len(val) == 0 {
 				continue
 			}
-			switch {
-			case nparts[idx] == `"id"`:
+			switch nparts[idx] {
+			case `"id"`:
 				e.ID = val
-			case nparts[idx] == `"detail"`:
+			case `"detail"`:
 				e.Detail = val
-			case nparts[idx] == `"status"`:
+			case `"status"`:
 				e.Status = val
-			case nparts[idx] == `"code"`:
+			case `"code"`:
 				c, err := strconv.ParseInt(val, 10, 32)
 				if err != nil {
 					return err

@@ -449,10 +449,10 @@ func Test_WithContextAttrFunc(t *testing.T) {
 	}
 
 	l.Info(ctx, "test message")
-	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"info"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"test message"`))) {
+	if !bytes.Contains(buf.Bytes(), []byte(`"level":"info"`)) || !bytes.Contains(buf.Bytes(), []byte(`"msg":"test message"`)) {
 		t.Fatalf("logger info, buf %s", buf.Bytes())
 	}
-	if !(bytes.Contains(buf.Bytes(), []byte(`"x-request-id":"`))) {
+	if !bytes.Contains(buf.Bytes(), []byte(`"x-request-id":"`)) {
 		t.Fatalf("logger info, buf %s", buf.Bytes())
 	}
 	if !(bytes.Contains(buf.Bytes(), []byte(`"source-service":"Test-System"`))) {
