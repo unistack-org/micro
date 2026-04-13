@@ -6,12 +6,14 @@ import (
 
 type brokerKey struct{}
 
+var brokerKeyVal = brokerKey{}
+
 // FromContext returns broker from passed context
 func FromContext(ctx context.Context) (Broker, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	c, ok := ctx.Value(brokerKey{}).(Broker)
+	c, ok := ctx.Value(brokerKeyVal).(Broker)
 	return c, ok
 }
 
@@ -29,7 +31,7 @@ func NewContext(ctx context.Context, s Broker) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, brokerKey{}, s)
+	return context.WithValue(ctx, brokerKeyVal, s)
 }
 
 // SetSubscribeOption returns a function to setup a context with given value

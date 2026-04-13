@@ -7,12 +7,14 @@ import (
 
 type tracerKey struct{}
 
+var tracerKeyVal = tracerKey{}
+
 // FromContext returns a tracer from context
 func FromContext(ctx context.Context) (Tracer, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	if tracer, ok := ctx.Value(tracerKey{}).(Tracer); ok {
+	if tracer, ok := ctx.Value(tracerKeyVal).(Tracer); ok {
 		return tracer, true
 	}
 	return nil, false
@@ -32,10 +34,12 @@ func NewContext(ctx context.Context, tracer Tracer) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, tracerKey{}, tracer)
+	return context.WithValue(ctx, tracerKeyVal, tracer)
 }
 
 type spanKey struct{}
+
+var spanKeyVal = spanKey{}
 
 // SpanFromContext returns a span from context
 func SpanMustContext(ctx context.Context) Span {
@@ -51,7 +55,7 @@ func SpanFromContext(ctx context.Context) (Span, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	if span, ok := ctx.Value(spanKey{}).(Span); ok {
+	if span, ok := ctx.Value(spanKeyVal).(Span); ok {
 		return span, true
 	}
 	return nil, false
@@ -62,7 +66,7 @@ func NewSpanContext(ctx context.Context, span Span) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, spanKey{}, span)
+	return context.WithValue(ctx, spanKeyVal, span)
 }
 
 // SetOption returns a function to setup a context with given value

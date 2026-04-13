@@ -6,12 +6,14 @@ import (
 
 type serverKey struct{}
 
+var serverKeyVal = serverKey{}
+
 // FromContext returns Server from context
 func FromContext(ctx context.Context) (Server, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	c, ok := ctx.Value(serverKey{}).(Server)
+	c, ok := ctx.Value(serverKeyVal).(Server)
 	return c, ok
 }
 
@@ -29,7 +31,7 @@ func NewContext(ctx context.Context, s Server) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, serverKey{}, s)
+	return context.WithValue(ctx, serverKeyVal, s)
 }
 
 // SetOption returns a function to setup a context with given value

@@ -11,6 +11,12 @@ import (
 // LookupFunc is used to lookup routes for a service
 type LookupFunc func(context.Context, Request, CallOptions) ([]string, error)
 
+type routesByMetric []router.Route
+
+func (r routesByMetric) Len() int           { return len(r) }
+func (r routesByMetric) Less(i, j int) bool { return r[i].Metric < r[j].Metric }
+func (r routesByMetric) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
+
 // LookupRoute for a request using the router and then choose one using the selector
 func LookupRoute(_ context.Context, req Request, opts CallOptions) ([]string, error) {
 	// check to see if an address was provided as a call option
@@ -40,9 +46,7 @@ func LookupRoute(_ context.Context, req Request, opts CallOptions) ([]string, er
 	}
 
 	// sort by lowest metric first
-	sort.Slice(routes, func(i, j int) bool {
-		return routes[i].Metric < routes[j].Metric
-	})
+	sort.Sort(routesByMetric(routes))
 
 	addrs := make([]string, 0, len(routes))
 	for _, route := range routes {

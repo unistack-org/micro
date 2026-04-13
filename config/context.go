@@ -6,12 +6,14 @@ import (
 
 type configKey struct{}
 
+var configKeyVal = configKey{}
+
 // FromContext returns store from context
 func FromContext(ctx context.Context) (Config, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	c, ok := ctx.Value(configKey{}).(Config)
+	c, ok := ctx.Value(configKeyVal).(Config)
 	return c, ok
 }
 
@@ -29,7 +31,7 @@ func NewContext(ctx context.Context, c Config) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, configKey{}, c)
+	return context.WithValue(ctx, configKeyVal, c)
 }
 
 // SetOption returns a function to setup a context with given value

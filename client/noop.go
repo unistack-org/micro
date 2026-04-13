@@ -15,6 +15,8 @@ import (
 	"go.unistack.org/micro/v4/tracer"
 )
 
+const statusSuccess = "200"
+
 type noopClient struct {
 	funcCall   FuncCall
 	funcStream FuncStream
@@ -170,25 +172,26 @@ func (n *noopClient) String() string {
 }
 
 func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error {
+	endpoint := req.Endpoint()
 	ts := time.Now()
-	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", req.Endpoint()).Inc()
+	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", endpoint).Inc()
 	var sp tracer.Span
 	ctx, sp = n.opts.Tracer.Start(ctx, "rpc-client",
 		tracer.WithSpanKind(tracer.SpanKindClient),
-		tracer.WithSpanLabels("endpoint", req.Endpoint()),
+		tracer.WithSpanLabels("endpoint", endpoint),
 	)
 	err := n.funcCall(ctx, req, rsp, opts...)
-	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", req.Endpoint()).Dec()
+	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", endpoint).Dec()
 	te := time.Since(ts)
-	n.opts.Meter.Summary(semconv.ClientRequestLatencyMicroseconds, "endpoint", req.Endpoint()).Update(te.Seconds())
-	n.opts.Meter.Histogram(semconv.ClientRequestDurationSeconds, "endpoint", req.Endpoint()).Update(te.Seconds())
+	n.opts.Meter.Summary(semconv.ClientRequestLatencyMicroseconds, "endpoint", endpoint).Update(te.Seconds())
+	n.opts.Meter.Histogram(semconv.ClientRequestDurationSeconds, "endpoint", endpoint).Update(te.Seconds())
 
 	if me := errors.FromError(err); me == nil {
 		sp.Finish()
-		n.opts.Meter.Counter(semconv.ClientRequestTotal, "endpoint", req.Endpoint(), "status", "success", "code", strconv.Itoa(int(200))).Inc()
+		n.opts.Meter.Counter(semconv.ClientRequestTotal, "endpoint", endpoint, "status", "success", "code", statusSuccess).Inc()
 	} else {
 		sp.SetStatus(tracer.SpanStatusError, err.Error())
-		n.opts.Meter.Counter(semconv.ClientRequestTotal, "endpoint", req.Endpoint(), "status", "failure", "code", strconv.Itoa(int(me.Code))).Inc()
+		n.opts.Meter.Counter(semconv.ClientRequestTotal, "endpoint", endpoint, "status", "failure", "code", strconv.Itoa(int(me.Code))).Inc()
 	}
 
 	return err
@@ -290,34 +293,25 @@ func (n *noopClient) fnCall(ctx context.Context, req Request, rsp interface{}, o
 		return err
 	}
 
-	ch := make(chan error, callOpts.Retries)
 	var gerr error
 
 	for i := 0; i <= callOpts.Retries; i++ {
-		go func() {
-			ch <- call(i)
-		}()
-
-		select {
-		case <-ctx.Done():
-			return errors.New("go.micro.client", fmt.Sprintf("%v", ctx.Err()), 408)
-		case err := <-ch:
-			// if the call succeeded lets bail early
-			if err == nil {
-				return nil
-			}
-
-			retry, rerr := callOpts.Retry(ctx, req, i, err)
-			if rerr != nil {
-				return rerr
-			}
-
-			if !retry {
-				return err
-			}
-
-			gerr = err
+		err := call(i)
+		// if the call succeeded lets bail early
+		if err == nil {
+			return nil
 		}
+
+		retry, rerr := callOpts.Retry(ctx, req, i, err)
+		if rerr != nil {
+			return rerr
+		}
+
+		if !retry {
+			return err
+		}
+
+		gerr = err
 	}
 
 	return gerr
@@ -328,25 +322,26 @@ func (n *noopClient) NewRequest(service, endpoint string, _ interface{}, _ ...Re
 }
 
 func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error) {
+	endpoint := req.Endpoint()
 	ts := time.Now()
-	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", req.Endpoint()).Inc()
+	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", endpoint).Inc()
 	var sp tracer.Span
 	ctx, sp = n.opts.Tracer.Start(ctx, "rpc-client",
 		tracer.WithSpanKind(tracer.SpanKindClient),
-		tracer.WithSpanLabels("endpoint", req.Endpoint()),
+		tracer.WithSpanLabels("endpoint", endpoint),
 	)
 	stream, err := n.funcStream(ctx, req, opts...)
-	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", req.Endpoint()).Dec()
+	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", endpoint).Dec()
 	te := time.Since(ts)
-	n.opts.Meter.Summary(semconv.ClientRequestLatencyMicroseconds, "endpoint", req.Endpoint()).Update(te.Seconds())
-	n.opts.Meter.Histogram(semconv.ClientRequestDurationSeconds, "endpoint", req.Endpoint()).Update(te.Seconds())
+	n.opts.Meter.Summary(semconv.ClientRequestLatencyMicroseconds, "endpoint", endpoint).Update(te.Seconds())
+	n.opts.Meter.Histogram(semconv.ClientRequestDurationSeconds, "endpoint", endpoint).Update(te.Seconds())
 
 	if me := errors.FromError(err); me == nil {
 		sp.Finish()
-		n.opts.Meter.Counter(semconv.ClientRequestTotal, "endpoint", req.Endpoint(), "status", "success", "code", strconv.Itoa(int(200))).Inc()
+		n.opts.Meter.Counter(semconv.ClientRequestTotal, "endpoint", endpoint, "status", "success", "code", statusSuccess).Inc()
 	} else {
 		sp.SetStatus(tracer.SpanStatusError, err.Error())
-		n.opts.Meter.Counter(semconv.ClientRequestTotal, "endpoint", req.Endpoint(), "status", "failure", "code", strconv.Itoa(int(me.Code))).Inc()
+		n.opts.Meter.Counter(semconv.ClientRequestTotal, "endpoint", endpoint, "status", "failure", "code", strconv.Itoa(int(me.Code))).Inc()
 	}
 
 	return stream, err
@@ -453,40 +448,25 @@ func (n *noopClient) fnStream(ctx context.Context, req Request, opts ...CallOpti
 		return stream, cerr
 	}
 
-	type response struct {
-		stream Stream
-		err    error
-	}
-
-	ch := make(chan response, callOpts.Retries)
 	var grr error
 
 	for i := 0; i <= callOpts.Retries; i++ {
-		go func() {
-			s, cerr := call(i)
-			ch <- response{s, cerr}
-		}()
-
-		select {
-		case <-ctx.Done():
-			return nil, errors.New("go.micro.client", fmt.Sprintf("%v", ctx.Err()), 408)
-		case rsp := <-ch:
-			// if the call succeeded lets bail early
-			if rsp.err == nil {
-				return rsp.stream, nil
-			}
-
-			retry, rerr := callOpts.Retry(ctx, req, i, err)
-			if rerr != nil {
-				return nil, rerr
-			}
-
-			if !retry {
-				return nil, rsp.err
-			}
-
-			grr = rsp.err
+		s, cerr := call(i)
+		// if the call succeeded lets bail early
+		if cerr == nil {
+			return s, nil
 		}
+
+		retry, rerr := callOpts.Retry(ctx, req, i, cerr)
+		if rerr != nil {
+			return nil, rerr
+		}
+
+		if !retry {
+			return nil, cerr
+		}
+
+		grr = cerr
 	}
 
 	return nil, grr

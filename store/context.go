@@ -6,12 +6,14 @@ import (
 
 type storeKey struct{}
 
+var storeKeyVal = storeKey{}
+
 // FromContext get store from context
 func FromContext(ctx context.Context) (Store, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	c, ok := ctx.Value(storeKey{}).(Store)
+	c, ok := ctx.Value(storeKeyVal).(Store)
 	return c, ok
 }
 
@@ -29,7 +31,7 @@ func NewContext(ctx context.Context, c Store) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, storeKey{}, c)
+	return context.WithValue(ctx, storeKeyVal, c)
 }
 
 // SetOption returns a function to setup a context with given value

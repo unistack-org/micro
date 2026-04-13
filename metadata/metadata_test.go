@@ -197,7 +197,7 @@ func TestMetadataContext(t *testing.T) {
 }
 
 func TestFromContext(t *testing.T) {
-	ctx := context.WithValue(context.TODO(), metadataCurrentKey{}, rawMetadata{md: New(0)})
+	ctx := context.WithValue(context.TODO(), metadataCurrentKeyVal, rawMetadata{md: New(0)})
 
 	c, ok := FromContext(ctx)
 	if c == nil || !ok {
@@ -215,7 +215,7 @@ func TestNewContext(t *testing.T) {
 }
 
 func TestFromIncomingContext(t *testing.T) {
-	ctx := context.WithValue(context.TODO(), metadataIncomingKey{}, rawMetadata{md: New(0)})
+	ctx := context.WithValue(context.TODO(), metadataIncomingKeyVal, rawMetadata{md: New(0)})
 
 	c, ok := FromIncomingContext(ctx)
 	if c == nil || !ok {
@@ -224,7 +224,7 @@ func TestFromIncomingContext(t *testing.T) {
 }
 
 func TestFromOutgoingContext(t *testing.T) {
-	ctx := context.WithValue(context.TODO(), metadataOutgoingKey{}, rawMetadata{md: New(0)})
+	ctx := context.WithValue(context.TODO(), metadataOutgoingKeyVal, rawMetadata{md: New(0)})
 
 	c, ok := FromOutgoingContext(ctx)
 	if c == nil || !ok {

@@ -6,12 +6,14 @@ import (
 
 type registerKey struct{}
 
+var registerKeyVal = registerKey{}
+
 // FromContext get register from context
 func FromContext(ctx context.Context) (Register, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	c, ok := ctx.Value(registerKey{}).(Register)
+	c, ok := ctx.Value(registerKeyVal).(Register)
 	return c, ok
 }
 
@@ -29,7 +31,7 @@ func NewContext(ctx context.Context, c Register) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, registerKey{}, c)
+	return context.WithValue(ctx, registerKeyVal, c)
 }
 
 // SetOption returns a function to setup a context with given value

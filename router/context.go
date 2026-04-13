@@ -6,12 +6,14 @@ import (
 
 type routerKey struct{}
 
+var routerKeyVal = routerKey{}
+
 // FromContext get router from context
 func FromContext(ctx context.Context) (Router, bool) {
 	if ctx == nil {
 		return nil, false
 	}
-	c, ok := ctx.Value(routerKey{}).(Router)
+	c, ok := ctx.Value(routerKeyVal).(Router)
 	return c, ok
 }
 
@@ -29,7 +31,7 @@ func NewContext(ctx context.Context, c Router) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, routerKey{}, c)
+	return context.WithValue(ctx, routerKeyVal, c)
 }
 
 // SetOption returns a function to setup a context with given value
