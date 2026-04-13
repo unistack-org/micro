@@ -13,7 +13,9 @@ func Test_SQLFromFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 
 	if err = SQLFromFile(c, "testdata/result/01_firstcase/Call_db.csv"); err != nil {
 		t.Fatal(err)

@@ -379,7 +379,7 @@ func cachingRoundTrip(cache *cache, network, address string) roundTripper {
 		ctx, cancel := context.WithCancel(ctx)
 		go func() {
 			<-ctx.Done()
-			conn.Close()
+			_ = conn.Close()
 		}()
 		defer cancel()
 

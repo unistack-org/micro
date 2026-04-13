@@ -81,7 +81,9 @@ func get(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func() {
+		_ = res.Body.Close()
+	}()
 	return io.ReadAll(res.Body)
 }
 

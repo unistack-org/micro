@@ -16,7 +16,7 @@ type ExpectedWrite struct {
 	key       string
 	value     interface{}
 	ttl       time.Duration
-	metadata  map[string]string
+	metadata  map[string]string //nolint: unused
 	namespace string
 	times     int
 	called    int

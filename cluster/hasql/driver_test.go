@@ -14,7 +14,10 @@ func TestDriver(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer dbMaster.Close()
+	defer func() {
+		_ = dbMaster.Close()
+	}()
+
 	dbMasterMock.MatchExpectationsInOrder(false)
 
 	dbMasterMock.ExpectQuery(`.*pg_is_in_recovery.*`).WillReturnRows(
@@ -33,7 +36,10 @@ func TestDriver(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer dbDRMaster.Close()
+	defer func() {
+		_ = dbDRMaster.Close()
+	}()
+
 	dbDRMasterMock.MatchExpectationsInOrder(false)
 
 	dbDRMasterMock.ExpectQuery(`.*pg_is_in_recovery.*`).WillReturnRows(
@@ -56,7 +62,9 @@ func TestDriver(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer dbSlaveDC1.Close()
+	defer func() {
+		_ = dbSlaveDC1.Close()
+	}()
 	dbSlaveDC1Mock.MatchExpectationsInOrder(false)
 
 	dbSlaveDC1Mock.ExpectQuery(`.*pg_is_in_recovery.*`).WillReturnRows(
@@ -75,7 +83,9 @@ func TestDriver(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer dbSlaveDC2.Close()
+	defer func() {
+		_ = dbSlaveDC2.Close()
+	}()
 	dbSlaveDC1Mock.MatchExpectationsInOrder(false)
 
 	dbSlaveDC2Mock.ExpectQuery(`.*pg_is_in_recovery.*`).WillReturnRows(
@@ -113,7 +123,9 @@ func TestDriver(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer c.Close()
+	defer func() {
+		_ = c.Close()
+	}()
 
 	if err = c.WaitForNodes(tctx, hasql.Primary, hasql.Standby); err != nil {
 		t.Fatal(err)

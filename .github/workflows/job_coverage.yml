@@ -12,16 +12,16 @@ on:
 jobs:
 
   build:
-    if: github.server_url != 'https://github.com'
+    if: github.server_url == 'https://github.com'
     runs-on: ubuntu-latest
     steps:
     - name: checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         filter: 'blob:none'
 
     - name: setup go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         cache-dependency-path: "**/*.sum"
         go-version: 'stable'

@@ -6,7 +6,7 @@ import (
 
 func TestNoopMeter(t *testing.T) {
 	m := NewMeter(Path("/noop"))
-	if "/noop" != m.Options().Path {
+	if m.Options().Path != "/noop" {
 		t.Fatalf("invalid options parsing: %v", m.Options())
 	}
 

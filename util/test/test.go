@@ -236,7 +236,9 @@ func SQLFromFile(m sqlmock.Sqlmock, name string) error {
 	if err != nil {
 		return err
 	}
-	defer fp.Close()
+	defer func() {
+		_ = fp.Close()
+	}()
 	return SQLFromReader(m, fp)
 }
 

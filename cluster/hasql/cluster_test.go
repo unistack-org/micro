@@ -15,7 +15,10 @@ func TestNewCluster(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer dbMaster.Close()
+	defer func() {
+		_ = dbMaster.Close()
+	}()
+
 	dbMasterMock.MatchExpectationsInOrder(false)
 
 	dbMasterMock.ExpectQuery(`.*pg_is_in_recovery.*`).WillReturnRows(
@@ -34,7 +37,10 @@ func TestNewCluster(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer dbDRMaster.Close()
+	defer func() {
+		_ = dbDRMaster.Close()
+	}()
+
 	dbDRMasterMock.MatchExpectationsInOrder(false)
 
 	dbDRMasterMock.ExpectQuery(`.*pg_is_in_recovery.*`).WillReturnRows(
@@ -57,7 +63,9 @@ func TestNewCluster(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer dbSlaveDC1.Close()
+	defer func() {
+		_ = dbSlaveDC1.Close()
+	}()
 	dbSlaveDC1Mock.MatchExpectationsInOrder(false)
 
 	dbSlaveDC1Mock.ExpectQuery(`.*pg_is_in_recovery.*`).WillReturnRows(
@@ -76,7 +84,10 @@ func TestNewCluster(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer dbSlaveDC2.Close()
+	defer func() {
+		_ = dbSlaveDC2.Close()
+	}()
+
 	dbSlaveDC1Mock.MatchExpectationsInOrder(false)
 
 	dbSlaveDC2Mock.ExpectQuery(`.*pg_is_in_recovery.*`).WillReturnRows(
@@ -114,7 +125,9 @@ func TestNewCluster(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer c.Close()
+	defer func() {
+		_ = c.Close()
+	}()
 
 	if err = c.WaitForNodes(tctx, hasql.Primary, hasql.Standby); err != nil {
 		t.Fatal(err)
@@ -128,7 +141,7 @@ func TestNewCluster(t *testing.T) {
 		t.Fatal(row.Err())
 	} else if err = row.Scan(&node1Name); err != nil {
 		t.Fatal(err)
-	} else if "slave-dc1" != node1Name {
+	} else if node1Name != "slave-dc1" {
 		t.Fatalf("invalid node name %s != %s", "slave-dc1", node1Name)
 	}
 
@@ -142,7 +155,7 @@ func TestNewCluster(t *testing.T) {
 		t.Fatal(row.Err())
 	} else if err = row.Scan(&node2Name); err != nil {
 		t.Fatal(err)
-	} else if "slave-dc1" != node2Name {
+	} else if node2Name != "slave-dc1" {
 		t.Fatalf("invalid node name %s != %s", "slave-dc1", node2Name)
 	}
 
@@ -152,7 +165,7 @@ func TestNewCluster(t *testing.T) {
 		t.Fatal(row.Err())
 	} else if err = row.Scan(&node3Name); err != nil {
 		t.Fatal(err)
-	} else if "master-dc1" != node3Name {
+	} else if node3Name != "master-dc1" {
 		t.Fatalf("invalid node name %s != %s", "master-dc1", node3Name)
 	}
 

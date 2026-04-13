@@ -137,7 +137,7 @@ func Sign(crt, key, csr []byte, opts ...CertOption) ([]byte, error) {
 
 	x509Cert, err := x509.CreateCertificate(rand.Reader, template, caCrt, caCrt.PublicKey, caKey)
 	if err != nil {
-		return nil, fmt.Errorf("Couldn't sign certificate: %w", err)
+		return nil, fmt.Errorf("sign certificate error: %w", err)
 	}
 	out := &bytes.Buffer{}
 	if err := pem.Encode(out, &pem.Block{Type: "CERTIFICATE", Bytes: x509Cert}); err != nil {
