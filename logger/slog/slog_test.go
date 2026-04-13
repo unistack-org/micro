@@ -373,7 +373,7 @@ func TestRedirectStdLogger(t *testing.T) {
 	fn := logger.RedirectStdLogger(l, logger.ErrorLevel)
 	defer fn()
 	log.Print("test")
-	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"error"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"test"`))) {
+	if !bytes.Contains(buf.Bytes(), []byte(`"level":"error"`)) || !bytes.Contains(buf.Bytes(), []byte(`"msg":"test"`)) {
 		t.Fatalf("logger error, buf %s", buf.Bytes())
 	}
 }
@@ -386,7 +386,7 @@ func TestStdLogger(t *testing.T) {
 	}
 	lg := logger.NewStdLogger(l, logger.ErrorLevel)
 	lg.Print("test")
-	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"error"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"test"`))) {
+	if !bytes.Contains(buf.Bytes(), []byte(`"level":"error"`)) || !bytes.Contains(buf.Bytes(), []byte(`"msg":"test"`)) {
 		t.Fatalf("logger error, buf %s", buf.Bytes())
 	}
 }
@@ -403,16 +403,16 @@ func TestLogger(t *testing.T) {
 	l.Fields("error", "test").Info(ctx, "error message")
 	l.Warn(ctx, "first second")
 
-	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"trace"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"trace_msg1"`))) {
+	if !bytes.Contains(buf.Bytes(), []byte(`"level":"trace"`)) || !bytes.Contains(buf.Bytes(), []byte(`"msg":"trace_msg1"`)) {
 		t.Fatalf("logger tracer, buf %s", buf.Bytes())
 	}
-	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"warn"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"warn_msg1"`))) {
+	if !bytes.Contains(buf.Bytes(), []byte(`"level":"warn"`)) || !bytes.Contains(buf.Bytes(), []byte(`"msg":"warn_msg1"`)) {
 		t.Fatalf("logger warn, buf %s", buf.Bytes())
 	}
-	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"info"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"error message","error":"test"`))) {
+	if !bytes.Contains(buf.Bytes(), []byte(`"level":"info"`)) || !bytes.Contains(buf.Bytes(), []byte(`"msg":"error message","error":"test"`)) {
 		t.Fatalf("logger info, buf %s", buf.Bytes())
 	}
-	if !(bytes.Contains(buf.Bytes(), []byte(`"level":"warn"`)) && bytes.Contains(buf.Bytes(), []byte(`"msg":"first second"`))) {
+	if !bytes.Contains(buf.Bytes(), []byte(`"level":"warn"`)) || !bytes.Contains(buf.Bytes(), []byte(`"msg":"first second"`)) {
 		t.Fatalf("logger warn, buf %s", buf.Bytes())
 	}
 }
