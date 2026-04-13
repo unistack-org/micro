@@ -68,7 +68,7 @@ func Extract(addr string) (string, error) {
 
 	ifaces, err := net.Interfaces()
 	if err != nil {
-		return "", fmt.Errorf("Failed to get interfaces! Err: %v", err)
+		return "", fmt.Errorf("failed to get interfaces! Err: %v", err)
 	}
 
 	//nolint:prealloc
@@ -129,7 +129,7 @@ func Extract(addr string) (string, error) {
 		return a.String(), nil
 	}
 
-	return "", fmt.Errorf("No IP address found, and explicit IP not provided")
+	return "", fmt.Errorf("no IP address found, and explicit IP not provided")
 }
 
 // IPs returns all known ips

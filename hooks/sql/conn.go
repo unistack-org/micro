@@ -32,7 +32,7 @@ type wrapperConn struct {
 	conn  driver.Conn
 	opts  Options
 	ctx   context.Context
-	//span  tracer.Span
+	// span  tracer.Span
 }
 
 // Close implements driver.Conn Close
@@ -324,8 +324,7 @@ func (w *wrapperConn) Ping(ctx context.Context) error {
 		return pc.Close()
 	}
 
-	var nctx context.Context //nolint:gosimple
-	nctx = ctx
+	nctx := ctx
 	/*
 		var span tracer.Span
 		if w.ctx != nil {

@@ -331,7 +331,7 @@ func Register(r register.Register, opts ...RegisterOption) Option {
 		for _, opt := range opts {
 			opt(&ropts)
 		}
-		all := false
+		var all bool
 		if len(opts) == 0 {
 			all = true
 		}
@@ -406,7 +406,7 @@ func Tracer(t tracer.Tracer, opts ...TracerOption) Option {
 		for _, opt := range opts {
 			opt(&topts)
 		}
-		all := false
+		var all bool
 		if len(opts) == 0 {
 			all = true
 		}
@@ -532,7 +532,7 @@ func Router(r router.Router, opts ...RouterOption) Option {
 		for _, opt := range opts {
 			opt(&ropts)
 		}
-		all := false
+		var all bool
 		if len(opts) == 0 {
 			all = true
 		}
@@ -610,7 +610,7 @@ func RegisterTTL(td time.Duration, opts ...RegisterOption) Option {
 		for _, opt := range opts {
 			opt(&ropts)
 		}
-		all := false
+		var all bool
 		if len(opts) == 0 {
 			all = true
 		}
@@ -635,7 +635,7 @@ func RegisterInterval(td time.Duration, opts ...RegisterOption) Option {
 		for _, opt := range opts {
 			opt(&ropts)
 		}
-		all := false
+		var all bool
 		if len(opts) == 0 {
 			all = true
 		}
