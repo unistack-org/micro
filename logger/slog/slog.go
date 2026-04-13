@@ -32,7 +32,10 @@ var recordPool = pool.NewPool[[]slog.Attr](func() []slog.Attr {
 }, 1024)
 
 // pool for stack trace buffers to reduce allocations
-var stackPool = pool.NewBytePool(1024 * 1024)
+var stackPool = pool.NewPool[*[]byte](func() *[]byte {
+	s := make([]byte, 1024*1024)
+	return &s
+}, 1024*1024)
 
 var (
 	traceValue = slog.StringValue("trace")
@@ -59,7 +62,7 @@ func (h *wrapper) Handle(ctx context.Context, rec slog.Record) error {
 
 func (h *wrapper) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return &wrapper{
-		h:     h.h.WithAttrs(attrs),
+		h:     h.h.WithAttrs(dedupAttrs(attrs)),
 		level: atomic.LoadInt64(&h.level),
 	}
 }
@@ -128,14 +131,9 @@ func (s *slogLogger) Clone(opts ...logger.Option) logger.Logger {
 		options.ContextAttrFuncs = logger.DefaultContextAttrFuncs
 	}
 
-	attrs := recordPool.Get()
-	attrs = attrs[:0]
-	defer recordPool.Put(attrs)
-
-	s.argsAttrs(attrs, options.Fields...)
 	l := &slogLogger{
 		handler: &wrapper{
-			h:     s.handler.h.WithAttrs(attrs),
+			h:     s.handler.h,
 			level: atomic.LoadInt64(&s.handler.level),
 		},
 		opts: options,
@@ -171,17 +169,12 @@ func (s *slogLogger) Fields(fields ...interface{}) logger.Logger {
 	l := &slogLogger{opts: options}
 	logger.WithAddFields(fields...)(&l.opts)
 
-	if len(options.ContextAttrFuncs) == 0 {
-		options.ContextAttrFuncs = logger.DefaultContextAttrFuncs
+	if len(l.opts.ContextAttrFuncs) == 0 {
+		l.opts.ContextAttrFuncs = logger.DefaultContextAttrFuncs
 	}
 
-	attrs := recordPool.Get()
-	attrs = attrs[:0]
-	defer recordPool.Put(attrs)
-
-	s.argsAttrs(attrs, fields...)
 	l.handler = &wrapper{
-		h:     s.handler.h.WithAttrs(attrs),
+		h:     s.handler.h,
 		level: atomic.LoadInt64(&s.handler.level),
 	}
 	atomic.StoreInt64(&l.handler.level, int64(loggerToSlogLevel(l.opts.Level)))
@@ -191,7 +184,7 @@ func (s *slogLogger) Fields(fields ...interface{}) logger.Logger {
 
 func (s *slogLogger) Init(opts ...logger.Option) error {
 	s.mu.Lock()
-
+	defer s.mu.Unlock()
 	for _, o := range opts {
 		o(&s.opts)
 	}
@@ -206,18 +199,11 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 		AddSource:   s.opts.AddSource,
 	}
 
-	attrs := recordPool.Get()
-	attrs = attrs[:0]
-	defer recordPool.Put(attrs)
-
-	s.argsAttrs(attrs, s.opts.Fields...)
-
 	var h slog.Handler
 	if s.opts.Context != nil {
 		if v, ok := s.opts.Context.Value(handlerKey{}).(slog.Handler); ok && v != nil {
 			h = v
 		}
-
 		if fn := s.opts.Context.Value(handlerFnKey{}); fn != nil {
 			if rfn := reflect.ValueOf(fn); rfn.Kind() == reflect.Func {
 				if ret := rfn.Call([]reflect.Value{reflect.ValueOf(s.opts.Out), reflect.ValueOf(handleOpt)}); len(ret) == 1 {
@@ -233,12 +219,8 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 		h = slog.NewJSONHandler(s.opts.Out, handleOpt)
 	}
 
-	s.handler = &wrapper{
-		h: h.WithAttrs(attrs),
-	}
-
+	s.handler = &wrapper{h: h}
 	atomic.StoreInt64(&s.handler.level, int64(loggerToSlogLevel(s.opts.Level)))
-	s.mu.Unlock()
 
 	return nil
 }
@@ -287,7 +269,6 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 		return
 	}
 	var argError error
-
 	s.opts.Meter.Counter(semconv.LoggerMessageTotal, "level", lvl.String()).Inc()
 
 	attrs := recordPool.Get()
@@ -295,9 +276,16 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 	defer recordPool.Put(attrs)
 
 	var err error
-	attrs, err = s.argsAttrs(attrs, args)
+
+	attrs, err = s.argsAttrs(attrs, s.opts.Fields...)
 	if err != nil {
 		argError = err
+	}
+
+	var callErr error
+	attrs, callErr = s.argsAttrs(attrs, args...)
+	if callErr != nil && argError == nil {
+		argError = callErr
 	}
 	if argError != nil {
 		if span, ok := tracer.SpanFromContext(ctx); ok {
@@ -307,8 +295,8 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 
 	for _, fn := range s.opts.ContextAttrFuncs {
 		var ctxErr error
-		attrs, ctxErr = s.argsAttrs(attrs, fn(ctx))
-		if ctxErr != nil {
+		attrs, ctxErr = s.argsAttrs(attrs, fn(ctx)...)
+		if ctxErr != nil && argError == nil {
 			argError = ctxErr
 		}
 	}
@@ -318,30 +306,28 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 		}
 	}
 
-	if s.opts.AddStacktrace && (lvl == logger.FatalLevel || lvl == logger.ErrorLevel) {
+	if s.opts.AddStacktrace {
 		stackBuf := stackPool.Get()
-		*stackBuf = (*stackBuf)[:0]
-		defer stackPool.Put(stackBuf)
 		if stackSize := runtime.Stack(*stackBuf, false); stackSize > 0 {
 			traceLines := reTrace.Split(string((*stackBuf)[:stackSize]), -1)
 			if len(traceLines) != 0 {
 				attrs = append(attrs, slog.String(s.opts.StacktraceKey, traceLines[len(traceLines)-1]))
 			}
 		}
+		stackPool.Put(stackBuf)
 	}
 
 	var pcs uintptr
-
-	if s.opts.AddCaller {
+	if s.opts.AddSource {
 		var caller [1]uintptr
-		runtime.Callers(s.opts.CallerSkipCount, caller[:]) // skip [Callers, printLog, LogLvlMethod]
+		runtime.Callers(s.opts.CallerSkipCount, caller[:])
 		pcs = caller[0]
 	}
 
 	r := slog.NewRecord(s.opts.TimeFunc(), loggerToSlogLevel(lvl), msg, pcs)
 	r.AddAttrs(attrs...)
 
-	_ = s.handler.Handle(ctx, r)
+	_ = s.handler.Handle(ctx, dedupRecord(r))
 }
 
 func NewLogger(opts ...logger.Option) logger.Logger {
@@ -424,4 +410,46 @@ type handlerFnKey struct{}
 
 func WithHandlerFunc(fn any) logger.Option {
 	return logger.SetOption(handlerFnKey{}, fn)
+}
+
+func dedupRecord(r slog.Record) slog.Record {
+	num := r.NumAttrs()
+	if num == 0 {
+		return r
+	}
+	attrs := make([]slog.Attr, 0, num)
+	r.Attrs(func(a slog.Attr) bool {
+		attrs = append(attrs, a)
+		return true
+	})
+
+	unique := dedupAttrs(attrs)
+	nr := slog.NewRecord(r.Time, r.Level, r.Message, r.PC)
+	nr.AddAttrs(unique...)
+	return nr
+}
+
+func dedupAttrs(a []slog.Attr) []slog.Attr {
+	if len(a) == 0 {
+		return a
+	}
+
+	lastVals := make(map[string]slog.Value, len(a))
+
+	order := make([]string, 0, len(a))
+	seen := make(map[string]struct{}, len(a))
+
+	for _, attr := range a {
+		if _, ok := seen[attr.Key]; !ok {
+			seen[attr.Key] = struct{}{}
+			order = append(order, attr.Key)
+		}
+		lastVals[attr.Key] = attr.Value
+	}
+
+	res := make([]slog.Attr, 0, len(order))
+	for _, k := range order {
+		res = append(res, slog.Attr{Key: k, Value: lastVals[k]})
+	}
+	return res
 }

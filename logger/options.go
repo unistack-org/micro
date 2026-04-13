@@ -5,7 +5,6 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"slices"
 	"time"
 
 	"go.unistack.org/micro/v4/meter"
@@ -78,18 +77,6 @@ func NewOptions(opts ...Option) Options {
 	return options
 }
 
-func WithCallerEnabled(b bool) Option {
-	return func(o *Options) {
-		o.AddCaller = b
-	}
-}
-
-func WithAddCaller(b bool) Option {
-	return func(o *Options) {
-		o.AddCaller = b
-	}
-}
-
 // WithContextAttrFuncs appends default funcs for the context attrs filler
 func WithContextAttrFuncs(fncs ...ContextAttrFunc) Option {
 	return func(o *Options) {
@@ -97,40 +84,17 @@ func WithContextAttrFuncs(fncs ...ContextAttrFunc) Option {
 	}
 }
 
-// WithDedupKeys dont log duplicate keys
-func WithDedupKeys(b bool) Option {
-	return func(o *Options) {
-		o.DedupKeys = b
-	}
-}
-
-// WithAddFields add fields for the logger
-func WithAddFields(fields ...interface{}) Option {
-	return func(o *Options) {
-		if o.DedupKeys {
-			for i := 0; i < len(o.Fields); i += 2 {
-				for j := 0; j < len(fields); j += 2 {
-					iv, iok := o.Fields[i].(string)
-					jv, jok := fields[j].(string)
-					if iok && jok && iv == jv {
-						o.Fields[i+1] = fields[j+1]
-						fields = slices.Delete(fields, j, j+2)
-					}
-				}
-			}
-			if len(fields) > 0 {
-				o.Fields = append(o.Fields, fields...)
-			}
-		} else {
-			o.Fields = append(o.Fields, fields...)
-		}
-	}
-}
-
 // WithFields set default fields for the logger
 func WithFields(fields ...interface{}) Option {
 	return func(o *Options) {
 		o.Fields = fields
+	}
+}
+
+// WithAddFields set default fields for the logger
+func WithAddFields(fields ...interface{}) Option {
+	return func(o *Options) {
+		o.Fields = append(o.Fields, fields...)
 	}
 }
 
@@ -148,15 +112,15 @@ func WithOutput(out io.Writer) Option {
 	}
 }
 
-// WithAddStacktrace controls writing stacktrace on error
-func WithAddStacktrace(v bool) Option {
+// WithStacktrace controls writing stacktrace on error
+func WithStacktrace(v bool) Option {
 	return func(o *Options) {
 		o.AddStacktrace = v
 	}
 }
 
-// WithAddSource controls writing source file and pos in log
-func WithAddSource(v bool) Option {
+// WithSource controls writing source file and pos in log
+func WithSource(v bool) Option {
 	return func(o *Options) {
 		o.AddSource = v
 	}

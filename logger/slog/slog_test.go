@@ -14,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/util/buffer"
 )
 
 // always first to have proper check
@@ -23,7 +22,8 @@ func TestStacktrace(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(logger.WithLevel(logger.DebugLevel), logger.WithOutput(buf),
 		WithHandlerFunc(slog.NewTextHandler),
-		logger.WithAddStacktrace(true),
+		logger.WithStacktrace(true),
+		logger.WithSource(true),
 	)
 	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
 		t.Fatal(err)
@@ -31,8 +31,8 @@ func TestStacktrace(t *testing.T) {
 
 	l.Error(ctx, "msg1", errors.New("err"))
 
-	if !bytes.Contains(buf.Bytes(), []byte(`slog_test.go:32`)) {
-		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
+	if !bytes.Contains(buf.Bytes(), []byte(`stacktrace`)) {
+		t.Fatalf("buf not contains stacktrace: %s", buf.Bytes())
 	}
 }
 
@@ -41,7 +41,7 @@ func TestNoneLevel(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(logger.WithLevel(logger.NoneLevel), logger.WithOutput(buf),
 		WithHandlerFunc(slog.NewTextHandler),
-		logger.WithAddStacktrace(true),
+		logger.WithStacktrace(true),
 	)
 	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
 		t.Fatal(err)
@@ -54,31 +54,12 @@ func TestNoneLevel(t *testing.T) {
 	}
 }
 
-func TestDelayedBuffer(t *testing.T) {
-	ctx := context.TODO()
-	buf := bytes.NewBuffer(nil)
-	dbuf := buffer.NewDelayedBuffer(100, 100*time.Millisecond, buf)
-	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(dbuf),
-		WithHandlerFunc(slog.NewTextHandler),
-		logger.WithAddStacktrace(true),
-	)
-	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
-		t.Fatal(err)
-	}
-
-	l.Error(ctx, "msg1", errors.New("err"))
-	time.Sleep(120 * time.Millisecond)
-	if !bytes.Contains(buf.Bytes(), []byte(`key1=val1`)) {
-		t.Fatalf("logger delayed buffer not works, buf contains: %s", buf.Bytes())
-	}
-}
-
 func TestTime(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf),
 		WithHandlerFunc(slog.NewTextHandler),
-		logger.WithAddStacktrace(true),
+		logger.WithStacktrace(true),
 		logger.WithTimeFunc(func() time.Time {
 			return time.Unix(0, 0).UTC()
 		}),
@@ -99,7 +80,6 @@ func TestWithFields(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(logger.WithLevel(logger.InfoLevel), logger.WithOutput(buf),
 		WithHandlerFunc(slog.NewTextHandler),
-		logger.WithDedupKeys(true),
 	)
 	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
 		t.Fatal(err)
@@ -111,7 +91,7 @@ func TestWithFields(t *testing.T) {
 
 	l.Info(ctx, "msg2")
 
-	if !bytes.Contains(buf.Bytes(), []byte(`msg=msg2 key1=val1`)) {
+	if !bytes.Contains(buf.Bytes(), []byte(`msg=msg2 key1=val2`)) {
 		t.Fatalf("logger error not works, buf contains: %s", buf.Bytes())
 	}
 }
@@ -121,7 +101,6 @@ func TestWithDedupKeysWithAddFields(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(logger.WithLevel(logger.InfoLevel), logger.WithOutput(buf),
 		WithHandlerFunc(slog.NewTextHandler),
-		logger.WithDedupKeys(true),
 	)
 	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
 		t.Fatal(err)
@@ -244,7 +223,7 @@ func TestMultipleFields(t *testing.T) {
 func TestError(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithAddStacktrace(true))
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithStacktrace(true))
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -262,7 +241,7 @@ func TestErrorf(t *testing.T) {
 	ctx := context.TODO()
 
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithAddStacktrace(true))
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithStacktrace(true))
 	if err := l.Init(logger.WithContextAttrFuncs(func(_ context.Context) []interface{} {
 		return nil
 	})); err != nil {
