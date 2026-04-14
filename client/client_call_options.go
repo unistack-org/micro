@@ -9,7 +9,7 @@ type clientCallOptions struct {
 	opts []CallOption
 }
 
-func (s *clientCallOptions) Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error {
+func (s *clientCallOptions) Call(ctx context.Context, req Request, rsp any, opts ...CallOption) error {
 	return s.Client.Call(ctx, req, rsp, append(s.opts, opts...)...)
 }
 

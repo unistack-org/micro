@@ -2,7 +2,7 @@ package memory
 
 import (
 	"context"
-	"sort"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -57,7 +57,7 @@ func (m *memoryStore) exists(prefix, key string) error {
 	return nil
 }
 
-func (m *memoryStore) get(prefix, key string, val interface{}) error {
+func (m *memoryStore) get(prefix, key string, val any) error {
 	key = m.key(prefix, key)
 
 	r, found := m.store.Get(key)
@@ -94,8 +94,8 @@ func (m *memoryStore) list(prefix string, limit, offset uint) []string {
 	}
 
 	if limit != 0 || offset != 0 {
-		sort.Slice(allKeys, func(i, j int) bool { return allKeys[i] < allKeys[j] })
-		sort.Slice(allKeys, func(i, j int) bool { return allKeys[i] < allKeys[j] })
+		slices.Sort(allKeys)
+		slices.Sort(allKeys)
 		end := uint(len(allKeys))
 		if limit > 0 {
 			calcLimit := offset + limit
@@ -178,7 +178,7 @@ func (m *memoryStore) fnExists(ctx context.Context, key string, opts ...store.Ex
 	return m.exists(options.Namespace, key)
 }
 
-func (m *memoryStore) Read(ctx context.Context, key string, val interface{}, opts ...store.ReadOption) error {
+func (m *memoryStore) Read(ctx context.Context, key string, val any, opts ...store.ReadOption) error {
 	if m.opts.LazyConnect {
 		if err := m.connect(ctx); err != nil {
 			return err
@@ -187,7 +187,7 @@ func (m *memoryStore) Read(ctx context.Context, key string, val interface{}, opt
 	return m.funcRead(ctx, key, val, opts...)
 }
 
-func (m *memoryStore) fnRead(ctx context.Context, key string, val interface{}, opts ...store.ReadOption) error {
+func (m *memoryStore) fnRead(ctx context.Context, key string, val any, opts ...store.ReadOption) error {
 	options := store.NewReadOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace
@@ -195,7 +195,7 @@ func (m *memoryStore) fnRead(ctx context.Context, key string, val interface{}, o
 	return m.get(options.Namespace, key, val)
 }
 
-func (m *memoryStore) Write(ctx context.Context, key string, val interface{}, opts ...store.WriteOption) error {
+func (m *memoryStore) Write(ctx context.Context, key string, val any, opts ...store.WriteOption) error {
 	if m.opts.LazyConnect {
 		if err := m.connect(ctx); err != nil {
 			return err
@@ -204,7 +204,7 @@ func (m *memoryStore) Write(ctx context.Context, key string, val interface{}, op
 	return m.funcWrite(ctx, key, val, opts...)
 }
 
-func (m *memoryStore) fnWrite(ctx context.Context, key string, val interface{}, opts ...store.WriteOption) error {
+func (m *memoryStore) fnWrite(ctx context.Context, key string, val any, opts ...store.WriteOption) error {
 	options := store.NewWriteOptions(opts...)
 	if options.Namespace == "" {
 		options.Namespace = m.opts.Namespace

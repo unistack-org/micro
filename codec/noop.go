@@ -19,7 +19,7 @@ func NewCodec(opts ...Option) Codec {
 	return &noopCodec{opts: NewOptions(opts...)}
 }
 
-func (c *noopCodec) Marshal(v interface{}, opts ...Option) ([]byte, error) {
+func (c *noopCodec) Marshal(v any, opts ...Option) ([]byte, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -42,7 +42,7 @@ func (c *noopCodec) Marshal(v interface{}, opts ...Option) ([]byte, error) {
 	return json.Marshal(v)
 }
 
-func (c *noopCodec) Unmarshal(d []byte, v interface{}, opts ...Option) error {
+func (c *noopCodec) Unmarshal(d []byte, v any, opts ...Option) error {
 	if v == nil {
 		return nil
 	}

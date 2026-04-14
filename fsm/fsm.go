@@ -12,7 +12,7 @@ var (
 
 type State interface {
 	Name() string
-	Body() interface{}
+	Body() any
 }
 
 // StateWrapper wraps the StateFunc and returns the equivalent
@@ -22,7 +22,7 @@ type StateWrapper func(StateFunc) StateFunc
 type StateFunc func(ctx context.Context, state State, opts ...StateOption) (State, error)
 
 type FSM interface {
-	Start(context.Context, interface{}, ...Option) (interface{}, error)
+	Start(context.Context, any, ...Option) (any, error)
 	Current() string
 	Reset()
 	State(string, StateFunc)

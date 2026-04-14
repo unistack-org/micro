@@ -1,7 +1,7 @@
 package broker
 
 // IsValidHandler func signature
-func IsValidHandler(sub interface{}) error {
+func IsValidHandler(sub any) error {
 	switch sub.(type) {
 	default:
 		return ErrInvalidHandler

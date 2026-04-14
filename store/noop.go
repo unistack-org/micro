@@ -88,7 +88,7 @@ func (n *noopStore) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (n *noopStore) Read(ctx context.Context, key string, val interface{}, opts ...ReadOption) error {
+func (n *noopStore) Read(ctx context.Context, key string, val any, opts ...ReadOption) error {
 	if n.opts.LazyConnect {
 		if err := n.connect(ctx); err != nil {
 			return err
@@ -97,7 +97,7 @@ func (n *noopStore) Read(ctx context.Context, key string, val interface{}, opts 
 	return n.funcRead(ctx, key, val, opts...)
 }
 
-func (n *noopStore) fnRead(ctx context.Context, _ string, _ interface{}, _ ...ReadOption) error {
+func (n *noopStore) fnRead(ctx context.Context, _ string, _ any, _ ...ReadOption) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -142,7 +142,7 @@ func (n *noopStore) fnExists(ctx context.Context, _ string, _ ...ExistsOption) e
 	return ErrNotFound
 }
 
-func (n *noopStore) Write(ctx context.Context, key string, val interface{}, opts ...WriteOption) error {
+func (n *noopStore) Write(ctx context.Context, key string, val any, opts ...WriteOption) error {
 	if n.opts.LazyConnect {
 		if err := n.connect(ctx); err != nil {
 			return err
@@ -151,7 +151,7 @@ func (n *noopStore) Write(ctx context.Context, key string, val interface{}, opts
 	return n.funcWrite(ctx, key, val, opts...)
 }
 
-func (n *noopStore) fnWrite(ctx context.Context, _ string, _ interface{}, _ ...WriteOption) error {
+func (n *noopStore) fnWrite(ctx context.Context, _ string, _ any, _ ...WriteOption) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()

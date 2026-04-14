@@ -82,7 +82,7 @@ func NewClientTrace(ctx context.Context, tr tracer.Tracer) *httptrace.ClientTrac
 	}
 }
 
-func (ct *clientTracer) start(hook, spanName string, attrs ...interface{}) {
+func (ct *clientTracer) start(hook, spanName string, attrs ...any) {
 	ct.mu.Lock()
 	defer ct.mu.Unlock()
 
@@ -103,7 +103,7 @@ func (ct *clientTracer) start(hook, spanName string, attrs ...interface{}) {
 	}
 }
 
-func (ct *clientTracer) end(hook string, err error, attrs ...interface{}) {
+func (ct *clientTracer) end(hook string, err error, attrs ...any) {
 	ct.mu.Lock()
 	defer ct.mu.Unlock()
 	if ctx, ok := ct.activeHooks[hook]; ok { // nolint:nestif

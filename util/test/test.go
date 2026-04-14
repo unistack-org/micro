@@ -45,15 +45,15 @@ var (
 	Codecs map[string]codec.Codec
 
 	// ResponseCompareFunc used to compare actual response with test case data
-	ResponseCompareFunc = func(expectRsp []byte, testRsp interface{}, expectCodec codec.Codec, testCodec codec.Codec) error {
+	ResponseCompareFunc = func(expectRsp []byte, testRsp any, expectCodec codec.Codec, testCodec codec.Codec) error {
 		var err error
 
-		expectMap := make(map[string]interface{})
+		expectMap := make(map[string]any)
 		if err = expectCodec.Unmarshal(expectRsp, &expectMap); err != nil {
 			return fmt.Errorf("failed to unmarshal err: %w", err)
 		}
 
-		testMap := make(map[string]interface{})
+		testMap := make(map[string]any)
 		switch v := testRsp.(type) {
 		case *codec.Frame:
 			if err = testCodec.Unmarshal(v.Data, &testMap); err != nil {
@@ -296,7 +296,7 @@ func SQLFromReader(m sqlmock.Sqlmock, r io.Reader) error {
 
 		switch {
 		case strings.HasPrefix(strings.ToLower(s[2:]), "columns"):
-			for _, field := range strings.Split(s[2+len("columns")+1:], ",") {
+			for field := range strings.SplitSeq(s[2+len("columns")+1:], ",") {
 				args := strings.Split(field, "|")
 
 				column := sqlmock.NewColumn(args[0]).Nullable(false)

@@ -1,7 +1,7 @@
 package options
 
 // Hook func interface
-type Hook interface{}
+type Hook any
 
 // Hooks func slice
 type Hooks []Hook

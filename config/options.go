@@ -14,7 +14,7 @@ import (
 // Options hold the config options
 type Options struct {
 	// Struct holds the destination config struct
-	Struct interface{}
+	Struct any
 	// Codec that used for load/save
 	Codec codec.Codec
 	// Tracer that will be used
@@ -76,7 +76,7 @@ type LoadOption func(o *LoadOptions)
 
 // LoadOptions struct
 type LoadOptions struct {
-	Struct   interface{}
+	Struct   any
 	Context  context.Context
 	Override bool
 	Append   bool
@@ -106,7 +106,7 @@ func LoadAppend(b bool) LoadOption {
 }
 
 // LoadStruct override struct for loading
-func LoadStruct(src interface{}) LoadOption {
+func LoadStruct(src any) LoadOption {
 	return func(o *LoadOptions) {
 		o.Struct = src
 	}
@@ -117,12 +117,12 @@ type SaveOption func(o *SaveOptions)
 
 // SaveOptions struct
 type SaveOptions struct {
-	Struct  interface{}
+	Struct  any
 	Context context.Context
 }
 
 // SaveStruct override struct for save to config
-func SaveStruct(src interface{}) SaveOption {
+func SaveStruct(src any) SaveOption {
 	return func(o *SaveOptions) {
 		o.Struct = src
 	}
@@ -215,7 +215,7 @@ func Tracer(t tracer.Tracer) Option {
 }
 
 // Struct used as config
-func Struct(v interface{}) Option {
+func Struct(v any) Option {
 	return func(o *Options) {
 		o.Struct = v
 	}
@@ -240,7 +240,7 @@ type WatchOptions struct {
 	// Context used by non default options
 	Context context.Context
 	// Struct for filling
-	Struct interface{}
+	Struct any
 	// MinInterval specifies the min time.Duration interval for poll changes
 	MinInterval time.Duration
 	// MaxInterval specifies the max time.Duration interval for poll changes
@@ -288,7 +288,7 @@ func WatchInterval(minTime, maxTime time.Duration) WatchOption {
 }
 
 // WatchStruct overrides struct for fill
-func WatchStruct(src interface{}) WatchOption {
+func WatchStruct(src any) WatchOption {
 	return func(o *WatchOptions) {
 		o.Struct = src
 	}

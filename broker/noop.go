@@ -123,7 +123,7 @@ func (m *noopMessage) Topic() string {
 	return ""
 }
 
-func (m *noopMessage) Unmarshal(dst interface{}, opts ...codec.Option) error {
+func (m *noopMessage) Unmarshal(dst any, opts ...codec.Option) error {
 	return m.c.Unmarshal(m.body, dst)
 }
 
@@ -131,7 +131,7 @@ func (m *noopMessage) Error() error {
 	return m.err
 }
 
-func (b *NoopBroker) NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...MessageOption) (Message, error) {
+func (b *NoopBroker) NewMessage(ctx context.Context, hdr metadata.Metadata, body any, opts ...MessageOption) (Message, error) {
 	options := NewMessageOptions(opts...)
 	if options.ContentType == "" {
 		options.ContentType = b.opts.ContentType
@@ -159,15 +159,15 @@ func (b *NoopBroker) Publish(ctx context.Context, topic string, msg ...Message) 
 type NoopSubscriber struct {
 	ctx     context.Context
 	topic   string
-	handler interface{}
+	handler any
 	opts    SubscribeOptions
 }
 
-func (b *NoopBroker) fnSubscribe(ctx context.Context, topic string, handler interface{}, opts ...SubscribeOption) (Subscriber, error) {
+func (b *NoopBroker) fnSubscribe(ctx context.Context, topic string, handler any, opts ...SubscribeOption) (Subscriber, error) {
 	return &NoopSubscriber{ctx: ctx, topic: topic, opts: NewSubscribeOptions(opts...), handler: handler}, nil
 }
 
-func (b *NoopBroker) Subscribe(ctx context.Context, topic string, handler interface{}, opts ...SubscribeOption) (Subscriber, error) {
+func (b *NoopBroker) Subscribe(ctx context.Context, topic string, handler any, opts ...SubscribeOption) (Subscriber, error) {
 	return b.funcSubscribe(ctx, topic, handler, opts...)
 }
 

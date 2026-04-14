@@ -260,7 +260,7 @@ func TestErrorf(t *testing.T) {
 
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithStacktrace(true))
-	if err := l.Init(logger.WithContextAttrFuncs(func(_ context.Context) []interface{} {
+	if err := l.Init(logger.WithContextAttrFuncs(func(_ context.Context) []any {
 		return nil
 	})); err != nil {
 		t.Fatal(err)
@@ -419,12 +419,12 @@ func TestLogger(t *testing.T) {
 
 func Test_WithContextAttrFunc(t *testing.T) {
 	loggerContextAttrFuncs := []logger.ContextAttrFunc{
-		func(ctx context.Context) []interface{} {
+		func(ctx context.Context) []any {
 			md, ok := metadata.FromOutgoingContext(ctx)
 			if !ok {
 				return nil
 			}
-			attrs := make([]interface{}, 0, 10)
+			attrs := make([]any, 0, 10)
 			for k, v := range md {
 				key := strings.ToLower(k)
 				switch key {

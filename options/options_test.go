@@ -9,8 +9,8 @@ import (
 )
 
 type codec interface {
-	Marshal(v interface{}, opts ...options.Option) ([]byte, error)
-	Unmarshal(b []byte, v interface{}, opts ...options.Option) error
+	Marshal(v any, opts ...options.Option) ([]byte, error)
+	Unmarshal(b []byte, v any, opts ...options.Option) error
 	String() string
 }
 

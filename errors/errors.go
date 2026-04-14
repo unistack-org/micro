@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -114,7 +115,7 @@ func Parse(err string) *Error {
 }
 
 // BadRequest generates a 400 error.
-func BadRequest(id, format string, args ...interface{}) error {
+func BadRequest(id, format string, args ...any) error {
 	return &Error{
 		ID:     id,
 		Code:   400,
@@ -124,7 +125,7 @@ func BadRequest(id, format string, args ...interface{}) error {
 }
 
 // Unauthorized generates a 401 error.
-func Unauthorized(id, format string, args ...interface{}) error {
+func Unauthorized(id, format string, args ...any) error {
 	return &Error{
 		ID:     id,
 		Code:   401,
@@ -134,7 +135,7 @@ func Unauthorized(id, format string, args ...interface{}) error {
 }
 
 // Forbidden generates a 403 error.
-func Forbidden(id, format string, args ...interface{}) error {
+func Forbidden(id, format string, args ...any) error {
 	return &Error{
 		ID:     id,
 		Code:   403,
@@ -144,7 +145,7 @@ func Forbidden(id, format string, args ...interface{}) error {
 }
 
 // NotFound generates a 404 error.
-func NotFound(id, format string, args ...interface{}) error {
+func NotFound(id, format string, args ...any) error {
 	return &Error{
 		ID:     id,
 		Code:   404,
@@ -154,7 +155,7 @@ func NotFound(id, format string, args ...interface{}) error {
 }
 
 // MethodNotAllowed generates a 405 error.
-func MethodNotAllowed(id, format string, args ...interface{}) error {
+func MethodNotAllowed(id, format string, args ...any) error {
 	return &Error{
 		ID:     id,
 		Code:   405,
@@ -164,7 +165,7 @@ func MethodNotAllowed(id, format string, args ...interface{}) error {
 }
 
 // Timeout generates a 408 error.
-func Timeout(id, format string, args ...interface{}) error {
+func Timeout(id, format string, args ...any) error {
 	return &Error{
 		ID:     id,
 		Code:   408,
@@ -174,7 +175,7 @@ func Timeout(id, format string, args ...interface{}) error {
 }
 
 // Conflict generates a 409 error.
-func Conflict(id, format string, args ...interface{}) error {
+func Conflict(id, format string, args ...any) error {
 	return &Error{
 		ID:     id,
 		Code:   409,
@@ -184,7 +185,7 @@ func Conflict(id, format string, args ...interface{}) error {
 }
 
 // InternalServerError generates a 500 error.
-func InternalServerError(id, format string, args ...interface{}) error {
+func InternalServerError(id, format string, args ...any) error {
 	return &Error{
 		ID:     id,
 		Code:   500,
@@ -194,7 +195,7 @@ func InternalServerError(id, format string, args ...interface{}) error {
 }
 
 // NotImplemented generates a 501 error
-func NotImplemented(id, format string, args ...interface{}) error {
+func NotImplemented(id, format string, args ...any) error {
 	return &Error{
 		ID:     id,
 		Code:   501,
@@ -204,7 +205,7 @@ func NotImplemented(id, format string, args ...interface{}) error {
 }
 
 // BadGateway generates a 502 error
-func BadGateway(id, format string, args ...interface{}) error {
+func BadGateway(id, format string, args ...any) error {
 	return &Error{
 		ID:     id,
 		Code:   502,
@@ -214,7 +215,7 @@ func BadGateway(id, format string, args ...interface{}) error {
 }
 
 // ServiceUnavailable generates a 503 error
-func ServiceUnavailable(id, format string, args ...interface{}) error {
+func ServiceUnavailable(id, format string, args ...any) error {
 	return &Error{
 		ID:     id,
 		Code:   503,
@@ -224,7 +225,7 @@ func ServiceUnavailable(id, format string, args ...interface{}) error {
 }
 
 // GatewayTimeout generates a 504 error
-func GatewayTimeout(id, format string, args ...interface{}) error {
+func GatewayTimeout(id, format string, args ...any) error {
 	return &Error{
 		ID:     id,
 		Code:   504,
@@ -254,7 +255,7 @@ func Equal(err1 error, err2 error) bool {
 }
 
 // CodeIn return true if err has specified code
-func CodeIn(err interface{}, codes ...int32) bool {
+func CodeIn(err any, codes ...int32) bool {
 	var code int32
 	switch verr := err.(type) {
 	case *Error:
@@ -265,13 +266,7 @@ func CodeIn(err interface{}, codes ...int32) bool {
 		return false
 	}
 
-	for _, check := range codes {
-		if code == check {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(codes, code)
 }
 
 // FromError try to convert go error to *Error

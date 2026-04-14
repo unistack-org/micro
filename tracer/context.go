@@ -70,7 +70,7 @@ func NewSpanContext(ctx context.Context, span Span) context.Context {
 }
 
 // SetOption returns a function to setup a context with given value
-func SetOption(k, v interface{}) Option {
+func SetOption(k, v any) Option {
 	return func(o *Options) {
 		if o.Context == nil {
 			o.Context = context.Background()

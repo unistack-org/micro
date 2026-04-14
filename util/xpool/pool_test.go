@@ -14,7 +14,7 @@ func TestByte(t *testing.T) {
 	}
 	p.Put(b)
 	b = p.Get()
-	for i := 0; i < 1500; i++ {
+	for range 1500 {
 		*b = append(*b, []byte(`test`)...)
 	}
 	p.Put(b)

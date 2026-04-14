@@ -19,18 +19,18 @@ func NewOptions(opts ...Option) Options {
 }
 
 type Options struct {
-	ServerHandlerFn func(context.Context, server.Request, interface{}, error) error
+	ServerHandlerFn func(context.Context, server.Request, any, error) error
 }
 
 type Option func(*Options)
 
-func ServerHandlerFunc(fn func(context.Context, server.Request, interface{}, error) error) Option {
+func ServerHandlerFunc(fn func(context.Context, server.Request, any, error) error) Option {
 	return func(o *Options) {
 		o.ServerHandlerFn = fn
 	}
 }
 
-var DefaultServerHandlerFn = func(ctx context.Context, req server.Request, rsp interface{}, err error) error {
+var DefaultServerHandlerFn = func(ctx context.Context, req server.Request, rsp any, err error) error {
 	return errors.BadRequest("", "%v", err)
 }
 
@@ -45,7 +45,7 @@ func NewHook(opts ...Option) *hook {
 }
 
 func (w *hook) ServerHandler(next server.FuncHandler) server.FuncHandler {
-	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
+	return func(ctx context.Context, req server.Request, rsp any) (err error) {
 		defer func() {
 			r := recover()
 			switch verr := r.(type) {

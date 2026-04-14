@@ -5,7 +5,7 @@ import (
 	"context"
 )
 
-type ContextAttrFunc func(ctx context.Context) []interface{}
+type ContextAttrFunc func(ctx context.Context) []any
 
 var DefaultContextAttrFuncs []ContextAttrFunc
 
@@ -29,21 +29,21 @@ type Logger interface {
 	// The Logger options
 	Options() Options
 	// Fields set fields to always be logged with keyval pairs
-	Fields(fields ...interface{}) Logger
+	Fields(fields ...any) Logger
 	// Info level message
-	Info(ctx context.Context, msg string, args ...interface{})
+	Info(ctx context.Context, msg string, args ...any)
 	// Trace level message
-	Trace(ctx context.Context, msg string, args ...interface{})
+	Trace(ctx context.Context, msg string, args ...any)
 	// Debug level message
-	Debug(ctx context.Context, msg string, args ...interface{})
+	Debug(ctx context.Context, msg string, args ...any)
 	// Warn level message
-	Warn(ctx context.Context, msg string, args ...interface{})
+	Warn(ctx context.Context, msg string, args ...any)
 	// Error level message
-	Error(ctx context.Context, msg string, args ...interface{})
+	Error(ctx context.Context, msg string, args ...any)
 	// Fatal level message
-	Fatal(ctx context.Context, msg string, args ...interface{})
+	Fatal(ctx context.Context, msg string, args ...any)
 	// Log logs message with needed level
-	Log(ctx context.Context, level Level, msg string, args ...interface{})
+	Log(ctx context.Context, level Level, msg string, args ...any)
 	// Name returns broker instance name
 	Name() string
 	// String returns the type of logger
@@ -51,4 +51,4 @@ type Logger interface {
 }
 
 // Field contains keyval pair
-type Field interface{}
+type Field any

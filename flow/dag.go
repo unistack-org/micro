@@ -16,6 +16,6 @@ func (n *node) String() string {
 	return n.name
 }
 
-func (n *node) Hashcode() interface{} {
+func (n *node) Hashcode() any {
 	return n.name
 }

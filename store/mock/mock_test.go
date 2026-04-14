@@ -21,7 +21,7 @@ func TestStore(t *testing.T) {
 
 	// Test Read with expectation
 	s.ExpectRead("test_key").WithValue("test_value")
-	var value interface{}
+	var value any
 	err = s.Read(ctx, "test_key", &value)
 	if err != nil {
 		t.Fatalf("Read failed: %v", err)

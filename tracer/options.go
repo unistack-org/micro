@@ -84,7 +84,7 @@ func (sk SpanKind) String() string {
 // SpanOptions contains span option
 type SpanOptions struct {
 	StatusMsg string
-	Labels    []interface{}
+	Labels    []any
 	Status    SpanStatus
 	Kind      SpanKind
 	Record    bool
@@ -95,19 +95,19 @@ type SpanOption func(o *SpanOptions)
 
 // EventOptions contains event options
 type EventOptions struct {
-	Labels []interface{}
+	Labels []any
 }
 
 // EventOption func signature
 type EventOption func(o *EventOptions)
 
-func WithEventLabels(kv ...interface{}) EventOption {
+func WithEventLabels(kv ...any) EventOption {
 	return func(o *EventOptions) {
 		o.Labels = append(o.Labels, kv...)
 	}
 }
 
-func WithSpanLabels(kv ...interface{}) SpanOption {
+func WithSpanLabels(kv ...any) SpanOption {
 	return func(o *SpanOptions) {
 		o.Labels = append(o.Labels, kv...)
 	}

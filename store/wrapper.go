@@ -35,11 +35,11 @@ func (w *NamespaceStore) Disconnect(ctx context.Context) error {
 	return w.s.Disconnect(ctx)
 }
 
-func (w *NamespaceStore) Read(ctx context.Context, key string, val interface{}, opts ...ReadOption) error {
+func (w *NamespaceStore) Read(ctx context.Context, key string, val any, opts ...ReadOption) error {
 	return w.s.Read(ctx, key, val, append(opts, ReadNamespace(w.ns))...)
 }
 
-func (w *NamespaceStore) Write(ctx context.Context, key string, val interface{}, opts ...WriteOption) error {
+func (w *NamespaceStore) Write(ctx context.Context, key string, val any, opts ...WriteOption) error {
 	return w.s.Write(ctx, key, val, append(opts, WriteNamespace(w.ns))...)
 }
 

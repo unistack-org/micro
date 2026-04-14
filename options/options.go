@@ -17,10 +17,10 @@ type Validator interface {
 }
 
 // Option func signature
-type Option func(interface{}) error
+type Option func(any) error
 
 // Apply assign options to struct src
-func Apply(src interface{}, opts ...Option) error {
+func Apply(src any, opts ...Option) error {
 	for _, opt := range opts {
 		if err := opt(src); err != nil {
 			return err
@@ -30,11 +30,11 @@ func Apply(src interface{}, opts ...Option) error {
 }
 
 // SetValueByPath set src struct field to val dst via path
-func SetValueByPath(src interface{}, dst interface{}, path string) error {
+func SetValueByPath(src any, dst any, path string) error {
 	var err error
 
 	switch v := dst.(type) {
-	case []interface{}:
+	case []any:
 		if len(v) == 1 {
 			dst = v[0]
 		}
@@ -52,7 +52,7 @@ func SetValueByPath(src interface{}, dst interface{}, path string) error {
 
 	for _, p := range parts {
 
-		if sv.Kind() == reflect.Ptr {
+		if sv.Kind() == reflect.Pointer {
 			sv = sv.Elem()
 		}
 		if sv.Kind() != reflect.Struct {
@@ -194,9 +194,9 @@ func SetValueByPath(src interface{}, dst interface{}, path string) error {
 }
 
 // NewOption create new option with name
-func NewOption(name string) func(...interface{}) Option {
-	return func(dst ...interface{}) Option {
-		return func(src interface{}) error {
+func NewOption(name string) func(...any) Option {
+	return func(dst ...any) Option {
+		return func(src any) error {
 			return SetValueByPath(src, dst, name)
 		}
 	}

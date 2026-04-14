@@ -53,7 +53,7 @@ func Test_getNameIndex(t *testing.T) {
 func TestRegisterHandler(t *testing.T) {
 	type args struct {
 		s    server.Server
-		h    interface{}
+		h    any
 		opts []server.HandlerOption
 	}
 	h := struct{}{}

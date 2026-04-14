@@ -10,7 +10,7 @@ import (
 type DigitalOceanMetadata struct {
 	Metadata struct {
 		V1 struct {
-			Features map[string]interface{} `json:"features"`
+			Features map[string]any `json:"features"`
 
 			Hostname   string `json:"hostname"`
 			VendorData string `json:"vendor_data"`

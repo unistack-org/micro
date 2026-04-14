@@ -209,7 +209,7 @@ func handleRPC(ctx context.Context, rs stats.RPCStats) {
 	}
 }
 
-func parseFullMethod(fullMethod string) (string, []interface{}) {
+func parseFullMethod(fullMethod string) (string, []any) {
 	if !strings.HasPrefix(fullMethod, "/") {
 		// Invalid format, does not follow `/package.service/method`.
 		return fullMethod, nil
@@ -222,7 +222,7 @@ func parseFullMethod(fullMethod string) (string, []interface{}) {
 	}
 	service, method := name[:pos], name[pos+1:]
 
-	var attrs []interface{}
+	var attrs []any
 	if service != "" {
 		attrs = append(attrs, "rpc.service", service)
 	}
@@ -232,7 +232,7 @@ func parseFullMethod(fullMethod string) (string, []interface{}) {
 	return name, attrs
 }
 
-func peerAttr(addr string) []interface{} {
+func peerAttr(addr string) []any {
 	host, p, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil
@@ -246,14 +246,14 @@ func peerAttr(addr string) []interface{} {
 		return nil
 	}
 
-	var attr []interface{}
+	var attr []any
 	if ip := net.ParseIP(host); ip != nil {
-		attr = []interface{}{
+		attr = []any{
 			"net.sock.peer.addr", host,
 			"net.sock.peer.port", port,
 		}
 	} else {
-		attr = []interface{}{
+		attr = []any{
 			"net.peer.name", host,
 			"net.peer.port", port,
 		}

@@ -44,7 +44,7 @@ func (l *noopLogger) Clone(opts ...Option) Logger {
 	return nl
 }
 
-func (l *noopLogger) Fields(_ ...interface{}) Logger {
+func (l *noopLogger) Fields(_ ...any) Logger {
 	return l
 }
 
@@ -56,23 +56,23 @@ func (l *noopLogger) String() string {
 	return "noop"
 }
 
-func (l *noopLogger) Log(ctx context.Context, lvl Level, msg string, attrs ...interface{}) {
+func (l *noopLogger) Log(ctx context.Context, lvl Level, msg string, attrs ...any) {
 }
 
-func (l *noopLogger) Info(ctx context.Context, msg string, attrs ...interface{}) {
+func (l *noopLogger) Info(ctx context.Context, msg string, attrs ...any) {
 }
 
-func (l *noopLogger) Debug(ctx context.Context, msg string, attrs ...interface{}) {
+func (l *noopLogger) Debug(ctx context.Context, msg string, attrs ...any) {
 }
 
-func (l *noopLogger) Error(ctx context.Context, msg string, attrs ...interface{}) {
+func (l *noopLogger) Error(ctx context.Context, msg string, attrs ...any) {
 }
 
-func (l *noopLogger) Trace(ctx context.Context, msg string, attrs ...interface{}) {
+func (l *noopLogger) Trace(ctx context.Context, msg string, attrs ...any) {
 }
 
-func (l *noopLogger) Warn(ctx context.Context, msg string, attrs ...interface{}) {
+func (l *noopLogger) Warn(ctx context.Context, msg string, attrs ...any) {
 }
 
-func (l *noopLogger) Fatal(ctx context.Context, msg string, attrs ...interface{}) {
+func (l *noopLogger) Fatal(ctx context.Context, msg string, attrs ...any) {
 }

@@ -39,7 +39,7 @@ func TestTicker(t *testing.T) {
 	precision := time.Duration(4)
 
 	rt := NewTicker(minTime*time.Millisecond, maxTime*time.Millisecond)
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		t0 := time.Now()
 		t1 := <-rt.C
 		td := t1.Sub(t0)

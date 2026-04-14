@@ -116,7 +116,7 @@ type endpoints map[methodTyp]*endpoint
 
 type endpoint struct {
 	// endpoint handler
-	handler interface{}
+	handler any
 	// pattern is the routing pattern for handler nodes
 	pattern string
 	// parameters keys recorded on handler nodes
@@ -134,7 +134,7 @@ func (s endpoints) Value(method methodTyp) *endpoint {
 }
 
 // Insert add elemenent to tree
-func (n *Trie) Insert(methods []string, pattern string, handler interface{}) error {
+func (n *Trie) Insert(methods []string, pattern string, handler any) error {
 	var err error
 	for _, method := range methods {
 		if err = n.insert(methodMap[method], pattern, handler); err != nil {
@@ -144,7 +144,7 @@ func (n *Trie) Insert(methods []string, pattern string, handler interface{}) err
 	return nil
 }
 
-func (n *Trie) insert(method methodTyp, pattern string, handler interface{}) error {
+func (n *Trie) insert(method methodTyp, pattern string, handler any) error {
 	var parent *Trie
 	search := pattern
 
@@ -359,7 +359,7 @@ func (n *Trie) replaceChild(label, tail byte, child *Trie) error {
 
 func (n *Trie) getEdge(ntyp nodeTyp, label, tail byte, prefix string) *Trie {
 	nds := n.children[ntyp]
-	for i := 0; i < len(nds); i++ {
+	for i := range nds {
 		if nds[i].label == label && nds[i].tail == tail {
 			if ntyp == ntRegexp && nds[i].prefix != prefix {
 				continue
@@ -370,7 +370,7 @@ func (n *Trie) getEdge(ntyp nodeTyp, label, tail byte, prefix string) *Trie {
 	return nil
 }
 
-func (n *Trie) setEndpoint(method methodTyp, handler interface{}, pattern string) error {
+func (n *Trie) setEndpoint(method methodTyp, handler any, pattern string) error {
 	// Set the handler for the method type on the node
 	if n.endpoints == nil {
 		n.endpoints = make(endpoints)
@@ -405,7 +405,7 @@ func (n *Trie) setEndpoint(method methodTyp, handler interface{}, pattern string
 }
 
 // Search try to find element in tree with path and method
-func (n *Trie) Search(method string, path string) (interface{}, map[string]string, error) {
+func (n *Trie) Search(method string, path string) (any, map[string]string, error) {
 	params := &routeParams{}
 	// Find the routing handlers for the path
 	rn := n.findRoute(params, methodMap[method], path)
@@ -469,7 +469,7 @@ func (n *Trie) findRoute(params *routeParams, method methodTyp, path string) *Tr
 			}
 
 			// serially loop through each node grouped by the tail delimiter
-			for idx := 0; idx < len(nds); idx++ {
+			for idx := range nds {
 				xn = nds[idx]
 
 				// label for param nodes is the delimiter byte

@@ -35,7 +35,7 @@ func NewContext(ctx context.Context, c Config) context.Context {
 }
 
 // SetOption returns a function to setup a context with given value
-func SetOption(k, v interface{}) Option {
+func SetOption(k, v any) Option {
 	return func(o *Options) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -45,7 +45,7 @@ func SetOption(k, v interface{}) Option {
 }
 
 // SetSaveOption returns a function to setup a context with given value
-func SetSaveOption(k, v interface{}) SaveOption {
+func SetSaveOption(k, v any) SaveOption {
 	return func(o *SaveOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -55,7 +55,7 @@ func SetSaveOption(k, v interface{}) SaveOption {
 }
 
 // SetLoadOption returns a function to setup a context with given value
-func SetLoadOption(k, v interface{}) LoadOption {
+func SetLoadOption(k, v any) LoadOption {
 	return func(o *LoadOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -65,7 +65,7 @@ func SetLoadOption(k, v interface{}) LoadOption {
 }
 
 // SetWatchOption returns a function to setup a context with given value
-func SetWatchOption(k, v interface{}) WatchOption {
+func SetWatchOption(k, v any) WatchOption {
 	return func(o *WatchOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()

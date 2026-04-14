@@ -11,7 +11,7 @@ import (
 
 func newSQLRowError() *sql.Row {
 	row := &sql.Row{}
-	t := reflect.TypeOf(row).Elem()
+	t := reflect.TypeFor[sql.Row]()
 	field, _ := t.FieldByName("err")
 	rowPtr := unsafe.Pointer(row)
 	errFieldPtr := unsafe.Pointer(uintptr(rowPtr) + field.Offset)
@@ -117,7 +117,7 @@ func (c *Cluster) Conn(ctx context.Context) (*sql.Conn, error) {
 	return conn, err
 }
 
-func (c *Cluster) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (c *Cluster) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	var res sql.Result
 	var err error
 
@@ -159,7 +159,7 @@ func (c *Cluster) PrepareContext(ctx context.Context, query string) (*sql.Stmt, 
 	return res, err
 }
 
-func (c *Cluster) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (c *Cluster) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	var res *sql.Rows
 	var err error
 
@@ -180,7 +180,7 @@ func (c *Cluster) QueryContext(ctx context.Context, query string, args ...interf
 	return res, err
 }
 
-func (c *Cluster) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func (c *Cluster) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
 	var res *sql.Row
 
 	retries := 0

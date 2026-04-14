@@ -34,9 +34,9 @@ type Store interface {
 	// Exists check that key exists in store
 	Exists(ctx context.Context, key string, opts ...ExistsOption) error
 	// Read reads a single key name to provided value with optional ReadOptions
-	Read(ctx context.Context, key string, val interface{}, opts ...ReadOption) error
+	Read(ctx context.Context, key string, val any, opts ...ReadOption) error
 	// Write writes a value to key name to the store with optional WriteOption
-	Write(ctx context.Context, key string, val interface{}, opts ...WriteOption) error
+	Write(ctx context.Context, key string, val any, opts ...WriteOption) error
 	// Delete removes the record with the corresponding key from the store.
 	Delete(ctx context.Context, key string, opts ...DeleteOption) error
 	// List returns any keys that match, or an empty list with no error if none matched.
@@ -58,9 +58,9 @@ type Store interface {
 type (
 	FuncExists func(ctx context.Context, key string, opts ...ExistsOption) error
 	HookExists func(next FuncExists) FuncExists
-	FuncRead   func(ctx context.Context, key string, val interface{}, opts ...ReadOption) error
+	FuncRead   func(ctx context.Context, key string, val any, opts ...ReadOption) error
 	HookRead   func(next FuncRead) FuncRead
-	FuncWrite  func(ctx context.Context, key string, val interface{}, opts ...WriteOption) error
+	FuncWrite  func(ctx context.Context, key string, val any, opts ...WriteOption) error
 	HookWrite  func(next FuncWrite) FuncWrite
 	FuncDelete func(ctx context.Context, key string, opts ...DeleteOption) error
 	HookDelete func(next FuncDelete) FuncDelete

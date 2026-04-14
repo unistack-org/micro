@@ -29,7 +29,7 @@ func As(b any, target any) bool {
 	}
 	val := reflect.ValueOf(target)
 	typ := val.Type()
-	if typ.Kind() != reflect.Ptr || val.IsNil() {
+	if typ.Kind() != reflect.Pointer || val.IsNil() {
 		return false
 	}
 	targetType := typ.Elem()
@@ -79,20 +79,20 @@ func As(b any, target any) bool {
 }
 
 var (
-	brokerType   = reflect.TypeOf((*broker.Broker)(nil)).Elem()
-	loggerType   = reflect.TypeOf((*logger.Logger)(nil)).Elem()
-	clientType   = reflect.TypeOf((*client.Client)(nil)).Elem()
-	serverType   = reflect.TypeOf((*server.Server)(nil)).Elem()
-	codecType    = reflect.TypeOf((*codec.Codec)(nil)).Elem()
-	flowType     = reflect.TypeOf((*flow.Flow)(nil)).Elem()
-	fsmType      = reflect.TypeOf((*fsm.FSM)(nil)).Elem()
-	meterType    = reflect.TypeOf((*meter.Meter)(nil)).Elem()
-	registerType = reflect.TypeOf((*register.Register)(nil)).Elem()
-	resolverType = reflect.TypeOf((*resolver.Resolver)(nil)).Elem()
-	routerType   = reflect.TypeOf((*router.Router)(nil)).Elem()
-	selectorType = reflect.TypeOf((*selector.Selector)(nil)).Elem()
-	storeType    = reflect.TypeOf((*store.Store)(nil)).Elem()
-	syncType     = reflect.TypeOf((*sync.Sync)(nil)).Elem()
-	tracerType   = reflect.TypeOf((*tracer.Tracer)(nil)).Elem()
-	serviceType  = reflect.TypeOf((*Service)(nil)).Elem()
+	brokerType   = reflect.TypeFor[broker.Broker]()
+	loggerType   = reflect.TypeFor[logger.Logger]()
+	clientType   = reflect.TypeFor[client.Client]()
+	serverType   = reflect.TypeFor[server.Server]()
+	codecType    = reflect.TypeFor[codec.Codec]()
+	flowType     = reflect.TypeFor[flow.Flow]()
+	fsmType      = reflect.TypeFor[fsm.FSM]()
+	meterType    = reflect.TypeFor[meter.Meter]()
+	registerType = reflect.TypeFor[register.Register]()
+	resolverType = reflect.TypeFor[resolver.Resolver]()
+	routerType   = reflect.TypeFor[router.Router]()
+	selectorType = reflect.TypeFor[selector.Selector]()
+	storeType    = reflect.TypeFor[store.Store]()
+	syncType     = reflect.TypeFor[sync.Sync]()
+	tracerType   = reflect.TypeFor[tracer.Tracer]()
+	serviceType  = reflect.TypeFor[Service]()
 )

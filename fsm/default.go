@@ -3,11 +3,12 @@ package fsm
 import (
 	"context"
 	"fmt"
+	"maps"
 	"sync"
 )
 
 type state struct {
-	body interface{}
+	body any
 	name string
 }
 
@@ -17,7 +18,7 @@ func (s *state) Name() string {
 	return s.name
 }
 
-func (s *state) Body() interface{} {
+func (s *state) Body() any {
 	return s.body
 }
 
@@ -63,7 +64,7 @@ func (f *fsm) State(state string, fn StateFunc) {
 }
 
 // Start runs state machine with provided data
-func (f *fsm) Start(ctx context.Context, args interface{}, opts ...Option) (interface{}, error) {
+func (f *fsm) Start(ctx context.Context, args any, opts ...Option) (any, error) {
 	var err error
 
 	f.mu.Lock()
@@ -77,9 +78,7 @@ func (f *fsm) Start(ctx context.Context, args interface{}, opts ...Option) (inte
 
 	cstate := options.Initial
 	states := make(map[string]StateFunc, len(f.statesMap))
-	for k, v := range f.statesMap {
-		states[k] = v
-	}
+	maps.Copy(states, f.statesMap)
 	f.current = cstate
 	f.mu.Unlock()
 

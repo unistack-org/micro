@@ -52,7 +52,7 @@ func NewPool[T any](fn func() T, size int) Pool[T] {
 	}
 
 	p.p = &sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			p.mis.Add(1)
 			return fn()
 		},
@@ -95,7 +95,7 @@ func NewBytePool(size int) *BytePool {
 		ret: &atomic.Uint64{},
 	}
 	p.p = &sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			p.mis.Add(1)
 			b := make([]byte, 0, size)
 			return &b
@@ -171,7 +171,7 @@ func NewBytesPool(size int) *BytesPool {
 		ret: &atomic.Uint64{},
 	}
 	p.p = &sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			p.mis.Add(1)
 			b := bytes.NewBuffer(make([]byte, 0, size))
 			return b
@@ -246,7 +246,7 @@ func NewStringsPool(size int) *StringsPool {
 		ret: &atomic.Uint64{},
 	}
 	p.p = &sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			p.mis.Add(1)
 			return &strings.Builder{}
 		},

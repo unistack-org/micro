@@ -11,7 +11,7 @@ import (
 )
 
 // FileServer creates new file server from the struct iface with specific tag and specific modtime
-func FileServer(iface interface{}, tag string, modtime time.Time) http.Handler {
+func FileServer(iface any, tag string, modtime time.Time) http.Handler {
 	if modtime.IsZero() {
 		modtime = time.Now()
 	}
@@ -36,7 +36,7 @@ func (fs *fs) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 type fs struct {
 	modtime time.Time
-	iface   interface{}
+	iface   any
 	tag     string
 }
 
@@ -53,7 +53,7 @@ type fileInfo struct {
 	size    int64
 }
 
-func (fi *fileInfo) Sys() interface{} {
+func (fi *fileInfo) Sys() any {
 	return nil
 }
 
@@ -130,7 +130,7 @@ func (fs *fs) Open(path string) (http.File, error) {
 	return newFile(path, fs.iface, fs.tag, fs.modtime)
 }
 
-func newFile(name string, iface interface{}, tag string, modtime time.Time) (*file, error) {
+func newFile(name string, iface any, tag string, modtime time.Time) (*file, error) {
 	var err error
 
 	f := &file{name: name, modtime: modtime}
@@ -141,10 +141,10 @@ func newFile(name string, iface interface{}, tag string, modtime time.Time) (*fi
 	return f, nil
 }
 
-func structItem(path string, iface interface{}, tag string) ([]byte, error) {
+func structItem(path string, iface any, tag string) ([]byte, error) {
 	var buf []byte
 	var err error
-	var curiface interface{}
+	var curiface any
 
 	if path == "/" {
 		return getNames(iface, tag)
@@ -167,7 +167,7 @@ func structItem(path string, iface interface{}, tag string) ([]byte, error) {
 	return buf, err
 }
 
-func getNames(iface interface{}, tag string) ([]byte, error) {
+func getNames(iface any, tag string) ([]byte, error) {
 	var lines []string
 	s := reflectValue(iface)
 	typeOf := s.Type()
@@ -183,7 +183,7 @@ func getNames(iface interface{}, tag string) ([]byte, error) {
 	return nil, fmt.Errorf("failed to find names")
 }
 
-func getStruct(name string, iface interface{}, tag string) (interface{}, error) {
+func getStruct(name string, iface any, tag string) (any, error) {
 	s := reflectValue(iface)
 	typeOf := s.Type()
 	for i := 0; i < s.NumField(); i++ {
@@ -194,12 +194,12 @@ func getStruct(name string, iface interface{}, tag string) (interface{}, error) 
 	return nil, fmt.Errorf("failed to find iface %T with name %s", iface, name)
 }
 
-func getValue(name string, iface interface{}, tag string) ([]byte, error) {
+func getValue(name string, iface any, tag string) ([]byte, error) {
 	s := reflectValue(iface)
 	typeOf := s.Type()
 	switch typeOf.Kind() {
 	case reflect.Map:
-		return []byte(fmt.Sprintf("%v", s.MapIndex(reflect.ValueOf(name)).Interface())), nil
+		return fmt.Appendf(nil, "%v", s.MapIndex(reflect.ValueOf(name)).Interface()), nil
 	default:
 		for i := 0; i < s.NumField(); i++ {
 			if typeOf.Field(i).Tag.Get(tag) != name {
@@ -214,7 +214,7 @@ func getValue(name string, iface interface{}, tag string) ([]byte, error) {
 				}
 				return []byte(strings.Join(lines, "\n")), nil
 			default:
-				return []byte(fmt.Sprintf("%v", ifs)), nil
+				return fmt.Appendf(nil, "%v", ifs), nil
 			}
 		}
 	}
@@ -233,10 +233,10 @@ func hasValidType(obj interface{}, types []reflect.Kind) bool {
 }
 */
 
-func reflectValue(obj interface{}) reflect.Value {
+func reflectValue(obj any) reflect.Value {
 	var val reflect.Value
 
-	if reflect.TypeOf(obj).Kind() == reflect.Ptr {
+	if reflect.TypeOf(obj).Kind() == reflect.Pointer {
 		val = reflect.ValueOf(obj).Elem()
 	} else {
 		val = reflect.ValueOf(obj)

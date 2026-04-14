@@ -91,7 +91,7 @@ func (p *bro) Connect(_ context.Context) error { return nil }
 func (p *bro) Disconnect(_ context.Context) error { return nil }
 
 // NewMessage creates new message
-func (p *bro) NewMessage(_ context.Context, _ metadata.Metadata, _ interface{}, _ ...broker.MessageOption) (broker.Message, error) {
+func (p *bro) NewMessage(_ context.Context, _ metadata.Metadata, _ any, _ ...broker.MessageOption) (broker.Message, error) {
 	return nil, nil
 }
 
@@ -101,7 +101,7 @@ func (p *bro) Publish(_ context.Context, _ string, _ ...broker.Message) error {
 }
 
 // Subscribe subscribes to topic message via handler
-func (p *bro) Subscribe(_ context.Context, _ string, _ interface{}, _ ...broker.SubscribeOption) (broker.Subscriber, error) {
+func (p *bro) Subscribe(_ context.Context, _ string, _ any, _ ...broker.SubscribeOption) (broker.Subscriber, error) {
 	return nil, nil
 }
 
@@ -112,7 +112,7 @@ type fsmT struct {
 	name string
 }
 
-func (f *fsmT) Start(_ context.Context, _ interface{}, _ ...Option) (interface{}, error) {
+func (f *fsmT) Start(_ context.Context, _ any, _ ...Option) (any, error) {
 	return nil, nil
 }
 func (f *fsmT) Current() string                 { return f.name }

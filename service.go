@@ -90,7 +90,7 @@ type Service interface {
 }
 
 // RegisterHandler is syntactic sugar for registering a handler
-func RegisterHandler(s server.Server, h interface{}, opts ...server.HandlerOption) error {
+func RegisterHandler(s server.Server, h any, opts ...server.HandlerOption) error {
 	return s.Handle(s.NewHandler(h, opts...))
 }
 

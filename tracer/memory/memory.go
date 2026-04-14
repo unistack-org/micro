@@ -75,8 +75,8 @@ type Span struct {
 	traceID    memoryStringer
 	spanID     memoryStringer
 	events     []*Event
-	labels     []interface{}
-	logs       []interface{}
+	labels     []any
+	logs       []any
 	kind       tracer.SpanKind
 	status     tracer.SpanStatus
 }
@@ -99,7 +99,7 @@ func (s *Span) IsRecording() bool {
 
 type Event struct {
 	name   string
-	labels []interface{}
+	labels []any
 }
 
 func (s *Span) AddEvent(name string, opts ...tracer.EventOption) {
@@ -111,11 +111,11 @@ func (s *Span) SetName(name string) {
 	s.name = name
 }
 
-func (s *Span) AddLogs(kv ...interface{}) {
+func (s *Span) AddLogs(kv ...any) {
 	s.logs = append(s.logs, kv...)
 }
 
-func (s *Span) AddLabels(kv ...interface{}) {
+func (s *Span) AddLabels(kv ...any) {
 	s.labels = append(s.labels, kv...)
 }
 

@@ -34,14 +34,14 @@ type Client interface {
 	Name() string
 	Init(opts ...Option) error
 	Options() Options
-	NewRequest(service string, endpoint string, req interface{}, opts ...RequestOption) Request
-	Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error
+	NewRequest(service string, endpoint string, req any, opts ...RequestOption) Request
+	Call(ctx context.Context, req Request, rsp any, opts ...CallOption) error
 	Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error)
 	String() string
 }
 
 type (
-	FuncCall   func(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error
+	FuncCall   func(ctx context.Context, req Request, rsp any, opts ...CallOption) error
 	HookCall   func(next FuncCall) FuncCall
 	FuncStream func(ctx context.Context, req Request, opts ...CallOption) (Stream, error)
 	HookStream func(next FuncStream) FuncStream
@@ -58,7 +58,7 @@ type Request interface {
 	// The content type
 	ContentType() string
 	// The unencoded request body
-	Body() interface{}
+	Body() any
 	// Write to the encoded request writer. This is nil before a call is made
 	Codec() codec.Codec
 	// indicates whether the request will be a streaming one rather than unary
@@ -84,13 +84,13 @@ type Stream interface {
 	// The response read
 	Response() Response
 	// Send will encode and send a request
-	Send(msg interface{}) error
+	Send(msg any) error
 	// Recv will decode and read a response
-	Recv(msg interface{}) error
+	Recv(msg any) error
 	// SendMsg will encode and send a request
-	SendMsg(msg interface{}) error
+	SendMsg(msg any) error
 	// RecvMsg will decode and read a response
-	RecvMsg(msg interface{}) error
+	RecvMsg(msg any) error
 	// Error returns the stream error
 	Error() error
 	// Close closes the stream
