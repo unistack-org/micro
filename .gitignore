@@ -1,1 +1,22 @@
-Nothing should be ignored in this case, as the modified files are all source code files (.go files) without any build artifacts, dependencies, or temporary files in the changes.
+```
+# Compiled and binary files
+*.o
+*.obj
+*.out
+
+# Dependencies
+vendor/
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+```

@@ -56,8 +56,6 @@ type Options struct {
 	AfterStop []func(context.Context) error
 	// Servers holds servers
 	Servers []server.Server
-	// GracefulTimeout timeout for graceful stop service
-	GracefulTimeout time.Duration
 }
 
 // NewOptions returns new Options filled with defaults and overrided by provided opts
@@ -74,7 +72,6 @@ func NewOptions(opts ...Option) Options {
 		Meters:          []meter.Meter{meter.DefaultMeter},
 		Configs:         []config.Config{config.DefaultConfig},
 		Stores:          []store.Store{store.DefaultStore},
-		GracefulTimeout: server.DefaultGracefulTimeout,
 		// Runtime   runtime.Runtime
 		// Profile   profile.Profile
 	}
@@ -683,19 +680,6 @@ func AfterStart(fn func(context.Context) error) Option {
 func AfterStop(fn func(context.Context) error) Option {
 	return func(o *Options) error {
 		o.AfterStop = append(o.AfterStop, fn)
-		return nil
-	}
-}
-
-// GracefulTimeout specifies the timeout for graceful stop service
-func GracefulTimeout(td time.Duration) Option {
-	return func(o *Options) error {
-		o.GracefulTimeout = td
-		for _, srv := range o.Servers {
-			if err := srv.Init(server.GracefulTimeout(td)); err != nil {
-				return err
-			}
-		}
 		return nil
 	}
 }
