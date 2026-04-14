@@ -5,7 +5,7 @@ import (
 )
 
 // sort labels alphabeticaly by label name
-type byKey []interface{}
+type byKey []any
 
 func (k byKey) Len() int           { return len(k) / 2 }
 func (k byKey) Less(i, j int) bool { return k[i*2].(string) < k[j*2].(string) }
@@ -14,7 +14,7 @@ func (k byKey) Swap(i, j int) {
 	k[i*2+1], k[j*2+1] = k[j*2+1], k[i*2+1]
 }
 
-func Uniq(labels []interface{}) []interface{} {
+func Uniq(labels []any) []any {
 	if len(labels)%2 == 1 {
 		labels = labels[:len(labels)-1]
 	}

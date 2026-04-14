@@ -11,7 +11,7 @@ func TestListen(t *testing.T) {
 	}
 
 	// try to create a number of listeners
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		l, err := Listen("localhost:10000-11000", fn)
 		if err != nil {
 			t.Fatal(err)

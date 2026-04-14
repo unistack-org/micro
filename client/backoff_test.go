@@ -21,7 +21,7 @@ func TestBackoffExp(t *testing.T) {
 		method:  "test",
 	}
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		d, err := BackoffExp(context.TODO(), r, i)
 		if err != nil {
 			t.Fatal(err)
@@ -43,7 +43,7 @@ func TestBackoffInterval(t *testing.T) {
 	}
 
 	fn := BackoffInterval(minTime, maxTime)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		d, err := fn(context.TODO(), r, i)
 		if err != nil {
 			t.Fatal(err)

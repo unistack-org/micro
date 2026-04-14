@@ -261,7 +261,7 @@ func fillValue(value reflect.Value, val string) error {
 func fillValues(valueOf reflect.Value, tname string) error {
 	var values reflect.Value
 
-	if valueOf.Kind() == reflect.Ptr {
+	if valueOf.Kind() == reflect.Pointer {
 		values = valueOf.Elem()
 	} else {
 		values = valueOf
@@ -289,7 +289,7 @@ func fillValues(valueOf reflect.Value, tname string) error {
 				return err
 			}
 			continue
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if value.IsNil() {
 				if value.Type().Elem().Kind() != reflect.Struct {
 					// nil pointer to a non-struct: leave it alone

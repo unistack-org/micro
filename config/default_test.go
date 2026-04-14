@@ -136,11 +136,10 @@ func TestValidate(t *testing.T) {
 }
 
 func Test_SizeOf(t *testing.T) {
-	st := cfg{}
 
-	tVal := reflect.TypeOf(st)
-	for i := 0; i < tVal.NumField(); i++ {
-		field := tVal.Field(i)
+	tVal := reflect.TypeFor[cfg]()
+	for field := range tVal.Fields() {
+		field := field
 		fmt.Printf("Field: %s, Offset: %d, Size: %d\n", field.Name, field.Offset, field.Type.Size())
 	}
 }

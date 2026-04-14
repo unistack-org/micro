@@ -45,7 +45,7 @@ func TestRoundRobin(t *testing.T) {
 
 	// start element is random but then it should loop through in order
 	start := -1
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if n1 == routes[i] {
 			start = i
 			break

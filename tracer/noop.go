@@ -74,7 +74,7 @@ type noopSpan struct {
 	finishTime time.Time
 	traceID    noopStringer
 	spanID     noopStringer
-	labels     []interface{}
+	labels     []any
 	kind       SpanKind
 	status     SpanStatus
 }
@@ -106,10 +106,10 @@ func (s *noopSpan) SetName(name string) {
 	s.name = name
 }
 
-func (s *noopSpan) AddLogs(kv ...interface{}) {
+func (s *noopSpan) AddLogs(kv ...any) {
 }
 
-func (s *noopSpan) AddLabels(kv ...interface{}) {
+func (s *noopSpan) AddLabels(kv ...any) {
 	s.labels = append(s.labels, kv...)
 }
 

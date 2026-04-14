@@ -15,11 +15,11 @@ import (
 
 type rpcHandler struct {
 	opts    HandlerOptions
-	handler interface{}
+	handler any
 	name    string
 }
 
-func newRPCHandler(handler interface{}, opts ...HandlerOption) Handler {
+func newRPCHandler(handler any, opts ...HandlerOption) Handler {
 	options := NewHandlerOptions(opts...)
 
 	hdlr := reflect.ValueOf(handler)
@@ -36,7 +36,7 @@ func (r *rpcHandler) Name() string {
 	return r.name
 }
 
-func (r *rpcHandler) Handler() interface{} {
+func (r *rpcHandler) Handler() any {
 	return r.handler
 }
 
@@ -89,7 +89,7 @@ func (n *noopServer) Name() string {
 	return n.opts.Name
 }
 
-func (n *noopServer) NewHandler(h interface{}, opts ...HandlerOption) Handler {
+func (n *noopServer) NewHandler(h any, opts ...HandlerOption) Handler {
 	return newRPCHandler(h, opts...)
 }
 

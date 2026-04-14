@@ -38,7 +38,7 @@ type Options struct {
 	// TimeFunc used to obtain current time
 	TimeFunc func() time.Time
 	// Fields holds additional metadata
-	Fields []interface{}
+	Fields []any
 	// ContextAttrFuncs contains funcs that executed before log func on context
 	ContextAttrFuncs []ContextAttrFunc
 	// callerSkipCount number of frames to skip
@@ -59,7 +59,7 @@ type Options struct {
 func NewOptions(opts ...Option) Options {
 	options := Options{
 		Level:            DefaultLevel,
-		Fields:           make([]interface{}, 0, 6),
+		Fields:           make([]any, 0, 6),
 		Out:              os.Stderr,
 		Context:          context.Background(),
 		ContextAttrFuncs: DefaultContextAttrFuncs,
@@ -85,14 +85,14 @@ func WithContextAttrFuncs(fncs ...ContextAttrFunc) Option {
 }
 
 // WithFields set default fields for the logger
-func WithFields(fields ...interface{}) Option {
+func WithFields(fields ...any) Option {
 	return func(o *Options) {
 		o.Fields = fields
 	}
 }
 
 // WithAddFields set default fields for the logger
-func WithAddFields(fields ...interface{}) Option {
+func WithAddFields(fields ...any) Option {
 	return func(o *Options) {
 		o.Fields = append(o.Fields, fields...)
 	}

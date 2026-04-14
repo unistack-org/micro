@@ -9,14 +9,14 @@ import (
 )
 
 var (
-	DefaultClientErrorFunc = func(req client.Request, rsp interface{}, err error) error {
+	DefaultClientErrorFunc = func(req client.Request, rsp any, err error) error {
 		if rsp != nil {
 			return errors.BadGateway(req.Service(), "%v", err)
 		}
 		return errors.BadRequest(req.Service(), "%v", err)
 	}
 
-	DefaultServerErrorFunc = func(req server.Request, rsp interface{}, err error) error {
+	DefaultServerErrorFunc = func(req server.Request, rsp any, err error) error {
 		if rsp != nil {
 			return errors.BadGateway(req.Service(), "%v", err)
 		}
@@ -25,8 +25,8 @@ var (
 )
 
 type (
-	ClientErrorFunc func(client.Request, interface{}, error) error
-	ServerErrorFunc func(server.Request, interface{}, error) error
+	ClientErrorFunc func(client.Request, any, error) error
+	ServerErrorFunc func(server.Request, any, error) error
 )
 
 // Options struct holds wrapper options
@@ -88,7 +88,7 @@ type hook struct {
 }
 
 func (w *hook) ClientCall(next client.FuncCall) client.FuncCall {
-	return func(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
+	return func(ctx context.Context, req client.Request, rsp any, opts ...client.CallOption) error {
 		if v, ok := req.Body().(validator); ok {
 			if err := v.Validate(); err != nil {
 				return w.opts.ClientErrorFn(req, nil, err)
@@ -116,7 +116,7 @@ func (w *hook) ClientStream(next client.FuncStream) client.FuncStream {
 }
 
 func (w *hook) ServerHandler(next server.FuncHandler) server.FuncHandler {
-	return func(ctx context.Context, req server.Request, rsp interface{}) error {
+	return func(ctx context.Context, req server.Request, rsp any) error {
 		if v, ok := req.Body().(validator); ok {
 			if err := v.Validate(); err != nil {
 				return w.opts.ServerErrorFn(req, nil, err)

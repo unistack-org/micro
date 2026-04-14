@@ -26,7 +26,7 @@ func NewClientWrapper(keys ...string) client.Wrapper {
 
 func NewClientCallWrapper(keys ...string) client.CallWrapper {
 	return func(fn client.CallFunc) client.CallFunc {
-		return func(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions) error {
+		return func(ctx context.Context, addr string, req client.Request, rsp any, opts client.CallOptions) error {
 			if keys == nil {
 				return fn(ctx, addr, req, rsp, opts)
 			}
@@ -49,7 +49,7 @@ func NewClientCallWrapper(keys ...string) client.CallWrapper {
 	}
 }
 
-func (w *wrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
+func (w *wrapper) Call(ctx context.Context, req client.Request, rsp any, opts ...client.CallOption) error {
 	if w.keys == nil {
 		return w.Client.Call(ctx, req, rsp, opts...)
 	}
@@ -93,7 +93,7 @@ func (w *wrapper) Stream(ctx context.Context, req client.Request, opts ...client
 
 func NewServerHandlerWrapper(keys ...string) server.HandlerWrapper {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
-		return func(ctx context.Context, req server.Request, rsp interface{}) error {
+		return func(ctx context.Context, req server.Request, rsp any) error {
 			if keys == nil {
 				return fn(ctx, req, rsp)
 			}

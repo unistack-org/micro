@@ -20,7 +20,7 @@ type Buffer struct {
 // Entry is ring buffer data entry
 type Entry struct {
 	Timestamp time.Time
-	Value     interface{}
+	Value     any
 }
 
 // Stream is used to stream the buffer
@@ -34,7 +34,7 @@ type Stream struct {
 }
 
 // Put adds a new value to ring buffer
-func (b *Buffer) Put(v interface{}) {
+func (b *Buffer) Put(v any) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

@@ -56,7 +56,7 @@ func (m *memoryMessage) Topic() string {
 	return ""
 }
 
-func (m *memoryMessage) Unmarshal(dst interface{}, opts ...codec.Option) error {
+func (m *memoryMessage) Unmarshal(dst any, opts ...codec.Option) error {
 	return m.c.Unmarshal(m.body, dst)
 }
 
@@ -67,7 +67,7 @@ func (m *memoryMessage) Error() error {
 type Subscriber struct {
 	ctx     context.Context
 	exit    chan bool
-	handler interface{}
+	handler any
 	id      string
 	topic   string
 	opts    broker.SubscribeOptions
@@ -162,7 +162,7 @@ func (b *Broker) Init(opts ...broker.Option) error {
 	return nil
 }
 
-func (b *Broker) NewMessage(ctx context.Context, hdr metadata.Metadata, body interface{}, opts ...broker.MessageOption) (broker.Message, error) {
+func (b *Broker) NewMessage(ctx context.Context, hdr metadata.Metadata, body any, opts ...broker.MessageOption) (broker.Message, error) {
 	options := broker.NewMessageOptions(opts...)
 	if options.ContentType == "" {
 		options.ContentType = b.opts.ContentType
@@ -251,11 +251,11 @@ func (b *Broker) publish(ctx context.Context, topic string, messages ...broker.M
 	return nil
 }
 
-func (b *Broker) Subscribe(ctx context.Context, topic string, handler interface{}, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
+func (b *Broker) Subscribe(ctx context.Context, topic string, handler any, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
 	return b.funcSubscribe(ctx, topic, handler, opts...)
 }
 
-func (b *Broker) fnSubscribe(ctx context.Context, topic string, handler interface{}, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
+func (b *Broker) fnSubscribe(ctx context.Context, topic string, handler any, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
 	if err := broker.IsValidHandler(handler); err != nil {
 		return nil, err
 	}

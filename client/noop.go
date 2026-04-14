@@ -24,7 +24,7 @@ type noopClient struct {
 }
 
 type noopRequest struct {
-	body        interface{}
+	body        any
 	codec       codec.Codec
 	service     string
 	method      string
@@ -63,7 +63,7 @@ func (n *noopRequest) ContentType() string {
 	return n.contentType
 }
 
-func (n *noopRequest) Body() interface{} {
+func (n *noopRequest) Body() any {
 	return n.body
 }
 
@@ -109,19 +109,19 @@ func (n *noopStream) Response() Response {
 	return &noopResponse{}
 }
 
-func (n *noopStream) Send(interface{}) error {
+func (n *noopStream) Send(any) error {
 	return nil
 }
 
-func (n *noopStream) Recv(interface{}) error {
+func (n *noopStream) Recv(any) error {
 	return nil
 }
 
-func (n *noopStream) SendMsg(interface{}) error {
+func (n *noopStream) SendMsg(any) error {
 	return nil
 }
 
-func (n *noopStream) RecvMsg(interface{}) error {
+func (n *noopStream) RecvMsg(any) error {
 	return nil
 }
 
@@ -171,7 +171,7 @@ func (n *noopClient) String() string {
 	return "noop"
 }
 
-func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error {
+func (n *noopClient) Call(ctx context.Context, req Request, rsp any, opts ...CallOption) error {
 	endpoint := req.Endpoint()
 	ts := time.Now()
 	n.opts.Meter.Counter(semconv.ClientRequestInflight, "endpoint", endpoint).Inc()
@@ -197,7 +197,7 @@ func (n *noopClient) Call(ctx context.Context, req Request, rsp interface{}, opt
 	return err
 }
 
-func (n *noopClient) fnCall(ctx context.Context, req Request, rsp interface{}, opts ...CallOption) error {
+func (n *noopClient) fnCall(ctx context.Context, req Request, rsp any, opts ...CallOption) error {
 	// make a copy of call opts
 	callOpts := n.opts.CallOptions
 	for _, opt := range opts {
@@ -226,7 +226,7 @@ func (n *noopClient) fnCall(ctx context.Context, req Request, rsp interface{}, o
 	}
 
 	// make copy of call method
-	hcall := func(ctx context.Context, addr string, req Request, rsp interface{}, opts CallOptions) error {
+	hcall := func(ctx context.Context, addr string, req Request, rsp any, opts CallOptions) error {
 		return nil
 	}
 
@@ -317,7 +317,7 @@ func (n *noopClient) fnCall(ctx context.Context, req Request, rsp interface{}, o
 	return gerr
 }
 
-func (n *noopClient) NewRequest(service, endpoint string, _ interface{}, _ ...RequestOption) Request {
+func (n *noopClient) NewRequest(service, endpoint string, _ any, _ ...RequestOption) Request {
 	return &noopRequest{service: service, endpoint: endpoint}
 }
 

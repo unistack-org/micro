@@ -6,7 +6,7 @@ import (
 
 type testRequest struct {
 	codec       codec.Codec
-	body        interface{}
+	body        any
 	service     string
 	method      string
 	endpoint    string
@@ -30,7 +30,7 @@ func (r *testRequest) Endpoint() string {
 	return r.endpoint
 }
 
-func (r *testRequest) Body() interface{} {
+func (r *testRequest) Body() any {
 	return r.body
 }
 

@@ -49,7 +49,7 @@ func (t EventType) String() string {
 // Event is register event
 type Event struct {
 	// Timestamp is event timestamp
-	Timestamp time.Time `json:"timestamp,omitempty"`
+	Timestamp time.Time `json:"timestamp"`
 	// Service is register service
 	Service *Service `json:"service,omitempty"`
 	// ID is register id

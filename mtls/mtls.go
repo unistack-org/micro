@@ -24,7 +24,7 @@ func newBPool() *bpool {
 	return &bp
 }
 
-func alloc() interface{} {
+func alloc() any {
 	return &bytes.Buffer{}
 }
 

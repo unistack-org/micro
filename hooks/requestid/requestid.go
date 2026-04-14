@@ -73,7 +73,7 @@ func NewHook() *hook {
 }
 
 func (w *hook) ServerHandler(next server.FuncHandler) server.FuncHandler {
-	return func(ctx context.Context, req server.Request, rsp interface{}) error {
+	return func(ctx context.Context, req server.Request, rsp any) error {
 		var err error
 		if ctx, err = DefaultMetadataFunc(ctx); err != nil {
 			return err
@@ -83,7 +83,7 @@ func (w *hook) ServerHandler(next server.FuncHandler) server.FuncHandler {
 }
 
 func (w *hook) ClientCall(next client.FuncCall) client.FuncCall {
-	return func(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
+	return func(ctx context.Context, req client.Request, rsp any, opts ...client.CallOption) error {
 		var err error
 		if ctx, err = DefaultMetadataFunc(ctx); err != nil {
 			return err

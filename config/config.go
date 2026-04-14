@@ -60,7 +60,7 @@ type (
 // Watcher is the config watcher
 type Watcher interface {
 	// Next blocks until update happens or error returned
-	Next() (map[string]interface{}, error)
+	Next() (map[string]any, error)
 	// Stop stops watcher
 	Stop() error
 }
@@ -80,7 +80,7 @@ func Load(ctx context.Context, cs []Config, opts ...LoadOption) error {
 }
 
 // Validate runs Validate() error func for each struct field
-func Validate(ctx context.Context, cfg interface{}) error {
+func Validate(ctx context.Context, cfg any) error {
 	if cfg == nil {
 		return nil
 	}
@@ -92,7 +92,7 @@ func Validate(ctx context.Context, cfg interface{}) error {
 	}
 
 	sv := reflect.ValueOf(cfg)
-	if sv.Kind() == reflect.Ptr {
+	if sv.Kind() == reflect.Pointer {
 		sv = sv.Elem()
 	}
 	if sv.Kind() != reflect.Struct {
@@ -114,7 +114,7 @@ func Validate(ctx context.Context, cfg interface{}) error {
 		}
 
 		switch val.Kind() {
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if reflect.Indirect(val).Kind() == reflect.Struct {
 				if err := Validate(ctx, val.Interface()); err != nil {
 					return err

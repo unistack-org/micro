@@ -19,14 +19,14 @@ func TestBuffer(t *testing.T) {
 	b = New(10)
 
 	// test 10 values
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		b.Put(i)
 	}
 
 	d := time.Now()
 	v = b.Get(10)
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		val := v[i].Value.(int)
 
 		if val != i {
@@ -36,14 +36,14 @@ func TestBuffer(t *testing.T) {
 
 	// test more values
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		v := i * 2
 		b.Put(v)
 	}
 
 	v = b.Get(10)
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		val := v[i].Value.(int)
 		expect := i * 2
 		if val != expect {

@@ -51,7 +51,7 @@ type Server interface {
 	// Register a handler
 	Handle(h Handler) error
 	// Create a new handler
-	NewHandler(h interface{}, opts ...HandlerOption) Handler
+	NewHandler(h any, opts ...HandlerOption) Handler
 	// Start the server
 	Start() error
 	// Stop the server
@@ -67,7 +67,7 @@ type Server interface {
 }
 
 type (
-	FuncHandler func(ctx context.Context, req Request, rsp interface{}) error
+	FuncHandler func(ctx context.Context, req Request, rsp any) error
 	HookHandler func(next FuncHandler) FuncHandler
 )
 
@@ -84,7 +84,7 @@ type Request interface {
 	// Header of the request
 	Header() metadata.Metadata
 	// Body is the initial decoded value
-	Body() interface{}
+	Body() any
 	// Read the undecoded request body
 	Read() ([]byte, error)
 	// The encoded message stream
@@ -113,13 +113,13 @@ type Stream interface {
 	// Request returns request
 	Request() Request
 	// Send will encode and send a request
-	Send(msg interface{}) error
+	Send(msg any) error
 	// Recv will decode and read a response
-	Recv(msg interface{}) error
+	Recv(msg any) error
 	// SendMsg will encode and send a request
-	SendMsg(msg interface{}) error
+	SendMsg(msg any) error
 	// RecvMsg will decode and read a response
-	RecvMsg(msg interface{}) error
+	RecvMsg(msg any) error
 	// Error returns stream error
 	Error() error
 	// Close closes the stream
@@ -139,7 +139,7 @@ type Stream interface {
 //	}
 type Handler interface {
 	Name() string
-	Handler() interface{}
+	Handler() any
 	Options() HandlerOptions
 }
 

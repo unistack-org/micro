@@ -35,7 +35,7 @@ func NewContext(ctx context.Context, c Client) context.Context {
 }
 
 // SetCallOption returns a function to setup a context with given value
-func SetCallOption(k, v interface{}) CallOption {
+func SetCallOption(k, v any) CallOption {
 	return func(o *CallOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -45,7 +45,7 @@ func SetCallOption(k, v interface{}) CallOption {
 }
 
 // SetOption returns a function to setup a context with given value
-func SetOption(k, v interface{}) Option {
+func SetOption(k, v any) Option {
 	return func(o *Options) {
 		if o.Context == nil {
 			o.Context = context.Background()

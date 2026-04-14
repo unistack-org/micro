@@ -42,7 +42,7 @@ func TestMemoryBroker(t *testing.T) {
 		t.Fatalf("Unexpected error subscribing %v", err)
 	}
 
-	for i := int64(0); i < count; i++ {
+	for i := range count {
 		message, err := b.NewMessage(ctx,
 			metadata.Pairs(
 				"foo", "bar",

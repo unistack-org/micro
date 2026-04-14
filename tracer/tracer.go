@@ -24,13 +24,13 @@ var (
 	DefaultContextAttrFuncs []ContextAttrFunc
 )
 
-type ContextAttrFunc func(ctx context.Context) []interface{}
+type ContextAttrFunc func(ctx context.Context) []any
 
 func init() {
 	logger.DefaultContextAttrFuncs = append(logger.DefaultContextAttrFuncs,
-		func(ctx context.Context) []interface{} {
+		func(ctx context.Context) []any {
 			if sp, ok := SpanFromContext(ctx); ok && sp != nil && sp.IsRecording() {
-				return []interface{}{
+				return []any{
 					TraceIDKey, sp.TraceID(),
 					SpanIDKey, sp.SpanID(),
 				}
@@ -69,11 +69,11 @@ type Span interface {
 	// Status returns span status and msg
 	Status() (SpanStatus, string)
 	// AddLabels append labels to span
-	AddLabels(kv ...interface{})
+	AddLabels(kv ...any)
 	// AddEvent append event to span
 	AddEvent(name string, opts ...EventOption)
 	// AddEvent append event to span
-	AddLogs(kv ...interface{})
+	AddLogs(kv ...any)
 	// Kind returns span kind
 	Kind() SpanKind
 	// TraceID returns trace id

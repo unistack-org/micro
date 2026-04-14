@@ -54,12 +54,12 @@ loop:
 	return time.ParseDuration(fmt.Sprintf("%dh%s", hours, s[p:]))
 }
 
-func (d Duration) MarshalYAML() (interface{}, error) {
+func (d Duration) MarshalYAML() (any, error) {
 	return time.Duration(d).String(), nil
 }
 
 func (d *Duration) UnmarshalYAML(data []byte) error {
-	var v interface{}
+	var v any
 	if err := yaml.Unmarshal(data, &v); err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (d Duration) MarshalJSON() ([]byte, error) {
 }
 
 func (d *Duration) UnmarshalJSON(b []byte) error {
-	var v interface{}
+	var v any
 	if err := json.Unmarshal(b, &v); err != nil {
 		return err
 	}

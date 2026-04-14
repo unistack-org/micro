@@ -35,7 +35,7 @@ func NewContext(ctx context.Context, c Store) context.Context {
 }
 
 // SetOption returns a function to setup a context with given value
-func SetOption(k, v interface{}) Option {
+func SetOption(k, v any) Option {
 	return func(o *Options) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -45,7 +45,7 @@ func SetOption(k, v interface{}) Option {
 }
 
 // SetReadOption returns a function to setup a context with given value
-func SetReadOption(k, v interface{}) ReadOption {
+func SetReadOption(k, v any) ReadOption {
 	return func(o *ReadOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -55,7 +55,7 @@ func SetReadOption(k, v interface{}) ReadOption {
 }
 
 // SetWriteOption returns a function to setup a context with given value
-func SetWriteOption(k, v interface{}) WriteOption {
+func SetWriteOption(k, v any) WriteOption {
 	return func(o *WriteOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -65,7 +65,7 @@ func SetWriteOption(k, v interface{}) WriteOption {
 }
 
 // SetListOption returns a function to setup a context with given value
-func SetListOption(k, v interface{}) ListOption {
+func SetListOption(k, v any) ListOption {
 	return func(o *ListOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -75,7 +75,7 @@ func SetListOption(k, v interface{}) ListOption {
 }
 
 // SetDeleteOption returns a function to setup a context with given value
-func SetDeleteOption(k, v interface{}) DeleteOption {
+func SetDeleteOption(k, v any) DeleteOption {
 	return func(o *DeleteOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -85,7 +85,7 @@ func SetDeleteOption(k, v interface{}) DeleteOption {
 }
 
 // SetExistsOption returns a function to setup a context with given value
-func SetExistsOption(k, v interface{}) ExistsOption {
+func SetExistsOption(k, v any) ExistsOption {
 	return func(o *ExistsOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()

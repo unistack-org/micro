@@ -135,7 +135,7 @@ type stringsPool struct {
 func newStringsPool(size int) *stringsPool {
 	p := &stringsPool{c: size}
 	p.p = &sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return &strings.Builder{}
 		},
 	}

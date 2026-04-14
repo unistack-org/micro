@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-func toInt8SliceE(i interface{}) ([]int8, error) {
+func toInt8SliceE(i any) ([]int8, error) {
 	if i == nil {
 		return []int8{}, fmt.Errorf("unable to cast %#v of type %T to []int8", i, i)
 	}
@@ -35,7 +35,7 @@ func toInt8SliceE(i interface{}) ([]int8, error) {
 	}
 }
 
-func toInt16SliceE(i interface{}) ([]int16, error) {
+func toInt16SliceE(i any) ([]int16, error) {
 	if i == nil {
 		return []int16{}, fmt.Errorf("unable to cast %#v of type %T to []int16", i, i)
 	}
@@ -63,7 +63,7 @@ func toInt16SliceE(i interface{}) ([]int16, error) {
 	}
 }
 
-func toInt32SliceE(i interface{}) ([]int32, error) {
+func toInt32SliceE(i any) ([]int32, error) {
 	if i == nil {
 		return []int32{}, fmt.Errorf("unable to cast %#v of type %T to []int32", i, i)
 	}
@@ -91,7 +91,7 @@ func toInt32SliceE(i interface{}) ([]int32, error) {
 	}
 }
 
-func toInt64SliceE(i interface{}) ([]int64, error) {
+func toInt64SliceE(i any) ([]int64, error) {
 	if i == nil {
 		return []int64{}, fmt.Errorf("unable to cast %#v of type %T to []int64", i, i)
 	}
@@ -119,7 +119,7 @@ func toInt64SliceE(i interface{}) ([]int64, error) {
 	}
 }
 
-func toUintSliceE(i interface{}) ([]uint, error) {
+func toUintSliceE(i any) ([]uint, error) {
 	if i == nil {
 		return []uint{}, fmt.Errorf("unable to cast %#v of type %T to []uint", i, i)
 	}
@@ -147,7 +147,7 @@ func toUintSliceE(i interface{}) ([]uint, error) {
 	}
 }
 
-func toUint8SliceE(i interface{}) ([]uint8, error) {
+func toUint8SliceE(i any) ([]uint8, error) {
 	if i == nil {
 		return []uint8{}, fmt.Errorf("unable to cast %#v of type %T to []uint8", i, i)
 	}
@@ -175,7 +175,7 @@ func toUint8SliceE(i interface{}) ([]uint8, error) {
 	}
 }
 
-func toUint16SliceE(i interface{}) ([]uint16, error) {
+func toUint16SliceE(i any) ([]uint16, error) {
 	if i == nil {
 		return []uint16{}, fmt.Errorf("unable to cast %#v of type %T to []uint16", i, i)
 	}
@@ -203,7 +203,7 @@ func toUint16SliceE(i interface{}) ([]uint16, error) {
 	}
 }
 
-func toUint32SliceE(i interface{}) ([]uint32, error) {
+func toUint32SliceE(i any) ([]uint32, error) {
 	if i == nil {
 		return []uint32{}, fmt.Errorf("unable to cast %#v of type %T to []uint32", i, i)
 	}
@@ -231,7 +231,7 @@ func toUint32SliceE(i interface{}) ([]uint32, error) {
 	}
 }
 
-func toUint64SliceE(i interface{}) ([]uint64, error) {
+func toUint64SliceE(i any) ([]uint64, error) {
 	if i == nil {
 		return []uint64{}, fmt.Errorf("unable to cast %#v of type %T to []uint64", i, i)
 	}
@@ -259,7 +259,7 @@ func toUint64SliceE(i interface{}) ([]uint64, error) {
 	}
 }
 
-func toFloat32SliceE(i interface{}) ([]float32, error) {
+func toFloat32SliceE(i any) ([]float32, error) {
 	if i == nil {
 		return []float32{}, fmt.Errorf("unable to cast %#v of type %T to []float32", i, i)
 	}
@@ -287,7 +287,7 @@ func toFloat32SliceE(i interface{}) ([]float32, error) {
 	}
 }
 
-func toFloat64SliceE(i interface{}) ([]float64, error) {
+func toFloat64SliceE(i any) ([]float64, error) {
 	if i == nil {
 		return []float64{}, fmt.Errorf("unable to cast %#v of type %T to []float64", i, i)
 	}
@@ -315,7 +315,7 @@ func toFloat64SliceE(i interface{}) ([]float64, error) {
 	}
 }
 
-func setMap(src interface{}, dst interface{}) error {
+func setMap(src any, dst any) error {
 	var err error
 
 	if src == nil {
@@ -331,7 +331,7 @@ func setMap(src interface{}, dst interface{}) error {
 	valKind := val.Type().Elem().Kind()
 
 	switch v := dst.(type) {
-	case []interface{}:
+	case []any:
 		if len(v) == 1 {
 			dstVal := reflect.ValueOf(v[0])
 			if dstVal.Kind() != reflect.Map {
@@ -340,8 +340,8 @@ func setMap(src interface{}, dst interface{}) error {
 			mapIter := dstVal.MapRange()
 			for mapIter.Next() {
 				var (
-					keyVal interface{}
-					valVal interface{}
+					keyVal any
+					valVal any
 				)
 				switch keyKind {
 				case reflect.Bool:
@@ -418,8 +418,8 @@ func setMap(src interface{}, dst interface{}) error {
 			v = v[:len(v)-1]
 		}
 		var (
-			keyVal interface{}
-			valVal interface{}
+			keyVal any
+			valVal any
 		)
 		for i := 0; i < len(v); i += 2 {
 			switch keyKind {
@@ -499,8 +499,8 @@ func setMap(src interface{}, dst interface{}) error {
 		mapIter := dstVal.MapRange()
 		for mapIter.Next() {
 			var (
-				keyVal interface{}
-				valVal interface{}
+				keyVal any
+				valVal any
 			)
 			switch keyKind {
 			case reflect.Bool:

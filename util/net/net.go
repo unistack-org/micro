@@ -9,7 +9,7 @@ import (
 )
 
 // HostPort format addr and port suitable for dial
-func HostPort(addr string, port interface{}) string {
+func HostPort(addr string, port any) string {
 	host := addr
 	if strings.Count(addr, ":") > 0 {
 		host = fmt.Sprintf("[%s]", addr)

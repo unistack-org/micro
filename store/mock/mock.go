@@ -14,7 +14,7 @@ import (
 // ExpectedWrite represents an expected Write operation
 type ExpectedWrite struct {
 	key       string
-	value     interface{}
+	value     any
 	ttl       time.Duration
 	metadata  map[string]string //nolint: unused
 	namespace string
@@ -24,7 +24,7 @@ type ExpectedWrite struct {
 	err       error
 }
 
-func (e *ExpectedWrite) match(key string, val interface{}, opts ...store.WriteOption) bool {
+func (e *ExpectedWrite) match(key string, val any, opts ...store.WriteOption) bool {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
 
@@ -59,7 +59,7 @@ func (e *ExpectedWrite) match(key string, val interface{}, opts ...store.WriteOp
 // ExpectedRead represents an expected Read operation
 type ExpectedRead struct {
 	key    string
-	value  interface{}
+	value  any
 	times  int
 	called int
 	mutex  sync.Mutex
@@ -222,7 +222,7 @@ type Store struct {
 	expectedConnects    []*ExpectedConnect
 	expectedDisconnects []*ExpectedDisconnect
 
-	data     map[string]interface{}
+	data     map[string]any
 	exists   map[string]bool
 	ttls     map[string]time.Time // key -> expiration time
 	metadata map[string]map[string]string
@@ -235,7 +235,7 @@ type Store struct {
 func NewStore(opts ...store.Option) *Store {
 	options := store.NewOptions(opts...)
 	return &Store{
-		data:     make(map[string]interface{}),
+		data:     make(map[string]any),
 		exists:   make(map[string]bool),
 		ttls:     make(map[string]time.Time),
 		metadata: make(map[string]map[string]string),
@@ -314,7 +314,7 @@ func (m *Store) ExpectDisconnect() *ExpectedDisconnect {
 }
 
 // WithValue sets the value to return for expected operations
-func (e *ExpectedWrite) WithValue(val interface{}) *ExpectedWrite {
+func (e *ExpectedWrite) WithValue(val any) *ExpectedWrite {
 	e.value = val
 	return e
 }
@@ -344,7 +344,7 @@ func (e *ExpectedWrite) WillReturnError(err error) *ExpectedWrite {
 }
 
 // WithValue sets the value to return for expected Read operations
-func (e *ExpectedRead) WithValue(val interface{}) *ExpectedRead {
+func (e *ExpectedRead) WithValue(val any) *ExpectedRead {
 	e.value = val
 	return e
 }
@@ -553,7 +553,7 @@ func (m *Store) Exists(ctx context.Context, key string, opts ...store.ExistsOpti
 }
 
 // Read reads a single key name to provided value with optional ReadOptions
-func (m *Store) Read(ctx context.Context, key string, val interface{}, opts ...store.ReadOption) error {
+func (m *Store) Read(ctx context.Context, key string, val any, opts ...store.ReadOption) error {
 	if m.err != nil {
 		return m.err
 	}
@@ -583,7 +583,7 @@ func (m *Store) Read(ctx context.Context, key string, val interface{}, opts ...s
 
 			if data != nil {
 				// Simple type conversion for testing
-				if target, ok := val.(*interface{}); ok {
+				if target, ok := val.(*any); ok {
 					*target = data
 				} else if target, ok := val.(*string); ok {
 					if s, ok := data.(string); ok {
@@ -608,7 +608,7 @@ func (m *Store) Read(ctx context.Context, key string, val interface{}, opts ...s
 	}
 
 	if data, ok := m.data[key]; ok {
-		if target, ok := val.(*interface{}); ok {
+		if target, ok := val.(*any); ok {
 			*target = data
 		} else if target, ok := val.(*string); ok {
 			if s, ok := data.(string); ok {
@@ -626,7 +626,7 @@ func (m *Store) Read(ctx context.Context, key string, val interface{}, opts ...s
 }
 
 // Write writes a value to key name to the store with optional WriteOption
-func (m *Store) Write(ctx context.Context, key string, val interface{}, opts ...store.WriteOption) error {
+func (m *Store) Write(ctx context.Context, key string, val any, opts ...store.WriteOption) error {
 	if m.err != nil {
 		return m.err
 	}
@@ -792,10 +792,7 @@ func (m *Store) List(ctx context.Context, opts ...store.ListOption) ([]string, e
 
 	// Apply limit and offset
 	if options.Limit > 0 && int(options.Limit) < len(keys) {
-		end := int(options.Offset) + int(options.Limit)
-		if end > len(keys) {
-			end = len(keys)
-		}
+		end := min(int(options.Offset)+int(options.Limit), len(keys))
 		if int(options.Offset) < len(keys) {
 			keys = keys[options.Offset:end]
 		} else {

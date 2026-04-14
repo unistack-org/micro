@@ -35,7 +35,7 @@ func NewContext(ctx context.Context, s Broker) context.Context {
 }
 
 // SetSubscribeOption returns a function to setup a context with given value
-func SetSubscribeOption(k, v interface{}) SubscribeOption {
+func SetSubscribeOption(k, v any) SubscribeOption {
 	return func(o *SubscribeOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -45,7 +45,7 @@ func SetSubscribeOption(k, v interface{}) SubscribeOption {
 }
 
 // SetMessageOption returns a function to setup a context with given value
-func SetMessageOption(k, v interface{}) MessageOption {
+func SetMessageOption(k, v any) MessageOption {
 	return func(o *MessageOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -55,7 +55,7 @@ func SetMessageOption(k, v interface{}) MessageOption {
 }
 
 // SetOption returns a function to setup a context with given value
-func SetOption(k, v interface{}) Option {
+func SetOption(k, v any) Option {
 	return func(o *Options) {
 		if o.Context == nil {
 			o.Context = context.Background()

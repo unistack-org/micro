@@ -164,7 +164,7 @@ func (s *slogLogger) Options() logger.Options {
 	return s.opts
 }
 
-func (s *slogLogger) Fields(fields ...interface{}) logger.Logger {
+func (s *slogLogger) Fields(fields ...any) logger.Logger {
 	s.mu.RLock()
 	options := s.opts
 	s.mu.RUnlock()
@@ -228,34 +228,34 @@ func (s *slogLogger) Init(opts ...logger.Option) error {
 	return nil
 }
 
-func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, msg string, attrs ...interface{}) {
+func (s *slogLogger) Log(ctx context.Context, lvl logger.Level, msg string, attrs ...any) {
 	s.printLog(ctx, lvl, msg, attrs...)
 }
 
-func (s *slogLogger) Info(ctx context.Context, msg string, attrs ...interface{}) {
+func (s *slogLogger) Info(ctx context.Context, msg string, attrs ...any) {
 	s.printLog(ctx, logger.InfoLevel, msg, attrs...)
 }
 
-func (s *slogLogger) Debug(ctx context.Context, msg string, attrs ...interface{}) {
+func (s *slogLogger) Debug(ctx context.Context, msg string, attrs ...any) {
 	s.printLog(ctx, logger.DebugLevel, msg, attrs...)
 }
 
-func (s *slogLogger) Trace(ctx context.Context, msg string, attrs ...interface{}) {
+func (s *slogLogger) Trace(ctx context.Context, msg string, attrs ...any) {
 	s.printLog(ctx, logger.TraceLevel, msg, attrs...)
 }
 
-func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...interface{}) {
+func (s *slogLogger) Error(ctx context.Context, msg string, attrs ...any) {
 	s.printLog(ctx, logger.ErrorLevel, msg, attrs...)
 }
 
-func (s *slogLogger) Fatal(ctx context.Context, msg string, attrs ...interface{}) {
+func (s *slogLogger) Fatal(ctx context.Context, msg string, attrs ...any) {
 	s.printLog(ctx, logger.FatalLevel, msg, attrs...)
 	if closer, ok := s.opts.Out.(io.Closer); ok {
 		_ = closer.Close()
 	}
 }
 
-func (s *slogLogger) Warn(ctx context.Context, msg string, attrs ...interface{}) {
+func (s *slogLogger) Warn(ctx context.Context, msg string, attrs ...any) {
 	s.printLog(ctx, logger.WarnLevel, msg, attrs...)
 }
 
@@ -267,7 +267,7 @@ func (s *slogLogger) String() string {
 	return "slog"
 }
 
-func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string, args ...interface{}) {
+func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string, args ...any) {
 	if !s.V(lvl) {
 		return
 	}
@@ -380,7 +380,7 @@ func slogToLoggerLevel(level slog.Level) logger.Level {
 	}
 }
 
-func (s *slogLogger) argsAttrs(attrs []slog.Attr, args ...interface{}) ([]slog.Attr, error) {
+func (s *slogLogger) argsAttrs(attrs []slog.Attr, args ...any) ([]slog.Attr, error) {
 	var err error
 
 	for idx := 0; idx < len(args); idx++ {

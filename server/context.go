@@ -35,7 +35,7 @@ func NewContext(ctx context.Context, s Server) context.Context {
 }
 
 // SetOption returns a function to setup a context with given value
-func SetOption(k, v interface{}) Option {
+func SetOption(k, v any) Option {
 	return func(o *Options) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -45,7 +45,7 @@ func SetOption(k, v interface{}) Option {
 }
 
 // SetSubscriberOption returns a function to setup a context with given value
-func SetSubscriberOption(k, v interface{}) SubscriberOption {
+func SetSubscriberOption(k, v any) SubscriberOption {
 	return func(o *SubscriberOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -55,7 +55,7 @@ func SetSubscriberOption(k, v interface{}) SubscriberOption {
 }
 
 // SetHandlerOption returns a function to setup a context with given value
-func SetHandlerOption(k, v interface{}) HandlerOption {
+func SetHandlerOption(k, v any) HandlerOption {
 	return func(o *HandlerOptions) {
 		if o.Context == nil {
 			o.Context = context.Background()

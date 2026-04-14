@@ -215,7 +215,7 @@ func TestMemoryRegistryTTLConcurrent(t *testing.T) {
 	errChan := make(chan error, concurrency)
 	syncChan := make(chan struct{})
 
-	for i := 0; i < concurrency; i++ {
+	for range concurrency {
 		go func() {
 			<-syncChan
 			for name := range testData {
@@ -240,7 +240,7 @@ func TestMemoryRegistryTTLConcurrent(t *testing.T) {
 	time.Sleep(waitTime)
 	close(syncChan)
 
-	for i := 0; i < concurrency; i++ {
+	for range concurrency {
 		if err := <-errChan; err != nil {
 			t.Fatal(err)
 		}
@@ -304,16 +304,14 @@ func TestWatcher(t *testing.T) {
 
 	cherr := make(chan error, 10)
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
+	wg.Go(func() {
 		_, err := wc.Next()
 		if err != nil {
 			cherr <- fmt.Errorf("unexpected err %v", err)
 		}
 		// t.Logf("changes %#+v", ch.Service)
 		wc.Stop()
-		wg.Done()
-	}()
+	})
 
 	if err := m.Register(ctx, testSrv); err != nil {
 		t.Fatalf("Register err: %v", err)

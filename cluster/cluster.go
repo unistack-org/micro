@@ -11,7 +11,7 @@ type Message interface {
 	// Header returns message headers
 	Header() metadata.Metadata
 	// Body returns broker message may be []byte slice or some go struct or interface
-	Body() interface{}
+	Body() any
 }
 
 type Node interface {

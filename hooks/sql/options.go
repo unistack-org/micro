@@ -14,8 +14,8 @@ var (
 	// DefaultMeterStatsInterval holds default stats interval
 	DefaultMeterStatsInterval = 5 * time.Second
 	// DefaultLoggerObserver used to prepare labels for logger
-	DefaultLoggerObserver = func(ctx context.Context, method string, query string, td time.Duration, err error) []interface{} {
-		labels := []interface{}{"db.method", method, "took", fmt.Sprintf("%v", td)}
+	DefaultLoggerObserver = func(ctx context.Context, method string, query string, td time.Duration, err error) []any {
+		labels := []any{"db.method", method, "took", fmt.Sprintf("%v", td)}
 		if err != nil {
 			labels = append(labels, "error", err.Error())
 		}
@@ -61,7 +61,7 @@ type Options struct {
 	MeterStatsInterval time.Duration
 	LoggerLevel        logger.Level
 	LoggerEnabled      bool
-	LoggerObserver     func(ctx context.Context, method string, name string, td time.Duration, err error) []interface{}
+	LoggerObserver     func(ctx context.Context, method string, name string, td time.Duration, err error) []any
 }
 
 // Option func signature
@@ -141,7 +141,7 @@ func LoggerLevel(lvl logger.Level) Option {
 }
 
 // LoggerObserver passes observer to fill logger fields
-func LoggerObserver(obs func(context.Context, string, string, time.Duration, error) []interface{}) Option {
+func LoggerObserver(obs func(context.Context, string, string, time.Duration, error) []any) Option {
 	return func(o *Options) {
 		o.LoggerObserver = obs
 	}

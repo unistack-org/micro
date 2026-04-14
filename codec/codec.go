@@ -21,14 +21,14 @@ var (
 
 // Codec encodes/decodes various types of messages.
 type Codec interface {
-	Marshal(v interface{}, opts ...Option) ([]byte, error)
-	Unmarshal(b []byte, v interface{}, opts ...Option) error
+	Marshal(v any, opts ...Option) ([]byte, error)
+	Unmarshal(b []byte, v any, opts ...Option) error
 	String() string
 }
 
 type CodecV2 interface {
-	Marshal(buf []byte, v interface{}, opts ...Option) ([]byte, error)
-	Unmarshal(buf []byte, v interface{}, opts ...Option) error
+	Marshal(buf []byte, v any, opts ...Option) ([]byte, error)
+	Unmarshal(buf []byte, v any, opts ...Option) error
 	String() string
 }
 

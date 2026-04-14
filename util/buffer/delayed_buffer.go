@@ -47,7 +47,7 @@ func (b *DelayedBuffer) flush() {
 	bufLen := len(b.buffer)
 	if bufLen > 0 {
 		tmp := make([][]byte, bufLen)
-		for i := 0; i < bufLen; i++ {
+		for i := range bufLen {
 			tmp[i] = <-b.buffer
 		}
 		for _, t := range tmp {

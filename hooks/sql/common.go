@@ -23,8 +23,8 @@ func namedValueToValue(named []driver.NamedValue) ([]driver.Value, error) {
 }
 
 // namedValueToLabels convert driver arguments to interface{} slice
-func namedValueToLabels(named []driver.NamedValue) []interface{} {
-	largs := make([]interface{}, 0, len(named)*2)
+func namedValueToLabels(named []driver.NamedValue) []any {
+	largs := make([]any, 0, len(named)*2)
 	var name string
 	for _, param := range named {
 		if param.Name != "" {

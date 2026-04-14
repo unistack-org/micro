@@ -251,7 +251,7 @@ func TestURLSliceVars(t *testing.T) {
 		t.Fatalf("key not exists: %#+v", mp)
 	}
 
-	vm, ok := v.([]interface{})
+	vm, ok := v.([]any)
 	if !ok {
 		t.Fatalf("invalid key value")
 	}
@@ -324,40 +324,40 @@ func TestIsZero(t *testing.T) {
 func TestFlattenMap(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    map[string]interface{}
-		expected map[string]interface{}
+		input    map[string]any
+		expected map[string]any
 	}{
 		{
 			name:     "empty map",
-			input:    map[string]interface{}{},
-			expected: map[string]interface{}{},
+			input:    map[string]any{},
+			expected: map[string]any{},
 		},
 		{
 			name:     "nil map",
 			input:    nil,
-			expected: map[string]interface{}{},
+			expected: map[string]any{},
 		},
 		{
 			name: "single level",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"username": "username",
 				"password": "password",
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"username": "username",
 				"password": "password",
 			},
 		},
 		{
 			name: "two level",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"order_id":      "order_id",
 				"user.name":     "username",
 				"user.password": "password",
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"order_id": "order_id",
-				"user": map[string]interface{}{
+				"user": map[string]any{
 					"name":     "username",
 					"password": "password",
 				},
@@ -365,19 +365,19 @@ func TestFlattenMap(t *testing.T) {
 		},
 		{
 			name: "three level",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"order_id":             "order_id",
 				"user.name":            "username",
 				"user.password":        "password",
 				"user.document.id":     "document_id",
 				"user.document.number": "document_number",
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"order_id": "order_id",
-				"user": map[string]interface{}{
+				"user": map[string]any{
 					"name":     "username",
 					"password": "password",
-					"document": map[string]interface{}{
+					"document": map[string]any{
 						"id":     "document_id",
 						"number": "document_number",
 					},
@@ -386,7 +386,7 @@ func TestFlattenMap(t *testing.T) {
 		},
 		{
 			name: "four level",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"order_id":                    "order_id",
 				"user.name":                   "username",
 				"user.password":               "password",
@@ -395,17 +395,17 @@ func TestFlattenMap(t *testing.T) {
 				"user.info.permissions.read":  "available",
 				"user.info.permissions.write": "available",
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"order_id": "order_id",
-				"user": map[string]interface{}{
+				"user": map[string]any{
 					"name":     "username",
 					"password": "password",
-					"document": map[string]interface{}{
+					"document": map[string]any{
 						"id":     "document_id",
 						"number": "document_number",
 					},
-					"info": map[string]interface{}{
-						"permissions": map[string]interface{}{
+					"info": map[string]any{
+						"permissions": map[string]any{
 							"read":  "available",
 							"write": "available",
 						},
@@ -415,32 +415,32 @@ func TestFlattenMap(t *testing.T) {
 		},
 		{
 			name: "key conflicts",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"user":          "user",
 				"user.name":     "username",
 				"user.password": "password",
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"user": "user",
 			},
 		},
 		{
 			name: "overwriting conflicts",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"order_id":             "order_id",
 				"user.document.id":     "document_id",
 				"user.document.number": "document_number",
 				"user.info.address":    "address",
 				"user.info.phone":      "phone",
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"order_id": "order_id",
-				"user": map[string]interface{}{
-					"document": map[string]interface{}{
+				"user": map[string]any{
+					"document": map[string]any{
 						"id":     "document_id",
 						"number": "document_number",
 					},
-					"info": map[string]interface{}{
+					"info": map[string]any{
 						"address": "address",
 						"phone":   "phone",
 					},
