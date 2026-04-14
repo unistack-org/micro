@@ -44,8 +44,6 @@ func init() {
 type Service interface {
 	// The service name
 	Name() string
-	// Init initialises options
-	Init(...Option) error
 	// Options returns the current options
 	Options() Options
 	// Logger is for output log from service components
@@ -89,11 +87,6 @@ type Service interface {
 	Health() bool
 }
 
-// RegisterHandler is syntactic sugar for registering a handler
-func RegisterHandler(s server.Server, h any, opts ...server.HandlerOption) error {
-	return s.Handle(s.NewHandler(h, opts...))
-}
-
 type service struct {
 	done    chan struct{}
 	opts    Options
@@ -108,67 +101,6 @@ func NewService(opts ...Option) Service {
 
 func (s *service) Name() string {
 	return s.opts.Name
-}
-
-// Init initialises options.
-//
-//nolint:gocyclo
-func (s *service) Init(opts ...Option) error {
-	var err error
-	// process options
-	for _, o := range opts {
-		if err = o(&s.opts); err != nil {
-			return err
-		}
-	}
-
-	for _, cfg := range s.opts.Configs {
-		if cfg.Options().Struct == nil {
-			// skip config as the struct not passed
-			continue
-		}
-		if err = cfg.Init(config.Context(cfg.Options().Context)); err != nil {
-			return err
-		}
-	}
-
-	for _, log := range s.opts.Loggers {
-		if err = log.Init(logger.WithContext(log.Options().Context)); err != nil {
-			return err
-		}
-	}
-
-	for _, reg := range s.opts.Registers {
-		if err = reg.Init(register.Context(reg.Options().Context)); err != nil {
-			return err
-		}
-	}
-
-	for _, brk := range s.opts.Brokers {
-		if err = brk.Init(broker.Context(brk.Options().Context)); err != nil {
-			return err
-		}
-	}
-
-	for _, str := range s.opts.Stores {
-		if err = str.Init(store.Context(str.Options().Context)); err != nil {
-			return err
-		}
-	}
-
-	for _, srv := range s.opts.Servers {
-		if err = srv.Init(server.Context(srv.Options().Context)); err != nil {
-			return err
-		}
-	}
-
-	for _, cli := range s.opts.Clients {
-		if err = cli.Init(client.Context(cli.Options().Context)); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (s *service) Options() Options {
@@ -345,24 +277,6 @@ func (s *service) Start() error {
 		config.Loggers[0].Info(s.opts.Context, fmt.Sprintf("starting [service] %s version %s", s.Options().Name, s.Options().Version))
 	}
 
-	for _, reg := range s.opts.Registers {
-		if err = reg.Connect(s.opts.Context); err != nil {
-			return err
-		}
-	}
-
-	for _, brk := range s.opts.Brokers {
-		if err = brk.Connect(s.opts.Context); err != nil {
-			return err
-		}
-	}
-
-	for _, str := range s.opts.Stores {
-		if err = str.Connect(s.opts.Context); err != nil {
-			return err
-		}
-	}
-
 	for _, srv := range s.opts.Servers {
 		if err = srv.Start(); err != nil {
 			return err
@@ -387,45 +301,48 @@ func (s *service) Stop() error {
 		config.Loggers[0].Info(s.opts.Context, fmt.Sprintf("stoppping [service] %s", s.Name()))
 	}
 
-	var err error
+	var errs []error
 	for _, fn := range s.opts.BeforeStop {
-		if err = fn(s.opts.Context); err != nil {
-			return err
+		if err := fn(s.opts.Context); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
 	for _, srv := range s.opts.Servers {
-		if err = srv.Stop(); err != nil {
-			return err
+		if err := srv.Stop(); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
 	for _, fn := range s.opts.AfterStop {
-		if err = fn(s.opts.Context); err != nil {
-			return err
+		if err := fn(s.opts.Context); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
 	for _, reg := range s.opts.Registers {
-		if err = reg.Disconnect(s.opts.Context); err != nil {
-			return err
+		if err := reg.Disconnect(s.opts.Context); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
 	for _, brk := range s.opts.Brokers {
-		if err = brk.Disconnect(s.opts.Context); err != nil {
-			return err
+		if err := brk.Disconnect(s.opts.Context); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
 	for _, str := range s.opts.Stores {
-		if err = str.Disconnect(s.opts.Context); err != nil {
-			return err
+		if err := str.Disconnect(s.opts.Context); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
 	s.notifyShutdown()
 
+	if len(errs) > 0 {
+		return fmt.Errorf("stop errors: %v", errs)
+	}
 	return nil
 }
 
