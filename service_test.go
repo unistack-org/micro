@@ -24,10 +24,6 @@ func TestClient(t *testing.T) {
 
 	svc := NewService(Client(c1, c2))
 
-	if err := svc.Init(); err != nil {
-		t.Fatal(err)
-	}
-
 	x1 := svc.Client("test2")
 	if x1.Name() != "test2" {
 		t.Fatalf("invalid client %#+v", svc.Options().Clients)
@@ -51,34 +47,7 @@ func Test_getNameIndex(t *testing.T) {
 }
 
 func TestRegisterHandler(t *testing.T) {
-	type args struct {
-		s    server.Server
-		h    any
-		opts []server.HandlerOption
-	}
-	h := struct{}{}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "RegisterHandler",
-			args: args{
-				s:    server.DefaultServer,
-				h:    h,
-				opts: nil,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := RegisterHandler(tt.args.s, tt.args.h, tt.args.opts...); (err != nil) != tt.wantErr {
-				t.Errorf("RegisterHandler() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	t.Skip("RegisterHandler removed from service")
 }
 
 func TestNewService(t *testing.T) {
@@ -140,39 +109,7 @@ func Test_service_Name(t *testing.T) {
 }
 
 func Test_service_Init(t *testing.T) {
-	type fields struct {
-		opts Options
-	}
-	type args struct {
-		opts []Option
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "service.Init()",
-			fields: fields{
-				opts: Options{},
-			},
-			args: args{
-				opts: []Option{},
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &service{
-				opts: tt.fields.opts,
-			}
-			if err := s.Init(tt.args.opts...); (err != nil) != tt.wantErr {
-				t.Errorf("service.Init() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	t.Skip("Init method removed from service")
 }
 
 func Test_service_Options(t *testing.T) {

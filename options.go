@@ -61,17 +61,17 @@ type Options struct {
 // NewOptions returns new Options filled with defaults and overrided by provided opts
 func NewOptions(opts ...Option) Options {
 	options := Options{
-		Context:   context.Background(),
-		Servers:   []server.Server{server.DefaultServer},
-		Clients:   []client.Client{client.DefaultClient},
-		Brokers:   []broker.Broker{broker.DefaultBroker},
-		Registers: []register.Register{register.DefaultRegister},
-		Routers:   []router.Router{router.DefaultRouter},
-		Loggers:   []logger.Logger{logger.DefaultLogger},
-		Tracers:   []tracer.Tracer{tracer.DefaultTracer},
-		Meters:    []meter.Meter{meter.DefaultMeter},
-		Configs:   []config.Config{config.DefaultConfig},
-		Stores:    []store.Store{store.DefaultStore},
+		Context:         context.Background(),
+		Servers:         []server.Server{server.DefaultServer},
+		Clients:         []client.Client{client.DefaultClient},
+		Brokers:         []broker.Broker{broker.DefaultBroker},
+		Registers:       []register.Register{register.DefaultRegister},
+		Routers:         []router.Router{router.DefaultRouter},
+		Loggers:         []logger.Logger{logger.DefaultLogger},
+		Tracers:         []tracer.Tracer{tracer.DefaultTracer},
+		Meters:          []meter.Meter{meter.DefaultMeter},
+		Configs:         []config.Config{config.DefaultConfig},
+		Stores:          []store.Store{store.DefaultStore},
 		// Runtime   runtime.Runtime
 		// Profile   profile.Profile
 	}
