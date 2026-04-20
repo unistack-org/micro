@@ -1,15 +1,8 @@
 ```
-# Go build artifacts
+# Compiled and build artifacts
 *.o
-*.a
+*.obj
 *.out
-*.test
-*.prof
-
-# Go cache and modules
-go.work.sum
-coverage.out
-.DS_Store
 
 # Dependencies
 vendor/
@@ -17,42 +10,19 @@ vendor/
 # Logs and temp files
 *.log
 *.tmp
-
-# Environment
-.env
-.env.local
-.env.*
+*.swp
 
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Build directories
-build/
-dist/
-target/
+# Coverage and testing
+.coverage
+coverage/
+htmlcov/
+*.coverprofile
 
-# Python artifacts (if any mixed)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-
-# Node artifacts (if any mixed)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Compression files
-*.zip
-*.tar.gz
-*.tar.xz
-*.tar.bz2
-*.gz
-*.rar
-*.7z
+# Go-specific
+*.test
+*.prof
 ```
