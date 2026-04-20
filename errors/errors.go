@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"go.unistack.org/micro/v4/util/slice"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -266,7 +266,7 @@ func CodeIn(err any, codes ...int32) bool {
 		return false
 	}
 
-	return slice.Contains(codes, code)
+	return slices.Contains(codes, code)
 }
 
 // FromError try to convert go error to *Error
