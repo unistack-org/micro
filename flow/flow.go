@@ -44,6 +44,13 @@ type Message struct {
 	Body   RawMessage
 }
 
+// FlowResult represents the result of a step execution
+type FlowResult struct {
+	StepID string
+	Result *Message
+	Error  error
+}
+
 // Step represents dedicated workflow step
 type Step interface {
 	// ID returns step id
@@ -68,6 +75,10 @@ type Step interface {
 	Request() *Message
 	// Response returns step response message
 	Response() *Message
+	// Compensate performs rollback for this step (Saga pattern)
+	// Should be called in reverse order if any subsequent step fails
+	// Return nil if step does not require compensation or compensation succeeded
+	Compensate(ctx context.Context, req *Message, opts ...ExecuteOption) error
 }
 
 // Status contains step current status
