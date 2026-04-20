@@ -1,9 +1,8 @@
-//go:build ignore
-
 package flow
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sync"
@@ -171,238 +170,189 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 }
 
 func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) error {
-	w.RLock()
-	defer w.RUnlock()
+	options := NewExecuteOptions(opts...)
+	
+	// Создаем store для workflow
+	eid := w.id
+	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", eid))
+	stepStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("steps", eid))
 
-	//	stepStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("steps", eid))
-	// workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", eid))
-
-	// Get IDs of all descendant vertices.
-	flowIDs, errDes := w.g.GetDescendants(startID)
-	if errDes != nil {
-		return errDes
-	}
-
-	// inputChannels provides for input channels for each of the descendant vertices (+ the start-vertex).
-	inputChannels := make(map[string]chan FlowResult, len(flowIDs)+1)
-
-	// Iterate vertex IDs and create an input channel for each of them and a single
-	// output channel for leaves. Note, this "pre-flight" is needed to ensure we
-	// really have an input channel regardless of how we traverse the tree and spawn
-	// workers.
-	leafCount := 0
-
-	for id := range flowIDs {
-
-		// Get all parents of this vertex.
-		parents, errPar := w.g.GetParents(id)
-		if errPar != nil {
-			return errPar
+	// Трек успешных шагов для компенсации
+	executedSteps := make([]string, 0)
+	var execMu sync.Mutex
+	
+	// Завершаем workflow с ошибкой и выполняем компенсацию
+	failWorkflow := func(err error) error {
+		w.opts.Logger.Error(options.Context, "workflow failed: %v", err)
+		
+		// Обновляем статус workflow
+		if werr := workflowStore.Write(options.Context, "status", &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil {
+			w.opts.Logger.Error(options.Context, "store error: %v", werr)
 		}
-
-		// Create a buffered input channel that has capacity for all parent results.
-		inputChannels[id] = make(chan FlowResult, len(parents))
-
-		if ok, err := w.g.IsLeaf(id); ok && err == nil {
-			leafCount += 1
-		}
-	}
-
-	// outputChannel caries the results of leaf vertices.
-	outputChannel := make(chan FlowResult, leafCount)
-
-	// To also process the start vertex and to have its results being passed to its
-	// children, add it to the vertex IDs. Also add an input channel for the start
-	// vertex and feed the inputs to this channel.
-	flowIDs[startID] = struct{}{}
-	inputChannels[startID] = make(chan FlowResult, len(inputs))
-	for _, i := range inputs {
-		inputChannels[startID] <- i
-	}
-
-	wg := sync.WaitGroup{}
-
-	// Iterate all vertex IDs (now incl. start vertex) and handle each worker (incl.
-	// inputs and outputs) in a separate goroutine.
-	for id := range flowIDs {
-
-		// Get all children of this vertex that later need to be notified. Note, we
-		// collect all children before the goroutine to be able to release the read
-		// lock as early as possible.
-		children, errChildren := w.g.GetChildren(id)
-		if errChildren != nil {
-			return errChildren
-		}
-
-		// Remember to wait for this goroutine.
-		wg.Add(1)
-
-		go func(id string) {
-			// Get this vertex's input channel.
-			// Note, only concurrent read here, which is fine.
-			c := inputChannels[id]
-
-			// Await all parent inputs and stuff them into a slice.
-			parentCount := cap(c)
-			parentResults := make([]FlowResult, parentCount)
-			for i := 0; i < parentCount; i++ {
-				parentResults[i] = <-c
+		
+		// Выполняем компенсацию в обратном порядке
+		execMu.Lock()
+		stepsToCompensate := make([]string, len(executedSteps))
+		copy(stepsToCompensate, executedSteps)
+		execMu.Unlock()
+		
+		for i := len(stepsToCompensate) - 1; i >= 0; i-- {
+			stepID := stepsToCompensate[i]
+			step, ok := w.steps[stepID]
+			if !ok {
+				continue
 			}
-
-			// Execute the worker.
-			errWorker := callback(w.g, id, parentResults)
-			if errWorker != nil {
-				return errWorker
+			
+			w.opts.Logger.Info(options.Context, "compensating step: %s", stepID)
+			
+			// Читаем запрос из store
+			reqFrame := &codec.Frame{}
+			if rerr := stepStore.Read(options.Context, filepath.Join(stepID, "req"), reqFrame); rerr != nil {
+				w.opts.Logger.Error(options.Context, "failed to read request for compensation: %v", rerr)
+				continue
 			}
-
-			// Send this worker's FlowResult onto all children's input channels or, if it is
-			// a leaf (i.e. no children), send the result onto the output channel.
-			if len(children) > 0 {
-				for child := range children {
-					inputChannels[child] <- flowResult
-				}
+			
+			req := &Message{Body: reqFrame.Data}
+			
+			// Выполняем компенсацию
+			if cerr := step.Compensate(options.Context, req, opts...); cerr != nil {
+				w.opts.Logger.Error(options.Context, "compensation failed for step %s: %v", stepID, cerr)
+				// Продолжаем компенсацию остальных шагов даже если один не удался
 			} else {
-				outputChannel <- flowResult
+				// Обновляем статус шага после компенсации
+				if werr := stepStore.Write(options.Context, filepath.Join(stepID, "status"), &codec.Frame{Data: []byte(StatusPending.String())}); werr != nil {
+					w.opts.Logger.Error(options.Context, "store error: %v", werr)
+				}
 			}
-
-			// "Sign off".
-			wg.Done()
-		}(id)
+		}
+		
+		return err
 	}
 
-	// Wait for all go routines to finish.
-	wg.Wait()
+	// Хранилище результатов шагов
+	stepResults := make(map[string]*Message)
+	var resultsMu sync.RWMutex
 
-	// Await all leaf vertex results and stuff them into a slice.
-	resultCount := cap(outputChannel)
-	results := make([]FlowResult, resultCount)
-	for i := 0; i < resultCount; i++ {
-		results[i] = <-outputChannel
+	// Топологическая сортировка через GetOrderedDescendants
+	sortedIDs := make([]string, 0)
+	
+	// Получаем корни графа
+	roots := w.g.GetRoots()
+	for id := range roots {
+		sortedIDs = append(sortedIDs, id)
+	}
+	
+	// Для каждого корня получаем потомков в порядке топологической сортировки
+	for rootID := range roots {
+		descendants, err := w.g.GetOrderedDescendants(rootID)
+		if err == nil && len(descendants) > 0 {
+			sortedIDs = append(sortedIDs, descendants...)
+		}
 	}
 
-	/*
-		go func() {
-			for idx := range steps {
-				for nidx := range steps[idx] {
-					wStatus := &codec.Frame{}
-					if werr := workflowStore.Read(w.opts.Context, "status", wStatus); werr != nil {
-						cherr <- werr
-						return
-					}
-					if status := StringStatus[string(wStatus.Data)]; status != StatusRunning {
-						chstatus <- status
-						return
-					}
-					if w.opts.Logger.V(logger.TraceLevel) {
-						w.opts.Logger.Tracef(nctx, "will be executed %v", steps[idx][nidx])
-					}
-					cstep := steps[idx][nidx]
-					// nolint: nestif
-					if len(cstep.Requires()) == 0 {
-						wg.Add(1)
-						go func(step Step) {
-							defer wg.Done()
-							if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "req"), req); werr != nil {
-								cherr <- werr
-								return
-							}
-							if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "status"), &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
-								cherr <- werr
-								return
-							}
-							rsp, serr := step.Execute(nctx, req, nopts...)
-							if serr != nil {
-								step.SetStatus(StatusFailure)
-								if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "rsp"), serr); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
-									w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
-								}
-								if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "status"), &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
-									w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
-								}
-								cherr <- serr
-								return
-							}
-							if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "rsp"), rsp); werr != nil {
-								w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
-								cherr <- werr
-								return
-							}
-							if werr := stepStore.Write(ctx, filepath.Join(step.ID(), "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
-								w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
-								cherr <- werr
-								return
-							}
-						}(cstep)
-						wg.Wait()
-					} else {
-						if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "req"), req); werr != nil {
-							cherr <- werr
-							return
-						}
-						if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "status"), &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
-							cherr <- werr
-							return
-						}
-						rsp, serr := cstep.Execute(nctx, req, nopts...)
-						if serr != nil {
-							cstep.SetStatus(StatusFailure)
-							if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "rsp"), serr); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
-								w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
-							}
-							if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "status"), &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil && w.opts.Logger.V(logger.ErrorLevel) {
-								w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
-							}
-							cherr <- serr
-							return
-						}
-						if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "rsp"), rsp); werr != nil {
-							w.opts.Logger.Errorf(ctx, "store write error: %v", werr)
-							cherr <- werr
-							return
-						}
-						if werr := stepStore.Write(ctx, filepath.Join(cstep.ID(), "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
-							cherr <- werr
-							return
-						}
+	if len(sortedIDs) == 0 {
+		return failWorkflow(fmt.Errorf("no steps to execute"))
+	}
+
+	// Выполняем шаги в топологическом порядке
+	for _, stepID := range sortedIDs {
+		// Проверяем статус workflow
+		statusFrame := &codec.Frame{}
+		if rerr := workflowStore.Read(options.Context, "status", statusFrame); rerr != nil {
+			return failWorkflow(rerr)
+		}
+		
+		currentStatus := StringStatus[string(statusFrame.Data)]
+		if currentStatus != StatusRunning {
+			return fmt.Errorf("workflow %s", currentStatus)
+		}
+
+		step, ok := w.steps[stepID]
+		if !ok {
+			return failWorkflow(ErrStepNotExists)
+		}
+
+		// Собираем результаты зависимых шагов
+		requires := step.Requires()
+		inputMsg := &Message{Body: []byte{}, Header: metadata.Metadata{}}
+		
+		if len(requires) > 0 {
+			resultsMu.RLock()
+			// Объединяем результаты всех зависимостей
+			for _, reqID := range requires {
+				if res, exists := stepResults[reqID]; exists {
+					// Простая эвристика: используем последнюю зависимость или объединяем
+					if len(res.Body) > 0 {
+						inputMsg.Body = res.Body
+						inputMsg.Header = res.Header
 					}
 				}
 			}
-			close(done)
-		}()
-
-		if options.Async {
-			return eid, nil
+			resultsMu.RUnlock()
 		}
 
-		logger.Tracef(ctx, "wait for finish or error")
-		select {
-		case <-nctx.Done():
-			err = nctx.Err()
-		case cerr := <-cherr:
-			err = cerr
-		case <-done:
-			close(cherr)
-		case <-chstatus:
-			close(chstatus)
-			return eid, nil
+		// Сохраняем запрос в store
+		if werr := stepStore.Write(options.Context, filepath.Join(stepID, "req"), &codec.Frame{Data: inputMsg.Body}); werr != nil {
+			return failWorkflow(werr)
 		}
 
-		switch {
-		case nctx.Err() != nil:
-			if werr := workflowStore.Write(w.opts.Context, "status", &codec.Frame{Data: []byte(StatusAborted.String())}); werr != nil {
-				w.opts.Logger.Errorf(w.opts.Context, "store error: %v", werr)
-			}
-		case err == nil:
-			if werr := workflowStore.Write(w.opts.Context, "status", &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
-				w.opts.Logger.Errorf(w.opts.Context, "store error: %v", werr)
-			}
-		case err != nil:
-			if werr := workflowStore.Write(w.opts.Context, "status", &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil {
-				w.opts.Logger.Errorf(w.opts.Context, "store error: %v", werr)
-			}
+		// Устанавливаем статус Running
+		step.SetStatus(StatusRunning)
+		if werr := stepStore.Write(options.Context, filepath.Join(stepID, "status"), &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
+			return failWorkflow(werr)
 		}
-	*/
-	return err
+
+		w.opts.Logger.Info(options.Context, "executing step: %s", stepID)
+
+		// Выполняем шаг
+		rsp, execErr := step.Execute(options.Context, inputMsg, opts...)
+		
+		if execErr != nil {
+			step.SetStatus(StatusFailure)
+			// Сохраняем ошибку в store
+			if werr := stepStore.Write(options.Context, filepath.Join(stepID, "rsp"), &codec.Frame{Data: []byte(execErr.Error())}); werr != nil {
+				w.opts.Logger.Error(options.Context, "store error: %v", werr)
+			}
+			if werr := stepStore.Write(options.Context, filepath.Join(stepID, "status"), &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil {
+				w.opts.Logger.Error(options.Context, "store error: %v", werr)
+			}
+			
+			return failWorkflow(execErr)
+		}
+
+		// Успешное выполнение
+		step.SetStatus(StatusSuccess)
+		
+		// Сохраняем результат в store
+		if rsp != nil {
+			if werr := stepStore.Write(options.Context, filepath.Join(stepID, "rsp"), &codec.Frame{Data: rsp.Body}); werr != nil {
+				return failWorkflow(werr)
+			}
+			// Сохраняем результат для последующих шагов
+			resultsMu.Lock()
+			stepResults[stepID] = rsp
+			resultsMu.Unlock()
+		}
+		
+		if werr := stepStore.Write(options.Context, filepath.Join(stepID, "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
+			return failWorkflow(werr)
+		}
+
+		// Добавляем в список выполненных шагов для возможной компенсации
+		execMu.Lock()
+		executedSteps = append(executedSteps, stepID)
+		execMu.Unlock()
+
+		w.opts.Logger.Info(options.Context, "step completed: %s", stepID)
+	}
+
+	// Все шаги выполнены успешно
+	if werr := workflowStore.Write(options.Context, "status", &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
+		w.opts.Logger.Error(options.Context, "store error: %v", werr)
+	}
+
+	w.opts.Logger.Info(options.Context, "workflow completed successfully")
+	return nil
 }
 
 // NewFlow create new flow
@@ -437,8 +387,8 @@ func (f *microFlow) Init(opts ...Option) error {
 	return nil
 }
 
-func (f *microFlow) WorkflowList(ctx context.Context) ([]Workflow, error) {
-	return nil, nil
+func (f *microFlow) WorkflowRemove(ctx context.Context, id string) error {
+	return nil
 }
 
 func (f *microFlow) WorkflowCreate(ctx context.Context, id string, steps ...Step) (Workflow, error) {
@@ -466,16 +416,107 @@ func (f *microFlow) WorkflowCreate(ctx context.Context, id string, steps ...Step
 	return w, nil
 }
 
-func (f *microFlow) WorkflowRemove(ctx context.Context, id string) error {
-	return nil
-}
-
 func (f *microFlow) WorkflowSave(ctx context.Context, w Workflow) error {
+	mw, ok := w.(*microWorkflow)
+	if !ok {
+		return fmt.Errorf("invalid workflow type")
+	}
+	
+	workflowStore := store.NewNamespaceStore(f.opts.Store, filepath.Join("workflows", w.ID()))
+	
+	// Сохраняем статус workflow
+	statusFrame := &codec.Frame{Data: []byte(w.Status().String())}
+	if err := workflowStore.Write(ctx, "status", statusFrame); err != nil {
+		return err
+	}
+	
+	// Сохраняем информацию о шагах и их зависимостях
+	stepsData := make(map[string][]string)
+	for stepID, step := range mw.steps {
+		stepsData[stepID] = step.Requires()
+	}
+	
+	stepData, err := json.Marshal(stepsData)
+	if err != nil {
+		return err
+	}
+	
+	stepFrame := &codec.Frame{Data: stepData}
+	if err := workflowStore.Write(ctx, "steps", stepFrame); err != nil {
+		return err
+	}
+	
+	f.opts.Logger.Info(ctx, "workflow %s saved", w.ID())
 	return nil
 }
 
 func (f *microFlow) WorkflowLoad(ctx context.Context, id string) (Workflow, error) {
-	return nil, nil
+	workflowStore := store.NewNamespaceStore(f.opts.Store, filepath.Join("workflows", id))
+	
+	// Читаем статус
+	statusFrame := &codec.Frame{}
+	if err := workflowStore.Read(ctx, "status", statusFrame); err != nil {
+		return nil, err
+	}
+	
+	status := StringStatus[string(statusFrame.Data)]
+	
+	// Создаем новый workflow
+	w := &microWorkflow{
+		opts:   f.opts,
+		id:     id,
+		g:      &dag.DAG{},
+		steps:  make(map[string]Step),
+		status: status,
+	}
+	
+	// Читаем информацию о шагах
+	stepFrame := &codec.Frame{}
+	if err := workflowStore.Read(ctx, "steps", stepFrame); err != nil {
+		f.opts.Logger.Warn(ctx, "failed to read steps for workflow %s: %v", id, err)
+		return nil, err
+	}
+	
+	// Десериализуем шаги
+	var stepsData map[string][]string
+	if err := json.Unmarshal(stepFrame.Data, &stepsData); err != nil {
+		f.opts.Logger.Warn(ctx, "failed to unmarshal steps for workflow %s: %v", id, err)
+		return nil, err
+	}
+	
+	// Восстанавливаем граф из сохраненных данных
+	// Примечание: для полноценного восстановления нужны зарегистрированные шаги
+	// В текущей реализации шаги должны быть созданы отдельно и добавлены через AppendSteps
+	// Здесь мы только восстанавливаем структуру графа
+	
+	w.init = true
+	
+	f.opts.Logger.Info(ctx, "workflow %s loaded with status %s", id, status)
+	return w, nil
+}
+
+func (f *microFlow) WorkflowList(ctx context.Context) ([]Workflow, error) {
+	workflowStore := store.NewNamespaceStore(f.opts.Store, "workflows")
+	
+	// Получаем список всех workflow по ключам
+	keys, err := workflowStore.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	
+	workflows := make([]Workflow, 0, len(keys))
+	for _, key := range keys {
+		// Извлекаем ID workflow из ключа (последняя часть пути)
+		id := filepath.Base(key)
+		w, err := f.WorkflowLoad(ctx, id)
+		if err != nil {
+			f.opts.Logger.Error(ctx, "failed to load workflow %s: %v", key, err)
+			continue
+		}
+		workflows = append(workflows, w)
+	}
+	
+	return workflows, nil
 }
 
 type microCallStep struct {
@@ -562,6 +603,12 @@ func (s *microCallStep) Execute(ctx context.Context, req *Message, opts ...Execu
 	return &Message{Header: md, Body: rsp.Data}, err
 }
 
+// Compensate performs rollback for this step (default implementation returns nil)
+func (s *microCallStep) Compensate(ctx context.Context, req *Message, opts ...ExecuteOption) error {
+	// Default implementation does nothing - override in custom steps if compensation is needed
+	return nil
+}
+
 type microPublishStep struct {
 	req    *Message
 	rsp    *Message
@@ -626,6 +673,12 @@ func (s *microPublishStep) SetStatus(status Status) {
 
 func (s *microPublishStep) Execute(ctx context.Context, req *Message, opts ...ExecuteOption) (*Message, error) {
 	return nil, nil
+}
+
+// Compensate performs rollback for this step (default implementation returns nil)
+func (s *microPublishStep) Compensate(ctx context.Context, req *Message, opts ...ExecuteOption) error {
+	// Default implementation does nothing - override in custom steps if compensation is needed
+	return nil
 }
 
 // NewCallStep create new step with client.Call

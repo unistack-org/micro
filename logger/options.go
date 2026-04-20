@@ -3,7 +3,6 @@ package logger
 import (
 	"context"
 	"io"
-	"log/slog"
 	"os"
 	"time"
 
@@ -157,8 +156,8 @@ func WithTimeFunc(fn func() time.Time) Option {
 func WithZapKeys() Option {
 	return func(o *Options) {
 		o.TimeKey = "@timestamp"
-		o.LevelKey = slog.LevelKey
-		o.MessageKey = slog.MessageKey
+		o.LevelKey = "level"
+		o.MessageKey = "msg"
 		o.SourceKey = "caller"
 		o.StacktraceKey = "stacktrace"
 		o.ErrorKey = "error"
@@ -167,8 +166,8 @@ func WithZapKeys() Option {
 
 func WithZerologKeys() Option {
 	return func(o *Options) {
-		o.TimeKey = slog.TimeKey
-		o.LevelKey = slog.LevelKey
+		o.TimeKey = "time"
+		o.LevelKey = "level"
 		o.MessageKey = "message"
 		o.SourceKey = "caller"
 		o.StacktraceKey = "stacktrace"
@@ -178,10 +177,10 @@ func WithZerologKeys() Option {
 
 func WithSlogKeys() Option {
 	return func(o *Options) {
-		o.TimeKey = slog.TimeKey
-		o.LevelKey = slog.LevelKey
-		o.MessageKey = slog.MessageKey
-		o.SourceKey = slog.SourceKey
+		o.TimeKey = "time"
+		o.LevelKey = "level"
+		o.MessageKey = "msg"
+		o.SourceKey = "source"
 		o.StacktraceKey = "stacktrace"
 		o.ErrorKey = "error"
 	}
@@ -190,8 +189,8 @@ func WithSlogKeys() Option {
 func WithMicroKeys() Option {
 	return func(o *Options) {
 		o.TimeKey = "timestamp"
-		o.LevelKey = slog.LevelKey
-		o.MessageKey = slog.MessageKey
+		o.LevelKey = "level"
+		o.MessageKey = "msg"
 		o.SourceKey = "caller"
 		o.StacktraceKey = "stacktrace"
 		o.ErrorKey = "error"

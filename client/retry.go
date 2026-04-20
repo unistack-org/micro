@@ -2,7 +2,7 @@ package client
 
 import (
 	"context"
-	"slices"
+	"go.unistack.org/micro/v4/util/slice"
 
 	"go.unistack.org/micro/v4/errors"
 )
@@ -41,7 +41,7 @@ func RetryOnErrors(codes ...int32) RetryFunc {
 			return false, nil
 		}
 		me := errors.FromError(err)
-		if slices.Contains(codes, me.Code) {
+		if slice.Contains(codes, me.Code) {
 			return true, nil
 		}
 		return false, nil
