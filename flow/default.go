@@ -233,117 +233,177 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 	stepResults := make(map[string]*Message)
 	var resultsMu sync.RWMutex
 
-	// Топологическая сортировка через GetOrderedDescendants
-	sortedIDs := make([]string, 0)
-	
-	// Получаем корни графа
-	roots := w.g.GetRoots()
-	for id := range roots {
-		sortedIDs = append(sortedIDs, id)
-	}
-	
-	// Для каждого корня получаем потомков в порядке топологической сортировки
-	for rootID := range roots {
-		descendants, err := w.g.GetOrderedDescendants(rootID)
-		if err == nil && len(descendants) > 0 {
-			sortedIDs = append(sortedIDs, descendants...)
-		}
-	}
-
-	if len(sortedIDs) == 0 {
+	// Получаем все вершины графа
+	vertices := w.g.GetVertices()
+	if len(vertices) == 0 {
 		return failWorkflow(fmt.Errorf("no steps to execute"))
 	}
 
-	// Выполняем шаги в топологическом порядке
-	for _, stepID := range sortedIDs {
-		// Проверяем статус workflow
-		statusFrame := &codec.Frame{}
-		if rerr := workflowStore.Read(options.Context, "status", statusFrame); rerr != nil {
-			return failWorkflow(rerr)
-		}
-		
-		currentStatus := StringStatus[string(statusFrame.Data)]
-		if currentStatus != StatusRunning {
-			return fmt.Errorf("workflow %s", currentStatus)
-		}
+	// Трек выполненных шагов для определения готовности
+	completedSteps := make(map[string]bool)
+	var completedMu sync.RWMutex
 
+	// Канал для сбора ошибок
+	errChan := make(chan error, len(vertices))
+	
+	// WaitGroup для ожидания завершения всех шагов
+	var wg sync.WaitGroup
+
+	// Функция проверки готовности шага (все зависимости выполнены)
+	isReady := func(stepID string) bool {
 		step, ok := w.steps[stepID]
 		if !ok {
-			return failWorkflow(ErrStepNotExists)
+			return false
 		}
-
-		// Собираем результаты зависимых шагов
 		requires := step.Requires()
-		inputMsg := &Message{Body: []byte{}, Header: metadata.Metadata{}}
-		
-		if len(requires) > 0 {
-			resultsMu.RLock()
-			// Объединяем результаты всех зависимостей
-			for _, reqID := range requires {
-				if res, exists := stepResults[reqID]; exists {
-					// Простая эвристика: используем последнюю зависимость или объединяем
-					if len(res.Body) > 0 {
-						inputMsg.Body = res.Body
-						inputMsg.Header = res.Header
-					}
+		if len(requires) == 0 {
+			return true
+		}
+		completedMu.RLock()
+		defer completedMu.RUnlock()
+		for _, reqID := range requires {
+			if !completedSteps[reqID] {
+				return false
+			}
+		}
+		return true
+	}
+
+	// Запускаем шаги в параллель с учетом зависимостей
+	for stepID := range vertices {
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			
+			// Ждем пока шаг станет готовым (все зависимости выполнены)
+			for {
+				// Проверяем статус workflow
+				statusFrame := &codec.Frame{}
+				if rerr := workflowStore.Read(options.Context, "status", statusFrame); rerr != nil {
+					errChan <- rerr
+					return
+				}
+				
+				currentStatus := StringStatus[string(statusFrame.Data)]
+				if currentStatus != StatusRunning {
+					errChan <- fmt.Errorf("workflow %s", currentStatus)
+					return
+				}
+				
+				if isReady(id) {
+					break
+				}
+				
+				// Небольшая пауза перед следующей проверкой
+				select {
+				case <-options.Context.Done():
+					errChan <- options.Context.Err()
+					return
+				default:
+					// Продолжаем ожидание
 				}
 			}
-			resultsMu.RUnlock()
-		}
-
-		// Сохраняем запрос в store
-		if werr := stepStore.Write(options.Context, filepath.Join(stepID, "req"), &codec.Frame{Data: inputMsg.Body}); werr != nil {
-			return failWorkflow(werr)
-		}
-
-		// Устанавливаем статус Running
-		step.SetStatus(StatusRunning)
-		if werr := stepStore.Write(options.Context, filepath.Join(stepID, "status"), &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
-			return failWorkflow(werr)
-		}
-
-		w.opts.Logger.Info(options.Context, "executing step: %s", stepID)
-
-		// Выполняем шаг
-		rsp, execErr := step.Execute(options.Context, inputMsg, opts...)
-		
-		if execErr != nil {
-			step.SetStatus(StatusFailure)
-			// Сохраняем ошибку в store
-			if werr := stepStore.Write(options.Context, filepath.Join(stepID, "rsp"), &codec.Frame{Data: []byte(execErr.Error())}); werr != nil {
-				w.opts.Logger.Error(options.Context, "store error: %v", werr)
+			
+			step, ok := w.steps[id]
+			if !ok {
+				errChan <- ErrStepNotExists
+				return
 			}
-			if werr := stepStore.Write(options.Context, filepath.Join(stepID, "status"), &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil {
-				w.opts.Logger.Error(options.Context, "store error: %v", werr)
+
+			// Собираем результаты зависимых шагов
+			requires := step.Requires()
+			inputMsg := &Message{Body: []byte{}, Header: metadata.Metadata{}}
+			
+			if len(requires) > 0 {
+				resultsMu.RLock()
+				// Объединяем результаты всех зависимостей
+				for _, reqID := range requires {
+					if res, exists := stepResults[reqID]; exists {
+						// Простая эвристика: используем последнюю зависимость или объединяем
+						if len(res.Body) > 0 {
+							inputMsg.Body = res.Body
+							inputMsg.Header = res.Header
+						}
+					}
+				}
+				resultsMu.RUnlock()
+			}
+
+			// Сохраняем запрос в store
+			if werr := stepStore.Write(options.Context, filepath.Join(id, "req"), &codec.Frame{Data: inputMsg.Body}); werr != nil {
+				errChan <- werr
+				return
+			}
+
+			// Устанавливаем статус Running
+			step.SetStatus(StatusRunning)
+			if werr := stepStore.Write(options.Context, filepath.Join(id, "status"), &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
+				errChan <- werr
+				return
+			}
+
+			w.opts.Logger.Info(options.Context, "executing step: %s", id)
+
+			// Выполняем шаг
+			rsp, execErr := step.Execute(options.Context, inputMsg, opts...)
+			
+			if execErr != nil {
+				step.SetStatus(StatusFailure)
+				// Сохраняем ошибку в store
+				if werr := stepStore.Write(options.Context, filepath.Join(id, "rsp"), &codec.Frame{Data: []byte(execErr.Error())}); werr != nil {
+					w.opts.Logger.Error(options.Context, "store error: %v", werr)
+				}
+				if werr := stepStore.Write(options.Context, filepath.Join(id, "status"), &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil {
+					w.opts.Logger.Error(options.Context, "store error: %v", werr)
+				}
+				
+				errChan <- execErr
+				return
+			}
+
+			// Успешное выполнение
+			step.SetStatus(StatusSuccess)
+			
+			// Сохраняем результат в store
+			if rsp != nil {
+				if werr := stepStore.Write(options.Context, filepath.Join(id, "rsp"), &codec.Frame{Data: rsp.Body}); werr != nil {
+					errChan <- werr
+					return
+				}
+				// Сохраняем результат для последующих шагов
+				resultsMu.Lock()
+				stepResults[id] = rsp
+				resultsMu.Unlock()
 			}
 			
-			return failWorkflow(execErr)
-		}
-
-		// Успешное выполнение
-		step.SetStatus(StatusSuccess)
-		
-		// Сохраняем результат в store
-		if rsp != nil {
-			if werr := stepStore.Write(options.Context, filepath.Join(stepID, "rsp"), &codec.Frame{Data: rsp.Body}); werr != nil {
-				return failWorkflow(werr)
+			if werr := stepStore.Write(options.Context, filepath.Join(id, "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
+				errChan <- werr
+				return
 			}
-			// Сохраняем результат для последующих шагов
-			resultsMu.Lock()
-			stepResults[stepID] = rsp
-			resultsMu.Unlock()
-		}
-		
-		if werr := stepStore.Write(options.Context, filepath.Join(stepID, "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
-			return failWorkflow(werr)
-		}
 
-		// Добавляем в список выполненных шагов для возможной компенсации
-		execMu.Lock()
-		executedSteps = append(executedSteps, stepID)
-		execMu.Unlock()
+			// Добавляем в список выполненных шагов для возможной компенсации
+			execMu.Lock()
+			executedSteps = append(executedSteps, id)
+			execMu.Unlock()
+			
+			// Помечаем шаг как завершенный
+			completedMu.Lock()
+			completedSteps[id] = true
+			completedMu.Unlock()
 
-		w.opts.Logger.Info(options.Context, "step completed: %s", stepID)
+			w.opts.Logger.Info(options.Context, "step completed: %s", id)
+		}(stepID)
+	}
+
+	// Ждем завершения всех горутин
+	wg.Wait()
+	close(errChan)
+
+	// Проверяем наличие ошибок
+	for err := range errChan {
+		if err != nil {
+			return failWorkflow(err)
+		}
 	}
 
 	// Все шаги выполнены успешно
