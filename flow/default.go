@@ -74,7 +74,9 @@ func (w *microWorkflow) RemoveSteps(steps ...Step) error {
 
 	for _, s := range steps {
 		delete(w.steps, s.String())
-		w.g.DeleteVertex(s.String())
+		if err := w.g.DeleteVertex(s.String()); err != nil {
+			return fmt.Errorf("failed to delete vertex %s: %w", s.String(), err)
+		}
 	}
 
 	for _, dst := range steps {
@@ -83,7 +85,9 @@ func (w *microWorkflow) RemoveSteps(steps ...Step) error {
 			if !ok {
 				return ErrStepNotExists
 			}
-			w.g.AddEdge(src.String(), dst.String())
+			if err := w.g.AddEdge(src.String(), dst.String()); err != nil {
+				return fmt.Errorf("failed to add edge %s -> %s: %w", src.String(), dst.String(), err)
+			}
 		}
 	}
 
@@ -162,7 +166,11 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 	}
 
 	if options.Async {
-		go w.handleWorkflow(startID, nopts...)
+		go func() {
+			if err := w.handleWorkflow(startID, nopts...); err != nil {
+				w.opts.Logger.Error(context.Background(), "async workflow execution failed", "error", err, "workflow_id", eid)
+			}
+		}()
 		return eid, nil
 	}
 
@@ -456,7 +464,9 @@ func (f *microFlow) WorkflowCreate(ctx context.Context, id string, steps ...Step
 
 	for _, s := range steps {
 		w.steps[s.String()] = s
-		w.g.AddVertex(s)
+		if _, err := w.g.AddVertex(s); err != nil {
+			return nil, fmt.Errorf("failed to add vertex %s: %w", s.String(), err)
+		}
 	}
 
 	for _, dst := range steps {
@@ -465,7 +475,9 @@ func (f *microFlow) WorkflowCreate(ctx context.Context, id string, steps ...Step
 			if !ok {
 				return nil, ErrStepNotExists
 			}
-			w.g.AddEdge(src.String(), dst.String())
+			if err := w.g.AddEdge(src.String(), dst.String()); err != nil {
+				return nil, fmt.Errorf("failed to add edge %s -> %s: %w", src.String(), dst.String(), err)
+			}
 		}
 	}
 

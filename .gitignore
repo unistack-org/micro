@@ -1,1 +1,58 @@
-Nothing should be ignored based on the provided file changes. The only modified file is `flow/default.go`, which is a source code file and should not be added to .gitignore.
+```
+# Go build artifacts
+*.o
+*.a
+*.out
+*.test
+*.prof
+
+# Go cache and modules
+go.work.sum
+coverage.out
+.DS_Store
+
+# Dependencies
+vendor/
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build directories
+build/
+dist/
+target/
+
+# Python artifacts (if any mixed)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Node artifacts (if any mixed)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Compression files
+*.zip
+*.tar.gz
+*.tar.xz
+*.tar.bz2
+*.gz
+*.rar
+*.7z
+```
