@@ -71,17 +71,17 @@ type (
 )
 
 // Request is a synchronous request interface
-type Request struct {
-	Header metadata.Metadata
-	Body   any
-	Method string
+type Request interface {
+	Header() metadata.Metadata
+	Body() any
+	Method() string
 }
 
 // Response is the response writer for unencoded messages
-type Response struct {
-	Header metadata.Metadata
-	Body   any
-	Method string
+type Response interface {
+	Header() metadata.Metadata
+	Body() any
+	Method() string
 }
 
 // Stream represents a stream established with a client.

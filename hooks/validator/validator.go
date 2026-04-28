@@ -11,16 +11,16 @@ import (
 var (
 	DefaultClientErrorFunc = func(req client.Request, rsp any, err error) error {
 		if rsp != nil {
-			return errors.BadGateway(req.Service(), "%v", err)
+			return errors.BadGateway("", "%v", err)
 		}
-		return errors.BadRequest(req.Service(), "%v", err)
+		return errors.BadRequest("", "%v", err)
 	}
 
 	DefaultServerErrorFunc = func(req server.Request, rsp any, err error) error {
 		if rsp != nil {
-			return errors.BadGateway(req.Service(), "%v", err)
+			return errors.BadGateway("", "%v", err)
 		}
-		return errors.BadRequest(req.Service(), "%v", err)
+		return errors.BadRequest("", "%v", err)
 	}
 )
 
