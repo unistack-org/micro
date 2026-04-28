@@ -10,7 +10,7 @@ import (
 	"go.unistack.org/micro/v4/register"
 	maddr "go.unistack.org/micro/v4/util/addr"
 	mnet "go.unistack.org/micro/v4/util/net"
-	"go.unistack.org/micro/v4/util/rand"
+	mrand "go.unistack.org/micro/v4/util/rand"
 )
 
 type rpcHandler struct {
@@ -218,7 +218,7 @@ func (n *noopServer) Start() error {
 	if err != nil {
 		return err
 	}
-	var rng rand.Rand
+	var rng mrand.Rand
 	i := rng.Intn(20000)
 	// set addr with port
 	addr = mnet.HostPort(addr, 10000+i)

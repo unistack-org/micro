@@ -6,7 +6,6 @@ import (
 	"errors"
 	"time"
 
-	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/metadata"
 )
 
@@ -72,35 +71,17 @@ type (
 )
 
 // Request is a synchronous request interface
-type Request interface {
-	// Service name requested
-	Service() string
-	// The action requested
-	Method() string
-	// Endpoint name requested
-	Endpoint() string
-	// Content type provided
-	ContentType() string
-	// Header of the request
-	Header() metadata.Metadata
-	// Body is the initial decoded value
-	Body() any
-	// Read the undecoded request body
-	Read() ([]byte, error)
-	// The encoded message stream
-	Codec() codec.Codec
-	// Indicates whether its a stream
-	Stream() bool
+type Request struct {
+	Header metadata.Metadata
+	Body   any
+	Method string
 }
 
 // Response is the response writer for unencoded messages
-type Response interface {
-	// Encoded writer
-	Codec() codec.Codec
-	// Write the header
-	WriteHeader(md metadata.Metadata)
-	// write a response directly to the client
-	Write([]byte) error
+type Response struct {
+	Header metadata.Metadata
+	Body   any
+	Method string
 }
 
 // Stream represents a stream established with a client.

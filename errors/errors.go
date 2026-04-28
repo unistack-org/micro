@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -266,7 +265,12 @@ func CodeIn(err any, codes ...int32) bool {
 		return false
 	}
 
-	return slices.Contains(codes, code)
+	for _, c := range codes {
+		if c == code {
+			return true
+		}
+	}
+	return false
 }
 
 // FromError try to convert go error to *Error

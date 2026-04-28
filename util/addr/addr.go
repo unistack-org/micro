@@ -3,7 +3,6 @@ package addr
 import (
 	"fmt"
 	"net"
-	"slices"
 )
 
 var privateBlocks []*net.IPNet
@@ -49,7 +48,12 @@ func IsLocal(addr string) bool {
 	}
 
 	// check against all local ips
-	return slices.Contains(IPs(), addr)
+	for _, ip := range IPs() {
+		if ip == addr {
+			return true
+		}
+	}
+	return false
 }
 
 // Extract returns a real ip
