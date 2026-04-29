@@ -280,13 +280,6 @@ func Listener(l net.Listener) Option {
 // HandlerOption func
 type HandlerOption func(*HandlerOptions)
 
-// GracefulTimeout duration
-func GracefulTimeout(td time.Duration) Option {
-	return func(o *Options) {
-		o.GracefulTimeout = td
-	}
-}
-
 // HandlerOptions struct
 type HandlerOptions struct {
 	// Context holds external options
@@ -309,102 +302,10 @@ func NewHandlerOptions(opts ...HandlerOption) HandlerOptions {
 	return options
 }
 
-// SubscriberOption func
-type SubscriberOption func(*SubscriberOptions)
-
-// SubscriberOptions struct
-type SubscriberOptions struct {
-	// Context holds the external options
-	Context context.Context
-	// Queue holds the subscription queue
-	Queue string
-	// BatchWait flag specifies max wait time for batch filling
-	BatchWait time.Duration
-	// BatchSize flag specifies max size of batch
-	BatchSize int
-	// AutoAck flag for auto ack messages after processing
-	AutoAck bool
-	// BodyOnly flag specifies that message without headers
-	BodyOnly bool
-}
-
-// NewSubscriberOptions create new SubscriberOptions
-func NewSubscriberOptions(opts ...SubscriberOption) SubscriberOptions {
-	options := SubscriberOptions{
-		AutoAck: true,
-		Context: context.Background(),
-	}
-
-	for _, o := range opts {
-		o(&options)
-	}
-
-	return options
-}
-
-// EndpointMetadata is a Handler option that allows metadata to be added to
-// individual endpoints.
-func EndpointMetadata(name string, md metadata.Metadata) HandlerOption {
-	return func(o *HandlerOptions) {
-		o.Metadata[name] = metadata.Copy(md)
-	}
-}
-
-// DisableAutoAck will disable auto acking of messages
-// after they have been handled.
-func DisableAutoAck() SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.AutoAck = false
-	}
-}
-
-// SubscriberQueue sets the shared queue name distributed messages across subscribers
-func SubscriberQueue(n string) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.Queue = n
-	}
-}
-
-// SubscriberGroup sets the shared group name distributed messages across subscribers
-func SubscriberGroup(n string) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.Queue = n
-	}
-}
-
-// SubscriberBodyOnly says broker that message contains raw data with absence of micro broker.Message format
-func SubscriberBodyOnly(b bool) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.BodyOnly = b
-	}
-}
-
-// SubscriberContext set context options to allow broker SubscriberOption passed
-func SubscriberContext(ctx context.Context) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.Context = ctx
-	}
-}
-
-// SubscriberAck control auto ack processing for handler
-func SubscriberAck(b bool) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.AutoAck = b
-	}
-}
-
-// SubscriberBatchSize control batch filling size for handler
-// Batch filling max waiting time controlled by SubscriberBatchWait
-func SubscriberBatchSize(n int) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.BatchSize = n
-	}
-}
-
-// SubscriberBatchWait control batch filling wait time for handler
-func SubscriberBatchWait(td time.Duration) SubscriberOption {
-	return func(o *SubscriberOptions) {
-		o.BatchWait = td
+// GracefulTimeout duration
+func GracefulTimeout(td time.Duration) Option {
+	return func(o *Options) {
+		o.GracefulTimeout = td
 	}
 }
 
@@ -412,5 +313,20 @@ func SubscriberBatchWait(td time.Duration) SubscriberOption {
 func Hooks(h ...options.Hook) Option {
 	return func(o *Options) {
 		o.Hooks = append(o.Hooks, h...)
+	}
+}
+
+// EndpointMetadata specifies metadata for endpoint
+func EndpointMetadata(md metadata.Metadata) HandlerOption {
+	return func(o *HandlerOptions) {
+		if o.Metadata == nil {
+			o.Metadata = make(map[string]metadata.Metadata)
+		}
+		for k, v := range md {
+			if _, ok := o.Metadata[k]; !ok {
+				o.Metadata[k] = metadata.New(0)
+			}
+			o.Metadata[k].Append(k, v...)
+		}
 	}
 }
