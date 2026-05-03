@@ -582,6 +582,11 @@ func (f *microFlow) Options() Options {
 	return f.opts
 }
 
+// Close releases the goroutine pool.
+func (f *microFlow) Close() error {
+	return nil
+}
+
 func (f *microFlow) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&f.opts)
