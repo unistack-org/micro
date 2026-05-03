@@ -150,11 +150,11 @@ func (w *microWorkflow) Resume(ctx context.Context, id string) error {
 	if err := workflowStore.Read(ctx, "last_step", lastStepFrame); err == nil && len(lastStepFrame.Data) > 0 {
 		lastStepID := string(lastStepFrame.Data)
 		// Находим следующий шаг после последнего выполненного
-		step, ok := w.steps[lastStepID]
+		_, ok := w.steps[lastStepID]
 		if ok {
 			// Получаем шаги которые зависят от последнего выполненного
 			vertices := w.g.GetVertices()
-			for stepID, v := range vertices {
+			for stepID := range vertices {
 				s, sok := w.steps[stepID]
 				if !sok {
 					continue
