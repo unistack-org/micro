@@ -641,7 +641,7 @@ func (f *microFlow) WorkflowRemove(ctx context.Context, id string) error {
 }
 
 func (f *microFlow) WorkflowCreate(ctx context.Context, id string, steps ...Step) (Workflow, error) {
-	w := &microWorkflow{opts: f.opts, pool: f.pool, id: id, g: &dag.DAG{}, steps: make(map[string]Step, len(steps))}
+	w := &microWorkflow{opts: f.opts, pool: f.pool, id: id, g: dag.NewDAG(), steps: make(map[string]Step, len(steps))}
 
 	for _, s := range steps {
 		w.steps[s.String()] = s
@@ -719,7 +719,7 @@ func (f *microFlow) WorkflowLoad(ctx context.Context, id string) (Workflow, erro
 		opts:   f.opts,
 		pool:   f.pool,
 		id:     id,
-		g:      &dag.DAG{},
+		g:      dag.NewDAG(),
 		steps:  make(map[string]Step),
 		status: status,
 	}
