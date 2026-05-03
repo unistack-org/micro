@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"sync"
 
+	ants "github.com/panjf2000/ants/v2"
 	"github.com/heimdalr/dag"
 	"go.unistack.org/micro/v4/client"
 	"go.unistack.org/micro/v4/codec"
@@ -17,6 +19,7 @@ import (
 
 type microFlow struct {
 	opts Options
+	pool *ants.Pool
 }
 
 type microWorkflow struct {
@@ -29,6 +32,7 @@ type microWorkflow struct {
 	init       bool
 	cancelFunc context.CancelFunc
 	execCtx    context.Context
+	pool       *ants.Pool
 }
 
 func (w *microWorkflow) ID() string {
@@ -575,7 +579,12 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 // NewFlow create new flow
 func NewFlow(opts ...Option) Flow {
 	options := NewOptions(opts...)
-	return &microFlow{opts: options}
+	size := options.PoolSize
+	if size == 0 {
+		size = runtime.NumCPU() * 2
+	}
+	p, _ := ants.NewPool(size)
+	return &microFlow{opts: options, pool: p}
 }
 
 func (f *microFlow) Options() Options {
@@ -614,7 +623,7 @@ func (f *microFlow) WorkflowRemove(ctx context.Context, id string) error {
 }
 
 func (f *microFlow) WorkflowCreate(ctx context.Context, id string, steps ...Step) (Workflow, error) {
-	w := &microWorkflow{opts: f.opts, id: id, g: &dag.DAG{}, steps: make(map[string]Step, len(steps))}
+	w := &microWorkflow{opts: f.opts, pool: f.pool, id: id, g: &dag.DAG{}, steps: make(map[string]Step, len(steps))}
 
 	for _, s := range steps {
 		w.steps[s.String()] = s
@@ -690,6 +699,7 @@ func (f *microFlow) WorkflowLoad(ctx context.Context, id string) (Workflow, erro
 	// Создаем новый workflow
 	w := &microWorkflow{
 		opts:   f.opts,
+		pool:   f.pool,
 		id:     id,
 		g:      &dag.DAG{},
 		steps:  make(map[string]Step),
