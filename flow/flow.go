@@ -158,6 +158,8 @@ type Flow interface {
 	WorkflowLoad(ctx context.Context, id string) (Workflow, error)
 	// WorkflowList lists all workflows
 	WorkflowList(ctx context.Context) ([]Workflow, error)
+	// Close releases resources held by the flow (goroutine pool)
+	Close() error
 }
 
 var (

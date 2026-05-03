@@ -297,6 +297,11 @@ func (m *Flow) Options() flow.Options {
 	return m.opts
 }
 
+// Close releases resources (no-op for mock)
+func (m *Flow) Close() error {
+	return nil
+}
+
 // Init initializes the mock flow
 func (m *Flow) Init(opts ...flow.Option) error {
 	m.mutex.Lock()

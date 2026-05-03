@@ -28,6 +28,8 @@ type Options struct {
 	Meter meter.Meter
 	// Store used for intermediate results
 	Store store.Store
+	// PoolSize is the maximum number of concurrently executing workflow steps (0 = default: runtime.NumCPU()*2)
+	PoolSize int
 }
 
 // NewOptions returns new options struct with default or passed values
@@ -88,6 +90,14 @@ func Tracer(t tracer.Tracer) Option {
 func Store(s store.Store) Option {
 	return func(o *Options) {
 		o.Store = s
+	}
+}
+
+// PoolSize sets the maximum number of concurrently executing workflow steps.
+// A value of 0 uses the default: runtime.NumCPU() * 2.
+func PoolSize(n int) Option {
+	return func(o *Options) {
+		o.PoolSize = n
 	}
 }
 
