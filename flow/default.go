@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
+	"sync/atomic"
 
 	ants "github.com/panjf2000/ants/v2"
 	"github.com/heimdalr/dag"
@@ -296,12 +297,10 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) error {
 	options := NewExecuteOptions(opts...)
 
-	// Создаем store для workflow
 	eid := w.id
 	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", eid))
 	stepStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("steps", eid))
 
-	// Инициализируем контекст выполнения если еще не инициализирован
 	w.Lock()
 	if w.execCtx == nil || w.cancelFunc == nil {
 		execCtx, cancel := context.WithCancel(context.Background())
@@ -311,20 +310,16 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 	execCtx := w.execCtx
 	w.Unlock()
 
-	// Трек успешных шагов для компенсации
-	executedSteps := make([]string, 0)
+	var executedSteps []string
 	var execMu sync.Mutex
 
-	// Завершаем workflow с ошибкой и выполняем компенсацию
 	failWorkflow := func(err error) error {
 		w.opts.Logger.Error(options.Context, "workflow failed: %v", err)
 
-		// Обновляем статус workflow
 		if werr := workflowStore.Write(options.Context, "status", &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil {
 			w.opts.Logger.Error(options.Context, "store error: %v", werr)
 		}
 
-		// Выполняем компенсацию в обратном порядке
 		execMu.Lock()
 		stepsToCompensate := make([]string, len(executedSteps))
 		copy(stepsToCompensate, executedSteps)
@@ -336,24 +331,16 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 			if !ok {
 				continue
 			}
-
 			w.opts.Logger.Info(options.Context, "compensating step: %s", stepID)
-
-			// Читаем запрос из store
 			reqFrame := &codec.Frame{}
 			if rerr := stepStore.Read(options.Context, filepath.Join(stepID, "req"), reqFrame); rerr != nil {
 				w.opts.Logger.Error(options.Context, "failed to read request for compensation: %v", rerr)
 				continue
 			}
-
 			req := &Message{Body: reqFrame.Data}
-
-			// Выполняем компенсацию
 			if cerr := step.Compensate(options.Context, req, opts...); cerr != nil {
 				w.opts.Logger.Error(options.Context, "compensation failed for step %s: %v", stepID, cerr)
-				// Продолжаем компенсацию остальных шагов даже если один не удался
 			} else {
-				// Обновляем статус шага после компенсации
 				if werr := stepStore.Write(options.Context, filepath.Join(stepID, "status"), &codec.Frame{Data: []byte(StatusPending.String())}); werr != nil {
 					w.opts.Logger.Error(options.Context, "store error: %v", werr)
 				}
@@ -363,211 +350,160 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 		return err
 	}
 
-	// Хранилище результатов шагов
 	stepResults := make(map[string]*Message)
 	var resultsMu sync.RWMutex
 
-	// Получаем все вершины графа
 	vertices := w.g.GetVertices()
 	if len(vertices) == 0 {
 		return failWorkflow(fmt.Errorf("no steps to execute"))
 	}
 
-	// Трек выполненных шагов для определения готовности
-	completedSteps := make(map[string]bool)
-	var completedMu sync.RWMutex
-
-	// Канал для сбора ошибок
-	errChan := make(chan error, len(vertices))
-
-	// WaitGroup для ожидания завершения всех шагов
-	var wg sync.WaitGroup
-
-	// Функция проверки готовности шага (все зависимости выполнены)
-	isReady := func(stepID string) bool {
-		step, ok := w.steps[stepID]
-		if !ok {
-			return false
-		}
-		requires := step.Requires()
-		if len(requires) == 0 {
-			return true
-		}
-		completedMu.RLock()
-		defer completedMu.RUnlock()
-		for _, reqID := range requires {
-			if !completedSteps[reqID] {
-				return false
-			}
-		}
-		return true
+	// One done-channel per step; closed when the step finishes (success or failure).
+	// Downstream watcher goroutines block on these channels outside the pool.
+	doneChan := make(map[string]chan struct{}, len(vertices))
+	for stepID := range vertices {
+		doneChan[stepID] = make(chan struct{})
 	}
 
-	// Запускаем шаги в параллель с учетом зависимостей
+	errChan := make(chan error, len(vertices))
+	var wg sync.WaitGroup
+	var aborted atomic.Bool
+
 	for stepID := range vertices {
 		wg.Add(1)
 		go func(id string) {
-			defer wg.Done()
-
-			// Ждем пока шаг станет готовым (все зависимости выполнены)
-			for {
-				// Проверяем статус workflow используя контекст выполнения
-				statusFrame := &codec.Frame{}
-				if rerr := workflowStore.Read(execCtx, "status", statusFrame); rerr != nil {
-					errChan <- rerr
-					return
-				}
-
-				currentStatus := StringStatus[string(statusFrame.Data)]
-				if currentStatus != StatusRunning {
-					errChan <- fmt.Errorf("workflow %s", currentStatus)
-					return
-				}
-
-				if isReady(id) {
-					break
-				}
-
-				// Небольшая пауза перед следующей проверкой
-				select {
-				case <-execCtx.Done():
-					errChan <- execCtx.Err()
-					return
-				default:
-					// Продолжаем ожидание
-				}
-			}
-
-			// Проверяем, не был ли шаг уже выполнен ранее (для Resume)
-			stepStatusFrame := &codec.Frame{}
-			stepStatusPath := filepath.Join("steps", eid, id, "status")
-			if rerr := stepStore.Read(execCtx, stepStatusPath, stepStatusFrame); rerr == nil {
-				status := StringStatus[string(stepStatusFrame.Data)]
-				if status == StatusSuccess {
-					// Шаг уже выполнен успешно, пропускаем его
-					completedMu.Lock()
-					completedSteps[id] = true
-					completedMu.Unlock()
-
-					// Читаем результат для использования последующими шагами
-					rspFrame := &codec.Frame{}
-					if rrerr := stepStore.Read(execCtx, filepath.Join("steps", eid, id, "rsp"), rspFrame); rrerr == nil && len(rspFrame.Data) > 0 {
-						resultsMu.Lock()
-						stepResults[id] = &Message{Body: rspFrame.Data}
-						resultsMu.Unlock()
-					}
-					return
-				}
-			}
-
 			step, ok := w.steps[id]
 			if !ok {
 				errChan <- ErrStepNotExists
+				close(doneChan[id])
+				wg.Done()
 				return
 			}
 
-			// Собираем результаты зависимых шагов
-			requires := step.Requires()
-			inputMsg := &Message{Body: []byte{}, Header: metadata.Metadata{}}
+			// Wait for all dependency channels to close (outside the pool).
+			for _, depID := range step.Requires() {
+				select {
+				case <-doneChan[depID]:
+				case <-execCtx.Done():
+					errChan <- execCtx.Err()
+					close(doneChan[id])
+					wg.Done()
+					return
+				}
+			}
 
-			if len(requires) > 0 {
-				resultsMu.RLock()
-				// Объединяем результаты всех зависимостей
-				for _, reqID := range requires {
-					if res, exists := stepResults[reqID]; exists {
-						// Простая эвристика: используем последнюю зависимость или объединяем
-						if len(res.Body) > 0 {
+			// Fast-exit if a prior step already failed.
+			if aborted.Load() {
+				close(doneChan[id])
+				wg.Done()
+				return
+			}
+
+			// Submit to pool. Blocks until a worker slot is available.
+			if err := w.pool.Submit(func() {
+				defer wg.Done()
+				defer close(doneChan[id])
+
+				if aborted.Load() {
+					return
+				}
+
+				// Resume support: skip steps that already completed successfully.
+				stepStatusFrame := &codec.Frame{}
+				if rerr := stepStore.Read(execCtx, filepath.Join(id, "status"), stepStatusFrame); rerr == nil {
+					if StringStatus[string(stepStatusFrame.Data)] == StatusSuccess {
+						rspFrame := &codec.Frame{}
+						if rrerr := stepStore.Read(execCtx, filepath.Join(id, "rsp"), rspFrame); rrerr == nil && len(rspFrame.Data) > 0 {
+							resultsMu.Lock()
+							stepResults[id] = &Message{Body: rspFrame.Data}
+							resultsMu.Unlock()
+						}
+						return
+					}
+				}
+
+				// Collect output from dependency steps as input.
+				inputMsg := &Message{Body: []byte{}, Header: metadata.Metadata{}}
+				requires := step.Requires()
+				if len(requires) > 0 {
+					resultsMu.RLock()
+					for _, reqID := range requires {
+						if res, exists := stepResults[reqID]; exists && len(res.Body) > 0 {
 							inputMsg.Body = res.Body
 							inputMsg.Header = res.Header
 						}
 					}
-				}
-				resultsMu.RUnlock()
-			}
-
-			// Сохраняем запрос в store
-			if werr := stepStore.Write(execCtx, filepath.Join(id, "req"), &codec.Frame{Data: inputMsg.Body}); werr != nil {
-				errChan <- werr
-				return
-			}
-
-			// Устанавливаем статус Running
-			step.SetStatus(StatusRunning)
-			if werr := stepStore.Write(execCtx, filepath.Join(id, "status"), &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
-				errChan <- werr
-				return
-			}
-
-			w.opts.Logger.Info(execCtx, "executing step: %s", id)
-
-			// Выполняем шаг
-			rsp, execErr := step.Execute(execCtx, inputMsg, opts...)
-
-			if execErr != nil {
-				step.SetStatus(StatusFailure)
-				// Сохраняем ошибку в store
-				if werr := stepStore.Write(execCtx, filepath.Join(id, "rsp"), &codec.Frame{Data: []byte(execErr.Error())}); werr != nil {
-					w.opts.Logger.Error(execCtx, "store error: %v", werr)
-				}
-				if werr := stepStore.Write(execCtx, filepath.Join(id, "status"), &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil {
-					w.opts.Logger.Error(execCtx, "store error: %v", werr)
+					resultsMu.RUnlock()
 				}
 
-				errChan <- execErr
-				return
-			}
-
-			// Успешное выполнение
-			step.SetStatus(StatusSuccess)
-
-			// Сохраняем результат в store
-			if rsp != nil {
-				if werr := stepStore.Write(execCtx, filepath.Join(id, "rsp"), &codec.Frame{Data: rsp.Body}); werr != nil {
+				if werr := stepStore.Write(execCtx, filepath.Join(id, "req"), &codec.Frame{Data: inputMsg.Body}); werr != nil {
+					aborted.Store(true)
 					errChan <- werr
 					return
 				}
-				// Сохраняем результат для последующих шагов
-				resultsMu.Lock()
-				stepResults[id] = rsp
-				resultsMu.Unlock()
+
+				step.SetStatus(StatusRunning)
+				if werr := stepStore.Write(execCtx, filepath.Join(id, "status"), &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
+					aborted.Store(true)
+					errChan <- werr
+					return
+				}
+
+				w.opts.Logger.Info(execCtx, "executing step: %s", id)
+
+				rsp, execErr := step.Execute(execCtx, inputMsg, opts...)
+				if execErr != nil {
+					step.SetStatus(StatusFailure)
+					_ = stepStore.Write(execCtx, filepath.Join(id, "rsp"), &codec.Frame{Data: []byte(execErr.Error())})
+					_ = stepStore.Write(execCtx, filepath.Join(id, "status"), &codec.Frame{Data: []byte(StatusFailure.String())})
+					aborted.Store(true)
+					errChan <- execErr
+					return
+				}
+
+				step.SetStatus(StatusSuccess)
+				if rsp != nil {
+					if werr := stepStore.Write(execCtx, filepath.Join(id, "rsp"), &codec.Frame{Data: rsp.Body}); werr != nil {
+						aborted.Store(true)
+						errChan <- werr
+						return
+					}
+					resultsMu.Lock()
+					stepResults[id] = rsp
+					resultsMu.Unlock()
+				}
+
+				if werr := stepStore.Write(execCtx, filepath.Join(id, "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
+					aborted.Store(true)
+					errChan <- werr
+					return
+				}
+
+				_ = workflowStore.Write(execCtx, "last_step", &codec.Frame{Data: []byte(id)})
+
+				execMu.Lock()
+				executedSteps = append(executedSteps, id)
+				execMu.Unlock()
+
+				w.opts.Logger.Info(execCtx, "step completed: %s", id)
+			}); err != nil {
+				// Pool was released or encountered an error.
+				errChan <- err
+				close(doneChan[id])
+				wg.Done()
 			}
-
-			if werr := stepStore.Write(execCtx, filepath.Join(id, "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
-				errChan <- werr
-				return
-			}
-
-			// Сохраняем ID последнего выполненного шага для возможного Resume
-			if werr := workflowStore.Write(execCtx, "last_step", &codec.Frame{Data: []byte(id)}); werr != nil {
-				w.opts.Logger.Error(execCtx, "failed to save last_step: %v", werr)
-			}
-
-			// Добавляем в список выполненных шагов для возможной компенсации
-			execMu.Lock()
-			executedSteps = append(executedSteps, id)
-			execMu.Unlock()
-
-			// Помечаем шаг как завершенный
-			completedMu.Lock()
-			completedSteps[id] = true
-			completedMu.Unlock()
-
-			w.opts.Logger.Info(execCtx, "step completed: %s", id)
 		}(stepID)
 	}
 
-	// Ждем завершения всех горутин
 	wg.Wait()
 	close(errChan)
 
-	// Проверяем наличие ошибок
 	for err := range errChan {
 		if err != nil {
 			return failWorkflow(err)
 		}
 	}
 
-	// Все шаги выполнены успешно
 	if werr := workflowStore.Write(options.Context, "status", &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
 		w.opts.Logger.Error(options.Context, "store error: %v", werr)
 	}
