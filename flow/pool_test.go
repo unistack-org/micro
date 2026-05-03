@@ -20,3 +20,10 @@ func TestNewFlowCreatesPool(t *testing.T) {
 	assert.Equal(t, 4, mf.pool.Cap())
 	require.NoError(t, f.Close())
 }
+
+func TestFlowClose(t *testing.T) {
+	f := NewFlow(PoolSize(2))
+	require.NoError(t, f.Close())
+	// Second close must not panic
+	require.NoError(t, f.Close())
+}

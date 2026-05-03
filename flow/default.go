@@ -593,6 +593,10 @@ func (f *microFlow) Options() Options {
 
 // Close releases the goroutine pool.
 func (f *microFlow) Close() error {
+	if f.pool != nil {
+		f.pool.Release()
+		f.pool = nil
+	}
 	return nil
 }
 
@@ -600,6 +604,20 @@ func (f *microFlow) Init(opts ...Option) error {
 	for _, o := range opts {
 		o(&f.opts)
 	}
+
+	if f.pool != nil {
+		f.pool.Release()
+	}
+	size := f.opts.PoolSize
+	if size == 0 {
+		size = runtime.NumCPU() * 2
+	}
+	var err error
+	f.pool, err = ants.NewPool(size)
+	if err != nil {
+		return err
+	}
+
 	if err := f.opts.Client.Init(); err != nil {
 		return err
 	}
