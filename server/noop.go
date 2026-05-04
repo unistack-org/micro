@@ -86,7 +86,7 @@ func (n *noopServer) Handle(handler Handler) error {
 }
 
 func (n *noopServer) Name() string {
-	return n.opts.Name
+	return "noop"
 }
 
 func (n *noopServer) NewHandler(h any, opts ...HandlerOption) Handler {
