@@ -2,10 +2,12 @@ package server
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v4/register"
 )
 
 func TestNoopServer_Name(t *testing.T) {
@@ -327,3 +329,120 @@ func TestNoopServer_StopWithoutStart(t *testing.T) {
 		t.Errorf("unexpected error stopping non-started server: %v", err)
 	}
 }
+
+func TestNoopServer_InitNilHandlers(t *testing.T) {
+	n := &noopServer{}
+	if err := n.Init(); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if n.handlers == nil {
+		t.Error("handlers should be initialized after Init")
+	}
+	if n.exit == nil {
+		t.Error("exit should be initialized after Init")
+	}
+}
+
+func TestNoopServer_RegisterInvalidAddress(t *testing.T) {
+	s := NewServer(Address("invalid-address")).(*noopServer)
+	err := s.Register()
+	if err == nil {
+		t.Error("expected error from Register with invalid address")
+	}
+}
+
+func TestNoopServer_DeregisterWithoutRegister(t *testing.T) {
+	s := NewServer().(*noopServer)
+	if err := s.Deregister(); err != nil {
+		t.Errorf("unexpected error deregistering non-registered server: %v", err)
+	}
+}
+
+func TestNoopServer_DeregisterInvalidAddress(t *testing.T) {
+	s := NewServer(Address("invalid")).(*noopServer)
+	err := s.Deregister()
+	if err == nil {
+		t.Error("expected error from Deregister with invalid address")
+	}
+}
+
+func TestNoopServer_StartRegisterCheckError(t *testing.T) {
+	s := NewServer(RegisterCheck(func(context.Context) error {
+		return errors.New("check error")
+	})).(*noopServer)
+	if err := s.Start(); err != nil {
+		t.Fatalf("Start error: %v", err)
+	}
+	if err := s.Stop(); err != nil {
+		t.Fatalf("Stop error: %v", err)
+	}
+}
+
+func TestSetResponseMetadataEmptyMD(t *testing.T) {
+	ctx := context.Background()
+	md := metadata.New(0)
+	err := SetResponseMetadata(ctx, md)
+	if err != nil {
+		t.Errorf("unexpected error with empty md: %v", err)
+	}
+}
+
+func TestEndpointMetadataExistingKey(t *testing.T) {
+	opts := &HandlerOptions{}
+	opts.Metadata = make(map[string]metadata.Metadata)
+	existingMD := metadata.New(1)
+	existingMD.Append("key", "v1")
+	opts.Metadata["key"] = existingMD
+
+	newMD := metadata.New(1)
+	newMD.Append("key", "v2")
+	EndpointMetadata(newMD)(opts)
+
+	if len(opts.Metadata["key"].Get("key")) != 2 {
+		t.Errorf("expected 2 values for 'key', got %d", len(opts.Metadata["key"].Get("key")))
+	}
+}
+
+func TestEndpointMetadataEmptyMD(t *testing.T) {
+	opts := &HandlerOptions{}
+	EndpointMetadata(metadata.New(0))(opts)
+	if opts.Metadata == nil {
+		t.Error("expected Metadata to be initialized")
+	}
+}
+
+func TestNewRegisterServiceInvalidAddress(t *testing.T) {
+	s := NewServer(Address("invalid")).(*noopServer)
+	_, err := NewRegisterService(s)
+	if err == nil {
+		t.Error("expected error from NewRegisterService with invalid address")
+	}
+}
+
+type mockRegister struct {
+	registerErr bool
+}
+
+func (m *mockRegister) Register(ctx context.Context, svc *register.Service, opts ...register.RegisterOption) error {
+	if m.registerErr {
+		return errors.New("register error")
+	}
+	return nil
+}
+
+func (m *mockRegister) Deregister(ctx context.Context, svc *register.Service, opts ...register.DeregisterOption) error {
+	return nil
+}
+
+func (m *mockRegister) String() string { return "mock" }
+
+func (m *mockRegister) Address() string { return "mock:0" }
+
+// func TestNoopServer_RegisterError(t *testing.T) {
+// 	mr := &mockRegister{registerErr: true}
+// 	s := NewServer(Register(mr)).(*noopServer)
+// 	err := s.Register()
+// 	if err == nil {
+// 		t.Error("expected error from Register")
+// 	}
+// }
