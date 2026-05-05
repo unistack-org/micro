@@ -51,3 +51,20 @@ func TestSetOption(t *testing.T) {
 		t.Fatal("SetOption not works")
 	}
 }
+
+func TestWithStore(t *testing.T) {
+	s := NewStore()
+	ctx := context.Background()
+	ctx = NewContext(ctx, s)
+	retrieved, ok := FromContext(ctx)
+	if !ok || retrieved != s {
+		t.Error("expected store to be retrieved from context")
+	}
+}
+
+func TestStoreFromContext_NotFound(t *testing.T) {
+	ctx := context.Background()
+	if _, ok := FromContext(ctx); ok {
+		t.Error("expected nil store from empty context")
+	}
+}

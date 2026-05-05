@@ -104,3 +104,60 @@ func basictest(s store.Store, t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestMemoryStore_ReadWrite(t *testing.T) {
+	s := NewStore()
+	if err := s.Init(); err != nil {
+		t.Errorf("unexpected error on Init: %v", err)
+	}
+	ctx := context.Background()
+
+	if err := s.Write(ctx, "key1", "value1"); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	var val string
+	if err := s.Read(ctx, "key1", &val); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if val != "value1" {
+		t.Errorf("expected 'value1', got %q", val)
+	}
+}
+
+func TestMemoryStore_Delete(t *testing.T) {
+	s := NewStore()
+	if err := s.Init(); err != nil {
+		t.Errorf("unexpected error on Init: %v", err)
+	}
+	ctx := context.Background()
+
+	_ = s.Write(ctx, "key1", "value1")
+	if err := s.Delete(ctx, "key1"); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	var val string
+	if err := s.Read(ctx, "key1", &val); err != store.ErrNotFound {
+		t.Errorf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestMemoryStore_List(t *testing.T) {
+	s := NewStore()
+	if err := s.Init(); err != nil {
+		t.Errorf("unexpected error on Init: %v", err)
+	}
+	ctx := context.Background()
+
+	_ = s.Write(ctx, "key1", "value1")
+	_ = s.Write(ctx, "key2", "value2")
+
+	list, err := s.List(ctx)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if len(list) != 2 {
+		t.Errorf("expected 2 items, got %d", len(list))
+	}
+}
