@@ -142,7 +142,11 @@ func (s *Span) SetStatus(st tracer.SpanStatus, msg string) {
 
 // NewTracer returns new memory tracer
 func NewTracer(opts ...tracer.Option) *Tracer {
+	o := tracer.NewOptions(opts...)
+	if o.Name == "" {
+		o.Name = "memory"
+	}
 	return &Tracer{
-		opts: tracer.NewOptions(opts...),
+		opts: o,
 	}
 }
