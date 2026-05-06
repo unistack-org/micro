@@ -28,7 +28,7 @@ type StructField struct {
 // StructFieldNameByTag get struct field name by tag key and its value
 func StructFieldNameByTag(src interface{}, tkey string, tval string) (string, interface{}, error) {
 	sv := reflect.ValueOf(src)
-	if sv.Kind() == reflect.Ptr {
+	if sv.Kind() == reflect.Pointer {
 		sv = sv.Elem()
 	}
 	if sv.Kind() != reflect.Struct {
@@ -52,7 +52,7 @@ func StructFieldNameByTag(src interface{}, tkey string, tval string) (string, in
 		}
 
 		switch val.Kind() {
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if val = val.Elem(); val.Kind() == reflect.Struct {
 				if name, fld, err := StructFieldNameByTag(val.Interface(), tkey, tval); err == nil {
 					return name, fld, nil
@@ -70,7 +70,7 @@ func StructFieldNameByTag(src interface{}, tkey string, tval string) (string, in
 // StructFieldByTag get struct field by tag key and its value
 func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, error) {
 	sv := reflect.ValueOf(src)
-	if sv.Kind() == reflect.Ptr {
+	if sv.Kind() == reflect.Pointer {
 		sv = sv.Elem()
 	}
 	if sv.Kind() != reflect.Struct {
@@ -94,7 +94,7 @@ func StructFieldByTag(src interface{}, tkey string, tval string) (interface{}, e
 		}
 
 		switch val.Kind() {
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if val = val.Elem(); val.Kind() == reflect.Struct {
 				if iface, err := StructFieldByTag(val.Interface(), tkey, tval); err == nil {
 					return iface, nil
@@ -168,7 +168,7 @@ func SetFieldByPath(src interface{}, dst interface{}, path string) error {
 
 // structValueByName get struct field by its name
 func structValueByName(sv reflect.Value, tkey string) (reflect.Value, error) {
-	if sv.Kind() == reflect.Ptr {
+	if sv.Kind() == reflect.Pointer {
 		sv = sv.Elem()
 	}
 	if sv.Kind() != reflect.Struct {
@@ -188,7 +188,7 @@ func structValueByName(sv reflect.Value, tkey string) (reflect.Value, error) {
 		}
 
 		switch val.Kind() {
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if val = val.Elem(); val.Kind() == reflect.Struct {
 				if iface, err := structValueByName(val, tkey); err == nil {
 					return iface, nil
@@ -218,7 +218,7 @@ func StructFieldByPath(src interface{}, path string) (interface{}, error) {
 // StructFieldByName get struct field by its name
 func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
 	sv := reflect.ValueOf(src)
-	if sv.Kind() == reflect.Ptr {
+	if sv.Kind() == reflect.Pointer {
 		sv = sv.Elem()
 	}
 	if sv.Kind() != reflect.Struct {
@@ -237,7 +237,7 @@ func StructFieldByName(src interface{}, tkey string) (interface{}, error) {
 		}
 
 		switch val.Kind() {
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if val = val.Elem(); val.Kind() == reflect.Struct {
 				if iface, err := StructFieldByName(val.Interface(), tkey); err == nil {
 					return iface, nil
@@ -270,7 +270,7 @@ func StructFields(src interface{}) ([]StructField, error) {
 	var fields []StructField
 
 	sv := reflect.ValueOf(src)
-	if sv.Kind() == reflect.Ptr {
+	if sv.Kind() == reflect.Pointer {
 		sv = sv.Elem()
 	}
 	if sv.Kind() != reflect.Struct {
@@ -294,7 +294,7 @@ func StructFields(src interface{}) ([]StructField, error) {
 		}
 
 		switch val.Kind() {
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if val.CanSet() && fld.Type.Elem().Kind() == reflect.Struct {
 				if val.IsNil() {
 					val.Set(reflect.New(fld.Type.Elem()))
@@ -374,7 +374,7 @@ func StructURLValues(src interface{}, pref string, tags []string) (url.Values, e
 	data := url.Values{}
 
 	sv := reflect.ValueOf(src)
-	if sv.Kind() == reflect.Ptr {
+	if sv.Kind() == reflect.Pointer {
 		sv = sv.Elem()
 	}
 	if sv.Kind() != reflect.Struct {
@@ -422,7 +422,7 @@ func StructURLValues(src interface{}, pref string, tags []string) (url.Values, e
 		}
 
 		switch val.Kind() {
-		case reflect.Struct, reflect.Ptr:
+		case reflect.Struct, reflect.Pointer:
 			if val.IsNil() {
 				continue
 			}
@@ -438,8 +438,8 @@ func StructURLValues(src interface{}, pref string, tags []string) (url.Values, e
 			case reflect.Slice:
 				for i := 0; i < val.Len(); i++ {
 					va := val.Index(i)
-					// if va.Type().Elem().Kind() != reflect.Ptr {
-					if va.Kind() != reflect.Ptr {
+					// if va.Type().Elem().Kind() != reflect.Pointer {
+					if va.Kind() != reflect.Pointer {
 						data.Set(t.name, fmt.Sprintf("%v", va.Interface()))
 						continue
 					}
