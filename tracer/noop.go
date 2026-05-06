@@ -21,7 +21,7 @@ func (t *noopTracer) Spans() []Span {
 var uuidNil = uuid.Nil.String()
 
 func (t *noopTracer) Enabled() bool {
-	return t.opts.Enabled
+	return false
 }
 
 func (t *noopTracer) Start(ctx context.Context, name string, opts ...SpanOption) (context.Context, Span) {
@@ -130,9 +130,13 @@ func (s *noopSpan) IsRecording() bool {
 	return false
 }
 
-// NewTracer returns new memory tracer
+// NewTracer returns new noop tracer
 func NewTracer(opts ...Option) Tracer {
+	o := NewOptions(opts...)
+	if o.Name == "" {
+		o.Name = "noop"
+	}
 	return &noopTracer{
-		opts: NewOptions(opts...),
+		opts: o,
 	}
 }

@@ -51,3 +51,18 @@ func TestSetOption(t *testing.T) {
 		t.Fatal("SetOption not works")
 	}
 }
+
+func TestWithServer(t *testing.T) {
+	s := NewServer()
+	ctx := NewContext(context.Background(), s)
+	if retrieved, ok := FromContext(ctx); !ok || retrieved != s {
+		t.Error("expected server to be retrieved from context")
+	}
+}
+
+func TestServerFromContext_NotFound(t *testing.T) {
+	ctx := context.Background()
+	if _, ok := FromContext(ctx); ok {
+		t.Error("expected nil server from empty context")
+	}
+}

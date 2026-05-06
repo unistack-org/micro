@@ -35,7 +35,11 @@ type noopRequest struct {
 
 // NewClient returns new noop client
 func NewClient(opts ...Option) Client {
-	n := &noopClient{opts: NewOptions(opts...)}
+	options := NewOptions(opts...)
+	if len(options.Name) == 0 {
+		options.Name = "noop"
+	}
+	n := &noopClient{opts: options}
 
 	n.funcCall = n.fnCall
 	n.funcStream = n.fnStream
@@ -317,8 +321,8 @@ func (n *noopClient) fnCall(ctx context.Context, req Request, rsp any, opts ...C
 	return gerr
 }
 
-func (n *noopClient) NewRequest(service, endpoint string, _ any, _ ...RequestOption) Request {
-	return &noopRequest{service: service, endpoint: endpoint}
+func (n *noopClient) NewRequest(service, endpoint string, body any, _ ...RequestOption) Request {
+	return &noopRequest{service: service, endpoint: endpoint, body: body, contentType: n.opts.ContentType}
 }
 
 func (n *noopClient) Stream(ctx context.Context, req Request, opts ...CallOption) (Stream, error) {

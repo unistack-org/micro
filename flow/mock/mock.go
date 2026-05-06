@@ -11,7 +11,6 @@ import (
 // ExpectedWorkflowCreate represents an expected WorkflowCreate operation
 type ExpectedWorkflowCreate struct {
 	id     string
-	steps  []flow.Step
 	times  int
 	called int
 	mutex  sync.Mutex
@@ -19,7 +18,7 @@ type ExpectedWorkflowCreate struct {
 	result flow.Workflow
 }
 
-func (e *ExpectedWorkflowCreate) match(id string, steps []flow.Step) bool {
+func (e *ExpectedWorkflowCreate) match(id string) bool {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
 
@@ -107,31 +106,7 @@ func (e *ExpectedWorkflowList) match() bool {
 	return true
 }
 
-// ExpectedExecute represents an expected Execute operation on a workflow
-type ExpectedExecute struct {
-	id     string
-	times  int
-	called int
-	mutex  sync.Mutex
-	err    error
-	result string
-}
 
-func (e *ExpectedExecute) match(id string) bool {
-	e.mutex.Lock()
-	defer e.mutex.Unlock()
-
-	if e.id != "" && e.id != id {
-		return false
-	}
-
-	if e.times > 0 && e.called >= e.times {
-		return false
-	}
-
-	e.called++
-	return true
-}
 
 // Flow is a mock implementation of the flow.Flow interface for testing
 type Flow struct {
@@ -139,7 +114,6 @@ type Flow struct {
 	expectedSaves   []*ExpectedWorkflowSave
 	expectedLoads   []*ExpectedWorkflowLoad
 	expectedLists   []*ExpectedWorkflowList
-	expectedExecutes []*ExpectedExecute
 
 	workflows map[string]flow.Workflow
 	opts      flow.Options
@@ -193,16 +167,6 @@ func (m *Flow) ExpectWorkflowList() *ExpectedWorkflowList {
 
 	exp := &ExpectedWorkflowList{}
 	m.expectedLists = append(m.expectedLists, exp)
-	return exp
-}
-
-// ExpectExecute creates an expectation for an Execute operation
-func (m *Flow) ExpectExecute(id string) *ExpectedExecute {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	exp := &ExpectedExecute{id: id}
-	m.expectedExecutes = append(m.expectedExecutes, exp)
 	return exp
 }
 
@@ -272,24 +236,6 @@ func (e *ExpectedWorkflowList) WillReturnError(err error) *ExpectedWorkflowList 
 	return e
 }
 
-// WithResult sets the execution ID to return for expected Execute operations
-func (e *ExpectedExecute) WithResult(execID string) *ExpectedExecute {
-	e.result = execID
-	return e
-}
-
-// Times sets how many times the expectation should be called
-func (e *ExpectedExecute) Times(n int) *ExpectedExecute {
-	e.times = n
-	return e
-}
-
-// WillReturnError sets an error to return for the expected operation
-func (e *ExpectedExecute) WillReturnError(err error) *ExpectedExecute {
-	e.err = err
-	return e
-}
-
 // Options returns the current options
 func (m *Flow) Options() flow.Options {
 	m.mutex.RLock()
@@ -328,7 +274,7 @@ func (m *Flow) WorkflowCreate(ctx context.Context, id string, steps ...flow.Step
 
 	// Find matching expectation
 	for _, exp := range m.expectedCreates {
-		if exp.match(id, steps) {
+		if exp.match(id) {
 			if exp.err != nil {
 				return nil, exp.err
 			}

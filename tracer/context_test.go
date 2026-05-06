@@ -40,3 +40,24 @@ func TestNewContext(t *testing.T) {
 		t.Fatal("NewContext not works")
 	}
 }
+
+func TestSpanFromContext(t *testing.T) {
+	tr := NewTracer()
+	ctx := context.Background()
+	ctx, span := tr.Start(ctx, "test")
+	retrieved, ok := SpanFromContext(ctx)
+	if !ok {
+		t.Fatal("expected span to be in context")
+	}
+	if retrieved != span {
+		t.Error("expected same span")
+	}
+}
+
+func TestSpanFromContext_NotFound(t *testing.T) {
+	ctx := context.Background()
+	span, ok := SpanFromContext(ctx)
+	if ok || span != nil {
+		t.Error("expected no span in empty context")
+	}
+}

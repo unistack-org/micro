@@ -51,3 +51,20 @@ func TestSetOption(t *testing.T) {
 		t.Fatal("SetOption not works")
 	}
 }
+
+func TestWithLogger_EdgeCases(t *testing.T) {
+	l := NewLogger()
+	ctx := context.Background()
+	
+	ctx = NewContext(ctx, l)
+	if retrieved, ok := FromContext(ctx); !ok || retrieved != l {
+		t.Error("expected logger to be retrieved from context")
+	}
+}
+
+func TestLoggerFromContext_NotFound(t *testing.T) {
+	ctx := context.Background()
+	if _, ok := FromContext(ctx); ok {
+		t.Error("expected no logger from empty context")
+	}
+}

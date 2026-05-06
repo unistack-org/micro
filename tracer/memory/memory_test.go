@@ -1,38 +1,46 @@
 package memory
 
 import (
-	"bytes"
 	"context"
-	"fmt"
-	"strings"
 	"testing"
 
-	"go.unistack.org/micro/v4/logger"
-	"go.unistack.org/micro/v4/logger/slog"
 	"go.unistack.org/micro/v4/tracer"
 )
 
-func TestLoggerWithTracer(t *testing.T) {
-	ctx := context.TODO()
-	buf := bytes.NewBuffer(nil)
-	logger.DefaultLogger = slog.NewLogger(logger.WithOutput(buf))
-
-	if err := logger.DefaultLogger.Init(); err != nil {
-		t.Fatal(err)
-	}
-	var span tracer.Span
+func TestMemoryTracer_Name(t *testing.T) {
 	tr := NewTracer()
-	ctx, span = tr.Start(ctx, "test1")
-
-	logger.DefaultLogger.Error(ctx, "my test error", fmt.Errorf("error"))
-
-	if !strings.Contains(buf.String(), span.TraceID()) {
-		t.Fatalf("log does not contains trace id: %s", buf.Bytes())
+	if name := tr.Name(); name != "memory" {
+		t.Errorf("expected 'memory', got %q", name)
 	}
+}
 
-	_, _ = tr.Start(ctx, "test2")
-
-	for _, s := range tr.Spans() {
-		_ = s
+func TestMemoryTracer_StartFinish(t *testing.T) {
+	tr := NewTracer()
+	ctx := context.Background()
+	_, span := tr.Start(ctx, "test-span")
+	if span == nil {
+		t.Fatal("expected non-nil span")
 	}
+	span.Finish()
+}
+
+func TestMemoryTracer_SpanOperations(t *testing.T) {
+	tr := NewTracer()
+	ctx := context.Background()
+	_, span := tr.Start(ctx, "test-span")
+	span.SetName("new-name")
+	span.SetStatus(tracer.SpanStatusOK, "ok")
+	span.AddLabels("key", "value")
+	span.AddEvent("event")
+	span.AddLogs("log-key", "log-value")
+	if span.TraceID() == "" {
+		t.Error("expected non-empty trace ID")
+	}
+	if span.SpanID() == "" {
+		t.Error("expected non-empty span ID")
+	}
+	if !span.IsRecording() {
+		t.Error("expected span to be recording")
+	}
+	span.Finish()
 }

@@ -100,7 +100,7 @@ func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 	var fname string
 
 	dviface := reflect.ValueOf(dst)
-	if dviface.Kind() == reflect.Ptr {
+	if dviface.Kind() == reflect.Pointer {
 		dviface = dviface.Elem()
 	}
 
@@ -171,7 +171,7 @@ func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 				return ErrInvalidValue
 			}
 			err = Merge(dval.Interface(), mp, opts...)
-		case reflect.Ptr:
+		case reflect.Pointer:
 			mp, ok := sval.Interface().(map[string]interface{})
 			if !ok {
 				return ErrInvalidValue
@@ -181,7 +181,7 @@ func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 				if dval.Elem().Type().Kind() == reflect.Struct {
 					for i := 0; i < dval.Elem().NumField(); i++ {
 						field := dval.Elem().Field(i)
-						if field.Type().Kind() == reflect.Ptr && field.IsNil() && dval.Elem().Type().Field(i).Anonymous {
+						if field.Type().Kind() == reflect.Pointer && field.IsNil() && dval.Elem().Type().Field(i).Anonymous {
 							field.Set(reflect.New(field.Type().Elem()))
 						}
 					}
@@ -202,12 +202,12 @@ func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 				} else {
 					idval = reflect.Indirect(reflect.New(dval.Type().Elem()))
 				}
-				if getKind(idval) == reflect.Ptr && idval.IsNil() {
+				if getKind(idval) == reflect.Pointer && idval.IsNil() {
 					idval.Set(reflect.New(idval.Type().Elem()))
 					if idval.Elem().Type().Kind() == reflect.Struct {
 						for i := 0; i < idval.Elem().NumField(); i++ {
 							field := idval.Elem().Field(i)
-							if field.Type().Kind() == reflect.Ptr && field.IsNil() && idval.Elem().Type().Field(i).Anonymous {
+							if field.Type().Kind() == reflect.Pointer && field.IsNil() && idval.Elem().Type().Field(i).Anonymous {
 								field.Set(reflect.New(field.Type().Elem()))
 							}
 						}
@@ -230,7 +230,7 @@ func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 						return ErrInvalidValue
 					}
 					err = Merge(idval.Interface(), imp, opts...)
-				case reflect.Ptr:
+				case reflect.Pointer:
 					nsval := sval.Index(idx)
 					if getKind(sval.Index(idx)) == reflect.Interface {
 						nsval = reflect.ValueOf(nsval.Interface())
@@ -270,7 +270,7 @@ func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 							if idval.Elem().Type().Kind() == reflect.Struct {
 								for i := 0; i < idval.Elem().NumField(); i++ {
 									field := idval.Elem().Field(i)
-									if field.Type().Kind() == reflect.Ptr && field.IsNil() && idval.Elem().Type().Field(i).Anonymous {
+									if field.Type().Kind() == reflect.Pointer && field.IsNil() && idval.Elem().Type().Field(i).Anonymous {
 										field.Set(reflect.New(field.Type().Elem()))
 									}
 								}
@@ -487,7 +487,7 @@ func IsZero(src interface{}) bool {
 func Zero(src interface{}) (interface{}, error) {
 	sv := reflect.ValueOf(src)
 
-	if sv.Kind() == reflect.Ptr {
+	if sv.Kind() == reflect.Pointer {
 		sv = sv.Elem()
 	}
 
@@ -513,7 +513,7 @@ func IsEmpty(v reflect.Value) bool {
 		return v.Uint() == 0
 	case reflect.Float32:
 		return v.Float() == 0
-	case reflect.Interface, reflect.Ptr:
+	case reflect.Interface, reflect.Pointer:
 		if v.IsNil() {
 			return true
 		}
@@ -599,7 +599,7 @@ func Equal(src interface{}, dst interface{}, excptFields ...string) bool {
 			}
 		}
 		return true
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if srcVal.IsNil() {
 			return dstVal.IsNil()
 		}

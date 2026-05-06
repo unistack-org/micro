@@ -60,3 +60,20 @@ func TestSetOption(t *testing.T) {
 		t.Fatal("SetOption not works")
 	}
 }
+
+func TestWithClient(t *testing.T) {
+	c := NewClient()
+	ctx := context.Background()
+	ctx = NewContext(ctx, c)
+	retrieved, ok := FromContext(ctx)
+	if !ok || retrieved != c {
+		t.Error("expected client to be retrieved from context")
+	}
+}
+
+func TestClientFromContext_NotFound(t *testing.T) {
+	ctx := context.Background()
+	if _, ok := FromContext(ctx); ok {
+		t.Error("expected nil client from empty context")
+	}
+}

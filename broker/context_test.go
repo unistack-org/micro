@@ -59,3 +59,21 @@ func TestSetOption(t *testing.T) {
 		t.Fatal("SetOption not works")
 	}
 }
+
+func TestWithBroker(t *testing.T) {
+	b := NewBroker()
+	ctx := context.Background()
+	ctx = NewContext(ctx, b)
+	retrieved, ok := FromContext(ctx)
+	if !ok || retrieved != b {
+		t.Error("expected broker to be retrieved from context")
+	}
+}
+
+func TestBrokerFromContext_NotFound(t *testing.T) {
+	ctx := context.Background()
+	retrieved, ok := FromContext(ctx)
+	if ok || retrieved != nil {
+		t.Error("expected nil broker from empty context")
+	}
+}

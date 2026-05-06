@@ -119,3 +119,35 @@ func TestCodeIn(t *testing.T) {
 		t.Fatalf("CodeIn not works: %v", err)
 	}
 }
+
+func TestErrorConstructors(t *testing.T) {
+	tests := []struct {
+		name string
+		fn   func() error
+		code int
+	}{
+		{"BadRequest", func() error { return BadRequest("id", "msg") }, 400},
+		{"Unauthorized", func() error { return Unauthorized("id", "msg") }, 401},
+		{"Forbidden", func() error { return Forbidden("id", "msg") }, 403},
+		{"MethodNotAllowed", func() error { return MethodNotAllowed("id", "msg") }, 405},
+		{"Timeout", func() error { return Timeout("id", "msg") }, 408},
+		{"Conflict", func() error { return Conflict("id", "msg") }, 409},
+		{"NotImplemented", func() error { return NotImplemented("id", "msg") }, 501},
+		{"BadGateway", func() error { return BadGateway("id", "msg") }, 502},
+		{"ServiceUnavailable", func() error { return ServiceUnavailable("id", "msg") }, 503},
+		{"GatewayTimeout", func() error { return GatewayTimeout("id", "msg") }, 504},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fn()
+			e, ok := err.(*Error)
+			if !ok {
+				t.Fatalf("expected *Error, got %T", err)
+			}
+			if e.Code != int32(tt.code) {
+				t.Errorf("expected code %d, got %d", tt.code, e.Code)
+			}
+		})
+	}
+}

@@ -58,7 +58,11 @@ type noopServer struct {
 
 // NewServer returns new noop server
 func NewServer(opts ...Option) Server {
-	n := &noopServer{opts: NewOptions(opts...)}
+	options := NewOptions(opts...)
+	if options.Name == DefaultName {
+		options.Name = "noop"
+	}
+	n := &noopServer{opts: options}
 	if n.handlers == nil {
 		n.handlers = make(map[string]Handler)
 	}
@@ -86,7 +90,10 @@ func (n *noopServer) Handle(handler Handler) error {
 }
 
 func (n *noopServer) Name() string {
-	return n.opts.Name
+	if len(n.opts.Name) > 0 {
+		return n.opts.Name
+	}
+	return "noop"
 }
 
 func (n *noopServer) NewHandler(h any, opts ...HandlerOption) Handler {
