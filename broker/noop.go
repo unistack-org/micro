@@ -139,6 +139,7 @@ func (b *NoopBroker) NewMessage(ctx context.Context, hdr metadata.Metadata, body
 	m := &noopMessage{ctx: ctx, hdr: hdr, opts: options}
 	c, err := b.newCodec(m.opts.ContentType)
 	if err == nil {
+		m.c = c
 		m.body, err = c.Marshal(body)
 	}
 	if err != nil {

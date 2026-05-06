@@ -3,10 +3,13 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"net"
+	"sync"
 	"testing"
 	"time"
 
 	"go.unistack.org/micro/v4/broker"
+	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/meter"
 	"go.unistack.org/micro/v4/metadata"
@@ -14,6 +17,13 @@ import (
 	"go.unistack.org/micro/v4/register"
 	"go.unistack.org/micro/v4/tracer"
 )
+
+type testCodec struct{}
+
+func (c *testCodec) Marshal(any, ...codec.Option) ([]byte, error) { return nil, nil }
+func (c *testCodec) Unmarshal([]byte, any, ...codec.Option) error { return nil }
+func (c *testCodec) String() string                              { return "test" }
+func (c *testCodec) ContentType() string                         { return "test" }
 
 func TestNoopServer_Name(t *testing.T) {
 	s := NewServer()
@@ -258,5 +268,117 @@ func TestNewRegisterService(t *testing.T) {
 	}
 	if svc == nil {
 		t.Error("expected non-nil service")
+	}
+}
+
+func TestCodecOption(t *testing.T) {
+	c := &testCodec{}
+	s := NewServer(Codec("test", c))
+	opts := s.Options()
+	if opts.Codecs == nil || opts.Codecs["test"] == nil {
+		t.Error("expected codec to be set")
+	}
+}
+
+func TestStartStopNoop(t *testing.T) {
+	s := NewServer()
+	if err := s.Start(); err != nil {
+		t.Errorf("unexpected error on Start: %v", err)
+	}
+	if err := s.Stop(); err != nil {
+		t.Errorf("unexpected error on Stop: %v", err)
+	}
+}
+
+func TestWaitOption(t *testing.T) {
+	var wg sync.WaitGroup
+	s := NewServer(Wait(&wg))
+	opts := s.Options()
+	if opts.Wait == nil {
+		t.Error("expected wait group to be set")
+	}
+}
+
+type testListener struct{}
+
+func (t *testListener) Accept() (net.Conn, error) { return nil, nil }
+func (t *testListener) Close() error               { return nil }
+func (t *testListener) Addr() net.Addr            { return nil }
+
+func TestListenerOption(t *testing.T) {
+	l := &testListener{}
+	s := NewServer(Listener(l))
+	opts := s.Options()
+	if opts.Listener != l {
+		t.Error("expected listener to be set")
+	}
+}
+
+func TestEndpointMetadataOption(t *testing.T) {
+	md := metadata.New(1)
+	md.Set("key", "value")
+	o := EndpointMetadata(md)
+	opts := &HandlerOptions{}
+	o(opts)
+	if opts.Metadata == nil {
+		t.Error("expected metadata to be set")
+	}
+}
+
+func TestNewHandlerOptionsFunc(t *testing.T) {
+	opts := NewHandlerOptions()
+	if opts.Context == nil {
+		t.Error("expected non-nil context")
+	}
+}
+
+func TestNoopServer_NameWithOption(t *testing.T) {
+	s := NewServer(Name("custom-server"))
+	if name := s.Name(); name != "custom-server" {
+		t.Errorf("expected 'custom-server', got %q", name)
+	}
+}
+
+func TestNoopServer_InitMultiple(t *testing.T) {
+	s := NewServer()
+	_ = s.Init()
+	_ = s.Init()
+	opts := s.Options()
+	if opts.ID == "" {
+		t.Error("expected non-empty ID")
+	}
+}
+
+func TestNoopServer_HandleMultiple(t *testing.T) {
+	s := NewServer()
+	h1 := s.NewHandler(func(ctx context.Context, req Request, rsp any) error { return nil })
+	h2 := s.NewHandler(func(ctx context.Context, req Request, rsp any) error { return nil })
+	_ = s.Handle(h1)
+	_ = s.Handle(h2)
+}
+
+func TestRegistryOptions(t *testing.T) {
+	s := NewServer(RegisterTTL(time.Minute), RegisterInterval(time.Second))
+	opts := s.Options()
+	if opts.RegisterTTL != time.Minute {
+		t.Errorf("expected 1m, got %v", opts.RegisterTTL)
+	}
+}
+
+func TestServerWithMetadata(t *testing.T) {
+	md := metadata.New(1)
+	md.Set("key", "value")
+	s := NewServer(Metadata(md))
+	opts := s.Options()
+	if opts.Metadata == nil {
+		t.Error("expected metadata to be set")
+	}
+}
+
+func TestServerWithBrokerOptions(t *testing.T) {
+	s := NewServer(Broker(broker.DefaultBroker))
+	opts := s.Options()
+	if opts.Broker == nil {
+		t.Error("expected broker to be set")
 	}
 }

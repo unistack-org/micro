@@ -40,7 +40,7 @@ func (n *noopStore) Health() bool {
 
 func NewStore(opts ...Option) Store {
 	options := NewOptions(opts...)
-	return &noopStore{opts: options}
+	return &noopStore{opts: options, watchers: make(map[string]Watcher)}
 }
 
 func (n *noopStore) Init(opts ...Option) error {
