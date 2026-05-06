@@ -84,7 +84,7 @@ func getValueByName(v reflect.Value, key string) (reflect.Value, error) {
 		return value, err
 	}
 	switch v.Kind() {
-	case reflect.Ptr, reflect.Interface:
+	case reflect.Pointer, reflect.Interface:
 		return getValueByName(v.Elem(), key)
 	case reflect.Struct:
 		value = v.FieldByName(key)
@@ -106,7 +106,7 @@ func getValueByName(v reflect.Value, key string) (reflect.Value, error) {
 		value = value.Index(index)
 	}
 
-	if value.Kind() == reflect.Ptr || value.Kind() == reflect.Interface {
+	if value.Kind() == reflect.Pointer || value.Kind() == reflect.Interface {
 		value = value.Elem()
 	}
 
@@ -249,7 +249,7 @@ func lookupType(ty reflect.Type, path ...string) (reflect.Type, bool) {
 		}
 		// Aggregate.
 		return lookupType(ty.Elem(), path...)
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return lookupType(ty.Elem(), path...)
 	case reflect.Interface:
 		// We can't know from here without a value. Let's just return this type.

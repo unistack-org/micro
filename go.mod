@@ -1,6 +1,6 @@
 module go.unistack.org/micro/v4
 
-go 1.25.0
+go 1.26
 
 retract [v4.0.0, v4.1.30]
 
