@@ -24,7 +24,7 @@ require (
 	google.golang.org/protobuf v1.36.11
 )
 
-replace go.unistack.org/micro-client-mock/v4 => ../micro-client-mock
+
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
