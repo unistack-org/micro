@@ -97,7 +97,7 @@ func TestWorkflowPoolConcurrency(t *testing.T) {
 	}
 
 	f := NewFlow(PoolSize(1), Store(ms))
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Diamond: start → (step_a, step_b) → end.
 	// With PoolSize(1), step_a and step_b must run serially — maxConcurrent stays 1.

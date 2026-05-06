@@ -144,7 +144,7 @@ func TestMemoryBroker_MessageMethods(t *testing.T) {
 	if err := b.Connect(ctx); err != nil {
 		t.Fatalf("Connect error: %v", err)
 	}
-	defer b.Disconnect(ctx)
+	defer func() { _ = b.Disconnect(ctx) }()
 
 	hdr := metadata.Pairs("key", "val")
 	body := []byte("test-body")
@@ -188,7 +188,7 @@ func TestMemoryBroker_ConcurrentSubscribe(t *testing.T) {
 	if err := b.Connect(ctx); err != nil {
 		t.Fatalf("Connect error: %v", err)
 	}
-	defer b.Disconnect(ctx)
+	defer func() { _ = b.Disconnect(ctx) }()
 
 	var wg sync.WaitGroup
 	subCount := 5
@@ -238,7 +238,7 @@ func TestMemoryBroker_Unsubscribe(t *testing.T) {
 	if err := b.Connect(ctx); err != nil {
 		t.Fatalf("Connect error: %v", err)
 	}
-	defer b.Disconnect(ctx)
+	defer func() { _ = b.Disconnect(ctx) }()
 
 	sub, err := b.Subscribe(ctx, "unsub-topic", func(msg broker.Message) error {
 		return nil
@@ -274,7 +274,7 @@ func TestMemoryBroker_WithOptions(t *testing.T) {
 	if err := b.Connect(ctx); err != nil {
 		t.Fatalf("Connect error: %v", err)
 	}
-	defer b.Disconnect(ctx)
+	defer func() { _ = b.Disconnect(ctx) }()
 
 	if b.Name() != "test" {
 		t.Errorf("Name: expected test, got %s", b.Name())
@@ -307,7 +307,7 @@ func TestMemoryBroker_Init(t *testing.T) {
 	if err := b.Connect(ctx); err != nil {
 		t.Fatalf("Connect error: %v", err)
 	}
-	defer b.Disconnect(ctx)
+	defer func() { _ = b.Disconnect(ctx) }()
 	// Publish to trigger hook
 	msg, err := b.NewMessage(ctx, metadata.Pairs(), []byte("test"), broker.MessageContentType("application/octet-stream"))
 	if err != nil {
@@ -339,7 +339,7 @@ func TestMemoryBroker_PublishErrors(t *testing.T) {
 	if err := b.Connect(ctx); err != nil {
 		t.Fatalf("Connect error: %v", err)
 	}
-	defer b.Disconnect(ctx)
+	defer func() { _ = b.Disconnect(ctx) }()
 	// Subscribe with invalid handler
 	_, err = b.Subscribe(ctx, "invalid-handler", "invalid")
 	if err != broker.ErrInvalidHandler {
@@ -392,7 +392,7 @@ func TestMemoryBroker_PublishEdgeCases(t *testing.T) {
 	if err := b.Connect(ctx); err != nil {
 		t.Fatalf("Connect error: %v", err)
 	}
-	defer b.Disconnect(ctx)
+	defer func() { _ = b.Disconnect(ctx) }()
 
 	// Test publish with no subscribers
 	msg, err := b.NewMessage(ctx, metadata.Pairs(), []byte("test"), broker.MessageContentType("application/octet-stream"))
@@ -477,7 +477,7 @@ func TestSubscriberMethods(t *testing.T) {
 	if err := b.Connect(ctx); err != nil {
 		t.Fatalf("Connect error: %v", err)
 	}
-	defer b.Disconnect(ctx)
+	defer func() { _ = b.Disconnect(ctx) }()
 
 	sub, err := b.Subscribe(ctx, "sub-methods", func(msg broker.Message) error {
 		return nil

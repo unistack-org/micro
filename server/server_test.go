@@ -18,6 +18,10 @@ import (
 	"go.unistack.org/micro/v4/tracer"
 )
 
+type contextKey string
+
+const testContextKey contextKey = "key"
+
 type testCodec struct{}
 
 func (c *testCodec) Marshal(any, ...codec.Option) ([]byte, error) { return nil, nil }
@@ -117,7 +121,7 @@ func TestMustContext(t *testing.T) {
 			t.Error("expected panic from MustContext with nil context")
 		}
 	}()
-	MustContext(nil)
+	MustContext(context.TODO())
 }
 
 func TestSetHandlerOption(t *testing.T) {
@@ -236,7 +240,7 @@ func TestAllOptions(t *testing.T) {
 	s := NewServer(
 		Advertise("127.0.0.1:8080"),
 		Broker(broker.DefaultBroker),
-		Context(context.WithValue(context.Background(), "key", "value")),
+		Context(context.WithValue(context.Background(), testContextKey, "value")),
 		Register(register.DefaultRegister),
 		Tracer(tracer.DefaultTracer),
 		Metadata(metadata.New(1)),

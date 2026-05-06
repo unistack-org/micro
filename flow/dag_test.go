@@ -75,16 +75,6 @@ func (m *mockStep) Compensate(ctx context.Context, req *Message, opts ...Execute
 	return nil
 }
 
-// vertexWrapper обертка для использования строки как вершины с dag.Vertexer
-type vertexWrapper struct {
-	id    string
-	value interface{}
-}
-
-func (v *vertexWrapper) Vertex() (string, interface{}) {
-	return v.id, v.value
-}
-
 // visitorFunc адаптер для использования функции как Visitor
 type visitorFunc func(dag.Vertexer)
 

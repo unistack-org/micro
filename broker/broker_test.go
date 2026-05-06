@@ -7,13 +7,20 @@ import (
 	"time"
 
 	broker "go.unistack.org/micro/v4/broker"
+	memorybroker "go.unistack.org/micro/v4/broker/memory"
 	"go.unistack.org/micro/v4/codec"
 	"go.unistack.org/micro/v4/logger"
 	"go.unistack.org/micro/v4/meter"
 	"go.unistack.org/micro/v4/metadata"
 	"go.unistack.org/micro/v4/register"
 	"go.unistack.org/micro/v4/tracer"
-	brokermemory "go.unistack.org/micro/v4/broker/memory"
+)
+
+type contextKey string
+
+const (
+	testKey    contextKey = "key"
+	testSubKey contextKey = "sub-key"
 )
 
 type testCodec struct{}
@@ -128,7 +135,7 @@ func TestNoopBroker_LiveReadyHealth(t *testing.T) {
 
 func TestMemoryBroker_PublishSubscribe(t *testing.T) {
 	c := &testCodec{}
-	b := brokermemory.NewBroker(
+	b := memorybroker.NewBroker(
 		broker.Codec(c.ContentType(), c),
 	)
 	if err := b.Init(); err != nil {
@@ -139,7 +146,7 @@ func TestMemoryBroker_PublishSubscribe(t *testing.T) {
 	if err := b.Connect(ctx); err != nil {
 		t.Fatalf("unexpected error on Connect: %v", err)
 	}
-	defer b.Disconnect(ctx)
+	defer func() { _ = b.Disconnect(ctx) }()
 
 	received := make(chan bool, 1)
 	_, err := b.Subscribe(ctx, "test-topic", func(msg broker.Message) error {
@@ -181,7 +188,7 @@ func TestNewContext(t *testing.T) {
 
 func TestFromContext(t *testing.T) {
 	t.Run("nil context", func(t *testing.T) {
-		_, ok := broker.FromContext(nil)
+		_, ok := broker.FromContext(context.TODO())
 		if ok {
 			t.Error("expected false for nil context")
 		}
@@ -258,9 +265,9 @@ func TestSetOption(t *testing.T) {
 }
 
 func TestOptions_Context(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "key", "val")
+	ctx := context.WithValue(context.Background(), testKey, "val")
 	b := broker.NewBroker(broker.Context(ctx))
-	if b.Options().Context.Value("key") != "val" {
+	if b.Options().Context.Value(testKey) != "val" {
 		t.Error("Context option not applied")
 	}
 }
@@ -354,9 +361,9 @@ func TestOptions_Addrs(t *testing.T) {
 }
 
 func TestSubscribeOptions_SubscribeContext(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "sub-key", "sub-val")
+	ctx := context.WithValue(context.Background(), testSubKey, "sub-val")
 	opts := broker.NewSubscribeOptions(broker.SubscribeContext(ctx))
-	if opts.Context.Value("sub-key") != "sub-val" {
+	if opts.Context.Value(testSubKey) != "sub-val" {
 		t.Error("SubscribeContext option not applied")
 	}
 }

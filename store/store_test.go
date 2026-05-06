@@ -13,6 +13,10 @@ import (
 	"go.unistack.org/micro/v4/tracer"
 )
 
+type contextKey string
+
+const testContextKey contextKey = "key"
+
 func TestNoopStore_Options(t *testing.T) {
 	s := NewStore()
 	opts := s.Options()
@@ -355,9 +359,9 @@ func TestTLSConfigOption(t *testing.T) {
 }
 
 func TestContextOption(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "key", "val")
+	ctx := context.WithValue(context.Background(), testContextKey, "val")
 	s := NewStore(Context(ctx))
-	if s.Options().Context.Value("key") != "val" {
+	if s.Options().Context.Value(testContextKey) != "val" {
 		t.Error("Context option not set")
 	}
 }
@@ -454,9 +458,9 @@ func TestReadNameOption(t *testing.T) {
 }
 
 func TestReadContextOption(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "key", "val")
+	ctx := context.WithValue(context.Background(), testContextKey, "val")
 	opts := NewReadOptions(ReadContext(ctx))
-	if opts.Context.Value("key") != "val" {
+	if opts.Context.Value(testContextKey) != "val" {
 		t.Error("ReadContext option not set")
 	}
 }
@@ -477,9 +481,9 @@ func TestWriteTimeoutOption(t *testing.T) {
 }
 
 func TestWriteContextOption(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "key", "val")
+	ctx := context.WithValue(context.Background(), testContextKey, "val")
 	opts := NewWriteOptions(WriteContext(ctx))
-	if opts.Context.Value("key") != "val" {
+	if opts.Context.Value(testContextKey) != "val" {
 		t.Error("WriteContext option not set")
 	}
 }
@@ -515,7 +519,7 @@ func TestWriteNameOption(t *testing.T) {
 }
 
 func TestDeleteContextOption(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "key", "val")
+	ctx := context.WithValue(context.Background(), testContextKey, "val")
 	opts := NewDeleteOptions(DeleteContext(ctx))
 	if opts.Context.Value("key") != "val" {
 		t.Error("DeleteContext option not set")
@@ -545,7 +549,7 @@ func TestDeleteTimeoutOption(t *testing.T) {
 }
 
 func TestListContextOption(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "key", "val")
+	ctx := context.WithValue(context.Background(), testContextKey, "val")
 	opts := NewListOptions(ListContext(ctx))
 	if opts.Context.Value("key") != "val" {
 		t.Error("ListContext option not set")
@@ -596,7 +600,7 @@ func TestListTimeoutOption(t *testing.T) {
 }
 
 func TestExistsContextOption(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "key", "val")
+	ctx := context.WithValue(context.Background(), testContextKey, "val")
 	opts := NewExistsOptions(ExistsContext(ctx))
 	if opts.Context.Value("key") != "val" {
 		t.Error("ExistsContext option not set")

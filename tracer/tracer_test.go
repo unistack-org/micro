@@ -29,7 +29,7 @@ func TestNoopTracer_Enabled(t *testing.T) {
 func TestNoopTracer_Start(t *testing.T) {
 	tr := NewTracer()
 	ctx := context.Background()
-	ctx, span := tr.Start(ctx, "test-span")
+	_, span := tr.Start(ctx, "test-span")
 	if span == nil {
 		t.Error("expected non-nil span")
 	}

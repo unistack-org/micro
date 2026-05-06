@@ -195,8 +195,12 @@ func TestMemoryStore_ListSuffix(t *testing.T) {
 		t.Fatal(err)
 	}
 	ctx := context.Background()
-	s.Write(ctx, "keysuffix", "val1")
-	s.Write(ctx, "other", "val2")
+	if err := s.Write(ctx, "keysuffix", "val1"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Write(ctx, "other", "val2"); err != nil {
+		t.Fatal(err)
+	}
 	list, err := s.List(ctx, store.ListSuffix("suffix"))
 	if err != nil {
 		t.Fatal(err)
@@ -213,7 +217,9 @@ func TestMemoryStore_ListLimitOffset(t *testing.T) {
 	}
 	ctx := context.Background()
 	for i := 0; i < 5; i++ {
-		s.Write(ctx, fmt.Sprintf("key%d", i), fmt.Sprintf("val%d", i))
+		if err := s.Write(ctx, fmt.Sprintf("key%d", i), fmt.Sprintf("val%d", i)); err != nil {
+			t.Fatal(err)
+		}
 	}
 	// Limit 2, Offset 1 → keys 1,2
 	list, err := s.List(ctx, store.ListLimit(2), store.ListOffset(1))
@@ -355,9 +361,15 @@ func TestMemoryStore_ListPrefix(t *testing.T) {
 		t.Fatal(err)
 	}
 	ctx := context.Background()
-	s.Write(ctx, "pre1", "val1")
-	s.Write(ctx, "pre2", "val2")
-	s.Write(ctx, "other", "val3")
+	if err := s.Write(ctx, "pre1", "val1"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Write(ctx, "pre2", "val2"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Write(ctx, "other", "val3"); err != nil {
+		t.Fatal(err)
+	}
 	list, err := s.List(ctx, store.ListPrefix("pre"))
 	if err != nil {
 		t.Fatal(err)
@@ -415,14 +427,20 @@ func TestMemoryStore_Exists(t *testing.T) {
 		t.Errorf("expected ErrNotFound, got %v", err)
 	}
 	// Existing key
-	s.Write(ctx, "exists", "val")
+	if err := s.Write(ctx, "exists", "val"); err != nil {
+		t.Fatal(err)
+	}
 	if err := s.Exists(ctx, "exists"); err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	// With ExistsNamespace
 	s2 := NewStore(store.Namespace("ns"))
-	s2.Init()
-	s2.Write(ctx, "key", "val")
+	if err := s2.Init(); err != nil {
+		t.Fatal(err)
+	}
+	if err := s2.Write(ctx, "key", "val"); err != nil {
+		t.Fatal(err)
+	}
 	if err := s2.Exists(ctx, "key", store.ExistsNamespace("ns")); err != nil {
 		t.Errorf("unexpected error with namespace: %v", err)
 	}
