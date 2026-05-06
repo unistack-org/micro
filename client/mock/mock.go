@@ -44,7 +44,7 @@ type expectation interface {
 type commonExpectation struct {
 	sync.Mutex
 	triggered bool
-	err      error
+	err       error
 }
 
 func (e *commonExpectation) fulfilled() bool {
@@ -118,7 +118,7 @@ func (c *MockClient) Call(ctx context.Context, req client.Request, rsp any, opts
 
 	cf, err := c.newCodec(ct)
 	if err != nil {
-		return errors.BadRequest("go.micro.client", err.Error())
+		return errors.BadRequest("go.micro.client", "%+v", err.Error())
 	}
 
 	for _, e := range c.expected {
@@ -154,7 +154,7 @@ func (c *MockClient) Call(ctx context.Context, req client.Request, rsp any, opts
 				err = cf.Unmarshal(reqbody, src)
 			}
 			if err != nil {
-				return errors.BadRequest("go.micro.client", err.Error())
+				return errors.BadRequest("go.micro.client", "%+v", err.Error())
 			}
 		case client.Request:
 			break
@@ -176,13 +176,13 @@ func (c *MockClient) Call(ctx context.Context, req client.Request, rsp any, opts
 		}
 		cfRsp, err := c.newCodec(rspCt)
 		if err != nil {
-			return errors.BadRequest("go.micro.client", err.Error())
+			return errors.BadRequest("go.micro.client", "%+v", err.Error())
 		}
 
 		switch rspbody := er.rsp.(type) {
 		case []byte:
 			if err = cfRsp.Unmarshal(rspbody, rsp); err != nil {
-				return errors.BadRequest("go.micro.client", err.Error())
+				return errors.BadRequest("go.micro.client", "%+v", err.Error())
 			}
 			return nil
 		}
