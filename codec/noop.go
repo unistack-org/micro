@@ -3,7 +3,7 @@ package codec
 import (
 	"encoding/json"
 
-	codecpb "go.unistack.org/micro-proto/v4/codec"
+	codecpb "go.unistack.org/micro-proto/v5/codec"
 )
 
 type noopCodec struct {
@@ -33,8 +33,6 @@ func (c *noopCodec) Marshal(v any, opts ...Option) ([]byte, error) {
 		return *ve, nil
 	case []byte:
 		return ve, nil
-	case *Frame:
-		return ve.Data, nil
 	case *codecpb.Frame:
 		return ve.Data, nil
 	}
@@ -55,9 +53,6 @@ func (c *noopCodec) Unmarshal(d []byte, v any, opts ...Option) error {
 		return nil
 	case *[]byte:
 		*ve = d
-		return nil
-	case *Frame:
-		ve.Data = d
 		return nil
 	case *codecpb.Frame:
 		ve.Data = d

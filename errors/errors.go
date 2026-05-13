@@ -292,9 +292,6 @@ func (e *Error) UnmarshalJSON(data []byte) error {
 	return e.Unmarshal(data)
 }
 
-// ProtoMessage noop func
-func (e *Error) ProtoMessage() {}
-
 // Reset resets error
 func (e *Error) Reset() {
 	*e = Error{}
