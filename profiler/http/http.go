@@ -7,7 +7,7 @@ import (
 	"net/http/pprof"
 	"sync"
 
-	profile "go.unistack.org/micro/v4/profiler"
+	profile "go.unistack.org/micro/v5/profiler"
 )
 
 type httpProfile struct {

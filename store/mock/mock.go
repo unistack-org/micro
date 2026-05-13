@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"go.unistack.org/micro/v4/store"
+	"go.unistack.org/micro/v5/store"
 )
 
 // ExpectedWrite represents an expected Write operation

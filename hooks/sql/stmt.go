@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	requestid "go.unistack.org/micro/v4/hooks/requestid"
-	"go.unistack.org/micro/v4/tracer"
+	requestid "go.unistack.org/micro/v5/hooks/requestid"
+	"go.unistack.org/micro/v5/tracer"
 )
 
 var (

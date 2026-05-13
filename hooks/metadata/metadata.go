@@ -3,9 +3,9 @@ package metadata
 import (
 	"context"
 
-	"go.unistack.org/micro/v4/client"
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/server"
+	"go.unistack.org/micro/v5/client"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/server"
 )
 
 type wrapper struct {

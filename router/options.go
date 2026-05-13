@@ -3,9 +3,9 @@ package router
 import (
 	"context"
 
-	"go.unistack.org/micro/v4/logger"
-	"go.unistack.org/micro/v4/register"
-	"go.unistack.org/micro/v4/util/id"
+	"go.unistack.org/micro/v5/logger"
+	"go.unistack.org/micro/v5/register"
+	"go.unistack.org/micro/v5/util/id"
 )
 
 // Options are router options

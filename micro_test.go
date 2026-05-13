@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"go.unistack.org/micro/v4/broker"
-	"go.unistack.org/micro/v4/fsm"
-	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v5/broker"
+	"go.unistack.org/micro/v5/fsm"
+	"go.unistack.org/micro/v5/metadata"
 )
 
 func TestAs(t *testing.T) {

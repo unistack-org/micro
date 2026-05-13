@@ -5,9 +5,9 @@ import (
 	"strings"
 	"sync"
 
-	"go.unistack.org/micro/v4/codec"
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/options"
+	"go.unistack.org/micro/v5/codec"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/options"
 )
 
 type NoopBroker struct {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 
-	"go.unistack.org/micro/v4/resolver"
+	"go.unistack.org/micro/v5/resolver"
 )
 
 // Resolver is a DNS network resolve

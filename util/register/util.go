@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"go.unistack.org/micro/v4/register"
-	jitter "go.unistack.org/micro/v4/util/jitter"
+	"go.unistack.org/micro/v5/register"
+	jitter "go.unistack.org/micro/v5/util/jitter"
 )
 
 func addNodes(old, neu []*register.Node) []*register.Node {

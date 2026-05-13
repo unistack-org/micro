@@ -11,10 +11,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"go.unistack.org/micro/v4/logger"
-	"go.unistack.org/micro/v4/semconv"
-	"go.unistack.org/micro/v4/tracer"
-	pool "go.unistack.org/micro/v4/util/xpool"
+	"go.unistack.org/micro/v5/logger"
+	"go.unistack.org/micro/v5/semconv"
+	"go.unistack.org/micro/v5/tracer"
+	pool "go.unistack.org/micro/v5/util/xpool"
 )
 
 const (

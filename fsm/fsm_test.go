@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v5/logger"
 )
 
 func TestFSMStart(t *testing.T) {

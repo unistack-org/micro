@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"go.unistack.org/micro/v4/store"
+	"go.unistack.org/micro/v5/store"
 )
 
 func TestStore(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"go.unistack.org/micro/v4/options"
+	"go.unistack.org/micro/v5/options"
 )
 
 type codec interface {

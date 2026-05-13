@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"go.unistack.org/micro/v4/logger"
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/register"
-	"go.unistack.org/micro/v4/util/id"
+	"go.unistack.org/micro/v5/logger"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/register"
+	"go.unistack.org/micro/v5/util/id"
 )
 
 var (

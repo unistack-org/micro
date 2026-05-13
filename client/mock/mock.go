@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"go.unistack.org/micro/v4/client"
-	"go.unistack.org/micro/v4/codec"
-	"go.unistack.org/micro/v4/errors"
-	rutil "go.unistack.org/micro/v4/util/reflect"
+	"go.unistack.org/micro/v5/client"
+	"go.unistack.org/micro/v5/codec"
+	"go.unistack.org/micro/v5/errors"
+	rutil "go.unistack.org/micro/v5/util/reflect"
 )
 
 var _ client.Client = (*MockClient)(nil)

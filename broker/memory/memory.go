@@ -5,15 +5,15 @@ import (
 	"strings"
 	"sync"
 
-	"go.unistack.org/micro/v4/broker"
-	"go.unistack.org/micro/v4/codec"
-	"go.unistack.org/micro/v4/logger"
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/options"
-	maddr "go.unistack.org/micro/v4/util/addr"
-	"go.unistack.org/micro/v4/util/id"
-	mnet "go.unistack.org/micro/v4/util/net"
-	"go.unistack.org/micro/v4/util/rand"
+	"go.unistack.org/micro/v5/broker"
+	"go.unistack.org/micro/v5/codec"
+	"go.unistack.org/micro/v5/logger"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/options"
+	maddr "go.unistack.org/micro/v5/util/addr"
+	"go.unistack.org/micro/v5/util/id"
+	mnet "go.unistack.org/micro/v5/util/net"
+	"go.unistack.org/micro/v5/util/rand"
 )
 
 type Broker struct {

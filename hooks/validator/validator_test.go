@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"go.unistack.org/micro/v4/client"
-	"go.unistack.org/micro/v4/codec"
-	"go.unistack.org/micro/v4/errors"
+	"go.unistack.org/micro/v5/client"
+	"go.unistack.org/micro/v5/codec"
+	"go.unistack.org/micro/v5/errors"
 )
 
 type validatableBody struct {

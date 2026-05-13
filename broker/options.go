@@ -5,13 +5,13 @@ import (
 	"crypto/tls"
 	"time"
 
-	"go.unistack.org/micro/v4/codec"
-	"go.unistack.org/micro/v4/logger"
-	"go.unistack.org/micro/v4/meter"
-	"go.unistack.org/micro/v4/options"
-	"go.unistack.org/micro/v4/register"
-	"go.unistack.org/micro/v4/sync"
-	"go.unistack.org/micro/v4/tracer"
+	"go.unistack.org/micro/v5/codec"
+	"go.unistack.org/micro/v5/logger"
+	"go.unistack.org/micro/v5/meter"
+	"go.unistack.org/micro/v5/options"
+	"go.unistack.org/micro/v5/register"
+	"go.unistack.org/micro/v5/sync"
+	"go.unistack.org/micro/v5/tracer"
 )
 
 // Options struct

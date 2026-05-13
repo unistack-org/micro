@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"go.uber.org/atomic"
-	"go.unistack.org/micro/v4/broker"
-	"go.unistack.org/micro/v4/codec"
-	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v5/broker"
+	"go.unistack.org/micro/v5/codec"
+	"go.unistack.org/micro/v5/metadata"
 )
 
 type hldr struct {

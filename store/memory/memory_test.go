@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/store"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/store"
 )
 
 type testHook struct {

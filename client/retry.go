@@ -4,7 +4,7 @@ import (
 	"context"
 	"slices"
 
-	"go.unistack.org/micro/v4/errors"
+	"go.unistack.org/micro/v5/errors"
 )
 
 // RetryFunc that returning either false or a non-nil error will result in the call not being retried

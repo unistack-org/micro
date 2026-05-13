@@ -11,11 +11,11 @@ import (
 
 	ants "github.com/panjf2000/ants/v2"
 	"github.com/heimdalr/dag"
-	"go.unistack.org/micro/v4/client"
-	"go.unistack.org/micro/v4/codec"
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/store"
-	"go.unistack.org/micro/v4/util/id"
+	"go.unistack.org/micro/v5/client"
+	"go.unistack.org/micro/v5/codec"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/store"
+	"go.unistack.org/micro/v5/util/id"
 )
 
 type microFlow struct {

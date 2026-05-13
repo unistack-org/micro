@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/textproto"
 
-	"go.unistack.org/micro/v4/client"
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/server"
-	"go.unistack.org/micro/v4/util/id"
+	"go.unistack.org/micro/v5/client"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/server"
+	"go.unistack.org/micro/v5/util/id"
 )
 
 type XRequestIDKey struct{}

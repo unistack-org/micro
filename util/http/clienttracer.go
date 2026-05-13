@@ -23,7 +23,7 @@ import (
 	"strings"
 	"sync"
 
-	"go.unistack.org/micro/v4/tracer"
+	"go.unistack.org/micro/v5/tracer"
 )
 
 const (

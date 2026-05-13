@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"time"
 
-	"go.unistack.org/micro/v4/codec"
-	"go.unistack.org/micro/v4/errors"
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/options"
-	"go.unistack.org/micro/v4/selector"
-	"go.unistack.org/micro/v4/semconv"
-	"go.unistack.org/micro/v4/tracer"
+	"go.unistack.org/micro/v5/codec"
+	"go.unistack.org/micro/v5/errors"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/options"
+	"go.unistack.org/micro/v5/selector"
+	"go.unistack.org/micro/v5/semconv"
+	"go.unistack.org/micro/v5/tracer"
 )
 
 const statusSuccess = "200"

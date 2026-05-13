@@ -1,8 +1,6 @@
-module go.unistack.org/micro/v4
+module go.unistack.org/micro/v5
 
 go 1.26
-
-retract [v4.0.0, v4.1.30]
 
 require (
 	dario.cat/mergo v1.0.2

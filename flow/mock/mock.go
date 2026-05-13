@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"go.unistack.org/micro/v4/flow"
+	"go.unistack.org/micro/v5/flow"
 )
 
 // ExpectedWorkflowCreate represents an expected WorkflowCreate operation

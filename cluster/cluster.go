@@ -3,7 +3,7 @@ package cluster
 import (
 	"context"
 
-	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v5/metadata"
 )
 
 // Message sent to member in cluster

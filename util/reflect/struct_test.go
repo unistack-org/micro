@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	rutil "go.unistack.org/micro/v4/util/reflect"
+	rutil "go.unistack.org/micro/v5/util/reflect"
 )
 
 func TestStructFields(t *testing.T) {

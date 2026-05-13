@@ -4,7 +4,7 @@ package jitter
 import (
 	"time"
 
-	"go.unistack.org/micro/v4/util/rand"
+	"go.unistack.org/micro/v5/util/rand"
 )
 
 // Random returns a random time to jitter with max cap specified

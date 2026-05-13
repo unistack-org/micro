@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	profile "go.unistack.org/micro/v4/profiler"
+	profile "go.unistack.org/micro/v5/profiler"
 )
 
 type profiler struct {

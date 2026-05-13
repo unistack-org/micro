@@ -5,7 +5,7 @@ import (
 	"context"
 	"testing"
 
-	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v5/logger"
 )
 
 func TestSlogLogger_Level(t *testing.T) {

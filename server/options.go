@@ -7,16 +7,16 @@ import (
 	"sync"
 	"time"
 
-	"go.unistack.org/micro/v4/broker"
-	"go.unistack.org/micro/v4/codec"
-	"go.unistack.org/micro/v4/logger"
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/meter"
-	"go.unistack.org/micro/v4/options"
-	"go.unistack.org/micro/v4/register"
-	msync "go.unistack.org/micro/v4/sync"
-	"go.unistack.org/micro/v4/tracer"
-	"go.unistack.org/micro/v4/util/id"
+	"go.unistack.org/micro/v5/broker"
+	"go.unistack.org/micro/v5/codec"
+	"go.unistack.org/micro/v5/logger"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/meter"
+	"go.unistack.org/micro/v5/options"
+	"go.unistack.org/micro/v5/register"
+	msync "go.unistack.org/micro/v5/sync"
+	"go.unistack.org/micro/v5/tracer"
+	"go.unistack.org/micro/v5/util/id"
 )
 
 // Option func

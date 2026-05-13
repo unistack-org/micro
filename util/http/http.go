@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strings"
 
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/selector/random"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/selector/random"
 )
 
 // Write sets the status and body on a http ResponseWriter

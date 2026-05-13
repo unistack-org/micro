@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"go.unistack.org/micro/v4/tracer"
+	"go.unistack.org/micro/v5/tracer"
 )
 
 func TestMemoryTracer_Name(t *testing.T) {

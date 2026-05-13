@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"go.unistack.org/micro/v4/logger"
-	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v5/logger"
+	"go.unistack.org/micro/v5/metadata"
 )
 
 // always first to have proper check

@@ -4,10 +4,10 @@ import (
 	"net"
 	"time"
 
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/register"
-	"go.unistack.org/micro/v4/util/addr"
-	"go.unistack.org/micro/v4/util/backoff"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/register"
+	"go.unistack.org/micro/v5/util/addr"
+	"go.unistack.org/micro/v5/util/backoff"
 )
 
 var (

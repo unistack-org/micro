@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
-	broker "go.unistack.org/micro/v4/broker"
-	memorybroker "go.unistack.org/micro/v4/broker/memory"
-	"go.unistack.org/micro/v4/codec"
-	"go.unistack.org/micro/v4/logger"
-	"go.unistack.org/micro/v4/meter"
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/register"
-	"go.unistack.org/micro/v4/tracer"
+	broker "go.unistack.org/micro/v5/broker"
+	memorybroker "go.unistack.org/micro/v5/broker/memory"
+	"go.unistack.org/micro/v5/codec"
+	"go.unistack.org/micro/v5/logger"
+	"go.unistack.org/micro/v5/meter"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/register"
+	"go.unistack.org/micro/v5/tracer"
 )
 
 type contextKey string

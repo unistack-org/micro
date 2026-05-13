@@ -7,8 +7,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"go.unistack.org/micro/v4/meter"
-	"go.unistack.org/micro/v4/semconv"
+	"go.unistack.org/micro/v5/meter"
+	"go.unistack.org/micro/v5/semconv"
 )
 
 func unregisterMetrics(size int) {

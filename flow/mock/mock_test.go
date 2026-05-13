@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.unistack.org/micro/v4/flow"
+	"go.unistack.org/micro/v5/flow"
 )
 
 func TestFlow(t *testing.T) {

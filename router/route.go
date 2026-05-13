@@ -3,7 +3,7 @@ package router
 import (
 	"hash/fnv"
 
-	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v5/metadata"
 )
 
 var (

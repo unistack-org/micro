@@ -6,11 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"go.unistack.org/micro/v4/logger"
-	"go.unistack.org/micro/v4/register"
-	maddr "go.unistack.org/micro/v4/util/addr"
-	mnet "go.unistack.org/micro/v4/util/net"
-	mrand "go.unistack.org/micro/v4/util/rand"
+	"go.unistack.org/micro/v5/logger"
+	"go.unistack.org/micro/v5/register"
+	maddr "go.unistack.org/micro/v5/util/addr"
+	mnet "go.unistack.org/micro/v5/util/net"
+	mrand "go.unistack.org/micro/v5/util/rand"
 )
 
 type rpcHandler struct {

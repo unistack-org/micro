@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"time"
 
-	"go.unistack.org/micro/v4/broker"
-	"go.unistack.org/micro/v4/client"
-	"go.unistack.org/micro/v4/config"
-	"go.unistack.org/micro/v4/logger"
-	"go.unistack.org/micro/v4/metadata"
-	"go.unistack.org/micro/v4/meter"
-	"go.unistack.org/micro/v4/register"
-	"go.unistack.org/micro/v4/router"
-	"go.unistack.org/micro/v4/server"
-	"go.unistack.org/micro/v4/store"
-	"go.unistack.org/micro/v4/tracer"
+	"go.unistack.org/micro/v5/broker"
+	"go.unistack.org/micro/v5/client"
+	"go.unistack.org/micro/v5/config"
+	"go.unistack.org/micro/v5/logger"
+	"go.unistack.org/micro/v5/metadata"
+	"go.unistack.org/micro/v5/meter"
+	"go.unistack.org/micro/v5/register"
+	"go.unistack.org/micro/v5/router"
+	"go.unistack.org/micro/v5/server"
+	"go.unistack.org/micro/v5/store"
+	"go.unistack.org/micro/v5/tracer"
 )
 
 // Options for micro service

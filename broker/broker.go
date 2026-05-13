@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"go.unistack.org/micro/v4/codec"
-	"go.unistack.org/micro/v4/metadata"
+	"go.unistack.org/micro/v5/codec"
+	"go.unistack.org/micro/v5/metadata"
 )
 
 // DefaultBroker default memory broker

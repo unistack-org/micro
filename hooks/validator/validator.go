@@ -3,9 +3,9 @@ package validator
 import (
 	"context"
 
-	"go.unistack.org/micro/v4/client"
-	"go.unistack.org/micro/v4/errors"
-	"go.unistack.org/micro/v4/server"
+	"go.unistack.org/micro/v5/client"
+	"go.unistack.org/micro/v5/errors"
+	"go.unistack.org/micro/v5/server"
 )
 
 var (

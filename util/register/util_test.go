@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"go.unistack.org/micro/v4/register"
+	"go.unistack.org/micro/v5/register"
 )
 
 func TestRemove(t *testing.T) {

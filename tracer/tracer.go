@@ -4,7 +4,7 @@ package tracer
 import (
 	"context"
 
-	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v5/logger"
 )
 
 var (

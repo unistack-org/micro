@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	memory "go.unistack.org/micro/v4/store/memory"
+	memory "go.unistack.org/micro/v5/store/memory"
 )
 
 // poolTestStep is a Step implementation for pool concurrency tests.

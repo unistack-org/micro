@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"go.unistack.org/micro/v4/meter"
+	"go.unistack.org/micro/v5/meter"
 )
 
 // Option func signature

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	cache "github.com/patrickmn/go-cache"
-	"go.unistack.org/micro/v4/options"
-	"go.unistack.org/micro/v4/store"
+	"go.unistack.org/micro/v5/options"
+	"go.unistack.org/micro/v5/store"
 )
 
 // NewStore returns a memory store
