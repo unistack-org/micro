@@ -12,7 +12,7 @@ import (
 	ants "github.com/panjf2000/ants/v2"
 	"github.com/heimdalr/dag"
 	"go.unistack.org/micro/v5/client"
-	"go.unistack.org/micro/v5/codec"
+	codecpb "go.unistack.org/micro-proto/v5/codec"
 	"go.unistack.org/micro/v5/metadata"
 	"go.unistack.org/micro/v5/store"
 	"go.unistack.org/micro/v5/util/id"
@@ -108,7 +108,7 @@ func (w *microWorkflow) Abort(ctx context.Context, id string) error {
 
 	// Обновляем статус в хранилище - это прервет выполнение в любом сервисе
 	// так как handleWorkflow проверяет статус перед каждым шагом
-	if err := workflowStore.Write(ctx, "status", &codec.Frame{Data: []byte(StatusAborted.String())}); err != nil {
+	if err := workflowStore.Write(ctx, "status", &codecpb.Frame{Data: []byte(StatusAborted.String())}); err != nil {
 		return err
 	}
 
@@ -129,7 +129,7 @@ func (w *microWorkflow) Suspend(ctx context.Context, id string) error {
 
 	// Обновляем статус в хранилище - это приостановит выполнение в любом сервисе
 	// так как handleWorkflow проверяет статус перед каждым шагом
-	if err := workflowStore.Write(ctx, "status", &codec.Frame{Data: []byte(StatusSuspend.String())}); err != nil {
+	if err := workflowStore.Write(ctx, "status", &codecpb.Frame{Data: []byte(StatusSuspend.String())}); err != nil {
 		return err
 	}
 
@@ -149,7 +149,7 @@ func (w *microWorkflow) Resume(ctx context.Context, id string) error {
 	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", id))
 
 	// Получаем последний выполненный шаг чтобы продолжить с него
-	lastStepFrame := &codec.Frame{}
+	lastStepFrame := &codecpb.Frame{}
 	var startID string
 
 	if err := workflowStore.Read(ctx, "last_step", lastStepFrame); err == nil && len(lastStepFrame.Data) > 0 {
@@ -182,7 +182,7 @@ func (w *microWorkflow) Resume(ctx context.Context, id string) error {
 	if startID == "" {
 		vertices := w.g.GetVertices()
 		for stepID := range vertices {
-			stepStatusFrame := &codec.Frame{}
+			stepStatusFrame := &codecpb.Frame{}
 			stepPath := filepath.Join("steps", id, stepID, "status")
 			if err := workflowStore.Read(ctx, stepPath, stepStatusFrame); err != nil {
 				// Шаг еще не выполнялся, можно начать с него
@@ -202,11 +202,11 @@ func (w *microWorkflow) Resume(ctx context.Context, id string) error {
 
 	if startID == "" {
 		// Нет шагов для выполнения, помечаем как завершенный
-		return workflowStore.Write(ctx, "status", &codec.Frame{Data: []byte(StatusSuccess.String())})
+		return workflowStore.Write(ctx, "status", &codecpb.Frame{Data: []byte(StatusSuccess.String())})
 	}
 
 	// Обновляем статус на Running
-	if err := workflowStore.Write(ctx, "status", &codec.Frame{Data: []byte(StatusRunning.String())}); err != nil {
+	if err := workflowStore.Write(ctx, "status", &codecpb.Frame{Data: []byte(StatusRunning.String())}); err != nil {
 		return err
 	}
 
@@ -256,7 +256,7 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 	)
 	nopts = append(nopts, opts...)
 
-	if werr := workflowStore.Write(ctx, "status", &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
+	if werr := workflowStore.Write(ctx, "status", &codecpb.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
 		w.opts.Logger.Error(ctx, "store error: %v", werr)
 		return eid, werr
 	}
@@ -316,7 +316,7 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 	failWorkflow := func(err error) error {
 		w.opts.Logger.Error(options.Context, "workflow failed: %v", err)
 
-		if werr := workflowStore.Write(options.Context, "status", &codec.Frame{Data: []byte(StatusFailure.String())}); werr != nil {
+		if werr := workflowStore.Write(options.Context, "status", &codecpb.Frame{Data: []byte(StatusFailure.String())}); werr != nil {
 			w.opts.Logger.Error(options.Context, "store error: %v", werr)
 		}
 
@@ -332,7 +332,7 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 				continue
 			}
 			w.opts.Logger.Info(options.Context, "compensating step: %s", stepID)
-			reqFrame := &codec.Frame{}
+			reqFrame := &codecpb.Frame{}
 			if rerr := stepStore.Read(options.Context, filepath.Join(stepID, "req"), reqFrame); rerr != nil {
 				w.opts.Logger.Error(options.Context, "failed to read request for compensation: %v", rerr)
 				continue
@@ -341,7 +341,7 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 			if cerr := step.Compensate(options.Context, req, opts...); cerr != nil {
 				w.opts.Logger.Error(options.Context, "compensation failed for step %s: %v", stepID, cerr)
 			} else {
-				if werr := stepStore.Write(options.Context, filepath.Join(stepID, "status"), &codec.Frame{Data: []byte(StatusPending.String())}); werr != nil {
+				if werr := stepStore.Write(options.Context, filepath.Join(stepID, "status"), &codecpb.Frame{Data: []byte(StatusPending.String())}); werr != nil {
 					w.opts.Logger.Error(options.Context, "store error: %v", werr)
 				}
 			}
@@ -409,10 +409,10 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 				}
 
 				// Resume support: skip steps that already completed successfully.
-				stepStatusFrame := &codec.Frame{}
+				stepStatusFrame := &codecpb.Frame{}
 				if rerr := stepStore.Read(execCtx, filepath.Join(id, "status"), stepStatusFrame); rerr == nil {
 					if StringStatus[string(stepStatusFrame.Data)] == StatusSuccess {
-						rspFrame := &codec.Frame{}
+						rspFrame := &codecpb.Frame{}
 						if rrerr := stepStore.Read(execCtx, filepath.Join(id, "rsp"), rspFrame); rrerr == nil && len(rspFrame.Data) > 0 {
 							resultsMu.Lock()
 							stepResults[id] = &Message{Body: rspFrame.Data}
@@ -436,14 +436,14 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 					resultsMu.RUnlock()
 				}
 
-				if werr := stepStore.Write(execCtx, filepath.Join(id, "req"), &codec.Frame{Data: inputMsg.Body}); werr != nil {
+				if werr := stepStore.Write(execCtx, filepath.Join(id, "req"), &codecpb.Frame{Data: inputMsg.Body}); werr != nil {
 					aborted.Store(true)
 					errChan <- werr
 					return
 				}
 
 				step.SetStatus(StatusRunning)
-				if werr := stepStore.Write(execCtx, filepath.Join(id, "status"), &codec.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
+				if werr := stepStore.Write(execCtx, filepath.Join(id, "status"), &codecpb.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
 					aborted.Store(true)
 					errChan <- werr
 					return
@@ -454,8 +454,8 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 				rsp, execErr := step.Execute(execCtx, inputMsg, opts...)
 				if execErr != nil {
 					step.SetStatus(StatusFailure)
-					_ = stepStore.Write(execCtx, filepath.Join(id, "rsp"), &codec.Frame{Data: []byte(execErr.Error())})
-					_ = stepStore.Write(execCtx, filepath.Join(id, "status"), &codec.Frame{Data: []byte(StatusFailure.String())})
+					_ = stepStore.Write(execCtx, filepath.Join(id, "rsp"), &codecpb.Frame{Data: []byte(execErr.Error())})
+					_ = stepStore.Write(execCtx, filepath.Join(id, "status"), &codecpb.Frame{Data: []byte(StatusFailure.String())})
 					aborted.Store(true)
 					errChan <- execErr
 					return
@@ -463,7 +463,7 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 
 				step.SetStatus(StatusSuccess)
 				if rsp != nil {
-					if werr := stepStore.Write(execCtx, filepath.Join(id, "rsp"), &codec.Frame{Data: rsp.Body}); werr != nil {
+					if werr := stepStore.Write(execCtx, filepath.Join(id, "rsp"), &codecpb.Frame{Data: rsp.Body}); werr != nil {
 						aborted.Store(true)
 						errChan <- werr
 						return
@@ -473,13 +473,13 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 					resultsMu.Unlock()
 				}
 
-				if werr := stepStore.Write(execCtx, filepath.Join(id, "status"), &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
+				if werr := stepStore.Write(execCtx, filepath.Join(id, "status"), &codecpb.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
 					aborted.Store(true)
 					errChan <- werr
 					return
 				}
 
-				_ = workflowStore.Write(execCtx, "last_step", &codec.Frame{Data: []byte(id)})
+				_ = workflowStore.Write(execCtx, "last_step", &codecpb.Frame{Data: []byte(id)})
 
 				execMu.Lock()
 				executedSteps = append(executedSteps, id)
@@ -504,7 +504,7 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 		}
 	}
 
-	if werr := workflowStore.Write(options.Context, "status", &codec.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
+	if werr := workflowStore.Write(options.Context, "status", &codecpb.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
 		w.opts.Logger.Error(options.Context, "store error: %v", werr)
 	}
 
@@ -614,7 +614,7 @@ func (f *microFlow) WorkflowSave(ctx context.Context, w Workflow) error {
 	workflowStore := store.NewNamespaceStore(f.opts.Store, filepath.Join("workflows", w.ID()))
 
 	// Сохраняем статус workflow
-	statusFrame := &codec.Frame{Data: []byte(w.Status().String())}
+	statusFrame := &codecpb.Frame{Data: []byte(w.Status().String())}
 	if err := workflowStore.Write(ctx, "status", statusFrame); err != nil {
 		return err
 	}
@@ -630,7 +630,7 @@ func (f *microFlow) WorkflowSave(ctx context.Context, w Workflow) error {
 		return err
 	}
 
-	stepFrame := &codec.Frame{Data: stepData}
+	stepFrame := &codecpb.Frame{Data: stepData}
 	if err := workflowStore.Write(ctx, "steps", stepFrame); err != nil {
 		return err
 	}
@@ -643,7 +643,7 @@ func (f *microFlow) WorkflowLoad(ctx context.Context, id string) (Workflow, erro
 	workflowStore := store.NewNamespaceStore(f.opts.Store, filepath.Join("workflows", id))
 
 	// Читаем статус
-	statusFrame := &codec.Frame{}
+	statusFrame := &codecpb.Frame{}
 	if err := workflowStore.Read(ctx, "status", statusFrame); err != nil {
 		return nil, err
 	}
@@ -661,7 +661,7 @@ func (f *microFlow) WorkflowLoad(ctx context.Context, id string) (Workflow, erro
 	}
 
 	// Читаем информацию о шагах
-	stepFrame := &codec.Frame{}
+	stepFrame := &codecpb.Frame{}
 	if err := workflowStore.Read(ctx, "steps", stepFrame); err != nil {
 		f.opts.Logger.Warn(ctx, "failed to read steps for workflow %s: %v", id, err)
 		return nil, err
@@ -777,7 +777,7 @@ func (s *microCallStep) Execute(ctx context.Context, req *Message, opts ...Execu
 	if options.Client == nil {
 		return nil, ErrMissingClient
 	}
-	rsp := &codec.Frame{}
+	rsp := &codecpb.Frame{}
 	copts := []client.CallOption{client.WithRetries(0)}
 	if options.Timeout > 0 {
 		copts = append(copts,
@@ -785,7 +785,7 @@ func (s *microCallStep) Execute(ctx context.Context, req *Message, opts ...Execu
 			client.WithDialTimeout(options.Timeout))
 	}
 	nctx := metadata.NewOutgoingContext(ctx, req.Header)
-	err := options.Client.Call(nctx, options.Client.NewRequest(s.service, s.method, &codec.Frame{Data: req.Body}), rsp, copts...)
+	err := options.Client.Call(nctx, options.Client.NewRequest(s.service, s.method, &codecpb.Frame{Data: req.Body}), rsp, copts...)
 	if err != nil {
 		return nil, err
 	}

@@ -48,8 +48,8 @@ type Options struct {
 	Level Level
 	// AddSource enabled writing source file and position in log
 	AddSource bool
-	// AddStacktrace controls writing of stacktaces on error
-	AddStacktrace bool
+	// AddStacktrace controls writing of stacktraces at or above the given level; NoneLevel disables it
+	AddStacktrace Level
 	// DedupKeys deduplicate keys in log output
 	DedupKeys bool
 }
@@ -65,6 +65,7 @@ func NewOptions(opts ...Option) Options {
 		AddSource:        true,
 		TimeFunc:         time.Now,
 		Meter:            meter.DefaultMeter,
+		AddStacktrace:    NoneLevel,
 	}
 
 	WithMicroKeys()(&options)
@@ -111,10 +112,10 @@ func WithOutput(out io.Writer) Option {
 	}
 }
 
-// WithStacktrace controls writing stacktrace on error
-func WithStacktrace(v bool) Option {
+// WithAddStacktrace enables stacktrace logging at or above the given level; use NoneLevel to disable
+func WithAddStacktrace(level Level) Option {
 	return func(o *Options) {
-		o.AddStacktrace = v
+		o.AddStacktrace = level
 	}
 }
 

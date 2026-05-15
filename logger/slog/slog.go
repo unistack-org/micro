@@ -309,7 +309,7 @@ func (s *slogLogger) printLog(ctx context.Context, lvl logger.Level, msg string,
 		}
 	}
 
-	if s.opts.AddStacktrace {
+	if s.opts.AddStacktrace.Enabled(lvl) {
 		stackBuf := stackPool.Get()
 		if stackSize := runtime.Stack(*stackBuf, false); stackSize > 0 {
 			traceLines := reTrace.Split(string((*stackBuf)[:stackSize]), -1)
