@@ -19,6 +19,7 @@ import (
 	"go.unistack.org/micro/v5/client"
 	"go.unistack.org/micro/v5/codec"
 	"go.unistack.org/micro/v5/errors"
+	codecpb "go.unistack.org/micro-proto/v5/codec"
 	"go.unistack.org/micro/v5/metadata"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/status"
@@ -55,7 +56,7 @@ var (
 
 		testMap := make(map[string]any)
 		switch v := testRsp.(type) {
-		case *codec.Frame:
+		case *codecpb.Frame:
 			if err = testCodec.Unmarshal(v.Data, &testMap); err != nil {
 				return fmt.Errorf("failed to unmarshal err: %w", err)
 			}
@@ -166,12 +167,12 @@ func CSVColumnParser(s string) []byte {
 	return []byte(s)
 }
 
-func NewResponseFromFile(rspfile string) (*codec.Frame, error) {
+func NewResponseFromFile(rspfile string) (*codecpb.Frame, error) {
 	rspbuf, err := os.ReadFile(rspfile)
 	if err != nil {
 		return nil, err
 	}
-	return &codec.Frame{Data: rspbuf}, nil
+	return &codecpb.Frame{Data: rspbuf}, nil
 }
 
 func getCodec(codecs map[string]codec.Codec, ext string) (codec.Codec, error) {
@@ -226,7 +227,7 @@ func NewRequestFromFile(c client.Client, reqfile string) (client.Request, error)
 		return nil, err
 	}
 
-	req := c.NewRequest("test", endpoint, &codec.Frame{Data: reqbuf}, client.RequestContentType(ct))
+	req := c.NewRequest("test", endpoint, &codecpb.Frame{Data: reqbuf}, client.RequestContentType(ct))
 
 	return req, nil
 }
@@ -372,7 +373,7 @@ func Run(ctx context.Context, c client.Client, m sqlmock.Sqlmock, dir string, ex
 				}
 			}()
 
-			data := &codec.Frame{}
+			data := &codecpb.Frame{}
 			md := metadata.New(1)
 			md.Set("X-Request-Id", xrid)
 			cerr := c.Call(metadata.NewOutgoingContext(gctx, md), treq, data, client.WithContentType(treq.ContentType()))

@@ -22,7 +22,7 @@ func TestStacktrace(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(logger.WithLevel(logger.DebugLevel), logger.WithOutput(buf),
 		WithHandlerFunc(slog.NewTextHandler),
-		logger.WithStacktrace(true),
+		logger.WithAddStacktrace(logger.TraceLevel),
 		logger.WithSource(true),
 	)
 	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
@@ -59,7 +59,7 @@ func TestNoneLevel(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(logger.WithLevel(logger.NoneLevel), logger.WithOutput(buf),
 		WithHandlerFunc(slog.NewTextHandler),
-		logger.WithStacktrace(true),
+		logger.WithAddStacktrace(logger.TraceLevel),
 	)
 	if err := l.Init(logger.WithFields("key1", "val1")); err != nil {
 		t.Fatal(err)
@@ -77,7 +77,7 @@ func TestTime(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf),
 		WithHandlerFunc(slog.NewTextHandler),
-		logger.WithStacktrace(true),
+		logger.WithAddStacktrace(logger.TraceLevel),
 		logger.WithTimeFunc(func() time.Time {
 			return time.Unix(0, 0).UTC()
 		}),
@@ -241,7 +241,7 @@ func TestMultipleFields(t *testing.T) {
 func TestError(t *testing.T) {
 	ctx := context.TODO()
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithStacktrace(true))
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithAddStacktrace(logger.TraceLevel))
 	if err := l.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -259,7 +259,7 @@ func TestErrorf(t *testing.T) {
 	ctx := context.TODO()
 
 	buf := bytes.NewBuffer(nil)
-	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithStacktrace(true))
+	l := NewLogger(logger.WithLevel(logger.ErrorLevel), logger.WithOutput(buf), logger.WithAddStacktrace(logger.TraceLevel))
 	if err := l.Init(logger.WithContextAttrFuncs(func(_ context.Context) []any {
 		return nil
 	})); err != nil {
