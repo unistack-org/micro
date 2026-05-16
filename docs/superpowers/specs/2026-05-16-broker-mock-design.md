@@ -134,7 +134,7 @@ type mockMessage struct {
     body  []byte
 }
 
-func NewMessage(ctx context.Context, topic string, hdr metadata.Metadata, body []byte) broker.Message
+func NewMockMessage(ctx context.Context, topic string, hdr metadata.Metadata, body []byte) broker.Message
 ```
 
 ## Behaviour per Method
@@ -144,7 +144,7 @@ func NewMessage(ctx context.Context, topic string, hdr metadata.Metadata, body [
 | `Connect` | Finds first unfulfilled `ExpectedConnect`. Missing → error. Sets internal `connected = true` unless `e.err != nil`. |
 | `Disconnect` | Finds first unfulfilled `ExpectedDisconnect`. Missing → error. Sets `connected = false`. |
 | `Publish` | Finds first unfulfilled `ExpectedPublish` matching topic. Missing → error. Applies delay. Returns `e.err`. Does **not** call handlers. |
-| `Subscribe` | Finds first unfulfilled `ExpectedSubscribe` matching topic. Missing → error. If `e.err == nil`, registers handler in `m.handlers[topic]`. Returns `MockSubscriber`. |
+| `Subscribe` | Finds first unfulfilled `ExpectedSubscribe` matching topic. Missing → error. If `e.err != nil`, returns `nil, e.err` without registering handler. Otherwise registers handler in `m.handlers[topic]` and returns `MockSubscriber, nil`. |
 | `Unsubscribe` | Finds first unfulfilled `ExpectedUnsubscribe` matching topic. Missing → error. Removes handler from `m.handlers[topic]`. |
 | `InjectMessage` | Calls all handlers in `m.handlers[topic]` with `msg`. Supports both `func(broker.Message) error` and `func([]broker.Message) error`. Returns first error. |
 | `NewMessage` | Creates a `mockMessage`; does not require a prior expectation. |
@@ -187,7 +187,7 @@ mock.ExpectDisconnect()
 _ = mock.Connect(ctx)
 myService.StartConsumer(ctx, mock)
 
-msg := mock.NewMessage(ctx, "orders", metadata.Metadata{"key": "val"}, []byte(`{}`))
+msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{"key": "val"}, []byte(`{}`))
 err := mock.InjectMessage(ctx, "orders", msg)
 assert.NoError(t, err)
 
