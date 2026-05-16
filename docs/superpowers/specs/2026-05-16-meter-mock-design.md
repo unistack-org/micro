@@ -1,23 +1,23 @@
-# Design: meter/mock — строгий мок для meter.Meter
+# Design: meter/mock — strict mock for meter.Meter
 
-**Дата:** 2026-05-16  
-**Модуль:** `go.unistack.org/micro/v5`  
-**Путь:** `meter/mock/mock.go`, `meter/mock/mock_test.go`
-
----
-
-## Цель
-
-Реализовать мок-имплементацию интерфейса `meter.Meter` в пакете `go.unistack.org/micro/v5/meter/mock` по аналогии с `broker/mock`. Мок должен позволять:
-
-1. Регистрировать ожидания на методы Meter (`ExpectCounter(...)`, `ExpectInit()` и т.д.)
-2. Проверять, что все ожидания были выполнены через `ExpectationsWereMet()`
-3. Инспектировать фактически накопленные значения метрик (Counter, Gauge и т.д.)
-4. Возвращать ошибку на неожиданные вызовы (для методов, возвращающих `error`)
+**Date:** 2026-05-16
+**Module:** `go.unistack.org/micro/v5`
+**Path:** `meter/mock/mock.go`, `meter/mock/mock_test.go`
 
 ---
 
-## Интерфейс meter.Meter (справка)
+## Goal
+
+Implement a mock of the `meter.Meter` interface in package `go.unistack.org/micro/v5/meter/mock`, following the same pattern as `broker/mock`. The mock must:
+
+1. Register expectations on Meter methods (`ExpectCounter(...)`, `ExpectInit()`, etc.)
+2. Verify all expectations were fulfilled via `ExpectationsWereMet()`
+3. Allow tests to inspect the actual accumulated metric values (Counter, Gauge, etc.)
+4. Return an error on unexpected calls to methods that return `error`
+
+---
+
+## meter.Meter interface (reference)
 
 ```go
 type Meter interface {
@@ -41,12 +41,12 @@ type Meter interface {
 
 ---
 
-## Архитектура
+## Architecture
 
-### Базовая инфраструктура ожиданий (как в broker/mock)
+### Expectation infrastructure (mirroring broker/mock)
 
 ```go
-// expectation — общий интерфейс для всех Expected*
+// expectation is the common interface for all Expected* types.
 type expectation interface {
     fulfilled() bool
     Lock()
@@ -54,7 +54,7 @@ type expectation interface {
     String() string
 }
 
-// commonExpectation — встраивается во все Expected-типы
+// commonExpectation is embedded in all Expected* types.
 type commonExpectation struct {
     sync.Mutex
     triggered bool
@@ -64,36 +64,36 @@ type commonExpectation struct {
 func (e *commonExpectation) fulfilled() bool { return e.triggered }
 ```
 
-### Expected-типы
+### Expected types
 
-| Тип | Метод Meter | Fluent-методы |
-|-----|-------------|---------------|
+| Type | Meter method | Fluent methods |
+|------|--------------|----------------|
 | `ExpectedInit` | `Init()` | `WillReturnError(err)` |
 | `ExpectedWrite` | `Write()` | `WillReturnError(err)` |
 | `ExpectedUnregister` | `Unregister(name, labels...)` | `WillReturn(bool)` |
-| `ExpectedCounter` | `Counter(name, labels...)` | содержит `*mockCounter` |
-| `ExpectedFloatCounter` | `FloatCounter(name, labels...)` | содержит `*mockFloatCounter` |
-| `ExpectedGauge` | `Gauge(name, fn, labels...)` | содержит `*mockGauge` |
-| `ExpectedHistogram` | `Histogram(name, labels...)` | содержит `*mockHistogram` |
-| `ExpectedHistogramExt` | `HistogramExt(name, quantiles, labels...)` | содержит `*mockHistogram` |
-| `ExpectedSummary` | `Summary(name, labels...)` | содержит `*mockSummary` |
-| `ExpectedSummaryExt` | `SummaryExt(name, window, quantiles, labels...)` | содержит `*mockSummary` |
+| `ExpectedCounter` | `Counter(name, labels...)` | exposes `*mockCounter` |
+| `ExpectedFloatCounter` | `FloatCounter(name, labels...)` | exposes `*mockFloatCounter` |
+| `ExpectedGauge` | `Gauge(name, fn, labels...)` | exposes `*mockGauge` |
+| `ExpectedHistogram` | `Histogram(name, labels...)` | exposes `*mockHistogram` |
+| `ExpectedHistogramExt` | `HistogramExt(name, quantiles, labels...)` | exposes `*mockHistogram` |
+| `ExpectedSummary` | `Summary(name, labels...)` | exposes `*mockSummary` |
+| `ExpectedSummaryExt` | `SummaryExt(name, window, quantiles, labels...)` | exposes `*mockSummary` |
 
-### Мок-объекты метрик (state-tracking)
+### Metric mock objects (state-tracking)
 
-Каждый мок-объект субинтерфейса реализует соответствующий интерфейс `meter.*` и накапливает реальные значения:
+Each sub-interface mock implements the corresponding `meter.*` interface and accumulates real values:
 
-- `mockCounter` — `value uint64`, защищён `sync.Mutex`
-- `mockFloatCounter` — `value float64`, защищён `sync.Mutex`
-- `mockGauge` — `value float64`, защищён `sync.Mutex`; `fn func() float64` для `Get()` при наличии
-- `mockHistogram` — срез `updates []float64`, защищён `sync.Mutex`
-- `mockSummary` — срез `updates []float64`, защищён `sync.Mutex`
+- `mockCounter` — `value uint64`, guarded by `sync.Mutex`
+- `mockFloatCounter` — `value float64`, guarded by `sync.Mutex`
+- `mockGauge` — `value float64`, guarded by `sync.Mutex`; `fn func() float64` stored for `Get()` when provided
+- `mockHistogram` — `updates []float64`, guarded by `sync.Mutex`; `Reset()` clears the slice
+- `mockSummary` — `updates []float64`, guarded by `sync.Mutex`
 
-Тест получает доступ через поле ожидания:
+Tests access the accumulated value through the expectation's field:
 
 ```go
 exp := m.ExpectCounter("requests", "method", "GET")
-// ... тестируемый код ...
+// ... run code under test ...
 if exp.Counter().Get() != 5 {
     t.Errorf("expected 5, got %d", exp.Counter().Get())
 }
@@ -106,20 +106,20 @@ type MockMeter struct {
     opts       meter.Options
     mu         sync.Mutex
     expected   []expectation
-    unexpected []string  // список неожиданных вызовов
+    unexpected []string  // unexpected call descriptions
 }
 
 func NewMockMeter(opts ...meter.Option) *MockMeter
 ```
 
-**Поведение при вызовах:**
+**Call dispatch rules:**
 
-- Первое подходящее незатронутое ожидание срабатывает и помечается `triggered = true`
-- Если подходящего ожидания нет:
+- The first untriggered matching expectation fires and is marked `triggered = true`.
+- If no matching expectation exists:
   - `Init()`, `Write()` → `fmt.Errorf("unexpected call to ...")`
-  - `Counter()`, `FloatCounter()`, `Gauge()`, `Histogram()`, `Summary()` → noop-объект + запись в `unexpected`
-  - `Unregister()` → `false` + запись в `unexpected`
-- `Clone()` и `Set()` → возвращают тот же `*MockMeter` (без необходимости регистрировать ожидание)
+  - `Counter()`, `FloatCounter()`, `Gauge()`, `Histogram()`, `Summary()` → noop object + append to `unexpected`
+  - `Unregister()` → `false` + append to `unexpected`
+- `Clone()` and `Set()` → return the same `*MockMeter` (no expectation required)
 
 ### ExpectationsWereMet()
 
@@ -127,27 +127,27 @@ func NewMockMeter(opts ...meter.Option) *MockMeter
 func (m *MockMeter) ExpectationsWereMet() error
 ```
 
-Возвращает ошибку если:
-1. Хотя бы одно ожидание не было выполнено (`triggered == false`)
-2. Были неожиданные вызовы (непустой `unexpected`)
+Returns an error if:
+1. Any registered expectation was not triggered (`triggered == false`)
+2. There were unexpected calls (non-empty `unexpected`)
 
 ---
 
-## Файлы
+## Files
 
 ```
 meter/
   mock/
-    mock.go       — MockMeter, Expected*, mock*Counter/Gauge/Histogram/Summary
-    mock_test.go  — тесты: Init, Counter.Inc, Histogram.Update, ExpectationsWereMet
+    mock.go       — MockMeter, Expected*, mockCounter/FloatCounter/Gauge/Histogram/Summary
+    mock_test.go  — tests: Init, Counter.Inc, Histogram.Update, ExpectationsWereMet, etc.
 ```
 
 ---
 
-## Примеры использования
+## Usage examples
 
 ```go
-// Базовый сценарий
+// Basic scenario
 m := mock.NewMockMeter()
 m.ExpectInit()
 m.ExpectCounter("requests", "method", "GET")
@@ -165,7 +165,7 @@ if err := m.ExpectationsWereMet(); err != nil {
     t.Error(err)
 }
 
-// Ожидание ошибки
+// Error injection
 m2 := mock.NewMockMeter()
 m2.ExpectInit().WillReturnError(errors.New("init failed"))
 if err := m2.Init(); err == nil {
@@ -182,28 +182,28 @@ if !m3.Unregister("old_metric") {
 
 ---
 
-## Тесты
+## Test coverage
 
-`mock_test.go` покрывает:
+`mock_test.go` covers:
 
-1. `TestMockMeter_Init` — ожидание, ошибка, неожиданный вызов
-2. `TestMockMeter_Counter` — `Inc`, `Dec`, `Add`, `Set`, `Get` через `ExpectedCounter.Counter()`
+1. `TestMockMeter_Init` — expectation, error injection, unexpected call
+2. `TestMockMeter_Counter` — `Inc`, `Dec`, `Add`, `Set`, `Get` via `ExpectedCounter.Counter()`
 3. `TestMockMeter_FloatCounter` — `Add`, `Sub`, `Set`, `Get`
 4. `TestMockMeter_Gauge` — `Inc`, `Dec`, `Set`, `Get`
 5. `TestMockMeter_Histogram` — `Update`, `UpdateDuration`, `Reset`
-6. `TestMockMeter_HistogramExt` — то же что Histogram
+6. `TestMockMeter_HistogramExt` — same as Histogram
 7. `TestMockMeter_Summary` — `Update`, `UpdateDuration`
-8. `TestMockMeter_SummaryExt` — то же что Summary
-9. `TestMockMeter_Write` — ожидание, ошибка
+8. `TestMockMeter_SummaryExt` — same as Summary
+9. `TestMockMeter_Write` — expectation, error injection
 10. `TestMockMeter_Unregister` — `WillReturn(true/false)`
-11. `TestMockMeter_ExpectationsWereMet` — незакрытые ожидания, неожиданные вызовы
-12. `TestMockMeter_CloneSet` — Clone и Set без ожиданий
+11. `TestMockMeter_ExpectationsWereMet` — unfulfilled expectations, unexpected calls
+12. `TestMockMeter_CloneSet` — Clone and Set without expectations
 
 ---
 
-## Соответствие стандартам проекта
+## Project standards
 
-- Compile-time check: `var _ meter.Meter = (*MockMeter)(nil)`
-- Документация всех публичных типов и методов (обязательна по CLAUDE.md)
-- Пакет `mock`, `package mock`
-- Импорт: `go.unistack.org/micro/v5/meter`
+- Compile-time interface check: `var _ meter.Meter = (*MockMeter)(nil)`
+- All public types and methods documented (required per project CLAUDE.md)
+- Package declaration: `package mock`
+- Import path: `go.unistack.org/micro/v5/meter`
