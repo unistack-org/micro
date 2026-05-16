@@ -69,6 +69,21 @@ func (e *ExpectedWrite) String() string {
 	return "ExpectedWrite"
 }
 
+// ExpectedUnregister holds an expectation for meter.Unregister.
+type ExpectedUnregister struct {
+	commonExpectation
+	name   string
+	labels []string
+	result bool
+}
+
+// WillReturn configures the bool returned by Unregister.
+func (e *ExpectedUnregister) WillReturn(v bool) *ExpectedUnregister { e.result = v; return e }
+
+func (e *ExpectedUnregister) String() string {
+	return fmt.Sprintf("ExpectedUnregister(%q)", e.name)
+}
+
 // ExpectedCounter holds an expectation for meter.Counter.
 type ExpectedCounter struct {
 	commonExpectation
@@ -298,6 +313,15 @@ func (m *MockMeter) ExpectSummaryExt(name string, window time.Duration, quantile
 	return e
 }
 
+// ExpectUnregister registers an expectation that meter.Unregister will be called with name.
+func (m *MockMeter) ExpectUnregister(name string, labels ...string) *ExpectedUnregister {
+	e := &ExpectedUnregister{name: name, labels: labels}
+	m.mu.Lock()
+	m.expected = append(m.expected, e)
+	m.mu.Unlock()
+	return e
+}
+
 // Init implements meter.Meter.
 func (m *MockMeter) Init(_ ...meter.Option) error {
 	m.mu.Lock()
@@ -503,11 +527,26 @@ func (m *MockMeter) SummaryExt(name string, _ time.Duration, _ []float64, _ ...s
 	return &mockSummary{}
 }
 
-// Unregister records the unexpected call and returns false.
+// Unregister implements meter.Meter.
 func (m *MockMeter) Unregister(name string, _ ...string) bool {
 	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.expected {
+		eu, ok := e.(*ExpectedUnregister)
+		if !ok {
+			continue
+		}
+		eu.Lock()
+		if eu.triggered || eu.name != name {
+			eu.Unlock()
+			continue
+		}
+		eu.triggered = true
+		result := eu.result
+		eu.Unlock()
+		return result
+	}
 	m.unexpected = append(m.unexpected, fmt.Sprintf("Unregister(%q)", name))
-	m.mu.Unlock()
 	return false
 }
 

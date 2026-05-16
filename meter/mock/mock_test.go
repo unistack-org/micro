@@ -171,3 +171,29 @@ func TestMockMeter_Write_Unexpected(t *testing.T) {
 		t.Fatal("expected error for unexpected Write call")
 	}
 }
+
+func TestMockMeter_Unregister_True(t *testing.T) {
+	m := NewMockMeter()
+	m.ExpectUnregister("old_metric").WillReturn(true)
+	if !m.Unregister("old_metric") {
+		t.Fatal("expected true")
+	}
+}
+
+func TestMockMeter_Unregister_False(t *testing.T) {
+	m := NewMockMeter()
+	m.ExpectUnregister("missing").WillReturn(false)
+	if m.Unregister("missing") {
+		t.Fatal("expected false")
+	}
+}
+
+func TestMockMeter_Unregister_Unexpected(t *testing.T) {
+	m := NewMockMeter()
+	if m.Unregister("anything") {
+		t.Fatal("expected false for unexpected call")
+	}
+	if len(m.unexpected) == 0 {
+		t.Fatal("expected unexpected call to be recorded")
+	}
+}
