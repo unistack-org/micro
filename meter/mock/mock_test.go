@@ -3,6 +3,7 @@ package mock
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"go.unistack.org/micro/v5/meter"
 )
@@ -117,5 +118,32 @@ func TestMockMeter_HistogramExt(t *testing.T) {
 	updates := exp.Histogram().Updates()
 	if len(updates) != 2 {
 		t.Fatalf("expected 2 updates, got %d", len(updates))
+	}
+}
+
+func TestMockMeter_Summary(t *testing.T) {
+	m := NewMockMeter()
+	exp := m.ExpectSummary("response_size")
+
+	s := m.Summary("response_size")
+	s.Update(100.0)
+	s.Update(200.0)
+
+	updates := exp.Summary().Updates()
+	if len(updates) != 2 || updates[0] != 100.0 || updates[1] != 200.0 {
+		t.Fatalf("expected [100.0, 200.0], got %v", updates)
+	}
+}
+
+func TestMockMeter_SummaryExt(t *testing.T) {
+	m := NewMockMeter()
+	exp := m.ExpectSummaryExt("response_size_ext", 5*time.Minute, []float64{0.5, 0.9})
+
+	s := m.SummaryExt("response_size_ext", 5*time.Minute, []float64{0.5, 0.9})
+	s.Update(42.0)
+
+	updates := exp.Summary().Updates()
+	if len(updates) != 1 || updates[0] != 42.0 {
+		t.Fatalf("expected [42.0], got %v", updates)
 	}
 }

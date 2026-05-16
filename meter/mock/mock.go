@@ -130,6 +130,38 @@ func (e *ExpectedHistogramExt) String() string {
 	return fmt.Sprintf("ExpectedHistogramExt(%q)", e.name)
 }
 
+// ExpectedSummary holds an expectation for meter.Summary.
+type ExpectedSummary struct {
+	commonExpectation
+	name    string
+	labels  []string
+	summary *mockSummary
+}
+
+// Summary returns the mock summary for value inspection.
+func (e *ExpectedSummary) Summary() *mockSummary { return e.summary }
+
+func (e *ExpectedSummary) String() string {
+	return fmt.Sprintf("ExpectedSummary(%q)", e.name)
+}
+
+// ExpectedSummaryExt holds an expectation for meter.SummaryExt.
+type ExpectedSummaryExt struct {
+	commonExpectation
+	name      string
+	window    time.Duration
+	quantiles []float64
+	labels    []string
+	summary   *mockSummary
+}
+
+// Summary returns the mock summary for value inspection.
+func (e *ExpectedSummaryExt) Summary() *mockSummary { return e.summary }
+
+func (e *ExpectedSummaryExt) String() string {
+	return fmt.Sprintf("ExpectedSummaryExt(%q)", e.name)
+}
+
 // MockMeter is a mock implementation of meter.Meter for use in tests.
 type MockMeter struct {
 	opts       meter.Options
@@ -218,6 +250,24 @@ func (m *MockMeter) ExpectHistogram(name string, labels ...string) *ExpectedHist
 // ExpectHistogramExt registers an expectation that meter.HistogramExt will be called with name.
 func (m *MockMeter) ExpectHistogramExt(name string, quantiles []float64, labels ...string) *ExpectedHistogramExt {
 	e := &ExpectedHistogramExt{name: name, quantiles: quantiles, labels: labels, histogram: &mockHistogram{}}
+	m.mu.Lock()
+	m.expected = append(m.expected, e)
+	m.mu.Unlock()
+	return e
+}
+
+// ExpectSummary registers an expectation that meter.Summary will be called with name.
+func (m *MockMeter) ExpectSummary(name string, labels ...string) *ExpectedSummary {
+	e := &ExpectedSummary{name: name, labels: labels, summary: &mockSummary{}}
+	m.mu.Lock()
+	m.expected = append(m.expected, e)
+	m.mu.Unlock()
+	return e
+}
+
+// ExpectSummaryExt registers an expectation that meter.SummaryExt will be called with name.
+func (m *MockMeter) ExpectSummaryExt(name string, window time.Duration, quantiles []float64, labels ...string) *ExpectedSummaryExt {
+	e := &ExpectedSummaryExt{name: name, window: window, quantiles: quantiles, labels: labels, summary: &mockSummary{}}
 	m.mu.Lock()
 	m.expected = append(m.expected, e)
 	m.mu.Unlock()
@@ -366,19 +416,49 @@ func (m *MockMeter) HistogramExt(name string, _ []float64, _ ...string) meter.Hi
 	return &mockHistogram{}
 }
 
-// Summary records the unexpected call and returns a stub summary.
+// Summary implements meter.Meter.
 func (m *MockMeter) Summary(name string, _ ...string) meter.Summary {
 	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.expected {
+		es, ok := e.(*ExpectedSummary)
+		if !ok {
+			continue
+		}
+		es.Lock()
+		if es.triggered || es.name != name {
+			es.Unlock()
+			continue
+		}
+		es.triggered = true
+		s := es.summary
+		es.Unlock()
+		return s
+	}
 	m.unexpected = append(m.unexpected, fmt.Sprintf("Summary(%q)", name))
-	m.mu.Unlock()
 	return &mockSummary{}
 }
 
-// SummaryExt records the unexpected call and returns a stub summary.
+// SummaryExt implements meter.Meter.
 func (m *MockMeter) SummaryExt(name string, _ time.Duration, _ []float64, _ ...string) meter.Summary {
 	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.expected {
+		es, ok := e.(*ExpectedSummaryExt)
+		if !ok {
+			continue
+		}
+		es.Lock()
+		if es.triggered || es.name != name {
+			es.Unlock()
+			continue
+		}
+		es.triggered = true
+		s := es.summary
+		es.Unlock()
+		return s
+	}
 	m.unexpected = append(m.unexpected, fmt.Sprintf("SummaryExt(%q)", name))
-	m.mu.Unlock()
 	return &mockSummary{}
 }
 
