@@ -197,3 +197,47 @@ func TestMockMeter_Unregister_Unexpected(t *testing.T) {
 		t.Fatal("expected unexpected call to be recorded")
 	}
 }
+
+func TestMockMeter_ExpectationsWereMet_OK(t *testing.T) {
+	m := NewMockMeter()
+	m.ExpectInit()
+	m.ExpectCounter("hits")
+
+	_ = m.Init()
+	_ = m.Counter("hits")
+
+	if err := m.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestMockMeter_ExpectationsWereMet_Unfulfilled(t *testing.T) {
+	m := NewMockMeter()
+	m.ExpectInit()
+	// Never call Init — expectation remains unfulfilled.
+
+	if err := m.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected error for unfulfilled expectation")
+	}
+}
+
+func TestMockMeter_ExpectationsWereMet_Unexpected(t *testing.T) {
+	m := NewMockMeter()
+	_ = m.Counter("unregistered") // no expectation
+
+	if err := m.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected error for unexpected call")
+	}
+}
+
+func TestMockMeter_CloneSet(t *testing.T) {
+	m := NewMockMeter(meter.Name("base"))
+	c := m.Clone()
+	if c == nil {
+		t.Fatal("Clone returned nil")
+	}
+	s := m.Set()
+	if s == nil {
+		t.Fatal("Set returned nil")
+	}
+}

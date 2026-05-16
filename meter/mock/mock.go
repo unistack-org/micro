@@ -550,9 +550,22 @@ func (m *MockMeter) Unregister(name string, _ ...string) bool {
 	return false
 }
 
-// ExpectationsWereMet verifies that all registered expectations were satisfied.
-// Full implementation is added in Task 8; currently always returns nil.
+// ExpectationsWereMet returns an error if any declared expectation was not fulfilled
+// or if there were unexpected calls.
 func (m *MockMeter) ExpectationsWereMet() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.expected {
+		e.Lock()
+		fulfilled := e.fulfilled()
+		e.Unlock()
+		if !fulfilled {
+			return fmt.Errorf("there is a remaining expectation which was not matched: %s", e)
+		}
+	}
+	if len(m.unexpected) > 0 {
+		return fmt.Errorf("there were unexpected calls: %v", m.unexpected)
+	}
 	return nil
 }
 
