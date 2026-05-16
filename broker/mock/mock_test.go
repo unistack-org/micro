@@ -124,6 +124,79 @@ func TestExpectationsWereMet_Empty(t *testing.T) {
 	}
 }
 
-// keep time import used
-var _ = time.Millisecond
+func TestPublish(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+	b.ExpectPublish("orders")
+
+	_ = b.Connect(ctx)
+	if err := b.Publish(ctx, "orders"); err != nil {
+		t.Fatalf("Publish: %v", err)
+	}
+	if err := b.ExpectationsWereMet(); err != nil {
+		t.Fatalf("ExpectationsWereMet: %v", err)
+	}
+}
+
+func TestPublish_Unexpected(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+
+	_ = b.Connect(ctx)
+	if err := b.Publish(ctx, "orders"); err == nil {
+		t.Fatal("expected error for unexpected Publish, got nil")
+	}
+}
+
+func TestPublish_WrongTopic(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+	b.ExpectPublish("invoices")
+
+	_ = b.Connect(ctx)
+	if err := b.Publish(ctx, "orders"); err == nil {
+		t.Fatal("expected error for wrong topic, got nil")
+	}
+}
+
+func TestPublish_ReturnsError(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	want := fmt.Errorf("publish failed")
+	b.ExpectConnect()
+	b.ExpectPublish("orders").WillReturnError(want)
+
+	_ = b.Connect(ctx)
+	if err := b.Publish(ctx, "orders"); err != want {
+		t.Fatalf("want %v, got %v", want, err)
+	}
+}
+
+func TestPublish_NotConnected(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectPublish("orders")
+
+	if err := b.Publish(ctx, "orders"); err != broker.ErrNotConnected {
+		t.Fatalf("want ErrNotConnected, got %v", err)
+	}
+}
+
+func TestPublish_Delay(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+	b.ExpectPublish("orders").WillDelayFor(50 * time.Millisecond)
+
+	_ = b.Connect(ctx)
+	start := time.Now()
+	_ = b.Publish(ctx, "orders")
+	if time.Since(start) < 50*time.Millisecond {
+		t.Fatal("expected delay of at least 50ms")
+	}
+}
+
 var _ broker.Message
