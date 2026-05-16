@@ -39,6 +39,21 @@ func (e *commonExpectation) fulfilled() bool {
 	return e.triggered
 }
 
+// ExpectedInit holds an expectation for meter.Init.
+type ExpectedInit struct {
+	commonExpectation
+}
+
+// WillReturnError configures the error returned by Init.
+func (e *ExpectedInit) WillReturnError(err error) *ExpectedInit { e.err = err; return e }
+
+func (e *ExpectedInit) String() string {
+	if e.err != nil {
+		return fmt.Sprintf("ExpectedInit => should return error: %s", e.err)
+	}
+	return "ExpectedInit"
+}
+
 // MockMeter is a mock implementation of meter.Meter for use in tests.
 type MockMeter struct {
 	opts       meter.Options
@@ -79,8 +94,34 @@ func (m *MockMeter) Set(_ ...meter.Option) meter.Meter {
 	return m
 }
 
-// Init records an unexpected call and returns an error.
+// ExpectInit registers an expectation that meter.Init will be called.
+func (m *MockMeter) ExpectInit() *ExpectedInit {
+	e := &ExpectedInit{}
+	m.mu.Lock()
+	m.expected = append(m.expected, e)
+	m.mu.Unlock()
+	return e
+}
+
+// Init implements meter.Meter.
 func (m *MockMeter) Init(_ ...meter.Option) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.expected {
+		ei, ok := e.(*ExpectedInit)
+		if !ok {
+			continue
+		}
+		ei.Lock()
+		if ei.triggered {
+			ei.Unlock()
+			continue
+		}
+		ei.triggered = true
+		err := ei.err
+		ei.Unlock()
+		return err
+	}
 	return fmt.Errorf("unexpected call to meter.Init")
 }
 
