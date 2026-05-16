@@ -199,4 +199,136 @@ func TestPublish_Delay(t *testing.T) {
 	}
 }
 
-var _ broker.Message
+func TestSubscribe(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+	b.ExpectSubscribe("orders")
+
+	_ = b.Connect(ctx)
+	sub, err := b.Subscribe(ctx, "orders", func(broker.Message) error { return nil })
+	if err != nil {
+		t.Fatalf("Subscribe: %v", err)
+	}
+	if sub == nil {
+		t.Fatal("expected non-nil subscriber")
+	}
+	if sub.Topic() != "orders" {
+		t.Fatalf("want topic %q, got %q", "orders", sub.Topic())
+	}
+	if err := b.ExpectationsWereMet(); err != nil {
+		t.Fatalf("ExpectationsWereMet: %v", err)
+	}
+}
+
+func TestSubscribe_Unexpected(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+
+	_ = b.Connect(ctx)
+	_, err := b.Subscribe(ctx, "orders", func(broker.Message) error { return nil })
+	if err == nil {
+		t.Fatal("expected error for unexpected Subscribe, got nil")
+	}
+}
+
+func TestSubscribe_ReturnsError(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	want := fmt.Errorf("subscribe failed")
+	b.ExpectConnect()
+	b.ExpectSubscribe("orders").WillReturnError(want)
+
+	_ = b.Connect(ctx)
+	_, err := b.Subscribe(ctx, "orders", func(broker.Message) error { return nil })
+	if err != want {
+		t.Fatalf("want %v, got %v", want, err)
+	}
+}
+
+func TestSubscribe_NotConnected(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectSubscribe("orders")
+
+	_, err := b.Subscribe(ctx, "orders", func(broker.Message) error { return nil })
+	if err != broker.ErrNotConnected {
+		t.Fatalf("want ErrNotConnected, got %v", err)
+	}
+}
+
+func TestInjectMessage_SingleHandler(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+	b.ExpectSubscribe("orders")
+
+	_ = b.Connect(ctx)
+
+	received := make([]broker.Message, 0)
+	_, _ = b.Subscribe(ctx, "orders", func(m broker.Message) error {
+		received = append(received, m)
+		return nil
+	})
+
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{"x": []string{"y"}}, []byte(`{}`))
+	if err := b.InjectMessage(ctx, "orders", msg); err != nil {
+		t.Fatalf("InjectMessage: %v", err)
+	}
+	if len(received) != 1 {
+		t.Fatalf("want 1 message, got %d", len(received))
+	}
+	if string(received[0].Body()) != `{}` {
+		t.Fatalf("unexpected body: %s", received[0].Body())
+	}
+}
+
+func TestInjectMessage_BatchHandler(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+	b.ExpectSubscribe("orders")
+
+	_ = b.Connect(ctx)
+
+	var batchReceived []broker.Message
+	_, _ = b.Subscribe(ctx, "orders", func(msgs []broker.Message) error {
+		batchReceived = append(batchReceived, msgs...)
+		return nil
+	})
+
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":2}`))
+	if err := b.InjectMessage(ctx, "orders", msg); err != nil {
+		t.Fatalf("InjectMessage: %v", err)
+	}
+	if len(batchReceived) != 1 {
+		t.Fatalf("want 1 message in batch, got %d", len(batchReceived))
+	}
+}
+
+func TestInjectMessage_NoHandlers(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+
+	msg := mock.NewMockMessage(ctx, "orders", nil, []byte(`{}`))
+	if err := b.InjectMessage(ctx, "orders", msg); err != nil {
+		t.Fatalf("InjectMessage with no handlers should return nil, got: %v", err)
+	}
+}
+
+func TestInjectMessage_HandlerError(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+	b.ExpectSubscribe("orders")
+
+	_ = b.Connect(ctx)
+	want := fmt.Errorf("handler error")
+	_, _ = b.Subscribe(ctx, "orders", func(broker.Message) error { return want })
+
+	msg := mock.NewMockMessage(ctx, "orders", nil, nil)
+	if err := b.InjectMessage(ctx, "orders", msg); err != want {
+		t.Fatalf("want %v, got %v", want, err)
+	}
+}
