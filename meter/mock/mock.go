@@ -54,6 +54,21 @@ func (e *ExpectedInit) String() string {
 	return "ExpectedInit"
 }
 
+// ExpectedWrite holds an expectation for meter.Write.
+type ExpectedWrite struct {
+	commonExpectation
+}
+
+// WillReturnError configures the error returned by Write.
+func (e *ExpectedWrite) WillReturnError(err error) *ExpectedWrite { e.err = err; return e }
+
+func (e *ExpectedWrite) String() string {
+	if e.err != nil {
+		return fmt.Sprintf("ExpectedWrite => should return error: %s", e.err)
+	}
+	return "ExpectedWrite"
+}
+
 // ExpectedCounter holds an expectation for meter.Counter.
 type ExpectedCounter struct {
 	commonExpectation
@@ -202,6 +217,15 @@ func (m *MockMeter) Set(_ ...meter.Option) meter.Meter {
 	return m
 }
 
+// ExpectWrite registers an expectation that meter.Write will be called.
+func (m *MockMeter) ExpectWrite() *ExpectedWrite {
+	e := &ExpectedWrite{}
+	m.mu.Lock()
+	m.expected = append(m.expected, e)
+	m.mu.Unlock()
+	return e
+}
+
 // ExpectInit registers an expectation that meter.Init will be called.
 func (m *MockMeter) ExpectInit() *ExpectedInit {
 	e := &ExpectedInit{}
@@ -296,8 +320,25 @@ func (m *MockMeter) Init(_ ...meter.Option) error {
 	return fmt.Errorf("unexpected call to meter.Init")
 }
 
-// Write records an unexpected call and returns an error.
+// Write implements meter.Meter.
 func (m *MockMeter) Write(_ io.Writer, _ ...meter.Option) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.expected {
+		ew, ok := e.(*ExpectedWrite)
+		if !ok {
+			continue
+		}
+		ew.Lock()
+		if ew.triggered {
+			ew.Unlock()
+			continue
+		}
+		ew.triggered = true
+		err := ew.err
+		ew.Unlock()
+		return err
+	}
 	return fmt.Errorf("unexpected call to meter.Write")
 }
 

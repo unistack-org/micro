@@ -2,6 +2,7 @@ package mock
 
 import (
 	"errors"
+	"io"
 	"testing"
 	"time"
 
@@ -145,5 +146,28 @@ func TestMockMeter_SummaryExt(t *testing.T) {
 	updates := exp.Summary().Updates()
 	if len(updates) != 1 || updates[0] != 42.0 {
 		t.Fatalf("expected [42.0], got %v", updates)
+	}
+}
+
+func TestMockMeter_Write_Success(t *testing.T) {
+	m := NewMockMeter()
+	m.ExpectWrite()
+	if err := m.Write(io.Discard); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestMockMeter_Write_Error(t *testing.T) {
+	m := NewMockMeter()
+	m.ExpectWrite().WillReturnError(errors.New("write failed"))
+	if err := m.Write(io.Discard); err == nil || err.Error() != "write failed" {
+		t.Fatalf("expected 'write failed', got %v", err)
+	}
+}
+
+func TestMockMeter_Write_Unexpected(t *testing.T) {
+	m := NewMockMeter()
+	if err := m.Write(io.Discard); err == nil {
+		t.Fatal("expected error for unexpected Write call")
 	}
 }
