@@ -404,3 +404,52 @@ func TestUnsubscribe_RemovesHandler(t *testing.T) {
 		t.Fatal("handler should not be called after Unsubscribe")
 	}
 }
+
+func TestFullLifecycle(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+
+	b.ExpectConnect()
+	b.ExpectSubscribe("orders")
+	b.ExpectPublish("results")
+	b.ExpectUnsubscribe("orders")
+	b.ExpectDisconnect()
+
+	if err := b.Connect(ctx); err != nil {
+		t.Fatalf("Connect: %v", err)
+	}
+
+	processed := make([]string, 0)
+	sub, err := b.Subscribe(ctx, "orders", func(m broker.Message) error {
+		processed = append(processed, string(m.Body()))
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("Subscribe: %v", err)
+	}
+
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":42}`))
+	if err := b.InjectMessage(ctx, "orders", msg); err != nil {
+		t.Fatalf("InjectMessage: %v", err)
+	}
+
+	if err := b.Publish(ctx, "results"); err != nil {
+		t.Fatalf("Publish: %v", err)
+	}
+
+	if err := sub.Unsubscribe(ctx); err != nil {
+		t.Fatalf("Unsubscribe: %v", err)
+	}
+
+	if err := b.Disconnect(ctx); err != nil {
+		t.Fatalf("Disconnect: %v", err)
+	}
+
+	if err := b.ExpectationsWereMet(); err != nil {
+		t.Fatalf("ExpectationsWereMet: %v", err)
+	}
+
+	if len(processed) != 1 || processed[0] != `{"id":42}` {
+		t.Fatalf("unexpected processed messages: %v", processed)
+	}
+}
