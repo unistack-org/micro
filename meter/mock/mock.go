@@ -99,6 +99,37 @@ func (e *ExpectedGauge) String() string {
 	return fmt.Sprintf("ExpectedGauge(%q)", e.name)
 }
 
+// ExpectedHistogram holds an expectation for meter.Histogram.
+type ExpectedHistogram struct {
+	commonExpectation
+	name      string
+	labels    []string
+	histogram *mockHistogram
+}
+
+// Histogram returns the mock histogram for value inspection.
+func (e *ExpectedHistogram) Histogram() *mockHistogram { return e.histogram }
+
+func (e *ExpectedHistogram) String() string {
+	return fmt.Sprintf("ExpectedHistogram(%q)", e.name)
+}
+
+// ExpectedHistogramExt holds an expectation for meter.HistogramExt.
+type ExpectedHistogramExt struct {
+	commonExpectation
+	name      string
+	quantiles []float64
+	labels    []string
+	histogram *mockHistogram
+}
+
+// Histogram returns the mock histogram for value inspection.
+func (e *ExpectedHistogramExt) Histogram() *mockHistogram { return e.histogram }
+
+func (e *ExpectedHistogramExt) String() string {
+	return fmt.Sprintf("ExpectedHistogramExt(%q)", e.name)
+}
+
 // MockMeter is a mock implementation of meter.Meter for use in tests.
 type MockMeter struct {
 	opts       meter.Options
@@ -169,6 +200,24 @@ func (m *MockMeter) ExpectFloatCounter(name string, labels ...string) *ExpectedF
 // ExpectGauge registers an expectation that meter.Gauge will be called with name.
 func (m *MockMeter) ExpectGauge(name string, labels ...string) *ExpectedGauge {
 	e := &ExpectedGauge{name: name, labels: labels, gauge: &mockGauge{}}
+	m.mu.Lock()
+	m.expected = append(m.expected, e)
+	m.mu.Unlock()
+	return e
+}
+
+// ExpectHistogram registers an expectation that meter.Histogram will be called with name.
+func (m *MockMeter) ExpectHistogram(name string, labels ...string) *ExpectedHistogram {
+	e := &ExpectedHistogram{name: name, labels: labels, histogram: &mockHistogram{}}
+	m.mu.Lock()
+	m.expected = append(m.expected, e)
+	m.mu.Unlock()
+	return e
+}
+
+// ExpectHistogramExt registers an expectation that meter.HistogramExt will be called with name.
+func (m *MockMeter) ExpectHistogramExt(name string, quantiles []float64, labels ...string) *ExpectedHistogramExt {
+	e := &ExpectedHistogramExt{name: name, quantiles: quantiles, labels: labels, histogram: &mockHistogram{}}
 	m.mu.Lock()
 	m.expected = append(m.expected, e)
 	m.mu.Unlock()
@@ -271,19 +320,49 @@ func (m *MockMeter) Gauge(name string, _ func() float64, _ ...string) meter.Gaug
 	return &mockGauge{}
 }
 
-// Histogram records the unexpected call and returns a stub histogram.
+// Histogram implements meter.Meter.
 func (m *MockMeter) Histogram(name string, _ ...string) meter.Histogram {
 	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.expected {
+		eh, ok := e.(*ExpectedHistogram)
+		if !ok {
+			continue
+		}
+		eh.Lock()
+		if eh.triggered || eh.name != name {
+			eh.Unlock()
+			continue
+		}
+		eh.triggered = true
+		h := eh.histogram
+		eh.Unlock()
+		return h
+	}
 	m.unexpected = append(m.unexpected, fmt.Sprintf("Histogram(%q)", name))
-	m.mu.Unlock()
 	return &mockHistogram{}
 }
 
-// HistogramExt records the unexpected call and returns a stub histogram.
+// HistogramExt implements meter.Meter.
 func (m *MockMeter) HistogramExt(name string, _ []float64, _ ...string) meter.Histogram {
 	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.expected {
+		eh, ok := e.(*ExpectedHistogramExt)
+		if !ok {
+			continue
+		}
+		eh.Lock()
+		if eh.triggered || eh.name != name {
+			eh.Unlock()
+			continue
+		}
+		eh.triggered = true
+		h := eh.histogram
+		eh.Unlock()
+		return h
+	}
 	m.unexpected = append(m.unexpected, fmt.Sprintf("HistogramExt(%q)", name))
-	m.mu.Unlock()
 	return &mockHistogram{}
 }
 

@@ -88,3 +88,34 @@ func TestMockMeter_Gauge(t *testing.T) {
 		t.Fatalf("expected 42.5, got %f", got)
 	}
 }
+
+func TestMockMeter_Histogram(t *testing.T) {
+	m := NewMockMeter()
+	exp := m.ExpectHistogram("latency")
+
+	h := m.Histogram("latency")
+	h.Update(1.0)
+	h.Update(2.5)
+	h.Reset()
+	h.Update(3.0)
+
+	updates := exp.Histogram().Updates()
+	if len(updates) != 1 || updates[0] != 3.0 {
+		t.Fatalf("expected [3.0], got %v", updates)
+	}
+}
+
+func TestMockMeter_HistogramExt(t *testing.T) {
+	m := NewMockMeter()
+	quantiles := []float64{0.5, 0.9, 0.99}
+	exp := m.ExpectHistogramExt("latency_ext", quantiles)
+
+	h := m.HistogramExt("latency_ext", quantiles)
+	h.Update(1.0)
+	h.Update(2.0)
+
+	updates := exp.Histogram().Updates()
+	if len(updates) != 2 {
+		t.Fatalf("expected 2 updates, got %d", len(updates))
+	}
+}
