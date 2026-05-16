@@ -332,3 +332,75 @@ func TestInjectMessage_HandlerError(t *testing.T) {
 		t.Fatalf("want %v, got %v", want, err)
 	}
 }
+
+func TestUnsubscribe(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+	b.ExpectSubscribe("orders")
+	b.ExpectUnsubscribe("orders")
+
+	_ = b.Connect(ctx)
+	sub, _ := b.Subscribe(ctx, "orders", func(broker.Message) error { return nil })
+
+	if err := sub.Unsubscribe(ctx); err != nil {
+		t.Fatalf("Unsubscribe: %v", err)
+	}
+	if err := b.ExpectationsWereMet(); err != nil {
+		t.Fatalf("ExpectationsWereMet: %v", err)
+	}
+}
+
+func TestUnsubscribe_Unexpected(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+	b.ExpectSubscribe("orders")
+
+	_ = b.Connect(ctx)
+	sub, _ := b.Subscribe(ctx, "orders", func(broker.Message) error { return nil })
+
+	if err := sub.Unsubscribe(ctx); err == nil {
+		t.Fatal("expected error for unexpected Unsubscribe, got nil")
+	}
+}
+
+func TestUnsubscribe_ReturnsError(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	want := fmt.Errorf("unsubscribe failed")
+	b.ExpectConnect()
+	b.ExpectSubscribe("orders")
+	b.ExpectUnsubscribe("orders").WillReturnError(want)
+
+	_ = b.Connect(ctx)
+	sub, _ := b.Subscribe(ctx, "orders", func(broker.Message) error { return nil })
+
+	if err := sub.Unsubscribe(ctx); err != want {
+		t.Fatalf("want %v, got %v", want, err)
+	}
+}
+
+func TestUnsubscribe_RemovesHandler(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+	b.ExpectSubscribe("orders")
+	b.ExpectUnsubscribe("orders")
+
+	_ = b.Connect(ctx)
+
+	called := false
+	sub, _ := b.Subscribe(ctx, "orders", func(broker.Message) error {
+		called = true
+		return nil
+	})
+	_ = sub.Unsubscribe(ctx)
+
+	msg := mock.NewMockMessage(ctx, "orders", nil, nil)
+	_ = b.InjectMessage(ctx, "orders", msg)
+
+	if called {
+		t.Fatal("handler should not be called after Unsubscribe")
+	}
+}
