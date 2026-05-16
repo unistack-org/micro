@@ -54,6 +54,51 @@ func (e *ExpectedInit) String() string {
 	return "ExpectedInit"
 }
 
+// ExpectedCounter holds an expectation for meter.Counter.
+type ExpectedCounter struct {
+	commonExpectation
+	name    string
+	labels  []string
+	counter *mockCounter
+}
+
+// Counter returns the mock counter for value inspection.
+func (e *ExpectedCounter) Counter() *mockCounter { return e.counter }
+
+func (e *ExpectedCounter) String() string {
+	return fmt.Sprintf("ExpectedCounter(%q)", e.name)
+}
+
+// ExpectedFloatCounter holds an expectation for meter.FloatCounter.
+type ExpectedFloatCounter struct {
+	commonExpectation
+	name         string
+	labels       []string
+	floatCounter *mockFloatCounter
+}
+
+// FloatCounter returns the mock float counter for value inspection.
+func (e *ExpectedFloatCounter) FloatCounter() *mockFloatCounter { return e.floatCounter }
+
+func (e *ExpectedFloatCounter) String() string {
+	return fmt.Sprintf("ExpectedFloatCounter(%q)", e.name)
+}
+
+// ExpectedGauge holds an expectation for meter.Gauge.
+type ExpectedGauge struct {
+	commonExpectation
+	name   string
+	labels []string
+	gauge  *mockGauge
+}
+
+// Gauge returns the mock gauge for value inspection.
+func (e *ExpectedGauge) Gauge() *mockGauge { return e.gauge }
+
+func (e *ExpectedGauge) String() string {
+	return fmt.Sprintf("ExpectedGauge(%q)", e.name)
+}
+
 // MockMeter is a mock implementation of meter.Meter for use in tests.
 type MockMeter struct {
 	opts       meter.Options
@@ -103,6 +148,33 @@ func (m *MockMeter) ExpectInit() *ExpectedInit {
 	return e
 }
 
+// ExpectCounter registers an expectation that meter.Counter will be called with name.
+func (m *MockMeter) ExpectCounter(name string, labels ...string) *ExpectedCounter {
+	e := &ExpectedCounter{name: name, labels: labels, counter: &mockCounter{}}
+	m.mu.Lock()
+	m.expected = append(m.expected, e)
+	m.mu.Unlock()
+	return e
+}
+
+// ExpectFloatCounter registers an expectation that meter.FloatCounter will be called with name.
+func (m *MockMeter) ExpectFloatCounter(name string, labels ...string) *ExpectedFloatCounter {
+	e := &ExpectedFloatCounter{name: name, labels: labels, floatCounter: &mockFloatCounter{}}
+	m.mu.Lock()
+	m.expected = append(m.expected, e)
+	m.mu.Unlock()
+	return e
+}
+
+// ExpectGauge registers an expectation that meter.Gauge will be called with name.
+func (m *MockMeter) ExpectGauge(name string, labels ...string) *ExpectedGauge {
+	e := &ExpectedGauge{name: name, labels: labels, gauge: &mockGauge{}}
+	m.mu.Lock()
+	m.expected = append(m.expected, e)
+	m.mu.Unlock()
+	return e
+}
+
 // Init implements meter.Meter.
 func (m *MockMeter) Init(_ ...meter.Option) error {
 	m.mu.Lock()
@@ -130,27 +202,72 @@ func (m *MockMeter) Write(_ io.Writer, _ ...meter.Option) error {
 	return fmt.Errorf("unexpected call to meter.Write")
 }
 
-// Counter records the unexpected call and returns a stub counter.
+// Counter implements meter.Meter.
 func (m *MockMeter) Counter(name string, _ ...string) meter.Counter {
 	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.expected {
+		ec, ok := e.(*ExpectedCounter)
+		if !ok {
+			continue
+		}
+		ec.Lock()
+		if ec.triggered || ec.name != name {
+			ec.Unlock()
+			continue
+		}
+		ec.triggered = true
+		c := ec.counter
+		ec.Unlock()
+		return c
+	}
 	m.unexpected = append(m.unexpected, fmt.Sprintf("Counter(%q)", name))
-	m.mu.Unlock()
 	return &mockCounter{}
 }
 
-// FloatCounter records the unexpected call and returns a stub float counter.
+// FloatCounter implements meter.Meter.
 func (m *MockMeter) FloatCounter(name string, _ ...string) meter.FloatCounter {
 	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.expected {
+		ec, ok := e.(*ExpectedFloatCounter)
+		if !ok {
+			continue
+		}
+		ec.Lock()
+		if ec.triggered || ec.name != name {
+			ec.Unlock()
+			continue
+		}
+		ec.triggered = true
+		fc := ec.floatCounter
+		ec.Unlock()
+		return fc
+	}
 	m.unexpected = append(m.unexpected, fmt.Sprintf("FloatCounter(%q)", name))
-	m.mu.Unlock()
 	return &mockFloatCounter{}
 }
 
-// Gauge records the unexpected call and returns a stub gauge.
+// Gauge implements meter.Meter.
 func (m *MockMeter) Gauge(name string, _ func() float64, _ ...string) meter.Gauge {
 	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.expected {
+		eg, ok := e.(*ExpectedGauge)
+		if !ok {
+			continue
+		}
+		eg.Lock()
+		if eg.triggered || eg.name != name {
+			eg.Unlock()
+			continue
+		}
+		eg.triggered = true
+		g := eg.gauge
+		eg.Unlock()
+		return g
+	}
 	m.unexpected = append(m.unexpected, fmt.Sprintf("Gauge(%q)", name))
-	m.mu.Unlock()
 	return &mockGauge{}
 }
 
