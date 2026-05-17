@@ -14,14 +14,14 @@
 
 | File | Responsibility |
 |---|---|
-| `broker/mock/mock_message.go` | `mockMessage` (implements `broker.Message`), `NewMockMessage` factory |
+| `broker/mock/mock_message.go` | `MockMessage` (exported, implements `broker.Message`, tracks `Acked()`), `NewMockMessage` factory |
 | `broker/mock/mock.go` | `MockBroker`, `MockSubscriber`, all `Expected*` types, `expectation` interface |
 | `broker/mock/mock_test.go` | All tests (package `mock_test`) |
 | `broker/mock/example_test.go` | Godoc `Example_*` functions (package `mock_test`) |
 
 ---
 
-### Task 1: mockMessage
+### Task 1: MockMessage
 
 **Files:**
 - Create: `broker/mock/mock_message.go`
@@ -49,7 +49,7 @@ func TestNewMockMessage(t *testing.T) {
 	hdr := metadata.Metadata{"key": "val"}
 	body := []byte(`{"id":1}`)
 
-	msg := mock.NewMockMessage(ctx, "orders", hdr, body)
+	msg := mock.NewMockMessage(ctx, "orders", hdr, body, nil)
 
 	if msg.Topic() != "orders" {
 		t.Fatalf("want topic %q, got %q", "orders", msg.Topic())
@@ -60,11 +60,14 @@ func TestNewMockMessage(t *testing.T) {
 	if msg.Context() != ctx {
 		t.Fatal("context mismatch")
 	}
-	if v, ok := msg.Header()["key"]; !ok || v != "val" {
+	if v, ok := msg.Header()["key"]; !ok || len(v) == 0 || v[0] != "val" {
 		t.Fatal("header mismatch")
 	}
 	if err := msg.Ack(); err != nil {
 		t.Fatalf("Ack: %v", err)
+	}
+	if !msg.Acked() {
+		t.Fatal("Acked should be true after Ack")
 	}
 	if err := msg.Error(); err != nil {
 		t.Fatalf("Error: %v", err)
@@ -94,37 +97,37 @@ import (
 	"go.unistack.org/micro/v5/metadata"
 )
 
-type mockMessage struct {
+// MockMessage is a broker.Message implementation for use in tests.
+// It tracks whether Ack was called so tests can assert handler behaviour.
+type MockMessage struct {
 	ctx   context.Context
 	topic string
 	hdr   metadata.Metadata
 	body  []byte
 	c     codec.Codec
 	err   error
+	acked bool
 }
 
-func (m *mockMessage) Context() context.Context  { return m.ctx }
-func (m *mockMessage) Topic() string             { return m.topic }
-func (m *mockMessage) Header() metadata.Metadata { return m.hdr }
-func (m *mockMessage) Body() []byte              { return m.body }
-func (m *mockMessage) Ack() error                { return nil }
-func (m *mockMessage) Error() error              { return m.err }
+func (m *MockMessage) Context() context.Context  { return m.ctx }
+func (m *MockMessage) Topic() string             { return m.topic }
+func (m *MockMessage) Header() metadata.Metadata { return m.hdr }
+func (m *MockMessage) Body() []byte              { return m.body }
+func (m *MockMessage) Ack() error                { m.acked = true; return nil }
+func (m *MockMessage) Acked() bool               { return m.acked }
+func (m *MockMessage) Error() error              { return m.err }
 
-func (m *mockMessage) Unmarshal(dst any, opts ...codec.Option) error {
+func (m *MockMessage) Unmarshal(dst any, opts ...codec.Option) error {
 	if m.c == nil {
 		return codec.ErrUnknownContentType
 	}
 	return m.c.Unmarshal(m.body, dst, opts...)
 }
 
-// NewMockMessage creates a broker.Message with pre-marshaled body for use with InjectMessage.
-// Optionally pass a codec to enable Unmarshal in the handler under test.
-func NewMockMessage(ctx context.Context, topic string, hdr metadata.Metadata, body []byte, c ...codec.Codec) broker.Message {
-	msg := &mockMessage{ctx: ctx, topic: topic, hdr: hdr, body: body}
-	if len(c) > 0 {
-		msg.c = c[0]
-	}
-	return msg
+// NewMockMessage creates a MockMessage with pre-marshaled body for use with InjectMessage.
+// Pass a non-nil codec to enable Unmarshal in the handler under test.
+func NewMockMessage(ctx context.Context, topic string, hdr metadata.Metadata, body []byte, c codec.Codec) *MockMessage {
+	return &MockMessage{ctx: ctx, topic: topic, hdr: hdr, body: body, c: c}
 }
 ```
 
@@ -140,7 +143,7 @@ Expected: PASS
 
 ```bash
 git add broker/mock/mock_message.go broker/mock/mock_test.go
-git commit -m "feat(broker/mock): add mockMessage and NewMockMessage"
+git commit -m "feat(broker/mock): add MockMessage and NewMockMessage"
 ```
 
 ---
@@ -553,7 +556,7 @@ func (m *MockBroker) NewMessage(ctx context.Context, hdr metadata.Metadata, body
 	if err != nil {
 		return nil, err
 	}
-	return &mockMessage{ctx: ctx, hdr: hdr, body: b, c: c}, nil
+	return &MockMessage{ctx: ctx, hdr: hdr, body: b, c: c}, nil
 }
 
 // Init implements broker.Broker.
@@ -961,7 +964,7 @@ func TestInjectMessage_SingleHandler(t *testing.T) {
 		return nil
 	})
 
-	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{"x": "y"}, []byte(`{}`))
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{"x": "y"}, []byte(`{}`), nil)
 	if err := b.InjectMessage(ctx, "orders", msg); err != nil {
 		t.Fatalf("InjectMessage: %v", err)
 	}
@@ -987,7 +990,7 @@ func TestInjectMessage_BatchHandler(t *testing.T) {
 		return nil
 	})
 
-	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":2}`))
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":2}`), nil)
 	if err := b.InjectMessage(ctx, "orders", msg); err != nil {
 		t.Fatalf("InjectMessage: %v", err)
 	}
@@ -1000,7 +1003,7 @@ func TestInjectMessage_NoHandlers(t *testing.T) {
 	ctx := context.Background()
 	b := mock.NewMockBroker()
 
-	msg := mock.NewMockMessage(ctx, "orders", nil, []byte(`{}`))
+	msg := mock.NewMockMessage(ctx, "orders", nil, []byte(`{}`), nil)
 	if err := b.InjectMessage(ctx, "orders", msg); err != nil {
 		t.Fatalf("InjectMessage with no handlers should return nil, got: %v", err)
 	}
@@ -1016,7 +1019,7 @@ func TestInjectMessage_HandlerError(t *testing.T) {
 	want := fmt.Errorf("handler error")
 	_, _ = b.Subscribe(ctx, "orders", func(broker.Message) error { return want })
 
-	msg := mock.NewMockMessage(ctx, "orders", nil, nil)
+	msg := mock.NewMockMessage(ctx, "orders", nil, nil, nil)
 	if err := b.InjectMessage(ctx, "orders", msg); err != want {
 		t.Fatalf("want %v, got %v", want, err)
 	}
@@ -1114,7 +1117,7 @@ func TestUnsubscribe_RemovesHandler(t *testing.T) {
 	})
 	_ = sub.Unsubscribe(ctx)
 
-	msg := mock.NewMockMessage(ctx, "orders", nil, nil)
+	msg := mock.NewMockMessage(ctx, "orders", nil, nil, nil)
 	_ = b.InjectMessage(ctx, "orders", msg)
 
 	if called {
@@ -1176,7 +1179,7 @@ func TestFullLifecycle(t *testing.T) {
 	}
 
 	// inject a message — handler receives it
-	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":42}`))
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":42}`), nil)
 	if err := b.InjectMessage(ctx, "orders", msg); err != nil {
 		t.Fatalf("InjectMessage: %v", err)
 	}
@@ -1262,7 +1265,7 @@ func Example() {
 		return nil
 	})
 
-	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":1}`))
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":1}`), nil)
 	_ = b.InjectMessage(ctx, "orders", msg)
 
 	_ = b.Publish(ctx, "results")
@@ -1322,7 +1325,7 @@ func ExampleMockBroker_InjectMessage() {
 		return nil
 	})
 
-	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":7}`))
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":7}`), nil)
 	_ = b.InjectMessage(ctx, "orders", msg)
 
 	_ = sub.Unsubscribe(ctx)

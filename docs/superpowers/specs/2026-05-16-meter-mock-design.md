@@ -150,14 +150,13 @@ meter/
 // Basic scenario
 m := mock.NewMockMeter()
 m.ExpectInit()
-m.ExpectCounter("requests", "method", "GET")
+exp := m.ExpectCounter("requests", "method", "GET")
 
 _ = m.Init()
 c := m.Counter("requests", "method", "GET")
 c.Inc()
 c.Inc()
 
-exp := m.expected[1].(*mock.ExpectedCounter)
 if exp.Counter().Get() != 2 {
     t.Error("expected 2 increments")
 }
