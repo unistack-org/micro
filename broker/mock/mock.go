@@ -396,7 +396,7 @@ func (m *MockBroker) NewMessage(ctx context.Context, hdr metadata.Metadata, body
 	if err != nil {
 		return nil, err
 	}
-	return &mockMessage{ctx: ctx, hdr: hdr, body: b, c: c}, nil
+	return &MockMessage{ctx: ctx, hdr: hdr, body: b, c: c}, nil
 }
 
 // Init implements broker.Broker.

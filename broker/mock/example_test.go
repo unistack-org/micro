@@ -28,7 +28,7 @@ func Example() {
 		return nil
 	})
 
-	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":1}`))
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":1}`), nil)
 	_ = b.InjectMessage(ctx, "orders", msg)
 
 	_ = b.Publish(ctx, "results")
@@ -88,7 +88,7 @@ func ExampleMockBroker_InjectMessage() {
 		return nil
 	})
 
-	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":7}`))
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":7}`), nil)
 	_ = b.InjectMessage(ctx, "orders", msg)
 
 	_ = sub.Unsubscribe(ctx)
