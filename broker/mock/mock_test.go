@@ -16,7 +16,7 @@ func TestNewMockMessage(t *testing.T) {
 	hdr := metadata.Metadata{"key": []string{"val"}}
 	body := []byte(`{"id":1}`)
 
-	msg := mock.NewMockMessage(ctx, "orders", hdr, body)
+	msg := mock.NewMockMessage(ctx, "orders", hdr, body, nil)
 
 	if msg.Topic() != "orders" {
 		t.Fatalf("want topic %q, got %q", "orders", msg.Topic())
@@ -272,7 +272,7 @@ func TestInjectMessage_SingleHandler(t *testing.T) {
 		return nil
 	})
 
-	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{"x": []string{"y"}}, []byte(`{}`))
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{"x": []string{"y"}}, []byte(`{}`), nil)
 	if err := b.InjectMessage(ctx, "orders", msg); err != nil {
 		t.Fatalf("InjectMessage: %v", err)
 	}
@@ -298,7 +298,7 @@ func TestInjectMessage_BatchHandler(t *testing.T) {
 		return nil
 	})
 
-	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":2}`))
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":2}`), nil)
 	if err := b.InjectMessage(ctx, "orders", msg); err != nil {
 		t.Fatalf("InjectMessage: %v", err)
 	}
@@ -311,7 +311,7 @@ func TestInjectMessage_NoHandlers(t *testing.T) {
 	ctx := context.Background()
 	b := mock.NewMockBroker()
 
-	msg := mock.NewMockMessage(ctx, "orders", nil, []byte(`{}`))
+	msg := mock.NewMockMessage(ctx, "orders", nil, []byte(`{}`), nil)
 	if err := b.InjectMessage(ctx, "orders", msg); err != nil {
 		t.Fatalf("InjectMessage with no handlers should return nil, got: %v", err)
 	}
@@ -327,7 +327,7 @@ func TestInjectMessage_HandlerError(t *testing.T) {
 	want := fmt.Errorf("handler error")
 	_, _ = b.Subscribe(ctx, "orders", func(broker.Message) error { return want })
 
-	msg := mock.NewMockMessage(ctx, "orders", nil, nil)
+	msg := mock.NewMockMessage(ctx, "orders", nil, nil, nil)
 	if err := b.InjectMessage(ctx, "orders", msg); err != want {
 		t.Fatalf("want %v, got %v", want, err)
 	}
@@ -397,7 +397,7 @@ func TestUnsubscribe_RemovesHandler(t *testing.T) {
 	})
 	_ = sub.Unsubscribe(ctx)
 
-	msg := mock.NewMockMessage(ctx, "orders", nil, nil)
+	msg := mock.NewMockMessage(ctx, "orders", nil, nil, nil)
 	_ = b.InjectMessage(ctx, "orders", msg)
 
 	if called {
@@ -428,7 +428,7 @@ func TestFullLifecycle(t *testing.T) {
 		t.Fatalf("Subscribe: %v", err)
 	}
 
-	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":42}`))
+	msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{}, []byte(`{"id":42}`), nil)
 	if err := b.InjectMessage(ctx, "orders", msg); err != nil {
 		t.Fatalf("InjectMessage: %v", err)
 	}

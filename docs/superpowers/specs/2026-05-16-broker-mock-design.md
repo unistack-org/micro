@@ -18,7 +18,7 @@ Strict expectation-based mock: every `Connect`, `Disconnect`, `Publish`, `Subscr
 ```
 micro/broker/mock/
 ├── mock.go          # MockBroker, MockSubscriber, expectation types, commonExpectation
-└── mock_message.go  # mockMessage — implements broker.Message for InjectMessage
+└── mock_message.go  # MockMessage — implements broker.Message for InjectMessage, exported for assertions
 ```
 
 ## Types
@@ -122,19 +122,27 @@ func (s *MockSubscriber) Unsubscribe(ctx context.Context) error
 
 `Unsubscribe` looks up the first unfulfilled `ExpectedUnsubscribe` for the topic, removes the handler from `m.handlers[topic]`, and marks the expectation as triggered. Returns an error if no matching expectation is found.
 
-### mockMessage
+### MockMessage
 
-Implements `broker.Message`. Used for constructing messages passed to `InjectMessage`.
+Exported type implementing `broker.Message`. Used for constructing messages passed to `InjectMessage`. Tracks whether `Ack` was called, allowing tests to assert handler acknowledgement behaviour.
 
 ```go
-type mockMessage struct {
+type MockMessage struct {
     ctx   context.Context
     topic string
     hdr   metadata.Metadata
     body  []byte
+    c     codec.Codec
+    err   error
+    acked bool
 }
 
-func NewMockMessage(ctx context.Context, topic string, hdr metadata.Metadata, body []byte) broker.Message
+func (m *MockMessage) Ack() error    // sets m.acked = true
+func (m *MockMessage) Acked() bool   // returns whether Ack was called
+
+// NewMockMessage creates a MockMessage with pre-marshaled body.
+// Pass a non-nil codec to enable Unmarshal in the handler under test.
+func NewMockMessage(ctx context.Context, topic string, hdr metadata.Metadata, body []byte, c codec.Codec) *MockMessage
 ```
 
 ## Behaviour per Method
@@ -147,7 +155,7 @@ func NewMockMessage(ctx context.Context, topic string, hdr metadata.Metadata, bo
 | `Subscribe` | Finds first unfulfilled `ExpectedSubscribe` matching topic. Missing → error. If `e.err != nil`, returns `nil, e.err` without registering handler. Otherwise registers handler in `m.handlers[topic]` and returns `MockSubscriber, nil`. |
 | `Unsubscribe` | Finds first unfulfilled `ExpectedUnsubscribe` matching topic. Missing → error. Removes handler from `m.handlers[topic]`. |
 | `InjectMessage` | Calls all handlers in `m.handlers[topic]` with `msg`. Supports both `func(broker.Message) error` and `func([]broker.Message) error`. Returns first error. |
-| `NewMessage` | Creates a `mockMessage`; does not require a prior expectation. |
+| `NewMessage` | Creates a `MockMessage` via codec marshal; does not require a prior expectation. |
 | `Name/String/Live/Ready/Health/Address/Options` | Simple getters; no expectation required. |
 
 ## Error Cases
@@ -187,7 +195,7 @@ mock.ExpectDisconnect()
 _ = mock.Connect(ctx)
 myService.StartConsumer(ctx, mock)
 
-msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{"key": "val"}, []byte(`{}`))
+msg := mock.NewMockMessage(ctx, "orders", metadata.Metadata{"key": "val"}, []byte(`{}`), nil)
 err := mock.InjectMessage(ctx, "orders", msg)
 assert.NoError(t, err)
 
