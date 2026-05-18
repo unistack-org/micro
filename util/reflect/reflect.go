@@ -296,7 +296,7 @@ func Merge(dst interface{}, mp map[string]interface{}, opts ...Option) error {
 		}
 
 		if err != nil {
-			err = fmt.Errorf("%v key %v invalid val %v", err, fname, sval.Interface())
+			return fmt.Errorf("%v key %v invalid val %v", err, fname, sval.Interface())
 		}
 
 	}

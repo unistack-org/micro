@@ -602,3 +602,113 @@ func TestEqualPointerNilVsNonNil(t *testing.T) {
 		t.Fatal("nil vs non-nil pointer should not be equal")
 	}
 }
+
+// TestBuildNewKey exercises the unexported buildNewKey function via queryToMap.
+// "bar[one][two]=val" → buildNewKey("bar[one][two]") == "one[two]"
+func TestBuildNewKey(t *testing.T) {
+	got := buildNewKey("bar[one][two]")
+	want := "one[two]"
+	if got != want {
+		t.Fatalf("buildNewKey: got %q, want %q", got, want)
+	}
+}
+
+// TestMergeSliceIface exercises the unexported mergeSliceIface function directly.
+func TestMergeSliceIface(t *testing.T) {
+	a := []interface{}{"x", "y"}
+	b := []interface{}{"z"}
+	got := mergeSliceIface(a, b)
+	if len(got) != 3 || got[2] != "z" {
+		t.Fatalf("mergeSliceIface: unexpected result %v", got)
+	}
+}
+
+// TestQueryToMapNested exercises the nested-bracket path in queryToMap.
+func TestQueryToMapNested(t *testing.T) {
+	m, err := queryToMap("a[b][c]=42")
+	if err != nil {
+		t.Fatal(err)
+	}
+	aMap, ok := m["a"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected nested map under 'a', got %T", m["a"])
+	}
+	bMap, ok := aMap["b"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected nested map under 'b', got %T", aMap["b"])
+	}
+	if bMap["c"] != "42" {
+		t.Fatalf("expected '42' got %v", bMap["c"])
+	}
+}
+
+// TestQueryToMapArrayBracket exercises the empty-bracket (array) path in queryToMap.
+func TestQueryToMapArrayBracket(t *testing.T) {
+	m, err := queryToMap("a[]=1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sl, ok := m["a"].([]interface{})
+	if !ok {
+		t.Fatalf("expected []interface{} under 'a', got %T", m["a"])
+	}
+	if len(sl) != 1 || sl[0] != "1" {
+		t.Fatalf("unexpected array value %v", sl)
+	}
+}
+
+// TestQueryToMapNoEquals exercises the splitKeyAndValue error path.
+func TestQueryToMapNoEquals(t *testing.T) {
+	_, err := queryToMap("noequals")
+	if err == nil {
+		t.Fatal("expected error for param with no '='")
+	}
+}
+
+// TestMergeWithJSONUnmarshaler exercises the json.Unmarshaler fast path in Merge.
+type jsonUnmarshalTarget struct {
+	Value string
+}
+
+func (j *jsonUnmarshalTarget) UnmarshalJSON(b []byte) error {
+	// simple: just record that we were called
+	j.Value = string(b)
+	return nil
+}
+
+func TestMergeJSONUnmarshaler(t *testing.T) {
+	dst := &jsonUnmarshalTarget{}
+	mp := map[string]interface{}{"key": "val"}
+	if err := Merge(dst, mp); err != nil {
+		t.Fatal(err)
+	}
+	if dst.Value == "" {
+		t.Fatal("expected UnmarshalJSON to be called")
+	}
+}
+
+// TestMergeBoolInvalidInt exercises the "default: ErrInvalidValue" branch in mergeBool for int > 1.
+func TestMergeBoolInvalidInt(t *testing.T) {
+	type str struct {
+		B bool `json:"b"`
+	}
+	mp := map[string]interface{}{"b": int(5)}
+	s := &str{}
+	err := Merge(s, mp, Tags([]string{"json"}))
+	if err == nil {
+		t.Fatal("expected error for int(5) merged into bool")
+	}
+}
+
+// TestMergeBoolInvalidUint exercises the "default: ErrInvalidValue" branch in mergeBool for uint > 1.
+func TestMergeBoolInvalidUint(t *testing.T) {
+	type str struct {
+		B bool `json:"b"`
+	}
+	mp := map[string]interface{}{"b": uint(7)}
+	s := &str{}
+	err := Merge(s, mp, Tags([]string{"json"}))
+	if err == nil {
+		t.Fatal("expected error for uint(7) merged into bool")
+	}
+}
