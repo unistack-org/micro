@@ -6,9 +6,12 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"go.unistack.org/micro/v5/client"
+	"go.unistack.org/micro/v5/client/mock"
 	"go.unistack.org/micro/v5/codec"
 	"go.unistack.org/micro/v5/errors"
 	codecpb "go.unistack.org/micro-proto/v5/codec"
+	"google.golang.org/grpc/status"
 )
 
 func Test_NewResponseFromFile(t *testing.T) {
@@ -311,5 +314,77 @@ func Test_GetCases(t *testing.T) {
 
 	if n := len(files); n != 1 {
 		t.Fatalf("invalid number of test cases %d", n)
+	}
+}
+
+func Test_NewRequestFromFile(t *testing.T) {
+	c := codec.NewCodec()
+	Codecs = map[string]codec.Codec{"application/json": c}
+
+	mc := mock.NewClient(client.Codec("application/json", c))
+	req, err := NewRequestFromFile(mc, "testdata/result/01_firstcase/Call_req.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if req == nil {
+		t.Fatal("expected non-nil request")
+	}
+}
+
+func Test_NewRequestFromFileMissing(t *testing.T) {
+	c := codec.NewCodec()
+	mc := mock.NewClient(client.Codec("application/json", c))
+	_, err := NewRequestFromFile(mc, "testdata/nonexistent.json")
+	if err == nil {
+		t.Fatal("expected error for missing file")
+	}
+}
+
+func Test_RunBadDir(t *testing.T) {
+	_, sqlm, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := codec.NewCodec()
+	mc := mock.NewClient(client.Codec("application/json", c))
+	err = Run(context.Background(), mc, sqlm, "/nonexistent/dir/that/does/not/exist", nil)
+	if err == nil {
+		t.Fatal("expected error for bad dir")
+	}
+}
+
+func Test_ResponseCompareFuncWithStatusStatus(t *testing.T) {
+	c := codec.NewCodec()
+	Codecs = map[string]codec.Codec{"application/json": c}
+
+	me := &errors.Error{ID: "test", Code: 200, Detail: "ok", Status: "OK"}
+	st := status.New(200, me.Error())
+	err := ResponseCompareFunc([]byte(me.Error()), st, c, c)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_ResponseCompareFuncGRPCStatusIface(t *testing.T) {
+	c := codec.NewCodec()
+	Codecs = map[string]codec.Codec{"application/json": c}
+
+	me := &errors.Error{ID: "test", Code: 200, Detail: "ok", Status: "OK"}
+	st := status.New(200, me.Error())
+	// grpcErr implements interface{ GRPCStatus() *status.Status }
+	grpcErr := st.Err()
+	err := ResponseCompareFunc([]byte(me.Error()), grpcErr, c, c)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_FromCSVStringNullableColumn(t *testing.T) {
+	col := sqlmock.NewColumn("c1").OfType("VARCHAR", nil).Nullable(true)
+	rows := sqlmock.NewRows([]string{"c1"})
+	// pass "null" to trigger the nullable nil path
+	rows = FromCSVString([]*sqlmock.Column{col}, rows, "null")
+	if rows == nil {
+		t.Fatal("expected non-nil rows")
 	}
 }
