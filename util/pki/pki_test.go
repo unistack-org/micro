@@ -86,6 +86,76 @@ func TestCA(t *testing.T) {
 	*/
 }
 
+func TestSign(t *testing.T) {
+	// Generate CA cert and key
+	pub, priv, err := GenerateKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	serialMax := new(big.Int).Lsh(big.NewInt(1), 128)
+	serial, err := rand.Int(rand.Reader, serialMax)
+	if err != nil {
+		t.Fatal(err)
+	}
+	caCert, caKey, err := CA(
+		KeyPair(pub, priv),
+		Subject(pkix.Name{Organization: []string{"test-ca"}}),
+		SerialNumber(serial),
+		NotBefore(time.Now().Add(-time.Minute)),
+		NotAfter(time.Now().Add(time.Hour)),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Generate a leaf CSR
+	leafPub, leafPriv, err := GenerateKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	csrPEM, err := CSR(
+		KeyPair(leafPub, leafPriv),
+		Subject(pkix.Name{CommonName: "leaf.local"}),
+		DNSNames("leaf.local"),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Sign the CSR with the CA
+	leafSerial, err := rand.Int(rand.Reader, serialMax)
+	if err != nil {
+		t.Fatal(err)
+	}
+	leafCert, err := Sign(caCert, caKey, csrPEM,
+		SerialNumber(leafSerial),
+		NotBefore(time.Now().Add(-time.Minute)),
+		NotAfter(time.Now().Add(time.Hour)),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	asn1Cert, _ := pem.Decode(leafCert)
+	if asn1Cert == nil {
+		t.Fatal("expected valid PEM cert from Sign")
+	}
+	decodedCert, err := x509.ParseCertificate(asn1Cert.Bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if decodedCert.Subject.CommonName != "leaf.local" {
+		t.Errorf("unexpected CN: %s", decodedCert.Subject.CommonName)
+	}
+}
+
+func TestSignInvalidCA(t *testing.T) {
+	_, err := Sign([]byte("not-pem"), []byte("not-pem"), []byte("not-pem"))
+	if err == nil {
+		t.Fatal("expected error for invalid CA cert PEM")
+	}
+}
+
 func TestCSR(t *testing.T) {
 	pub, priv, err := GenerateKey()
 	if err != nil {
