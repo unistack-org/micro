@@ -373,7 +373,7 @@ func TestPairsPanic(t *testing.T) {
 			t.Fatal("Pairs with odd args should panic")
 		}
 	}()
-	Pairs("key1")
+	Pairs("key1") // nolint:staticcheck
 }
 
 func TestAppendContext(t *testing.T) {
@@ -406,7 +406,7 @@ func TestAppendContextPanic(t *testing.T) {
 			t.Fatal("AppendContext with odd args should panic")
 		}
 	}()
-	AppendContext(context.TODO(), "key1")
+	AppendContext(context.TODO(), "key1") // nolint:staticcheck
 }
 
 func TestAppendOutgoingContextPanic(t *testing.T) {
@@ -415,7 +415,7 @@ func TestAppendOutgoingContextPanic(t *testing.T) {
 			t.Fatal("AppendOutgoingContext with odd args should panic")
 		}
 	}()
-	AppendOutgoingContext(context.TODO(), "key1")
+	AppendOutgoingContext(context.TODO(), "key1") // nolint:staticcheck
 }
 
 func TestAppendOutgoingContextWithExisting(t *testing.T) {
@@ -573,9 +573,9 @@ func TestGetJoinedMultiple(t *testing.T) {
 
 func TestDelMultipleFormats(t *testing.T) {
 	md := Metadata{
-		"x-request-id":  []string{"1"},
-		"X-Request-Id":  []string{"2"},
-		"X-Request-ID":  []string{"3"},
+		"x-request-id": []string{"1"},
+		"X-Request-Id": []string{"2"},
+		"X-Request-ID": []string{"3"},
 	}
 	md.Del("x-request-id")
 	if md.Get("x-request-id") != nil {

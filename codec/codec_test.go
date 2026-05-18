@@ -317,7 +317,7 @@ func TestMustContextOK(t *testing.T) {
 
 // TestFromContextNil tests FromContext with nil context
 func TestFromContextNil(t *testing.T) {
-	c, ok := FromContext(nil)
+	c, ok := FromContext(nil) // nolint: staticcheck
 	if ok || c != nil {
 		t.Fatal("expected nil codec and false for nil context")
 	}
@@ -326,7 +326,7 @@ func TestFromContextNil(t *testing.T) {
 // TestNewContextNil tests NewContext with nil context
 func TestNewContextNil(t *testing.T) {
 	nc := NewCodec()
-	ctx := NewContext(nil, nc)
+	ctx := NewContext(nil, nc) // nolint:staticcheck
 	c, ok := FromContext(ctx)
 	if !ok || c == nil {
 		t.Fatal("expected codec from NewContext(nil, ...)")

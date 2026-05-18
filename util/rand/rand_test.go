@@ -42,26 +42,6 @@ func TestInt(t *testing.T) {
 	}
 }
 
-func TestUint32(t *testing.T) {
-	r := &Rand{}
-	for i := 0; i < 100; i++ {
-		val := r.Uint32()
-		if val < 0 {
-			t.Fatalf("Uint32 returned negative value: %d", val)
-		}
-	}
-}
-
-func TestUint64(t *testing.T) {
-	r := &Rand{}
-	for i := 0; i < 100; i++ {
-		val := r.Uint64()
-		if val < 0 {
-			t.Fatalf("Uint64 returned negative value: %d", val)
-		}
-	}
-}
-
 func TestFloat64(t *testing.T) {
 	r := &Rand{}
 	for i := 0; i < 100; i++ {

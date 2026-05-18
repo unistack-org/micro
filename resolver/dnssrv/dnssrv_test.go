@@ -74,9 +74,9 @@ func buildSRVResponse(queryMsg []byte) []byte {
 	mkRR := func(rdata []byte) []byte {
 		var rr []byte
 		rr = append(rr, qnameBytes...)
-		rr = append(rr, 0, 33)        // TYPE SRV
-		rr = append(rr, 0, 1)         // CLASS IN
-		rr = append(rr, 0, 0, 0, 30)  // TTL 30
+		rr = append(rr, 0, 33)       // TYPE SRV
+		rr = append(rr, 0, 1)        // CLASS IN
+		rr = append(rr, 0, 0, 0, 30) // TTL 30
 		rdLen := []byte{0, 0}
 		binary.BigEndian.PutUint16(rdLen, uint16(len(rdata)))
 		rr = append(rr, rdLen...)
@@ -93,7 +93,7 @@ func buildSRVResponse(queryMsg []byte) []byte {
 	// Reconstruct the original question section
 	question := make([]byte, len(qnameBytes)+4)
 	copy(question, qnameBytes)
-	binary.BigEndian.PutUint16(question[len(qnameBytes):], 33) // QTYPE SRV
+	binary.BigEndian.PutUint16(question[len(qnameBytes):], 33)  // QTYPE SRV
 	binary.BigEndian.PutUint16(question[len(qnameBytes)+2:], 1) // QCLASS IN
 
 	msg := append(hdr, question...)
@@ -136,7 +136,7 @@ func TestResolveSuccessWithCustomResolver(t *testing.T) {
 	}
 	defer func() {
 		net.DefaultResolver = orig
-		pc.Close() // stops the goroutine
+		_ = pc.Close() // stops the goroutine
 	}()
 
 	r := &Resolver{}

@@ -5,8 +5,8 @@ import (
 	"crypto/tls"
 	"errors"
 	"net/http"
-	"net/http/httptrace"
 	"net/http/httptest"
+	"net/http/httptrace"
 	"net/textproto"
 	"strings"
 	"testing"
@@ -19,24 +19,24 @@ type mockSpan struct {
 	ctx context.Context
 }
 
-func (s *mockSpan) Tracer() tracer.Tracer                        { return nil }
-func (s *mockSpan) Finish(opts ...tracer.SpanOption)             {}
-func (s *mockSpan) Context() context.Context                     { return s.ctx }
-func (s *mockSpan) SetName(name string)                          {}
-func (s *mockSpan) SetStatus(st tracer.SpanStatus, msg string)   {}
-func (s *mockSpan) Status() (tracer.SpanStatus, string)          { return tracer.SpanStatusUnset, "" }
-func (s *mockSpan) AddLabels(kv ...any)                          {}
+func (s *mockSpan) Tracer() tracer.Tracer                            { return nil }
+func (s *mockSpan) Finish(opts ...tracer.SpanOption)                 {}
+func (s *mockSpan) Context() context.Context                         { return s.ctx }
+func (s *mockSpan) SetName(name string)                              {}
+func (s *mockSpan) SetStatus(st tracer.SpanStatus, msg string)       {}
+func (s *mockSpan) Status() (tracer.SpanStatus, string)              { return tracer.SpanStatusUnset, "" }
+func (s *mockSpan) AddLabels(kv ...any)                              {}
 func (s *mockSpan) AddEvent(name string, opts ...tracer.EventOption) {}
-func (s *mockSpan) AddLogs(kv ...any)                            {}
-func (s *mockSpan) Kind() tracer.SpanKind                        { return tracer.SpanKindClient }
-func (s *mockSpan) TraceID() string                              { return "trace-id" }
-func (s *mockSpan) SpanID() string                               { return "span-id" }
-func (s *mockSpan) IsRecording() bool                            { return true }
+func (s *mockSpan) AddLogs(kv ...any)                                {}
+func (s *mockSpan) Kind() tracer.SpanKind                            { return tracer.SpanKindClient }
+func (s *mockSpan) TraceID() string                                  { return "trace-id" }
+func (s *mockSpan) SpanID() string                                   { return "span-id" }
+func (s *mockSpan) IsRecording() bool                                { return true }
 
 // mockTracer is a minimal no-op implementation of tracer.Tracer.
 type mockTracer struct{}
 
-func (t *mockTracer) Name() string { return "mock" }
+func (t *mockTracer) Name() string                { return "mock" }
 func (t *mockTracer) Init(...tracer.Option) error { return nil }
 func (t *mockTracer) Start(ctx context.Context, name string, opts ...tracer.SpanOption) (context.Context, tracer.Span) {
 	sp := &mockSpan{ctx: ctx}
@@ -277,7 +277,7 @@ func TestClientTracerReceive(t *testing.T) {
 	ct.gotFirstResponseByte()
 	ct.got100Continue()
 	ct.wait100Continue()
-	ct.got1xxResponse(100, textproto.MIMEHeader{})
+	_ = ct.got1xxResponse(100, textproto.MIMEHeader{})
 	ct.putIdleConn(nil)
 }
 

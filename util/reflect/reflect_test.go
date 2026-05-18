@@ -509,7 +509,7 @@ func TestZeroInvalid(t *testing.T) {
 
 func TestMergeNonStruct(t *testing.T) {
 	// Merge to a non-struct, non-map should return ErrInvalidStruct
-	var s string = "hello"
+	s := "hello"
 	err := Merge(&s, map[string]interface{}{"x": 1})
 	if err == nil {
 		t.Fatal("expected error merging into non-struct pointer")

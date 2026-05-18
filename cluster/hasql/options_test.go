@@ -73,7 +73,9 @@ func TestNewClusterMissingDiscoverer(t *testing.T) {
 
 func TestNewClusterMissingPicker(t *testing.T) {
 	db, _, _ := sqlmock.New()
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 	_, err := NewCluster[Querier](
 		WithClusterNodeChecker(hasql.PostgreSQLChecker),
 		WithClusterNodes(ClusterNode{"n1", db, 1}),
@@ -85,7 +87,9 @@ func TestNewClusterMissingPicker(t *testing.T) {
 
 func TestOptionSetters(t *testing.T) {
 	db, _, _ := sqlmock.New()
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 
 	opts := ClusterOptions{}
 	WithClusterNodeDiscoverer(hasql.NewStaticNodeDiscoverer[Querier]())(&opts)
@@ -248,7 +252,9 @@ func TestDriverLegacyMethods(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 
 	ctx := context.Background()
 
@@ -369,15 +375,6 @@ func TestDriverLegacyConnMethods(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-
-type fakeCheckedNode struct {
-	name string
-	lag  int
-	lat  time.Duration
-}
-
-func (f fakeCheckedNode) ReplicationLag() int        { return f.lag }
-func (f fakeCheckedNode) Latency() time.Duration     { return f.lat }
 
 func TestCompareNodes(t *testing.T) {
 	p := &CustomPicker[Querier]{opts: CustomPickerOptions{
