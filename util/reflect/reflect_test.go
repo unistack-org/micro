@@ -184,6 +184,95 @@ func TestMergeNested(t *testing.T) {
 	}
 }
 
+func TestZero(t *testing.T) {
+	type Str struct {
+		Name  string
+		Value int
+	}
+	src := &Str{Name: "hello", Value: 42}
+	z, err := Zero(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if z == nil {
+		t.Fatal("expected non-nil zero value")
+	}
+	zs, ok := z.(*Str)
+	if !ok {
+		t.Fatalf("expected *Str got %T", z)
+	}
+	if zs.Name != "" || zs.Value != 0 {
+		t.Fatalf("expected zero struct, got %+v", zs)
+	}
+}
+
+func TestMergeFloat(t *testing.T) {
+	type str struct {
+		F32 float32 `json:"f32"`
+		F64 float64 `json:"f64"`
+	}
+
+	mp := make(map[string]interface{})
+	mp["f32"] = "3.14"
+	mp["f64"] = "2.718"
+	s := &str{}
+
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+
+	if s.F32 < 3.13 || s.F32 > 3.15 {
+		t.Fatalf("merge float32 error: %#+v\n", s)
+	}
+	if s.F64 < 2.717 || s.F64 > 2.719 {
+		t.Fatalf("merge float64 error: %#+v\n", s)
+	}
+}
+
+func TestMergeInt(t *testing.T) {
+	type str struct {
+		I   int   `json:"i"`
+		I32 int32 `json:"i32"`
+		I64 int64 `json:"i64"`
+	}
+
+	mp := make(map[string]interface{})
+	mp["i"] = "10"
+	mp["i32"] = "20"
+	mp["i64"] = "30"
+	s := &str{}
+
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+
+	if s.I != 10 || s.I32 != 20 || s.I64 != 30 {
+		t.Fatalf("merge int error: %#+v\n", s)
+	}
+}
+
+func TestMergeUint(t *testing.T) {
+	type str struct {
+		U   uint   `json:"u"`
+		U32 uint32 `json:"u32"`
+		U64 uint64 `json:"u64"`
+	}
+
+	mp := make(map[string]interface{})
+	mp["u"] = "10"
+	mp["u32"] = "20"
+	mp["u64"] = "30"
+	s := &str{}
+
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+
+	if s.U != 10 || s.U32 != 20 || s.U64 != 30 {
+		t.Fatalf("merge uint error: %#+v\n", s)
+	}
+}
+
 func TestEqual(t *testing.T) {
 	type tstr struct {
 		Key1 string
@@ -194,5 +283,226 @@ func TestEqual(t *testing.T) {
 	dst := &tstr{Key1: "val1", Key2: "val2"}
 	if !Equal(src, dst, "Key2") {
 		t.Fatal("invalid Equal test")
+	}
+}
+
+func TestEqualSlice(t *testing.T) {
+	src := []string{"a", "b"}
+	dst := []string{"a", "b"}
+	if !Equal(src, dst) {
+		t.Fatal("expected equal slices")
+	}
+}
+
+func TestEqualMap(t *testing.T) {
+	src := map[string]string{"k": "v"}
+	dst := map[string]string{"k": "v"}
+	if !Equal(src, dst) {
+		t.Fatal("expected equal maps")
+	}
+}
+
+func TestMergeBoolFromUint(t *testing.T) {
+	type str struct {
+		B bool `json:"b"`
+	}
+	mp := map[string]interface{}{"b": uint(1)}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if !s.B {
+		t.Fatalf("expected true from uint(1), got %v", s.B)
+	}
+}
+
+func TestMergeBoolFromFloat(t *testing.T) {
+	type str struct {
+		B bool `json:"b"`
+	}
+	mp := map[string]interface{}{"b": float64(0)}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.B {
+		t.Fatalf("expected false from float64(0), got %v", s.B)
+	}
+}
+
+func TestMergeIntFromUint(t *testing.T) {
+	type str struct {
+		I int `json:"i"`
+	}
+	mp := map[string]interface{}{"i": uint(42)}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.I != 42 {
+		t.Fatalf("expected 42 got %d", s.I)
+	}
+}
+
+func TestMergeIntFromFloat(t *testing.T) {
+	type str struct {
+		I int `json:"i"`
+	}
+	mp := map[string]interface{}{"i": float64(7)}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.I != 7 {
+		t.Fatalf("expected 7 got %d", s.I)
+	}
+}
+
+func TestMergeIntFromBool(t *testing.T) {
+	type str struct {
+		I int `json:"i"`
+	}
+	mp := map[string]interface{}{"i": true}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.I != 1 {
+		t.Fatalf("expected 1 from bool true, got %d", s.I)
+	}
+}
+
+func TestMergeUintFromInt(t *testing.T) {
+	type str struct {
+		U uint `json:"u"`
+	}
+	mp := map[string]interface{}{"u": int(5)}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.U != 5 {
+		t.Fatalf("expected 5 got %d", s.U)
+	}
+}
+
+func TestMergeUintFromFloat(t *testing.T) {
+	type str struct {
+		U uint `json:"u"`
+	}
+	mp := map[string]interface{}{"u": float64(9)}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.U != 9 {
+		t.Fatalf("expected 9 got %d", s.U)
+	}
+}
+
+func TestMergeUintFromBool(t *testing.T) {
+	type str struct {
+		U uint `json:"u"`
+	}
+	mp := map[string]interface{}{"u": false}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.U != 0 {
+		t.Fatalf("expected 0 from bool false, got %d", s.U)
+	}
+}
+
+func TestMergeFloatFromInt(t *testing.T) {
+	type str struct {
+		F float64 `json:"f"`
+	}
+	mp := map[string]interface{}{"f": int(3)}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.F != 3.0 {
+		t.Fatalf("expected 3.0 got %v", s.F)
+	}
+}
+
+func TestMergeFloatFromUint(t *testing.T) {
+	type str struct {
+		F float64 `json:"f"`
+	}
+	mp := map[string]interface{}{"f": uint(4)}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.F != 4.0 {
+		t.Fatalf("expected 4.0 got %v", s.F)
+	}
+}
+
+func TestMergeFloatFromBool(t *testing.T) {
+	type str struct {
+		F float64 `json:"f"`
+	}
+	mp := map[string]interface{}{"f": true}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.F != 1.0 {
+		t.Fatalf("expected 1.0 from bool true, got %v", s.F)
+	}
+}
+
+func TestMergeStringFromInt(t *testing.T) {
+	type str struct {
+		S string `json:"s"`
+	}
+	// mergeString uses sval.Type().Bits() as base; int8 = 8 bits → base 8 (valid)
+	mp := map[string]interface{}{"s": int8(7)}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.S == "" {
+		t.Fatalf("expected non-empty string from int8, got %q", s.S)
+	}
+}
+
+func TestMergeStringFromUint(t *testing.T) {
+	type str struct {
+		S string `json:"s"`
+	}
+	// mergeString uses sval.Type().Bits() as base; uint8 = 8 bits → base 8 (valid)
+	mp := map[string]interface{}{"s": uint8(9)}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.S == "" {
+		t.Fatalf("expected non-empty string from uint8, got %q", s.S)
+	}
+}
+
+func TestMergeStringFromFloat(t *testing.T) {
+	type str struct {
+		S string `json:"s"`
+	}
+	mp := map[string]interface{}{"s": float64(1.5)}
+	s := &str{}
+	if err := Merge(s, mp, Tags([]string{"json"})); err != nil {
+		t.Fatal(err)
+	}
+	if s.S == "" {
+		t.Fatalf("expected non-empty string from float, got %q", s.S)
+	}
+}
+
+func TestZeroInvalid(t *testing.T) {
+	_, err := Zero(nil)
+	if err == nil {
+		t.Fatal("expected error for nil input")
 	}
 }

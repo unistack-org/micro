@@ -5,6 +5,53 @@ import (
 	"time"
 )
 
+func TestBufferStream(t *testing.T) {
+	b := New(10)
+
+	entries, stop := b.Stream()
+	if entries == nil {
+		t.Fatal("expected entries channel, got nil")
+	}
+	if stop == nil {
+		t.Fatal("expected stop channel, got nil")
+	}
+
+	b.Put("stream-entry")
+
+	select {
+	case e := <-entries:
+		if e.Value.(string) != "stream-entry" {
+			t.Fatalf("expected stream-entry got %v", e.Value)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("timed out waiting for stream entry")
+	}
+
+	// stop the stream
+	close(stop)
+	// put another value to trigger cleanup
+	b.Put("after-stop")
+}
+
+func TestBufferSize(t *testing.T) {
+	b := New(5)
+	if b.Size() != 5 {
+		t.Fatalf("expected size 5 got %d", b.Size())
+	}
+}
+
+func TestBufferSinceFuture(t *testing.T) {
+	b := New(10)
+	b.Put("entry1")
+
+	// a time in the future should return nil
+	future := time.Now().Add(time.Hour)
+	v := b.Since(future)
+	if v != nil {
+		t.Fatalf("expected nil for future time, got %v", v)
+	}
+}
+
 func TestBuffer(t *testing.T) {
 	b := New(10)
 
