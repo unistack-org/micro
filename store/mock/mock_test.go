@@ -382,3 +382,350 @@ func TestStoreExpectedOperations(t *testing.T) {
 		t.Fatalf("Expectations not met: %v", err)
 	}
 }
+
+func TestStoreInit(t *testing.T) {
+	s := NewStore()
+	if err := s.Init(store.Name("newname")); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	if s.Name() != "newname" {
+		t.Fatalf("expected name 'newname', got %q", s.Name())
+	}
+}
+
+func TestStoreInitError(t *testing.T) {
+	s := NewStore()
+	s.SetError(store.ErrNotFound)
+	if err := s.Init(); err == nil {
+		t.Fatal("expected error from Init when global error is set")
+	}
+}
+
+func TestStoreString(t *testing.T) {
+	s := NewStore()
+	if s.String() != "mock" {
+		t.Fatalf("expected 'mock', got %q", s.String())
+	}
+}
+
+func TestStoreWatch(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+
+	w, err := s.Watch(ctx)
+	if err != nil {
+		t.Fatalf("Watch failed: %v", err)
+	}
+	if w == nil {
+		t.Fatal("expected non-nil watcher")
+	}
+}
+
+func TestStoreWatchError(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.SetError(store.ErrNotConnected)
+	_, err := s.Watch(ctx)
+	if err == nil {
+		t.Fatal("expected error from Watch when global error is set")
+	}
+}
+
+func TestWatcherSendEvent(t *testing.T) {
+	w := NewWatcher()
+	// Send an event and receive it
+	ev := &mockEvent{key: "k1"}
+	w.SendEvent(ev)
+	got, err := w.Next()
+	if err != nil {
+		t.Fatalf("Next returned error: %v", err)
+	}
+	if got != ev {
+		t.Fatal("expected the sent event back")
+	}
+}
+
+// mockEvent satisfies store.Event for testing.
+type mockEvent struct {
+	key string
+}
+
+func (e *mockEvent) Timestamp() time.Time  { return time.Time{} }
+func (e *mockEvent) Error() error          { return nil }
+func (e *mockEvent) Type() store.EventType { return store.EventTypeUnknown }
+
+func TestStoreListWithPrefixSuffixLimitOffset(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	_ = s.Write(ctx, "prefix_a", "v1")
+	_ = s.Write(ctx, "prefix_b", "v2")
+	_ = s.Write(ctx, "other_a_suffix", "v3")
+	_ = s.Write(ctx, "other_b_suffix", "v4")
+	_ = s.Write(ctx, "prefix_c_suffix", "v5")
+
+	// Prefix filter
+	keys, err := s.List(ctx, store.ListPrefix("prefix_"))
+	if err != nil {
+		t.Fatalf("List with prefix failed: %v", err)
+	}
+	for _, k := range keys {
+		if len(k) < len("prefix_") || k[:len("prefix_")] != "prefix_" {
+			t.Fatalf("key %q does not have expected prefix", k)
+		}
+	}
+
+	// Suffix filter
+	keys, err = s.List(ctx, store.ListSuffix("_suffix"))
+	if err != nil {
+		t.Fatalf("List with suffix failed: %v", err)
+	}
+	for _, k := range keys {
+		if len(k) < len("_suffix") || k[len(k)-len("_suffix"):] != "_suffix" {
+			t.Fatalf("key %q does not have expected suffix", k)
+		}
+	}
+
+	// Limit
+	keys, err = s.List(ctx, store.ListLimit(2))
+	if err != nil {
+		t.Fatalf("List with limit failed: %v", err)
+	}
+	if len(keys) > 2 {
+		t.Fatalf("expected ≤2 keys with limit, got %d", len(keys))
+	}
+
+	// Offset beyond list length
+	keys, err = s.List(ctx, store.ListOffset(100))
+	if err != nil {
+		t.Fatalf("List with large offset failed: %v", err)
+	}
+	if len(keys) != 0 {
+		t.Fatalf("expected 0 keys with offset beyond length, got %d", len(keys))
+	}
+
+	// Limit + offset within range
+	keys, err = s.List(ctx, store.ListLimit(2), store.ListOffset(1))
+	if err != nil {
+		t.Fatalf("List with limit+offset failed: %v", err)
+	}
+	if len(keys) > 2 {
+		t.Fatalf("expected ≤2 keys, got %d", len(keys))
+	}
+}
+
+func TestStoreListError(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.SetError(store.ErrNotConnected)
+	_, err := s.List(ctx)
+	if err == nil {
+		t.Fatal("expected error from List when global error is set")
+	}
+}
+
+func TestExpectedListError(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.ExpectList().WillReturnError(store.ErrNotFound)
+	_, err := s.List(ctx)
+	if err != store.ErrNotFound {
+		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestExpectedListTimes(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.ExpectList().Times(2).WillReturn("k1", "k2")
+	for range 2 {
+		keys, err := s.List(ctx)
+		if err != nil {
+			t.Fatalf("List failed: %v", err)
+		}
+		if len(keys) != 2 {
+			t.Fatalf("expected 2 keys, got %d", len(keys))
+		}
+	}
+	if err := s.ExpectationsWereMet(); err != nil {
+		t.Fatalf("Expectations not met: %v", err)
+	}
+}
+
+func TestExpectedDeleteTimes(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.ExpectDelete("dk").Times(1)
+	if err := s.Delete(ctx, "dk"); err != nil {
+		t.Fatalf("Delete failed: %v", err)
+	}
+	if err := s.ExpectationsWereMet(); err != nil {
+		t.Fatalf("Expectations not met: %v", err)
+	}
+}
+
+func TestExpectedDeleteError(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.ExpectDelete("ek").WillReturnError(store.ErrNotFound)
+	if err := s.Delete(ctx, "ek"); err != store.ErrNotFound {
+		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestDeleteGlobalError(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.SetError(store.ErrNotConnected)
+	if err := s.Delete(ctx, "k"); err == nil {
+		t.Fatal("expected error from Delete when global error is set")
+	}
+}
+
+func TestExpectedExistsTimes(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	_ = s.Write(ctx, "ek", "v")
+	s.ExpectExists("ek").Times(1)
+	if err := s.Exists(ctx, "ek"); err != nil {
+		t.Fatalf("Exists failed: %v", err)
+	}
+	if err := s.ExpectationsWereMet(); err != nil {
+		t.Fatalf("Expectations not met: %v", err)
+	}
+}
+
+func TestExpectedReadTimes(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	_ = s.Write(ctx, "rk", "rv")
+	s.ExpectRead("rk").Times(1)
+	var v string
+	if err := s.Read(ctx, "rk", &v); err != nil {
+		t.Fatalf("Read failed: %v", err)
+	}
+	if err := s.ExpectationsWereMet(); err != nil {
+		t.Fatalf("Expectations not met: %v", err)
+	}
+}
+
+func TestExpectedReadError(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.ExpectRead("missing").WillReturnError(store.ErrNotFound)
+	var v string
+	if err := s.Read(ctx, "missing", &v); err != store.ErrNotFound {
+		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestReadGlobalError(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.SetError(store.ErrNotConnected)
+	var v string
+	if err := s.Read(ctx, "k", &v); err == nil {
+		t.Fatal("expected error from Read when global error is set")
+	}
+}
+
+func TestExpectedWriteNamespace(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.ExpectWrite("nk").WithNamespace("ns1").WithValue("nv")
+	if err := s.Write(ctx, "nk", "nv", store.WriteNamespace("ns1")); err != nil {
+		t.Fatalf("Write with namespace failed: %v", err)
+	}
+}
+
+func TestExpectedWriteError(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.ExpectWrite("ek").WillReturnError(store.ErrNotFound)
+	if err := s.Write(ctx, "ek", "v"); err != store.ErrNotFound {
+		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestWriteGlobalError(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.SetError(store.ErrNotConnected)
+	if err := s.Write(ctx, "k", "v"); err == nil {
+		t.Fatal("expected error from Write when global error is set")
+	}
+}
+
+func TestExpectationsNotMetWrite(t *testing.T) {
+	s := NewStore()
+	s.ExpectWrite("k").Times(3)
+	// Only call once so expectation is not met
+	_ = s.Write(context.Background(), "k", "v")
+	if err := s.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected ExpectationsWereMet to return error")
+	}
+}
+
+func TestExpectationsNotMetRead(t *testing.T) {
+	s := NewStore()
+	s.ExpectRead("k").Times(2)
+	var v string
+	_ = s.Read(context.Background(), "k", &v)
+	if err := s.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected ExpectationsWereMet to return error for read")
+	}
+}
+
+func TestExpectationsNotMetDelete(t *testing.T) {
+	s := NewStore()
+	s.ExpectDelete("k").Times(2)
+	_ = s.Delete(context.Background(), "k")
+	if err := s.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected ExpectationsWereMet to return error for delete")
+	}
+}
+
+func TestExpectationsNotMetExists(t *testing.T) {
+	s := NewStore()
+	s.ExpectExists("k").Times(2)
+	_ = s.Exists(context.Background(), "k")
+	if err := s.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected ExpectationsWereMet to return error for exists")
+	}
+}
+
+func TestExpectationsNotMetList(t *testing.T) {
+	s := NewStore()
+	s.ExpectList().Times(3)
+	_, _ = s.List(context.Background())
+	if err := s.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected ExpectationsWereMet to return error for list")
+	}
+}
+
+func TestExistsGlobalError(t *testing.T) {
+	ctx := context.Background()
+	s := NewStore()
+	s.SetError(store.ErrNotConnected)
+	if err := s.Exists(ctx, "k"); err == nil {
+		t.Fatal("expected error from Exists when global error is set")
+	}
+}
+
+func TestWatcherSendEventFull(t *testing.T) {
+	w := NewWatcher()
+	// Fill the channel (capacity 1)
+	ev1 := &mockEvent{key: "k1"}
+	ev2 := &mockEvent{key: "k2"}
+	w.SendEvent(ev1)
+	// This second send should be dropped silently (channel full)
+	w.SendEvent(ev2)
+	got, err := w.Next()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != ev1 {
+		t.Fatal("expected first event")
+	}
+	// Stop the watcher so Next doesn't block
+	w.Stop()
+}

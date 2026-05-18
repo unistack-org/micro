@@ -506,3 +506,99 @@ func TestZeroInvalid(t *testing.T) {
 		t.Fatal("expected error for nil input")
 	}
 }
+
+func TestMergeNonStruct(t *testing.T) {
+	// Merge to a non-struct, non-map should return ErrInvalidStruct
+	var s string = "hello"
+	err := Merge(&s, map[string]interface{}{"x": 1})
+	if err == nil {
+		t.Fatal("expected error merging into non-struct pointer")
+	}
+}
+
+func TestMergeBoolInvalidValue(t *testing.T) {
+	type str struct {
+		B bool `json:"b"`
+	}
+	// string that doesn't parse as bool
+	mp := map[string]interface{}{"b": "notabool"}
+	s := &str{}
+	err := Merge(s, mp, Tags([]string{"json"}))
+	if err == nil {
+		t.Fatal("expected error for invalid bool string")
+	}
+}
+
+func TestMergeIntInvalidString(t *testing.T) {
+	type str struct {
+		I int `json:"i"`
+	}
+	mp := map[string]interface{}{"i": "notanumber"}
+	s := &str{}
+	err := Merge(s, mp, Tags([]string{"json"}))
+	if err == nil {
+		t.Fatal("expected error for invalid int string")
+	}
+}
+
+func TestMergeUintInvalidString(t *testing.T) {
+	type str struct {
+		U uint `json:"u"`
+	}
+	mp := map[string]interface{}{"u": "notanumber"}
+	s := &str{}
+	err := Merge(s, mp, Tags([]string{"json"}))
+	if err == nil {
+		t.Fatal("expected error for invalid uint string")
+	}
+}
+
+func TestMergeFloatInvalidString(t *testing.T) {
+	type str struct {
+		F float64 `json:"f"`
+	}
+	mp := map[string]interface{}{"f": "notafloat"}
+	s := &str{}
+	err := Merge(s, mp, Tags([]string{"json"}))
+	if err == nil {
+		t.Fatal("expected error for invalid float string")
+	}
+}
+
+func TestIsEmptyFunc(t *testing.T) {
+	// non-nil func: IsZero should return false
+	import_reflect := func() {}
+	if IsZero(import_reflect) {
+		t.Fatal("non-nil func should not be empty")
+	}
+	// nil func: IsZero should return true
+	var fn func()
+	if !IsZero(fn) {
+		t.Fatal("nil func should be empty")
+	}
+}
+
+func TestIsEmptyStructDefault(t *testing.T) {
+	// default case in IsEmpty: chan — IsZero returns false for channels
+	ch := make(chan int)
+	if IsZero(ch) {
+		t.Fatal("channel default case should return false")
+	}
+}
+
+func TestEqualPointerBothNil(t *testing.T) {
+	var a *struct{ X int }
+	var b *struct{ X int }
+	if !Equal(a, b) {
+		t.Fatal("two nil pointers should be equal")
+	}
+}
+
+func TestEqualPointerNilVsNonNil(t *testing.T) {
+	type S struct{ X int }
+	var a *S
+	b := &S{X: 1}
+	if Equal(a, b) {
+		t.Fatal("nil vs non-nil pointer should not be equal")
+	}
+}
