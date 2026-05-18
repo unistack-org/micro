@@ -2,12 +2,12 @@ name: coverage
 
 on:
   push:
-    branches: [ main, v3, v4 ]
+    branches: [ main, v3, v4, v5 ]
     paths-ignore:
       - '.github/**'
       - '.gitea/**'
   pull_request:
-    branches: [ main, v3, v4 ]
+    branches: [ main, v3, v4, v5 ]
 
 jobs:
 

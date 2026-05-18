@@ -3,7 +3,7 @@ name: lint
 on:
   pull_request:
     types: [opened, reopened, synchronize]
-    branches: [ master, v3, v4 ]
+    branches: [ master, v3, v4, v5 ]
     paths-ignore:
       - '.github/**'
       - '.gitea/**'

@@ -189,7 +189,7 @@ func (c *MockClient) Call(ctx context.Context, req client.Request, rsp any, opts
 
 		v := reflect.ValueOf(rsp)
 
-		if t := reflect.TypeOf(rsp); t.Kind() == reflect.Ptr {
+		if t := reflect.TypeOf(rsp); t.Kind() == reflect.Pointer {
 			v = reflect.Indirect(v)
 		}
 		response := er.rsp

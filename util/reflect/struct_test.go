@@ -274,6 +274,65 @@ func TestURLMap(t *testing.T) {
 	_ = mp
 }
 
+func TestStructFieldNameByTag(t *testing.T) {
+	type Str struct {
+		Name string `json:"name" codec:"flatten"`
+	}
+	val := &Str{Name: "hello"}
+	name, v, err := rutil.StructFieldNameByTag(val, "codec", "flatten")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if name != "Name" {
+		t.Fatalf("expected Name got %s", name)
+	}
+	if v.(string) != "hello" {
+		t.Fatalf("expected hello got %v", v)
+	}
+}
+
+func TestStructFieldNameByTagNotFound(t *testing.T) {
+	type Str struct {
+		Name string `json:"name"`
+	}
+	val := &Str{Name: "hello"}
+	_, _, err := rutil.StructFieldNameByTag(val, "codec", "flatten")
+	if err == nil {
+		t.Fatal("expected error for missing tag, got nil")
+	}
+}
+
+func TestCopyDefaults(t *testing.T) {
+	type Cfg struct {
+		Host string
+		Port int
+	}
+	a := &Cfg{Host: "localhost", Port: 8080}
+	b := &Cfg{Host: "remotehost", Port: 9090}
+	rutil.CopyDefaults(a, b)
+	if a.Host != "remotehost" || a.Port != 9090 {
+		t.Fatalf("CopyDefaults failed: %+v", a)
+	}
+}
+
+func TestCopyFrom(t *testing.T) {
+	type Src struct {
+		Name  string
+		Value int
+		Extra string
+	}
+	type Dst struct {
+		Name  string
+		Value int
+	}
+	src := &Src{Name: "test", Value: 42, Extra: "ignored"}
+	dst := &Dst{}
+	rutil.CopyFrom(dst, src)
+	if dst.Name != "test" || dst.Value != 42 {
+		t.Fatalf("CopyFrom failed: %+v", dst)
+	}
+}
+
 func TestIsZero(t *testing.T) {
 	testStr1 := struct {
 		Name   string

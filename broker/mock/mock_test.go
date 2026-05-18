@@ -405,6 +405,99 @@ func TestUnsubscribe_RemovesHandler(t *testing.T) {
 	}
 }
 
+func TestMockMessage_AckedAndUnmarshal(t *testing.T) {
+	ctx := context.Background()
+	msg := mock.NewMockMessage(ctx, "topic", nil, []byte(`{}`), nil)
+
+	if msg.Acked() {
+		t.Fatal("expected Acked() == false before Ack()")
+	}
+	if err := msg.Ack(); err != nil {
+		t.Fatalf("Ack: %v", err)
+	}
+	if !msg.Acked() {
+		t.Fatal("expected Acked() == true after Ack()")
+	}
+
+	// Unmarshal with nil codec returns ErrUnknownContentType
+	if err := msg.Unmarshal(nil); err == nil {
+		t.Fatal("expected error from Unmarshal with nil codec")
+	}
+}
+
+func TestMockBroker_InitOptionsNameStringAddressLiveReadyHealth(t *testing.T) {
+	b := mock.NewMockBroker()
+
+	if err := b.Init(); err != nil {
+		t.Fatalf("Init: %v", err)
+	}
+	_ = b.Options()
+	_ = b.Name()
+	_ = b.String()
+	_ = b.Address()
+	if !b.Live() {
+		t.Fatal("expected Live() == true")
+	}
+	if !b.Ready() {
+		t.Fatal("expected Ready() == true")
+	}
+	if !b.Health() {
+		t.Fatal("expected Health() == true")
+	}
+}
+
+func TestMockBroker_NewMessage_NoCodec(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	_, err := b.NewMessage(ctx, nil, struct{}{})
+	if err == nil {
+		t.Fatal("expected error when no codec configured")
+	}
+}
+
+func TestExpectedString_WithError(t *testing.T) {
+	b := mock.NewMockBroker()
+	want := fmt.Errorf("some error")
+
+	ec := b.ExpectConnect().WillReturnError(want)
+	if s := ec.String(); s == "" {
+		t.Fatal("expected non-empty String()")
+	}
+
+	ed := b.ExpectDisconnect().WillReturnError(want)
+	if s := ed.String(); s == "" {
+		t.Fatal("expected non-empty String()")
+	}
+
+	ep := b.ExpectPublish("topic").WillReturnError(want)
+	if s := ep.String(); s == "" {
+		t.Fatal("expected non-empty String()")
+	}
+
+	es := b.ExpectSubscribe("topic").WillReturnError(want)
+	if s := es.String(); s == "" {
+		t.Fatal("expected non-empty String()")
+	}
+
+	eu := b.ExpectUnsubscribe("topic").WillReturnError(want)
+	if s := eu.String(); s == "" {
+		t.Fatal("expected non-empty String()")
+	}
+}
+
+func TestSubscriber_Options(t *testing.T) {
+	ctx := context.Background()
+	b := mock.NewMockBroker()
+	b.ExpectConnect()
+	b.ExpectSubscribe("orders")
+	_ = b.Connect(ctx)
+	sub, err := b.Subscribe(ctx, "orders", func(broker.Message) error { return nil })
+	if err != nil {
+		t.Fatalf("Subscribe: %v", err)
+	}
+	_ = sub.Options()
+}
+
 func TestFullLifecycle(t *testing.T) {
 	ctx := context.Background()
 	b := mock.NewMockBroker()
