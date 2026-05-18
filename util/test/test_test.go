@@ -379,6 +379,57 @@ func Test_ResponseCompareFuncGRPCStatusIface(t *testing.T) {
 	}
 }
 
+type fakeRunClient struct {
+	*mock.MockClient
+	retErr  error
+	rspData []byte
+}
+
+func (f *fakeRunClient) Call(ctx context.Context, req client.Request, rsp any, opts ...client.CallOption) error {
+	if f.retErr != nil {
+		return f.retErr
+	}
+	if frame, ok := rsp.(*codecpb.Frame); ok {
+		frame.Data = f.rspData
+	}
+	return nil
+}
+
+func Test_RunSuccess(t *testing.T) {
+	ctx := context.Background()
+	_, sqlm, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := codec.NewCodec()
+	Codecs = map[string]codec.Codec{"application/json": c}
+	mc := &fakeRunClient{
+		MockClient: mock.NewClient(client.Codec("application/json", c)),
+		rspData:    []byte("{}"),
+	}
+	if err = Run(ctx, mc, sqlm, "testdata/", nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_RunClientError(t *testing.T) {
+	ctx := context.Background()
+	_, sqlm, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := codec.NewCodec()
+	Codecs = map[string]codec.Codec{"application/json": c}
+	mc := &fakeRunClient{
+		MockClient: mock.NewClient(client.Codec("application/json", c)),
+		retErr:     fmt.Errorf("call failed"),
+	}
+	err = Run(ctx, mc, sqlm, "testdata/", nil)
+	if err == nil {
+		t.Fatal("expected error from client call")
+	}
+}
+
 func Test_FromCSVStringNullableColumn(t *testing.T) {
 	col := sqlmock.NewColumn("c1").OfType("VARCHAR", nil).Nullable(true)
 	rows := sqlmock.NewRows([]string{"c1"})
