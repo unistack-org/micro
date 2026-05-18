@@ -20,3 +20,18 @@ func TestSelectorTests(t *testing.T) {
 	s := random.NewSelector()
 	selector.Tests(t, s)
 }
+
+func TestNewSelectOptions(t *testing.T) {
+	opts := selector.NewSelectOptions()
+	_ = opts
+
+	called := false
+	customOpt := func(o *selector.SelectOptions) {
+		called = true
+	}
+	opts2 := selector.NewSelectOptions(customOpt)
+	_ = opts2
+	if !called {
+		t.Fatal("expected custom SelectOption to be called")
+	}
+}
