@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	codecpb "go.unistack.org/micro-proto/v5/codec"
@@ -120,6 +121,20 @@ type StateStore interface {
 	StepSetCheckpoint(ctx context.Context, eid, sid string, data []byte) error
 }
 
+// WorkflowWatcher is an optional StateStore extension for pushing workflow
+// status changes to subscribers instead of relying on polling.
+//
+// When the state store implements this interface, the engine subscribes to
+// every execution running in this process (on registration) and cancels it
+// as soon as the store reports a StatusAborted or StatusSuspend status.
+type WorkflowWatcher interface {
+	// WatchWorkflow subscribes to the status changes of the execution eid.
+	// The returned channel first receives the current status (when the
+	// record exists) and then every subsequently set status; it is closed
+	// when ctx is done.
+	WatchWorkflow(ctx context.Context, eid string) (<-chan Status, error)
+}
+
 // kvStateStore adapts a plain store.Store to StateStore.
 //
 // State is stored as flat keys (only key paths, no key parts):
@@ -143,6 +158,13 @@ type StateStore interface {
 // adapter compatible with data written by the previous key-based engine.
 type kvStateStore struct {
 	s store.Store
+
+	// In-process status push (WorkflowWatcher). Subscribers belong to this
+	// process, so statuses are delivered to in-process subscribers only;
+	// for cross-process push use a StateStore implementation backed by a
+	// pub/sub store (e.g. Redis).
+	subMu sync.Mutex
+	subs  map[string]map[chan Status]struct{}
 }
 
 // NewKVStateStore creates a StateStore backed by a store.Store.
@@ -337,6 +359,7 @@ func (k *kvStateStore) WorkflowSave(ctx context.Context, eid string, st *Workflo
 			return err
 		}
 	}
+	k.notify(eid, st.Status)
 	return nil
 }
 
@@ -356,7 +379,11 @@ func (k *kvStateStore) WorkflowDelete(ctx context.Context, eid string) error {
 }
 
 func (k *kvStateStore) WorkflowSetStatus(ctx context.Context, eid string, s Status) error {
-	return k.write(ctx, kvWorkflowKey(eid, "status"), []byte(s.String()))
+	if err := k.write(ctx, kvWorkflowKey(eid, "status"), []byte(s.String())); err != nil {
+		return err
+	}
+	k.notify(eid, s)
+	return nil
 }
 
 func (k *kvStateStore) WorkflowStatus(ctx context.Context, eid string) (Status, error) {
@@ -369,6 +396,68 @@ func (k *kvStateStore) WorkflowStatus(ctx context.Context, eid string) (Status, 
 
 func (k *kvStateStore) WorkflowSetLastStep(ctx context.Context, eid, sid string) error {
 	return k.write(ctx, kvWorkflowKey(eid, "last_step"), []byte(sid))
+}
+
+// WatchWorkflow implements WorkflowWatcher with an in-process pub/sub
+// registry: statuses written through this store instance are pushed to its
+// subscribers.
+func (k *kvStateStore) WatchWorkflow(ctx context.Context, eid string) (<-chan Status, error) {
+	ch := make(chan Status, 1)
+
+	// Register before reading the current status so that no write is lost
+	// between the two: a concurrent write is either captured by the read or
+	// delivered by notify.
+	k.subMu.Lock()
+	if k.subs == nil {
+		k.subs = make(map[string]map[chan Status]struct{})
+	}
+	if k.subs[eid] == nil {
+		k.subs[eid] = make(map[chan Status]struct{})
+	}
+	k.subs[eid][ch] = struct{}{}
+	st, err := k.WorkflowStatus(ctx, eid)
+	k.subMu.Unlock()
+
+	if err != nil {
+		if !errors.Is(err, store.ErrNotFound) {
+			k.unsub(eid, ch)
+			return nil, err
+		}
+	} else {
+		ch <- st
+	}
+
+	go func() {
+		<-ctx.Done()
+		k.unsub(eid, ch)
+		close(ch)
+	}()
+
+	return ch, nil
+}
+
+// unsub removes a subscriber from the in-process pub/sub registry.
+func (k *kvStateStore) unsub(eid string, ch chan Status) {
+	k.subMu.Lock()
+	delete(k.subs[eid], ch)
+	k.subMu.Unlock()
+}
+
+// notify pushes a status to all in-process subscribers of the execution.
+func (k *kvStateStore) notify(eid string, st Status) {
+	k.subMu.Lock()
+	subs := make([]chan Status, 0, len(k.subs[eid]))
+	for ch := range k.subs[eid] {
+		subs = append(subs, ch)
+	}
+	k.subMu.Unlock()
+
+	for _, ch := range subs {
+		select {
+		case ch <- st:
+		default: // subscriber is lagging; the poller is the safety net
+		}
+	}
 }
 
 func (k *kvStateStore) WorkflowList(ctx context.Context, f *WorkflowFilter) ([]WorkflowListEntry, error) {

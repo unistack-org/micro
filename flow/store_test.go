@@ -214,3 +214,51 @@ func TestKVStateStore(t *testing.T) {
 	}
 	StateStoreConformance(t, newStore)
 }
+
+func TestKVStateStoreWatchWorkflow(t *testing.T) {
+	s := memory.NewStore()
+	require.NoError(t, s.Init())
+	require.NoError(t, s.Connect(context.Background()))
+	ss := NewKVStateStore(s)
+
+	w, ok := ss.(WorkflowWatcher)
+	require.True(t, ok)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	ch, err := w.WatchWorkflow(ctx, "watch-eid")
+	require.NoError(t, err)
+
+	// No initial value for a non-existent execution.
+	select {
+	case st := <-ch:
+		t.Fatalf("unexpected initial status: %v", st)
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	require.NoError(t, ss.WorkflowSetStatus(ctx, "watch-eid", StatusRunning))
+	select {
+	case st := <-ch:
+		assert.Equal(t, StatusRunning, st)
+	case <-time.After(time.Second):
+		t.Fatal("timed out waiting for pushed status")
+	}
+
+	require.NoError(t, ss.WorkflowSetStatus(ctx, "watch-eid", StatusAborted))
+	select {
+	case st := <-ch:
+		assert.Equal(t, StatusAborted, st)
+	case <-time.After(time.Second):
+		t.Fatal("timed out waiting for pushed status")
+	}
+
+	// Cancellation of the subscription context closes the channel.
+	cancel()
+	select {
+	case _, ok := <-ch:
+		assert.False(t, ok)
+	case <-time.After(time.Second):
+		t.Fatal("timed out waiting for channel close")
+	}
+}

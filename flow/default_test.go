@@ -100,7 +100,8 @@ func (s *engineStep) input(i int) string {
 }
 
 // newTestFlow creates an initialized flow backed by a memory store and
-// returns the flow with a StateStore view over the same store.
+// returns the flow with its own StateStore, so status writes in tests also
+// reach the flow's in-process status push subscriptions.
 func newTestFlow(t *testing.T, opts ...Option) (Flow, StateStore) {
 	t.Helper()
 	s := memory.NewStore()
@@ -109,7 +110,9 @@ func newTestFlow(t *testing.T, opts ...Option) (Flow, StateStore) {
 	f := NewFlow(append([]Option{Store(s)}, opts...)...)
 	require.NoError(t, f.Init())
 	t.Cleanup(func() { _ = f.Close() })
-	return f, NewKVStateStore(s)
+	mf, ok := f.(*microFlow)
+	require.True(t, ok)
+	return f, mf.stateStore()
 }
 
 // waitFinished polls until the execution has reached a terminal write
@@ -528,7 +531,9 @@ func TestEngineCrossProcessAbort(t *testing.T) {
 }
 
 func TestEngineCrossProcessAbortInFlight(t *testing.T) {
-	f, ss := newTestFlow(t)
+	// Polling is disabled: the abort signal can only arrive via the state
+	// store's WorkflowWatcher push subscription.
+	f, ss := newTestFlow(t, PollInterval(-1))
 	ctx := context.Background()
 
 	a := &engineStep{name: "a"}
@@ -548,13 +553,64 @@ func TestEngineCrossProcessAbortInFlight(t *testing.T) {
 
 	waitStepStatus(t, ss, eid, "b", StatusRunning)
 
-	// Set the status directly in the store (another process); the poller
-	// must cancel the in-flight execution.
+	// Set the status directly in the store (another process); the push
+	// subscription must cancel the in-flight execution.
 	require.NoError(t, ss.WorkflowSetStatus(ctx, eid, StatusAborted))
 
 	require.Eventually(t, func() bool {
 		return atomic.LoadInt32(&cancelled) == 1
-	}, 15*time.Second, 100*time.Millisecond)
+	}, 5*time.Second, 10*time.Millisecond)
+
+	st := waitFinished(t, ss, eid)
+	assert.Equal(t, StatusAborted, st.Status)
+}
+
+// pollingStateStore hides the optional WorkflowWatcher implementation of
+// the wrapped store (embedding exposes only the StateStore method set), so
+// the poller path can be exercised in isolation.
+type pollingStateStore struct {
+	StateStore
+}
+
+func TestEngineCrossProcessAbortPolling(t *testing.T) {
+	s := memory.NewStore()
+	require.NoError(t, s.Init())
+	require.NoError(t, s.Connect(context.Background()))
+
+	f := NewFlow(
+		Store(s),
+		StateStorage(pollingStateStore{NewKVStateStore(s)}),
+		PollInterval(10*time.Millisecond),
+	)
+	require.NoError(t, f.Init())
+	t.Cleanup(func() { _ = f.Close() })
+	ss := f.(*microFlow).stateStore()
+	ctx := context.Background()
+
+	a := &engineStep{name: "a"}
+	b := &engineStep{name: "b"}
+	require.NoError(t, b.Require(a))
+	var cancelled int32
+	b.setFn(func(ctx context.Context, req *Message) (*Message, error) {
+		<-ctx.Done()
+		atomic.StoreInt32(&cancelled, 1)
+		return nil, ctx.Err()
+	})
+
+	w, err := f.WorkflowCreate(ctx, "wf-xabort-poll", a, b)
+	require.NoError(t, err)
+	eid, err := w.Execute(ctx, nil, ExecuteAsync(true))
+	require.NoError(t, err)
+
+	waitStepStatus(t, ss, eid, "b", StatusRunning)
+
+	// Set the status directly in the store (another process); with no
+	// WorkflowWatcher available, only the poller can cancel the execution.
+	require.NoError(t, ss.WorkflowSetStatus(ctx, eid, StatusAborted))
+
+	require.Eventually(t, func() bool {
+		return atomic.LoadInt32(&cancelled) == 1
+	}, 5*time.Second, 10*time.Millisecond)
 
 	st := waitFinished(t, ss, eid)
 	assert.Equal(t, StatusAborted, st.Status)

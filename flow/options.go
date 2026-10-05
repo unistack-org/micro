@@ -37,6 +37,12 @@ type Options struct {
 	CleanupInterval time.Duration
 	// CleanupTTL is how long a finished execution is kept before deletion.
 	CleanupTTL time.Duration
+	// PollInterval is the interval between state store polls for
+	// cross-process abort/suspend signals of executions running in this
+	// process. Zero uses DefaultPollInterval; negative disables polling
+	// (useful when the state store pushes status changes via
+	// WorkflowWatcher).
+	PollInterval time.Duration
 	// PoolSize is the maximum number of concurrently executing workflow steps (0 = default: runtime.NumCPU()*2)
 	PoolSize int
 }
@@ -115,6 +121,15 @@ func Cleanup(interval, ttl time.Duration) Option {
 	return func(o *Options) {
 		o.CleanupInterval = interval
 		o.CleanupTTL = ttl
+	}
+}
+
+// PollInterval sets the interval between state store polls for
+// cross-process abort/suspend signals. Zero uses DefaultPollInterval;
+// negative disables polling (rely on WorkflowWatcher push instead).
+func PollInterval(d time.Duration) Option {
+	return func(o *Options) {
+		o.PollInterval = d
 	}
 }
 

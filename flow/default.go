@@ -16,10 +16,10 @@ import (
 	"go.unistack.org/micro/v5/util/id"
 )
 
-// defaultStatusPollInterval is how often the engine checks the state store
-// for cross-process abort/suspend signals of executions running in this
-// process.
-const defaultStatusPollInterval = 5 * time.Second
+// DefaultPollInterval is how often the engine checks the state store for
+// cross-process abort/suspend signals of executions running in this process
+// when Options.PollInterval is zero.
+const DefaultPollInterval = 5 * time.Second
 
 // microFlow implements Flow.
 type microFlow struct {
@@ -29,13 +29,15 @@ type microFlow struct {
 	mu         sync.Mutex
 	executions map[string]*microExecution
 
+	ctx    context.Context
 	cancel context.CancelFunc
 }
 
 // microExecution is an execution currently running in this process.
 type microExecution struct {
-	eid    string
-	cancel context.CancelFunc
+	eid         string
+	cancel      context.CancelFunc
+	watchCancel context.CancelFunc
 }
 
 type microWorkflow struct {
@@ -663,9 +665,12 @@ func (f *microFlow) Init(opts ...Option) error {
 
 	if f.cancel == nil {
 		ctx, cancel := context.WithCancel(f.opts.Context)
+		f.ctx = ctx
 		f.cancel = cancel
 
-		go f.pollStatuses(ctx)
+		if f.opts.PollInterval >= 0 {
+			go f.pollStatuses(ctx)
+		}
 		if f.opts.CleanupInterval > 0 {
 			go f.cleanup(ctx)
 		}
@@ -687,13 +692,47 @@ func (f *microFlow) registerExecution(e *microExecution) {
 	f.mu.Lock()
 	f.executions[e.eid] = e
 	f.mu.Unlock()
+
+	f.subscribeExecution(e)
+}
+
+// subscribeExecution subscribes the execution to the state store's status
+// push notifications (when the store implements WorkflowWatcher) so a
+// cross-process abort/suspend cancels the execution immediately instead of
+// waiting for the status poller.
+func (f *microFlow) subscribeExecution(e *microExecution) {
+	w, ok := f.stateStore().(WorkflowWatcher)
+	if !ok {
+		return
+	}
+	ctx, cancel := context.WithCancel(f.ctx)
+	e.watchCancel = cancel
+	ch, err := w.WatchWorkflow(ctx, e.eid)
+	if err != nil {
+		cancel()
+		e.watchCancel = nil
+		f.opts.Logger.Error(ctx, "failed to subscribe workflow status", "eid", e.eid, "error", err)
+		return
+	}
+	go func() {
+		for st := range ch {
+			if st == StatusAborted || st == StatusSuspend {
+				e.cancel()
+				return
+			}
+		}
+	}()
 }
 
 // unregisterExecution removes an execution from the in-process registry.
 func (f *microFlow) unregisterExecution(eid string) {
 	f.mu.Lock()
+	e := f.executions[eid]
 	delete(f.executions, eid)
 	f.mu.Unlock()
+	if e != nil && e.watchCancel != nil {
+		e.watchCancel()
+	}
 }
 
 // cancelExecution cancels the execution running in this process (if any), so
@@ -709,9 +748,14 @@ func (f *microFlow) cancelExecution(eid string) {
 
 // pollStatuses periodically checks the state store for cross-process
 // abort/suspend signals of executions running in this process and cancels
-// their execution contexts.
+// their execution contexts. It complements WorkflowWatcher push
+// subscriptions and acts as a safety net when the store does not push.
 func (f *microFlow) pollStatuses(ctx context.Context) {
-	ticker := time.NewTicker(defaultStatusPollInterval)
+	interval := f.opts.PollInterval
+	if interval <= 0 {
+		interval = DefaultPollInterval
+	}
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
 		select {
