@@ -22,22 +22,22 @@ type poolTestStep struct {
 	mu            sync.Mutex
 }
 
-func (s *poolTestStep) ID() string               { return s.name }
-func (s *poolTestStep) Endpoint() string         { return s.name }
-func (s *poolTestStep) String() string           { return s.name }
-func (s *poolTestStep) Hashcode() interface{}    { return s.name }
-func (s *poolTestStep) Requires() []string       { return s.requires }
-func (s *poolTestStep) Options() StepOptions     { return StepOptions{} }
+func (s *poolTestStep) ID() string            { return s.name }
+func (s *poolTestStep) Endpoint() string      { return s.name }
+func (s *poolTestStep) String() string        { return s.name }
+func (s *poolTestStep) Hashcode() interface{} { return s.name }
+func (s *poolTestStep) Requires() []string    { return s.requires }
+func (s *poolTestStep) Options() StepOptions  { return StepOptions{} }
 func (s *poolTestStep) Require(steps ...Step) error {
 	for _, step := range steps {
 		s.requires = append(s.requires, step.String())
 	}
 	return nil
 }
-func (s *poolTestStep) GetStatus() Status  { s.mu.Lock(); defer s.mu.Unlock(); return s.status }
+func (s *poolTestStep) GetStatus() Status   { s.mu.Lock(); defer s.mu.Unlock(); return s.status }
 func (s *poolTestStep) SetStatus(st Status) { s.mu.Lock(); defer s.mu.Unlock(); s.status = st }
-func (s *poolTestStep) Request() *Message  { return nil }
-func (s *poolTestStep) Response() *Message { return nil }
+func (s *poolTestStep) Request() *Message   { return nil }
+func (s *poolTestStep) Response() *Message  { return nil }
 func (s *poolTestStep) Compensate(_ context.Context, _ *Message, _ ...ExecuteOption) error {
 	return nil
 }

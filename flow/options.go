@@ -28,6 +28,15 @@ type Options struct {
 	Meter meter.Meter
 	// Store used for intermediate results
 	Store store.Store
+	// StateStore stores workflow execution state.
+	// When Store is set and StateStore is nil, it defaults to a KV
+	// adapter (NewKVStateStore) over Store.
+	StateStore StateStore
+	// CleanupInterval is the interval between cleanup sweeps of finished
+	// executions. Zero disables cleanup.
+	CleanupInterval time.Duration
+	// CleanupTTL is how long a finished execution is kept before deletion.
+	CleanupTTL time.Duration
 	// PoolSize is the maximum number of concurrently executing workflow steps (0 = default: runtime.NumCPU()*2)
 	PoolSize int
 }
@@ -90,6 +99,22 @@ func Tracer(t tracer.Tracer) Option {
 func Store(s store.Store) Option {
 	return func(o *Options) {
 		o.Store = s
+	}
+}
+
+// StateStorage sets a custom state store for workflow execution state.
+func StateStorage(ss StateStore) Option {
+	return func(o *Options) {
+		o.StateStore = ss
+	}
+}
+
+// Cleanup enables periodic cleanup of finished executions: every interval,
+// executions that have been finished for longer than ttl are deleted.
+func Cleanup(interval, ttl time.Duration) Option {
+	return func(o *Options) {
+		o.CleanupInterval = interval
+		o.CleanupTTL = ttl
 	}
 }
 
@@ -204,12 +229,24 @@ func NewExecuteOptions(opts ...ExecuteOption) ExecuteOptions {
 	return options
 }
 
+// RetryPolicy configures step-level retries.
+type RetryPolicy struct {
+	// MaxAttempts is the total number of attempts, including the first
+	// one. Values below 1 mean no retries.
+	MaxAttempts int
+	// Backoff is the initial delay between attempts. The delay doubles
+	// with each attempt (exponential backoff). Zero means no delay.
+	Backoff time.Duration
+}
+
 // StepOptions holds step options
 type StepOptions struct {
 	Context  context.Context
 	Fallback string
 	ID       string
 	Requires []string
+	// Retry configures step-level retries. Nil means a single attempt.
+	Retry *RetryPolicy
 }
 
 // StepOption func signature
@@ -244,5 +281,12 @@ func StepRequires(steps ...string) StepOption {
 func StepFallback(step string) StepOption {
 	return func(o *StepOptions) {
 		o.Fallback = step
+	}
+}
+
+// StepRetry sets the retry policy of the step.
+func StepRetry(p RetryPolicy) StepOption {
+	return func(o *StepOptions) {
+		o.Retry = &p
 	}
 }

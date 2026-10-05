@@ -106,8 +106,6 @@ func (e *ExpectedWorkflowList) match() bool {
 	return true
 }
 
-
-
 // Flow is a mock implementation of the flow.Flow interface for testing
 type Flow struct {
 	expectedCreates []*ExpectedWorkflowCreate
@@ -422,12 +420,12 @@ func (m *Flow) ExpectationsWereMet() error {
 
 // Workflow is a mock implementation of the flow.Workflow interface for testing
 type Workflow struct {
-	id        string
-	status    flow.Status
-	steps     map[string]flow.Step
-	executed  bool
+	id         string
+	status     flow.Status
+	steps      map[string]flow.Step
+	executed   bool
 	executeErr error
-	mutex     sync.RWMutex
+	mutex      sync.RWMutex
 }
 
 // NewWorkflow creates a new mock workflow
@@ -527,18 +525,18 @@ func (w *Workflow) Abort(ctx context.Context, id string) error {
 
 // Step is a mock implementation of the flow.Step interface for testing
 type Step struct {
-	id           string
-	endpoint     string
-	requires     []string
-	executeFunc  func(ctx context.Context, req *flow.Message, opts ...flow.ExecuteOption) (*flow.Message, error)
+	id             string
+	endpoint       string
+	requires       []string
+	executeFunc    func(ctx context.Context, req *flow.Message, opts ...flow.ExecuteOption) (*flow.Message, error)
 	compensateFunc func(ctx context.Context, req *flow.Message, opts ...flow.ExecuteOption) error
-	executeErr   error
-	compensateErr error
-	request      *flow.Message
-	response     *flow.Message
-	status       flow.Status
-	options      flow.StepOptions
-	mutex        sync.RWMutex
+	executeErr     error
+	compensateErr  error
+	request        *flow.Message
+	response       *flow.Message
+	status         flow.Status
+	options        flow.StepOptions
+	mutex          sync.RWMutex
 }
 
 // NewStep creates a new mock step

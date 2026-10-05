@@ -85,7 +85,7 @@ func (vf visitorFunc) Visit(v dag.Vertexer) {
 // TestDagLinearPipeline тестирует линейный пайплайн: A -> B -> C
 func TestDagLinearPipeline(t *testing.T) {
 	d := dag.NewDAG()
-	
+
 	// Добавляем вершины с явным указанием ID
 	require.NoError(t, d.AddVertexByID("A", "A"))
 	require.NoError(t, d.AddVertexByID("B", "B"))
@@ -197,7 +197,7 @@ func TestDagExecutionWithCompensation(t *testing.T) {
 	// Симулируем выполнение и компенсацию
 	ctx := context.Background()
 	failed := false
-	
+
 	// Выполняем шаги по порядку через OrderedWalk
 	var order_exec []string
 	d.OrderedWalk(visitorFunc(func(v dag.Vertexer) {
@@ -218,7 +218,7 @@ func TestDagExecutionWithCompensation(t *testing.T) {
 	}))
 
 	assert.True(t, failed, "ошибка должна была произойти")
-	
+
 	// Проверяем что все выполненные шаги были скомпенсированы
 	_, ok1 := executed.Load("Step1")
 	assert.True(t, ok1)
@@ -276,7 +276,7 @@ func TestDagCycleDetection(t *testing.T) {
 	require.NoError(t, d.AddVertexByID("B", "B"))
 
 	require.NoError(t, d.AddEdge("A", "B"))
-	
+
 	// Пытаемся создать цикл
 	err := d.AddEdge("B", "A")
 	assert.Error(t, err, "должна быть ошибка при создании цикла")

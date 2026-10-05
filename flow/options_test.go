@@ -21,22 +21,22 @@ type simpleStep struct {
 	status   Status
 }
 
-func (s *simpleStep) ID() string               { return s.name }
-func (s *simpleStep) Endpoint() string         { return s.name }
-func (s *simpleStep) String() string           { return s.name }
-func (s *simpleStep) Hashcode() interface{}    { return s.name }
-func (s *simpleStep) Requires() []string       { return s.requires }
-func (s *simpleStep) Options() StepOptions     { return StepOptions{} }
+func (s *simpleStep) ID() string            { return s.name }
+func (s *simpleStep) Endpoint() string      { return s.name }
+func (s *simpleStep) String() string        { return s.name }
+func (s *simpleStep) Hashcode() interface{} { return s.name }
+func (s *simpleStep) Requires() []string    { return s.requires }
+func (s *simpleStep) Options() StepOptions  { return StepOptions{} }
 func (s *simpleStep) Require(steps ...Step) error {
 	for _, step := range steps {
 		s.requires = append(s.requires, step.String())
 	}
 	return nil
 }
-func (s *simpleStep) GetStatus() Status  { return s.status }
+func (s *simpleStep) GetStatus() Status   { return s.status }
 func (s *simpleStep) SetStatus(st Status) { s.status = st }
-func (s *simpleStep) Request() *Message  { return nil }
-func (s *simpleStep) Response() *Message { return nil }
+func (s *simpleStep) Request() *Message   { return nil }
+func (s *simpleStep) Response() *Message  { return nil }
 func (s *simpleStep) Execute(_ context.Context, _ *Message, _ ...ExecuteOption) (*Message, error) {
 	return &Message{Body: []byte(`{}`)}, nil
 }
@@ -371,22 +371,22 @@ type failingStep struct {
 	errMsg   string
 }
 
-func (s *failingStep) ID() string               { return s.name }
-func (s *failingStep) Endpoint() string         { return s.name }
-func (s *failingStep) String() string           { return s.name }
-func (s *failingStep) Hashcode() interface{}    { return s.name }
-func (s *failingStep) Requires() []string       { return s.requires }
-func (s *failingStep) Options() StepOptions     { return StepOptions{} }
+func (s *failingStep) ID() string            { return s.name }
+func (s *failingStep) Endpoint() string      { return s.name }
+func (s *failingStep) String() string        { return s.name }
+func (s *failingStep) Hashcode() interface{} { return s.name }
+func (s *failingStep) Requires() []string    { return s.requires }
+func (s *failingStep) Options() StepOptions  { return StepOptions{} }
 func (s *failingStep) Require(steps ...Step) error {
 	for _, step := range steps {
 		s.requires = append(s.requires, step.String())
 	}
 	return nil
 }
-func (s *failingStep) GetStatus() Status  { return s.status }
+func (s *failingStep) GetStatus() Status   { return s.status }
 func (s *failingStep) SetStatus(st Status) { s.status = st }
-func (s *failingStep) Request() *Message  { return nil }
-func (s *failingStep) Response() *Message { return nil }
+func (s *failingStep) Request() *Message   { return nil }
+func (s *failingStep) Response() *Message  { return nil }
 func (s *failingStep) Execute(_ context.Context, _ *Message, _ ...ExecuteOption) (*Message, error) {
 	return nil, fmt.Errorf("%s", s.errMsg)
 }

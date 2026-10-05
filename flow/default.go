@@ -2,38 +2,51 @@ package flow
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"runtime"
 	"sync"
 	"sync/atomic"
+	"time"
 
-	ants "github.com/panjf2000/ants/v2"
 	"github.com/heimdalr/dag"
-	"go.unistack.org/micro/v5/client"
+	ants "github.com/panjf2000/ants/v2"
 	codecpb "go.unistack.org/micro-proto/v5/codec"
+	"go.unistack.org/micro/v5/client"
 	"go.unistack.org/micro/v5/metadata"
-	"go.unistack.org/micro/v5/store"
 	"go.unistack.org/micro/v5/util/id"
 )
 
+// defaultStatusPollInterval is how often the engine checks the state store
+// for cross-process abort/suspend signals of executions running in this
+// process.
+const defaultStatusPollInterval = 5 * time.Second
+
+// microFlow implements Flow.
 type microFlow struct {
 	opts Options
 	pool *ants.Pool
+
+	mu         sync.Mutex
+	executions map[string]*microExecution
+
+	cancel context.CancelFunc
+}
+
+// microExecution is an execution currently running in this process.
+type microExecution struct {
+	eid    string
+	cancel context.CancelFunc
 }
 
 type microWorkflow struct {
+	f      *microFlow
 	opts   Options
 	g      *dag.DAG
 	steps  map[string]Step
 	id     string
 	status Status
 	sync.RWMutex
-	init       bool
-	cancelFunc context.CancelFunc
-	execCtx    context.Context
-	pool       *ants.Pool
+	init bool
 }
 
 func (w *microWorkflow) ID() string {
@@ -103,125 +116,51 @@ func (w *microWorkflow) RemoveSteps(steps ...Step) error {
 	return nil
 }
 
-func (w *microWorkflow) Abort(ctx context.Context, id string) error {
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", id))
-
-	// Обновляем статус в хранилище - это прервет выполнение в любом сервисе
-	// так как handleWorkflow проверяет статус перед каждым шагом
-	if err := workflowStore.Write(ctx, "status", &codecpb.Frame{Data: []byte(StatusAborted.String())}); err != nil {
+// Abort aborts execution eid: the status is written to the state store (so
+// it is visible to every process) and, if the execution runs in this
+// process, its context is canceled so the current step stops immediately.
+func (w *microWorkflow) Abort(ctx context.Context, eid string) error {
+	if err := w.f.stateStore().WorkflowSetStatus(ctx, eid, StatusAborted); err != nil {
 		return err
 	}
-
-	// Если это тот же сервис что выполняет, отменяем контекст для быстрой остановки
-	w.Lock()
-	if w.cancelFunc != nil && w.id == id {
-		w.cancelFunc()
-		w.cancelFunc = nil
-		w.execCtx = nil
-	}
-	w.Unlock()
-
+	w.f.cancelExecution(eid)
 	return nil
 }
 
-func (w *microWorkflow) Suspend(ctx context.Context, id string) error {
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", id))
-
-	// Обновляем статус в хранилище - это приостановит выполнение в любом сервисе
-	// так как handleWorkflow проверяет статус перед каждым шагом
-	if err := workflowStore.Write(ctx, "status", &codecpb.Frame{Data: []byte(StatusSuspend.String())}); err != nil {
+// Suspend suspends execution eid (see Abort). A suspended execution can be
+// resumed later with Resume from any process.
+func (w *microWorkflow) Suspend(ctx context.Context, eid string) error {
+	if err := w.f.stateStore().WorkflowSetStatus(ctx, eid, StatusSuspend); err != nil {
 		return err
 	}
-
-	// Если это тот же сервис что выполняет, отменяем контекст для быстрой остановки
-	w.Lock()
-	if w.cancelFunc != nil && w.id == id {
-		w.cancelFunc()
-		w.cancelFunc = nil
-		w.execCtx = nil
-	}
-	w.Unlock()
-
+	w.f.cancelExecution(eid)
 	return nil
 }
 
-func (w *microWorkflow) Resume(ctx context.Context, id string) error {
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", id))
+// Resume resumes execution eid from any process: the status is reset to
+// Running and the DAG is re-executed, skipping steps that already completed
+// successfully (detected via the state store).
+func (w *microWorkflow) Resume(ctx context.Context, eid string) error {
+	ss := w.f.stateStore()
 
-	// Получаем последний выполненный шаг чтобы продолжить с него
-	lastStepFrame := &codecpb.Frame{}
-	var startID string
-
-	if err := workflowStore.Read(ctx, "last_step", lastStepFrame); err == nil && len(lastStepFrame.Data) > 0 {
-		lastStepID := string(lastStepFrame.Data)
-		// Находим следующий шаг после последнего выполненного
-		_, ok := w.steps[lastStepID]
-		if ok {
-			// Получаем шаги которые зависят от последнего выполненного
-			vertices := w.g.GetVertices()
-			for stepID := range vertices {
-				s, sok := w.steps[stepID]
-				if !sok {
-					continue
-				}
-				requires := s.Requires()
-				for _, req := range requires {
-					if req == lastStepID {
-						startID = stepID
-						break
-					}
-				}
-				if startID != "" {
-					break
-				}
-			}
-		}
-	}
-
-	// Если не нашли следующий шаг, пробуем найти первый невыполненный
-	if startID == "" {
-		vertices := w.g.GetVertices()
-		for stepID := range vertices {
-			stepStatusFrame := &codecpb.Frame{}
-			stepPath := filepath.Join("steps", id, stepID, "status")
-			if err := workflowStore.Read(ctx, stepPath, stepStatusFrame); err != nil {
-				// Шаг еще не выполнялся, можно начать с него
-				if _, ok := w.steps[stepID]; ok {
-					startID = stepID
-					break
-				}
-			} else {
-				status := StringStatus[string(stepStatusFrame.Data)]
-				if status != StatusSuccess {
-					startID = stepID
-					break
-				}
-			}
-		}
-	}
-
-	if startID == "" {
-		// Нет шагов для выполнения, помечаем как завершенный
-		return workflowStore.Write(ctx, "status", &codecpb.Frame{Data: []byte(StatusSuccess.String())})
-	}
-
-	// Обновляем статус на Running
-	if err := workflowStore.Write(ctx, "status", &codecpb.Frame{Data: []byte(StatusRunning.String())}); err != nil {
+	st, err := ss.WorkflowLoad(ctx, eid)
+	if err != nil {
 		return err
 	}
 
-	// Запускаем обработку с нужного места в отдельной горутине
+	// Only non-terminal executions can be resumed.
+	switch st.Status {
+	case StatusRunning, StatusSuccess, StatusAborted:
+		return nil
+	}
+
+	if err := ss.WorkflowSetStatus(ctx, eid, StatusRunning); err != nil {
+		return err
+	}
+
 	go func() {
-		// Создаем временные опции для запуска
-		nopts := []ExecuteOption{
-			ExecuteClient(w.opts.Client),
-			ExecuteTracer(w.opts.Tracer),
-			ExecuteLogger(w.opts.Logger),
-			ExecuteMeter(w.opts.Meter),
-		}
-
-		if err := w.handleWorkflow(startID, nopts...); err != nil {
-			w.opts.Logger.Error(context.Background(), "resume workflow execution failed", "error", err, "workflow_id", id)
+		if err := w.handleWorkflow(context.Background(), eid, nil); err != nil {
+			w.opts.Logger.Error(context.Background(), "resume workflow execution failed", "error", err, "eid", eid)
 		}
 	}()
 
@@ -241,9 +180,6 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 		return "", err
 	}
 
-	//	stepStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("steps", eid))
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", eid))
-
 	options := NewExecuteOptions(opts...)
 
 	nopts := make([]ExecuteOption, 0, len(opts)+5)
@@ -256,98 +192,87 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 	)
 	nopts = append(nopts, opts...)
 
-	if werr := workflowStore.Write(ctx, "status", &codecpb.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
-		w.opts.Logger.Error(ctx, "store error: %v", werr)
-		return eid, werr
-	}
-
-	var startID string
-	if options.Start == "" {
-		mp := w.g.GetRoots()
-		if len(mp) != 1 {
-			return eid, ErrStepNotExists
-		}
-		for k := range mp {
-			startID = k
-		}
-	} else {
-		for k, v := range w.g.GetVertices() {
-			if v == options.Start {
-				startID = k
-			}
-		}
-	}
-
-	if startID == "" {
-		return eid, ErrStepNotExists
+	// Persist the execution record. The record is keyed by the execution id;
+	// WorkflowID references the workflow definition.
+	if err := w.f.stateStore().WorkflowSave(ctx, eid, &WorkflowState{
+		EID:        eid,
+		WorkflowID: w.id,
+		Status:     StatusRunning,
+		Graph:      w.graph(),
+		StartedAt:  time.Now(),
+	}); err != nil {
+		return eid, err
 	}
 
 	if options.Async {
 		go func() {
-			if err := w.handleWorkflow(startID, nopts...); err != nil {
-				w.opts.Logger.Error(context.Background(), "async workflow execution failed", "error", err, "workflow_id", eid)
+			if err := w.handleWorkflow(ctx, eid, req, nopts...); err != nil {
+				w.opts.Logger.Error(context.Background(), "async workflow execution failed", "error", err, "eid", eid)
 			}
 		}()
 		return eid, nil
 	}
 
-	return eid, w.handleWorkflow(startID, nopts...)
+	return eid, w.handleWorkflow(ctx, eid, req, nopts...)
 }
 
-func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) error {
-	options := NewExecuteOptions(opts...)
-
-	eid := w.id
-	workflowStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("workflows", eid))
-	stepStore := store.NewNamespaceStore(w.opts.Store, filepath.Join("steps", eid))
-
-	w.Lock()
-	if w.execCtx == nil || w.cancelFunc == nil {
-		execCtx, cancel := context.WithCancel(context.Background())
-		w.execCtx = execCtx
-		w.cancelFunc = cancel
+// graph returns the step dependency graph: step id -> required step ids.
+func (w *microWorkflow) graph() map[string][]string {
+	w.RLock()
+	defer w.RUnlock()
+	g := make(map[string][]string, len(w.steps))
+	for id, step := range w.steps {
+		g[id] = step.Requires()
 	}
-	execCtx := w.execCtx
-	w.Unlock()
+	return g
+}
+
+// handleWorkflow executes the DAG of the given execution, persisting step and
+// workflow state to the state store. Steps that already completed
+// successfully (StatusSuccess) are skipped, which makes it safe to re-invoke
+// the same execution id to resume a previous execution.
+func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Message, opts ...ExecuteOption) error {
+	options := NewExecuteOptions(opts...)
+	ss := w.f.stateStore()
+
+	nopts := make([]ExecuteOption, 0, len(opts)+5)
+	nopts = append(nopts,
+		ExecuteClient(w.opts.Client),
+		ExecuteTracer(w.opts.Tracer),
+		ExecuteLogger(w.opts.Logger),
+		ExecuteMeter(w.opts.Meter),
+	)
+	nopts = append(nopts, opts...)
+
+	// Execution context: canceled on abort/suspend (in-process directly,
+	// cross-process by the status poller) or when the base context is done.
+	execCtx, cancel := context.WithCancel(options.Context)
+	defer cancel()
+
+	w.f.registerExecution(&microExecution{eid: eid, cancel: cancel})
+	defer w.f.unregisterExecution(eid)
+
+	// Load step states persisted by previous attempts of this execution so
+	// completed steps can be skipped (resume semantics).
+	prevSteps, err := ss.StepList(ctx, eid)
+	if err != nil {
+		return err
+	}
 
 	var executedSteps []string
 	var execMu sync.Mutex
 
-	failWorkflow := func(err error) error {
-		w.opts.Logger.Error(options.Context, "workflow failed: %v", err)
-
-		if werr := workflowStore.Write(options.Context, "status", &codecpb.Frame{Data: []byte(StatusFailure.String())}); werr != nil {
-			w.opts.Logger.Error(options.Context, "store error: %v", werr)
-		}
-
+	// compensateSteps runs Compensate for all executed steps in reverse
+	// order (Saga pattern).
+	compensateSteps := func() {
 		execMu.Lock()
 		stepsToCompensate := make([]string, len(executedSteps))
 		copy(stepsToCompensate, executedSteps)
 		execMu.Unlock()
 
 		for i := len(stepsToCompensate) - 1; i >= 0; i-- {
-			stepID := stepsToCompensate[i]
-			step, ok := w.steps[stepID]
-			if !ok {
-				continue
-			}
-			w.opts.Logger.Info(options.Context, "compensating step: %s", stepID)
-			reqFrame := &codecpb.Frame{}
-			if rerr := stepStore.Read(options.Context, filepath.Join(stepID, "req"), reqFrame); rerr != nil {
-				w.opts.Logger.Error(options.Context, "failed to read request for compensation: %v", rerr)
-				continue
-			}
-			req := &Message{Body: reqFrame.Data}
-			if cerr := step.Compensate(options.Context, req, opts...); cerr != nil {
-				w.opts.Logger.Error(options.Context, "compensation failed for step %s: %v", stepID, cerr)
-			} else {
-				if werr := stepStore.Write(options.Context, filepath.Join(stepID, "status"), &codecpb.Frame{Data: []byte(StatusPending.String())}); werr != nil {
-					w.opts.Logger.Error(options.Context, "store error: %v", werr)
-				}
-			}
+			w.compensateStep(ctx, eid, stepsToCompensate[i])
 		}
-
-		return err
 	}
 
 	stepResults := make(map[string]*Message)
@@ -355,7 +280,7 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 
 	vertices := w.g.GetVertices()
 	if len(vertices) == 0 {
-		return failWorkflow(fmt.Errorf("no steps to execute"))
+		return w.finishWorkflow(ctx, eid, fmt.Errorf("no steps to execute"))
 	}
 
 	// One done-channel per step; closed when the step finishes (success or failure).
@@ -369,7 +294,31 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 	var wg sync.WaitGroup
 	var aborted atomic.Bool
 
+	// Skip steps that completed successfully in a previous attempt of this
+	// execution: seed their results and mark them done.
 	for stepID := range vertices {
+		st := prevSteps[stepID]
+		if st == nil || st.Status != StatusSuccess {
+			continue
+		}
+		if step, ok := w.steps[stepID]; ok {
+			step.SetStatus(StatusSuccess)
+		}
+		resultsMu.Lock()
+		stepResults[stepID] = &Message{Body: st.Rsp}
+		resultsMu.Unlock()
+		execMu.Lock()
+		executedSteps = append(executedSteps, stepID)
+		execMu.Unlock()
+		close(doneChan[stepID])
+	}
+
+	for stepID := range vertices {
+		// Steps skipped above were already marked done and seeded, so they
+		// need no execution task.
+		if ps, ok := prevSteps[stepID]; ok && ps.Status == StatusSuccess {
+			continue
+		}
 		wg.Add(1)
 		go func(id string) {
 			step, ok := w.steps[id]
@@ -399,27 +348,23 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 				return
 			}
 
+			// Cross-process abort/suspend check: the status may have been
+			// updated by another process while we were waiting.
+			if st, lerr := ss.WorkflowStatus(ctx, eid); lerr == nil &&
+				(st == StatusAborted || st == StatusSuspend) {
+				aborted.Store(true)
+				close(doneChan[id])
+				wg.Done()
+				return
+			}
+
 			// Submit to pool. Blocks until a worker slot is available.
-			if err := w.pool.Submit(func() {
+			if err := w.f.pool.Submit(func() {
 				defer wg.Done()
 				defer close(doneChan[id])
 
 				if aborted.Load() {
 					return
-				}
-
-				// Resume support: skip steps that already completed successfully.
-				stepStatusFrame := &codecpb.Frame{}
-				if rerr := stepStore.Read(execCtx, filepath.Join(id, "status"), stepStatusFrame); rerr == nil {
-					if StringStatus[string(stepStatusFrame.Data)] == StatusSuccess {
-						rspFrame := &codecpb.Frame{}
-						if rrerr := stepStore.Read(execCtx, filepath.Join(id, "rsp"), rspFrame); rrerr == nil && len(rspFrame.Data) > 0 {
-							resultsMu.Lock()
-							stepResults[id] = &Message{Body: rspFrame.Data}
-							resultsMu.Unlock()
-						}
-						return
-					}
 				}
 
 				// Collect output from dependency steps as input.
@@ -434,28 +379,86 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 						}
 					}
 					resultsMu.RUnlock()
+				} else if req != nil {
+					// The workflow input message feeds the root steps.
+					inputMsg = req
 				}
 
-				if werr := stepStore.Write(execCtx, filepath.Join(id, "req"), &codecpb.Frame{Data: inputMsg.Body}); werr != nil {
-					aborted.Store(true)
-					errChan <- werr
-					return
+				maxAttempts := 1
+				backoff := time.Duration(0)
+				if rp := step.Options().Retry; rp != nil {
+					if rp.MaxAttempts > 1 {
+						maxAttempts = rp.MaxAttempts
+					}
+					backoff = rp.Backoff
 				}
 
-				step.SetStatus(StatusRunning)
-				if werr := stepStore.Write(execCtx, filepath.Join(id, "status"), &codecpb.Frame{Data: []byte(StatusRunning.String())}); werr != nil {
-					aborted.Store(true)
-					errChan <- werr
-					return
+				// Step checkpoint: seeded from the persisted state of a
+				// previous attempt of this execution (resume) and shared
+				// across retries in this run.
+				cp := &stepCheckpoint{}
+				if ps, ok := prevSteps[id]; ok {
+					cp.last = append([]byte(nil), ps.Checkpoint...)
+				}
+				cp.save = func(ctx context.Context, data []byte) error {
+					return ss.StepSetCheckpoint(ctx, eid, id, data)
 				}
 
-				w.opts.Logger.Info(execCtx, "executing step: %s", id)
+				var (
+					attempt int
+					rsp     *Message
+					execErr error
+				)
 
-				rsp, execErr := step.Execute(execCtx, inputMsg, opts...)
+				for a := 0; a < maxAttempts; a++ {
+					attempt = a + 1
+
+					attemptCtx := context.WithValue(execCtx, stepCheckpointKey{}, cp)
+
+					step.SetStatus(StatusRunning)
+					if serr := ss.StepSave(ctx, eid, id, &StepState{
+						EID: eid, StepID: id, Status: StatusRunning,
+						Req: inputMsg.Body, Attempt: attempt,
+						StartedAt: time.Now(),
+					}); serr != nil {
+						w.opts.Logger.Error(ctx, "failed to persist step status", "error", serr, "eid", eid, "step", id)
+					}
+
+					w.opts.Logger.Info(attemptCtx, "executing step: %s (attempt %d)", id, attempt)
+
+					rsp, execErr = step.Execute(attemptCtx, inputMsg, nopts...)
+					if execErr == nil {
+						break
+					}
+					if execCtx.Err() != nil {
+						// Execution aborted/suspended or the base context is
+						// done: no point retrying.
+						break
+					}
+
+					// Persist the failed attempt; the checkpoint (if any)
+					// survives for the next attempt.
+					_ = ss.StepSave(ctx, eid, id, &StepState{
+						EID: eid, StepID: id, Status: StatusFailure,
+						Error: execErr.Error(), Attempt: attempt,
+						FinishedAt: time.Now(),
+					})
+
+					if a < maxAttempts-1 && backoff > 0 {
+						select {
+						case <-time.After(backoff << a):
+						case <-execCtx.Done():
+						}
+					}
+				}
+
 				if execErr != nil {
 					step.SetStatus(StatusFailure)
-					_ = stepStore.Write(execCtx, filepath.Join(id, "rsp"), &codecpb.Frame{Data: []byte(execErr.Error())})
-					_ = stepStore.Write(execCtx, filepath.Join(id, "status"), &codecpb.Frame{Data: []byte(StatusFailure.String())})
+					_ = ss.StepSave(ctx, eid, id, &StepState{
+						EID: eid, StepID: id, Status: StatusFailure,
+						Error: execErr.Error(), Attempt: attempt,
+						FinishedAt: time.Now(),
+					})
 					aborted.Store(true)
 					errChan <- execErr
 					return
@@ -463,29 +466,23 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 
 				step.SetStatus(StatusSuccess)
 				if rsp != nil {
-					if werr := stepStore.Write(execCtx, filepath.Join(id, "rsp"), &codecpb.Frame{Data: rsp.Body}); werr != nil {
-						aborted.Store(true)
-						errChan <- werr
-						return
-					}
+					_ = ss.StepSave(ctx, eid, id, &StepState{
+						EID: eid, StepID: id, Status: StatusSuccess,
+						Rsp: rsp.Body, Attempt: attempt,
+						FinishedAt: time.Now(),
+					})
 					resultsMu.Lock()
 					stepResults[id] = rsp
 					resultsMu.Unlock()
 				}
 
-				if werr := stepStore.Write(execCtx, filepath.Join(id, "status"), &codecpb.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
-					aborted.Store(true)
-					errChan <- werr
-					return
-				}
-
-				_ = workflowStore.Write(execCtx, "last_step", &codecpb.Frame{Data: []byte(id)})
-
 				execMu.Lock()
 				executedSteps = append(executedSteps, id)
 				execMu.Unlock()
 
-				w.opts.Logger.Info(execCtx, "step completed: %s", id)
+				_ = ss.WorkflowSetLastStep(ctx, eid, id)
+
+				w.opts.Logger.Info(ctx, "step completed: %s", id)
 			}); err != nil {
 				// Pool was released or encountered an error.
 				errChan <- err
@@ -498,18 +495,91 @@ func (w *microWorkflow) handleWorkflow(startID string, opts ...ExecuteOption) er
 	wg.Wait()
 	close(errChan)
 
+	var runErr error
 	for err := range errChan {
-		if err != nil {
-			return failWorkflow(err)
+		if runErr == nil {
+			runErr = err
 		}
 	}
 
-	if werr := workflowStore.Write(options.Context, "status", &codecpb.Frame{Data: []byte(StatusSuccess.String())}); werr != nil {
-		w.opts.Logger.Error(options.Context, "store error: %v", werr)
+	if runErr != nil {
+		compensateSteps()
 	}
 
-	w.opts.Logger.Info(options.Context, "workflow completed successfully")
+	return w.finishWorkflow(ctx, eid, runErr)
+}
+
+// compensateStep runs Compensate for a single step (Saga pattern), reading
+// the step's persisted request from the state store. The step is reset to
+// Pending so a resumed execution re-runs it.
+func (w *microWorkflow) compensateStep(ctx context.Context, eid, stepID string) {
+	step, ok := w.steps[stepID]
+	if !ok {
+		return
+	}
+	ss := w.f.stateStore()
+
+	w.opts.Logger.Info(ctx, "compensating step: %s", stepID)
+	st, err := ss.StepLoad(ctx, eid, stepID)
+	if err != nil || st == nil {
+		w.opts.Logger.Error(ctx, "failed to load step state for compensation", "error", err, "eid", eid, "step", stepID)
+		return
+	}
+
+	req := &Message{Body: st.Req}
+	if cerr := step.Compensate(ctx, req); cerr != nil {
+		w.opts.Logger.Error(ctx, "compensation failed for step %s: %v", stepID, cerr)
+		return
+	}
+
+	if werr := ss.StepSave(ctx, eid, stepID, &StepState{EID: eid, StepID: stepID, Status: StatusPending}); werr != nil {
+		w.opts.Logger.Error(ctx, "failed to reset step status after compensation", "error", werr, "eid", eid, "step", stepID)
+	}
+}
+
+// finishWorkflow writes the terminal status of the execution. A status
+// already set by Abort/Suspend (in this or another process) is kept.
+func (w *microWorkflow) finishWorkflow(ctx context.Context, eid string, runErr error) error {
+	ss := w.f.stateStore()
+
+	st, lerr := ss.WorkflowStatus(ctx, eid)
+	if lerr != nil {
+		st = StatusRunning
+	}
+	switch {
+	case runErr != nil && st == StatusRunning:
+		st = StatusFailure
+	case st == StatusRunning:
+		st = StatusSuccess
+	}
+
+	w.setStatus(st)
+
+	if state, lerr := ss.WorkflowLoad(ctx, eid); lerr == nil && state != nil {
+		state.Status = st
+		state.FinishedAt = time.Now()
+		if err := ss.WorkflowSave(ctx, eid, state); err != nil {
+			return err
+		}
+	} else if lerr != nil {
+		if err := ss.WorkflowSetStatus(ctx, eid, st); err != nil {
+			return err
+		}
+	}
+
+	if runErr != nil {
+		w.opts.Logger.Error(ctx, "workflow failed: %v", runErr)
+		return runErr
+	}
+	w.opts.Logger.Info(ctx, "workflow completed successfully")
 	return nil
+}
+
+// setStatus updates the in-process status cache.
+func (w *microWorkflow) setStatus(s Status) {
+	w.Lock()
+	w.status = s
+	w.Unlock()
 }
 
 // NewFlow create new flow
@@ -520,15 +590,22 @@ func NewFlow(opts ...Option) Flow {
 		size = runtime.NumCPU() * 2
 	}
 	p, _ := ants.NewPool(size)
-	return &microFlow{opts: options, pool: p}
+	return &microFlow{
+		opts:       options,
+		pool:       p,
+		executions: make(map[string]*microExecution),
+	}
 }
 
 func (f *microFlow) Options() Options {
 	return f.opts
 }
 
-// Close releases the goroutine pool.
+// Close releases the goroutine pool and stops background goroutines.
 func (f *microFlow) Close() error {
+	if f.cancel != nil {
+		f.cancel()
+	}
 	if f.pool != nil {
 		f.pool.Release()
 		f.pool = nil
@@ -566,18 +643,137 @@ func (f *microFlow) Init(opts ...Option) error {
 	if err := f.opts.Meter.Init(); err != nil {
 		return err
 	}
-	if err := f.opts.Store.Init(); err != nil {
-		return err
+	if f.opts.Store != nil {
+		if err := f.opts.Store.Init(); err != nil {
+			return err
+		}
 	}
+
+	// State store for workflow execution state. Defaults to a KV adapter
+	// over Store; when neither is set, a no-op store is used.
+	if f.opts.StateStore == nil && f.opts.Store != nil {
+		f.opts.StateStore = NewKVStateStore(f.opts.Store)
+	}
+	if f.opts.StateStore == nil {
+		f.opts.StateStore = noopStateStore{}
+	}
+	if f.executions == nil {
+		f.executions = make(map[string]*microExecution)
+	}
+
+	if f.cancel == nil {
+		ctx, cancel := context.WithCancel(f.opts.Context)
+		f.cancel = cancel
+
+		go f.pollStatuses(ctx)
+		if f.opts.CleanupInterval > 0 {
+			go f.cleanup(ctx)
+		}
+	}
+
 	return nil
+}
+
+// stateStore returns the state store used by this flow (never nil).
+func (f *microFlow) stateStore() StateStore {
+	if f.opts.StateStore != nil {
+		return f.opts.StateStore
+	}
+	return noopStateStore{}
+}
+
+// registerExecution registers an execution running in this process.
+func (f *microFlow) registerExecution(e *microExecution) {
+	f.mu.Lock()
+	f.executions[e.eid] = e
+	f.mu.Unlock()
+}
+
+// unregisterExecution removes an execution from the in-process registry.
+func (f *microFlow) unregisterExecution(eid string) {
+	f.mu.Lock()
+	delete(f.executions, eid)
+	f.mu.Unlock()
+}
+
+// cancelExecution cancels the execution running in this process (if any), so
+// the current step stops immediately.
+func (f *microFlow) cancelExecution(eid string) {
+	f.mu.Lock()
+	e, ok := f.executions[eid]
+	f.mu.Unlock()
+	if ok {
+		e.cancel()
+	}
+}
+
+// pollStatuses periodically checks the state store for cross-process
+// abort/suspend signals of executions running in this process and cancels
+// their execution contexts.
+func (f *microFlow) pollStatuses(ctx context.Context) {
+	ticker := time.NewTicker(defaultStatusPollInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			f.mu.Lock()
+			execs := make([]*microExecution, 0, len(f.executions))
+			for _, e := range f.executions {
+				execs = append(execs, e)
+			}
+			f.mu.Unlock()
+
+			for _, e := range execs {
+				st, err := f.stateStore().WorkflowStatus(ctx, e.eid)
+				if err != nil {
+					continue
+				}
+				if st == StatusAborted || st == StatusSuspend {
+					e.cancel()
+				}
+			}
+		}
+	}
+}
+
+// cleanup periodically deletes executions that have been in a terminal
+// status for longer than opts.CleanupTTL.
+func (f *microFlow) cleanup(ctx context.Context) {
+	ticker := time.NewTicker(f.opts.CleanupInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			entries, err := f.stateStore().WorkflowList(ctx, &WorkflowFilter{
+				Statuses: []Status{StatusSuccess, StatusFailure, StatusAborted},
+			})
+			if err != nil {
+				f.opts.Logger.Error(ctx, "cleanup failed to list workflows", "error", err)
+				continue
+			}
+			deadline := time.Now().Add(-f.opts.CleanupTTL)
+			for _, entry := range entries {
+				if entry.State.FinishedAt.IsZero() || entry.State.FinishedAt.After(deadline) {
+					continue
+				}
+				if err := f.stateStore().WorkflowDelete(ctx, entry.EID); err != nil {
+					f.opts.Logger.Error(ctx, "cleanup failed to delete workflow", "error", err, "eid", entry.EID)
+				}
+			}
+		}
+	}
 }
 
 func (f *microFlow) WorkflowRemove(ctx context.Context, id string) error {
-	return nil
+	return f.stateStore().WorkflowDelete(ctx, id)
 }
 
 func (f *microFlow) WorkflowCreate(ctx context.Context, id string, steps ...Step) (Workflow, error) {
-	w := &microWorkflow{opts: f.opts, pool: f.pool, id: id, g: dag.NewDAG(), steps: make(map[string]Step, len(steps))}
+	w := &microWorkflow{f: f, opts: f.opts, id: id, g: dag.NewDAG(), steps: make(map[string]Step, len(steps))}
 
 	for _, s := range steps {
 		w.steps[s.String()] = s
@@ -611,99 +807,61 @@ func (f *microFlow) WorkflowSave(ctx context.Context, w Workflow) error {
 		return fmt.Errorf("invalid workflow type")
 	}
 
-	workflowStore := store.NewNamespaceStore(f.opts.Store, filepath.Join("workflows", w.ID()))
-
-	// Сохраняем статус workflow
-	statusFrame := &codecpb.Frame{Data: []byte(w.Status().String())}
-	if err := workflowStore.Write(ctx, "status", statusFrame); err != nil {
+	// The workflow definition is stored as a record keyed by its id, with the
+	// step dependency graph.
+	if err := f.stateStore().WorkflowSave(ctx, mw.id, &WorkflowState{
+		EID:        mw.id,
+		WorkflowID: mw.id,
+		Status:     mw.Status(),
+		Graph:      mw.graph(),
+	}); err != nil {
 		return err
 	}
 
-	// Сохраняем информацию о шагах и их зависимостях
-	stepsData := make(map[string][]string)
-	for stepID, step := range mw.steps {
-		stepsData[stepID] = step.Requires()
-	}
-
-	stepData, err := json.Marshal(stepsData)
-	if err != nil {
-		return err
-	}
-
-	stepFrame := &codecpb.Frame{Data: stepData}
-	if err := workflowStore.Write(ctx, "steps", stepFrame); err != nil {
-		return err
-	}
-
-	f.opts.Logger.Info(ctx, "workflow %s saved", w.ID())
+	f.opts.Logger.Info(ctx, "workflow %s saved", mw.id)
 	return nil
 }
 
 func (f *microFlow) WorkflowLoad(ctx context.Context, id string) (Workflow, error) {
-	workflowStore := store.NewNamespaceStore(f.opts.Store, filepath.Join("workflows", id))
-
-	// Читаем статус
-	statusFrame := &codecpb.Frame{}
-	if err := workflowStore.Read(ctx, "status", statusFrame); err != nil {
-		return nil, err
-	}
-
-	status := StringStatus[string(statusFrame.Data)]
-
-	// Создаем новый workflow
-	w := &microWorkflow{
-		opts:   f.opts,
-		pool:   f.pool,
-		id:     id,
-		g:      dag.NewDAG(),
-		steps:  make(map[string]Step),
-		status: status,
-	}
-
-	// Читаем информацию о шагах
-	stepFrame := &codecpb.Frame{}
-	if err := workflowStore.Read(ctx, "steps", stepFrame); err != nil {
-		f.opts.Logger.Warn(ctx, "failed to read steps for workflow %s: %v", id, err)
-		return nil, err
-	}
-
-	// Десериализуем шаги
-	var stepsData map[string][]string
-	if err := json.Unmarshal(stepFrame.Data, &stepsData); err != nil {
-		f.opts.Logger.Warn(ctx, "failed to unmarshal steps for workflow %s: %v", id, err)
-		return nil, err
-	}
-
-	// Восстанавливаем граф из сохраненных данных
-	// Примечание: для полноценного восстановления нужны зарегистрированные шаги
-	// В текущей реализации шаги должны быть созданы отдельно и добавлены через AppendSteps
-	// Здесь мы только восстанавливаем структуру графа
-
-	w.init = true
-
-	f.opts.Logger.Info(ctx, "workflow %s loaded with status %s", id, status)
-	return w, nil
-}
-
-func (f *microFlow) WorkflowList(ctx context.Context) ([]Workflow, error) {
-	workflowStore := store.NewNamespaceStore(f.opts.Store, "workflows")
-
-	// Получаем список всех workflow по ключам
-	keys, err := workflowStore.List(ctx)
+	st, err := f.stateStore().WorkflowLoad(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	workflows := make([]Workflow, 0, len(keys))
-	for _, key := range keys {
-		// Извлекаем ID workflow из ключа (последняя часть пути)
-		id := filepath.Base(key)
-		w, err := f.WorkflowLoad(ctx, id)
-		if err != nil {
-			f.opts.Logger.Error(ctx, "failed to load workflow %s: %v", key, err)
-			continue
-		}
-		workflows = append(workflows, w)
+	// Steps are Go objects (callables) and cannot be restored from the store;
+	// they must be (re)registered via WorkflowCreate/AppendSteps. The record
+	// carries the dependency graph and the status.
+	w := &microWorkflow{
+		f:      f,
+		opts:   f.opts,
+		id:     st.EID,
+		g:      dag.NewDAG(),
+		steps:  make(map[string]Step),
+		status: st.Status,
+		init:   true,
+	}
+
+	f.opts.Logger.Info(ctx, "workflow %s loaded with status %s", id, st.Status.String())
+	return w, nil
+}
+
+func (f *microFlow) WorkflowList(ctx context.Context) ([]Workflow, error) {
+	entries, err := f.stateStore().WorkflowList(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	workflows := make([]Workflow, 0, len(entries))
+	for _, entry := range entries {
+		workflows = append(workflows, &microWorkflow{
+			f:      f,
+			opts:   f.opts,
+			id:     entry.EID,
+			g:      dag.NewDAG(),
+			steps:  make(map[string]Step),
+			status: entry.State.Status,
+			init:   true,
+		})
 	}
 
 	return workflows, nil
