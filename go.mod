@@ -10,7 +10,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/heimdalr/dag v1.5.1
 	github.com/matoous/go-nanoid v1.5.1
-	github.com/panjf2000/ants/v2 v2.12.0
+	github.com/panjf2000/ants/v2 v2.12.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1

@@ -175,6 +175,10 @@ type ExecuteOptions struct {
 	Timeout time.Duration
 	// Async enables async execution
 	Async bool
+	// EID is the execution id to use. When empty, a new id is generated.
+	// Reusing an existing execution id resumes that execution: steps that
+	// already completed successfully are skipped (see handleWorkflow).
+	EID string
 }
 
 // ExecuteOption func signature
@@ -226,6 +230,15 @@ func ExecuteTimeout(td time.Duration) ExecuteOption {
 func ExecuteAsync(b bool) ExecuteOption {
 	return func(o *ExecuteOptions) {
 		o.Async = b
+	}
+}
+
+// ExecuteEID sets the execution id to use. When empty, a new id is generated.
+// Reusing an existing execution id resumes that execution: steps that already
+// completed successfully are skipped.
+func ExecuteEID(eid string) ExecuteOption {
+	return func(o *ExecuteOptions) {
+		o.EID = eid
 	}
 }
 

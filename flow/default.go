@@ -21,6 +21,10 @@ import (
 // when Options.PollInterval is zero.
 const DefaultPollInterval = 5 * time.Second
 
+// poolSlotWait is the backoff between attempts to acquire a worker slot
+// while the pool is saturated.
+const poolSlotWait = 10 * time.Millisecond
+
 // microFlow implements Flow.
 type microFlow struct {
 	opts Options
@@ -177,12 +181,23 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 	}
 	w.Unlock()
 
-	eid, err := id.New()
-	if err != nil {
-		return "", err
-	}
-
 	options := NewExecuteOptions(opts...)
+
+	eid := options.EID
+	startedAt := time.Now()
+	if eid != "" {
+		// Resume: keep the original start time of the execution if the
+		// record already exists.
+		if st, err := w.f.stateStore().WorkflowLoad(ctx, eid); err == nil && st != nil && !st.StartedAt.IsZero() {
+			startedAt = st.StartedAt
+		}
+	} else {
+		var err error
+		eid, err = id.New()
+		if err != nil {
+			return "", err
+		}
+	}
 
 	nopts := make([]ExecuteOption, 0, len(opts)+5)
 
@@ -201,7 +216,7 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 		WorkflowID: w.id,
 		Status:     StatusRunning,
 		Graph:      w.graph(),
-		StartedAt:  time.Now(),
+		StartedAt:  startedAt,
 	}); err != nil {
 		return eid, err
 	}
@@ -360,12 +375,12 @@ func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Mes
 				return
 			}
 
-			// Submit to pool. Blocks until a worker slot is available.
-			if err := w.f.pool.Submit(func() {
+			// Step task, executed inside a pool worker.
+			task := func() {
 				defer wg.Done()
 				defer close(doneChan[id])
 
-				if aborted.Load() {
+				if aborted.Load() || execCtx.Err() != nil {
 					return
 				}
 
@@ -485,11 +500,31 @@ func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Mes
 				_ = ss.WorkflowSetLastStep(ctx, eid, id)
 
 				w.opts.Logger.Info(ctx, "step completed: %s", id)
-			}); err != nil {
-				// Pool was released or encountered an error.
-				errChan <- err
-				close(doneChan[id])
-				wg.Done()
+			}
+
+			// Wait for a free worker slot unless the execution is
+			// aborted/suspended in the meantime, so a saturated pool
+			// cannot hold an aborted execution hostage.
+			for {
+				err := w.f.pool.Submit(task)
+				if err == nil {
+					return
+				}
+				if err != ants.ErrPoolOverload {
+					// Pool was released or encountered an error.
+					errChan <- err
+					close(doneChan[id])
+					wg.Done()
+					return
+				}
+				select {
+				case <-time.After(poolSlotWait):
+				case <-execCtx.Done():
+					errChan <- execCtx.Err()
+					close(doneChan[id])
+					wg.Done()
+					return
+				}
 			}
 		}(stepID)
 	}
@@ -588,10 +623,13 @@ func (w *microWorkflow) setStatus(s Status) {
 func NewFlow(opts ...Option) Flow {
 	options := NewOptions(opts...)
 	size := options.PoolSize
-	if size == 0 {
+	if size <= 0 {
 		size = runtime.NumCPU() * 2
 	}
-	p, _ := ants.NewPool(size)
+	// NewPool fails only for a non-positive size, ruled out above.
+	// Non-blocking: Submit returns ErrPoolOverload when saturated so the
+	// caller can wait for a slot without blocking a worker goroutine.
+	p, _ := ants.NewPool(size, ants.WithNonblocking(true))
 	return &microFlow{
 		opts:       options,
 		pool:       p,
@@ -624,11 +662,11 @@ func (f *microFlow) Init(opts ...Option) error {
 		f.pool.Release()
 	}
 	size := f.opts.PoolSize
-	if size == 0 {
+	if size <= 0 {
 		size = runtime.NumCPU() * 2
 	}
 	var err error
-	f.pool, err = ants.NewPool(size)
+	f.pool, err = ants.NewPool(size, ants.WithNonblocking(true))
 	if err != nil {
 		return err
 	}
