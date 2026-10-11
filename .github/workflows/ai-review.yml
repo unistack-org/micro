@@ -1,0 +1,124 @@
+name: AI Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Cline
+        run: npm install -g cline@3.0.70
+
+      # Point Cline at our custom OpenAI-compatible endpoint. `cline auth`
+      # persists the provider (base URL + model + key) to ~/.cline, which the
+      # review step below reads. The base URL can only be set here (not via a
+      # run flag), so this step is required.
+      - name: Configure Cline provider
+        env:
+          UNISTOCK_API_KEY: ${{ secrets.UNISTOCK_AI_API_KEY }}
+          UNISTOCK_API_BASE_URL: ${{ secrets.UNISTOCK_AI_API_BASE_URL }}
+        run: |
+          cline auth --provider openai-compatible \
+            --apikey "$UNISTOCK_API_KEY" \
+            --modelid "Qwen/Qwen3-14B" \
+            --baseurl "$UNISTOCK_API_BASE_URL"
+
+      - name: Prepare diff
+        id: diff
+        run: |
+          set -e
+          BASE="origin/${{ github.event.pull_request.base.ref }}"
+          git diff "$BASE"...HEAD > /tmp/pr.diff
+          SIZE=$(wc -c < /tmp/pr.diff)
+          echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          if [ "$SIZE" -gt 200000 ]; then
+            echo "skip=diff too large ($SIZE bytes, limit 200000)" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Diff size: $SIZE bytes"
+
+      - name: Run AI review
+        if: steps.diff.outputs.skip == ''
+        env:
+          REVIEW_PROMPT: |
+            Ты — строгий ревьюер Go-кода проекта unistock (micro/v5, pgx, NATS JetStream, Redis).
+            В stdin передан diff pull request. Найди:
+            1. Реальные баги: race conditions, nil-указатели, утечки ресурсов, необработанные ошибки, data race
+            2. Проблемы безопасности: SQL injection, утечки секретов, неэкранированный ввод
+            3. Нарушения конвенций проекта из AGENTS.md
+
+            Опирайся ТОЛЬКО на diff и контекст строк в нём — файлы репозитория не читай.
+            Ответь на русском, структурированно по файлам: файл — проблема — почему — как исправить.
+            Фокус на багах, не на стиле. Если замечаний нет — напиши ровно: Замечаний нет.
+        run: |
+          # Deny ALL tools: --auto-approve false in a non-TTY denies every tool
+          # call, so the model reviews the diff directly instead of wandering
+          # into read/glob/grep loops that never converge. (Read-only allow was
+          # non-deterministic: the model sometimes read a file that differed
+          # from the diff and reasoned for 50+ min.) Deny-all converges
+          # reliably and still finds real bugs. Qwen3-14B is a thinking model,
+          # so a review takes ~3-9 min depending on the diff.
+          #
+          # The diff is passed via stdin (not as an argument) to avoid the Linux
+          # 128KB-per-argument limit on large diffs; the prompt is the argument.
+          #
+          # --timeout 540 is Cline's per-request timeout; the outer `timeout
+          # 900` is the total backstop in case the process hangs after the
+          # run_result or the model over-reasons.
+          timeout 900 cline --auto-approve false --thinking none --timeout 540 --json \
+            "$REVIEW_PROMPT" < /tmp/pr.diff > /tmp/cline_out.json 2>/tmp/cline_err.log
+          CLINE_EXIT=$?
+          jq -r 'select(.type=="run_result" and .finishReason=="completed") | .text' \
+            /tmp/cline_out.json > /tmp/review.md 2>/dev/null
+          if [ ! -s /tmp/review.md ]; then
+            echo "AI review produced empty output (cline exit=$CLINE_EXIT)" >&2
+            echo "--- cline stderr ---" >&2
+            cat /tmp/cline_err.log >&2
+            echo "--- cline stdout (tail) ---" >&2
+            tail -50 /tmp/cline_out.json >&2
+            exit 1
+          fi
+          echo "=== Review ==="
+          cat /tmp/review.md
+
+      - name: Post PR comment
+        if: success() && steps.diff.outputs.skip == ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const review = fs.readFileSync('/tmp/review.md', 'utf8').trim();
+            const body = `## 🤖 AI Review (Qwen3-14B)\n\n${review}\n\n---\n_Автоматический ревью через [ai.unistock.cloud](https://ai.unistock.cloud)_`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body,
+            });
+
+      - name: Comment on skip
+        if: steps.diff.outputs.skip != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: `## 🤖 AI Review\n\nСкип: ${{ steps.diff.outputs.skip }}`,
+            });
