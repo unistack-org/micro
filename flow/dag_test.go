@@ -65,7 +65,7 @@ func (m *mockStep) Execute(ctx context.Context, req *Message, opts ...ExecuteOpt
 	return req, nil
 }
 
-func (m *mockStep) Compensate(ctx context.Context, req *Message, opts ...ExecuteOption) error {
+func (m *mockStep) Compensate(ctx context.Context, in *CompensateInput, opts ...ExecuteOption) error {
 	if m.compensated != nil {
 		m.compensated.Store(m.name, true)
 	}
@@ -211,7 +211,7 @@ func TestDagExecutionWithCompensation(t *testing.T) {
 			for i := len(order_exec) - 1; i >= 0; i-- {
 				compID := order_exec[i]
 				if compStep, ok := steps[compID]; ok {
-					_ = compStep.Compensate(ctx, &Message{})
+					_ = compStep.Compensate(ctx, &CompensateInput{})
 				}
 			}
 		}

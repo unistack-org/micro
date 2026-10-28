@@ -45,6 +45,24 @@ type Options struct {
 	PollInterval time.Duration
 	// PoolSize is the maximum number of concurrently executing workflow steps (0 = default: runtime.NumCPU()*2)
 	PoolSize int
+	// Hooks holds optional lifecycle callbacks invoked by the engine.
+	Hooks *Hooks
+}
+
+// Hooks are optional lifecycle callbacks invoked by the flow engine.
+// They mirror the lifecycle events Cloudflare Workflows emits for rollbacks.
+// All callbacks are optional; nil callbacks are skipped.
+type Hooks struct {
+	// OnCompensateStart is called before a step's compensation begins.
+	OnCompensateStart func(eid, stepID string)
+	// OnCompensateSuccess is called after a step's compensation succeeds.
+	OnCompensateSuccess func(eid, stepID string)
+	// OnCompensateFailure is called after a step's compensation fails
+	// (after its configured retries).
+	OnCompensateFailure func(eid, stepID string, err error)
+	// OnCompensateComplete is called when the compensation phase finishes.
+	// failed is true if any step's compensation failed.
+	OnCompensateComplete func(eid string, failed bool)
 }
 
 // NewOptions returns new options struct with default or passed values
@@ -138,6 +156,13 @@ func PollInterval(d time.Duration) Option {
 func PoolSize(n int) Option {
 	return func(o *Options) {
 		o.PoolSize = n
+	}
+}
+
+// WithHooks sets the lifecycle callbacks invoked by the engine (see Hooks).
+func WithHooks(h *Hooks) Option {
+	return func(o *Options) {
+		o.Hooks = h
 	}
 }
 
@@ -270,11 +295,22 @@ type RetryPolicy struct {
 // StepOptions holds step options
 type StepOptions struct {
 	Context  context.Context
-	Fallback string
 	ID       string
 	Requires []string
 	// Retry configures step-level retries. Nil means a single attempt.
 	Retry *RetryPolicy
+	// CompensateRetry configures retries of the step's compensation
+	// (rollback). Nil means a single compensation attempt.
+	CompensateRetry *RetryPolicy
+	// CompensateTimeout bounds a single compensation attempt. Zero means no
+	// timeout (the step context governs).
+	CompensateTimeout time.Duration
+	// ExecuteFunc is the step's execution logic, set via StepExecute. It is
+	// used by steps created with NewStep.
+	ExecuteFunc func(ctx context.Context, req *Message, opts ...ExecuteOption) (*Message, error)
+	// CompensateFunc is the step's compensation logic, set via StepCompensate.
+	// It is used by steps created with NewStep.
+	CompensateFunc func(ctx context.Context, in *CompensateInput, opts ...ExecuteOption) error
 }
 
 // StepOption func signature
@@ -305,16 +341,38 @@ func StepRequires(steps ...string) StepOption {
 	}
 }
 
-// StepFallback set the step to run on error
-func StepFallback(step string) StepOption {
-	return func(o *StepOptions) {
-		o.Fallback = step
-	}
-}
-
 // StepRetry sets the retry policy of the step.
 func StepRetry(p RetryPolicy) StepOption {
 	return func(o *StepOptions) {
 		o.Retry = &p
+	}
+}
+
+// StepCompensateRetry sets the retry policy of the step's compensation.
+func StepCompensateRetry(p RetryPolicy) StepOption {
+	return func(o *StepOptions) {
+		o.CompensateRetry = &p
+	}
+}
+
+// StepCompensateTimeout sets the timeout of a single compensation attempt.
+func StepCompensateTimeout(d time.Duration) StepOption {
+	return func(o *StepOptions) {
+		o.CompensateTimeout = d
+	}
+}
+
+// StepExecute sets the execution logic of a step created with NewStep.
+func StepExecute(fn func(ctx context.Context, req *Message, opts ...ExecuteOption) (*Message, error)) StepOption {
+	return func(o *StepOptions) {
+		o.ExecuteFunc = fn
+	}
+}
+
+// StepCompensate sets the compensation (rollback) logic of a step created
+// with NewStep.
+func StepCompensate(fn func(ctx context.Context, in *CompensateInput, opts ...ExecuteOption) error) StepOption {
+	return func(o *StepOptions) {
+		o.CompensateFunc = fn
 	}
 }

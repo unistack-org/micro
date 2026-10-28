@@ -38,7 +38,7 @@ func (s *poolTestStep) GetStatus() Status   { s.mu.Lock(); defer s.mu.Unlock(); 
 func (s *poolTestStep) SetStatus(st Status) { s.mu.Lock(); defer s.mu.Unlock(); s.status = st }
 func (s *poolTestStep) Request() *Message   { return nil }
 func (s *poolTestStep) Response() *Message  { return nil }
-func (s *poolTestStep) Compensate(_ context.Context, _ *Message, _ ...ExecuteOption) error {
+func (s *poolTestStep) Compensate(_ context.Context, _ *CompensateInput, _ ...ExecuteOption) error {
 	return nil
 }
 func (s *poolTestStep) Execute(_ context.Context, req *Message, _ ...ExecuteOption) (*Message, error) {

@@ -64,7 +64,7 @@ func (s *engineStep) setFn(fn func(ctx context.Context, req *Message) (*Message,
 	s.mu.Unlock()
 }
 
-func (s *engineStep) Compensate(context.Context, *Message, ...ExecuteOption) error {
+func (s *engineStep) Compensate(context.Context, *CompensateInput, ...ExecuteOption) error {
 	return nil
 }
 
@@ -214,10 +214,10 @@ func TestEngineFailureCompensates(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, StatusFailure, st.Status)
 
-	// a succeeded and was compensated back to Pending.
+	// a succeeded and was compensated (marked StatusCompensated).
 	ast, err := ss.StepLoad(ctx, eid, "a")
 	require.NoError(t, err)
-	assert.Equal(t, StatusPending, ast.Status)
+	assert.Equal(t, StatusCompensated, ast.Status)
 
 	// b failed with its error persisted.
 	bst, err := ss.StepLoad(ctx, eid, "b")
@@ -486,7 +486,7 @@ func TestEngineSuspendResume(t *testing.T) {
 	require.NoError(t, w.Suspend(ctx, eid))
 
 	st := waitFinished(t, ss, eid)
-	assert.Equal(t, StatusSuspend, st.Status)
+	assert.Equal(t, StatusSuspended, st.Status)
 
 	// Let b succeed and resume the execution.
 	b.setFn(func(ctx context.Context, req *Message) (*Message, error) {

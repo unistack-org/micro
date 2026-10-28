@@ -53,6 +53,11 @@ type StepState struct {
 	Error string `json:"error,omitempty"`
 	// Attempt is the last attempt number (1-based).
 	Attempt int `json:"attempt,omitempty"`
+	// Order is the step's start order within the execution (1-based,
+	// assigned when the step first starts). Compensation runs in reverse
+	// start order, so Order is the stable source of truth for rollback
+	// sequencing (mirrors Cloudflare Workflows).
+	Order int `json:"order,omitempty"`
 	// StartedAt is the last attempt start time (UTC).
 	StartedAt time.Time `json:"started_at,omitempty"`
 	// FinishedAt is the last attempt finish time (UTC).
@@ -126,7 +131,7 @@ type StateStore interface {
 //
 // When the state store implements this interface, the engine subscribes to
 // every execution running in this process (on registration) and cancels it
-// as soon as the store reports a StatusAborted or StatusSuspend status.
+// as soon as the store reports a StatusAborted or StatusSuspended status.
 type WorkflowWatcher interface {
 	// WatchWorkflow subscribes to the status changes of the execution eid.
 	// The returned channel first receives the current status (when the
@@ -262,7 +267,9 @@ func statusFromString(s string) Status {
 	case "aborted":
 		return StatusAborted
 	case "suspend", "suspended":
-		return StatusSuspend
+		return StatusSuspended
+	case "compensated":
+		return StatusCompensated
 	default:
 		return StatusPending
 	}
@@ -571,6 +578,16 @@ func (k *kvStateStore) StepLoad(ctx context.Context, eid, sid string) (*StepStat
 		st.Attempt = n
 	}
 
+	if data, ok, err := k.readOpt(ctx, base+"order"); err != nil {
+		return nil, err
+	} else if ok {
+		n, perr := strconv.Atoi(string(data))
+		if perr != nil {
+			return nil, perr
+		}
+		st.Order = n
+	}
+
 	if data, ok, err := k.readOpt(ctx, base+"started_at"); err != nil {
 		return nil, err
 	} else if ok {
@@ -614,6 +631,11 @@ func (k *kvStateStore) StepSave(ctx context.Context, eid, sid string, st *StepSt
 	}
 	if st.Attempt > 0 {
 		if err := k.write(ctx, base+"attempt", []byte(strconv.Itoa(st.Attempt))); err != nil {
+			return err
+		}
+	}
+	if st.Order > 0 {
+		if err := k.write(ctx, base+"order", []byte(strconv.Itoa(st.Order))); err != nil {
 			return err
 		}
 	}
