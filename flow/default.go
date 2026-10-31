@@ -1674,7 +1674,7 @@ func (s *microWorkflowStep) Execute(ctx context.Context, req *Message, _ ...Exec
 	// compete for the parent's pool slots (which would deadlock). The sub-flow
 	// pool is released once the sub-workflow finishes.
 	subFlow := mf.newSubFlow()
-	defer subFlow.Close()
+	defer func() { _ = subFlow.Close() }()
 	subWf, err := subFlow.WorkflowCreate(ctx, s.opts.ID, s.subSteps...)
 	if err != nil {
 		return nil, err
