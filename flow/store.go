@@ -25,6 +25,9 @@ type WorkflowState struct {
 	EID string `json:"eid,omitempty"`
 	// WorkflowID references the workflow definition (Workflow.ID).
 	WorkflowID string `json:"workflow_id,omitempty"`
+	// Version is the workflow definition version the execution was started
+	// with (see Options.Version / WorkflowVersion). Empty means unversioned.
+	Version string `json:"version,omitempty"`
 	// Status is the execution status.
 	Status Status `json:"status"`
 	// Graph is the step dependency graph: step id -> required step ids.
@@ -272,6 +275,8 @@ func statusFromString(s string) Status {
 		return StatusSuspended
 	case "compensated":
 		return StatusCompensated
+	case "skip", "skipped":
+		return StatusSkipped
 	default:
 		return StatusPending
 	}
@@ -302,6 +307,12 @@ func (k *kvStateStore) WorkflowLoad(ctx context.Context, eid string) (*WorkflowS
 		return nil, err
 	} else if ok {
 		st.WorkflowID = string(data)
+	}
+
+	if data, ok, err := k.readOpt(ctx, kvWorkflowKey(eid, "version")); err != nil {
+		return nil, err
+	} else if ok {
+		st.Version = string(data)
 	}
 
 	if data, ok, err := k.readOpt(ctx, kvWorkflowKey(eid, "last_step")); err != nil {
@@ -341,6 +352,11 @@ func (k *kvStateStore) WorkflowSave(ctx context.Context, eid string, st *Workflo
 	}
 	if st.WorkflowID != "" {
 		if err := k.write(ctx, kvWorkflowKey(eid, "workflow_id"), []byte(st.WorkflowID)); err != nil {
+			return err
+		}
+	}
+	if st.Version != "" {
+		if err := k.write(ctx, kvWorkflowKey(eid, "version"), []byte(st.Version)); err != nil {
 			return err
 		}
 	}

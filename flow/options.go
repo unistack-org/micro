@@ -47,6 +47,11 @@ type Options struct {
 	PoolSize int
 	// Hooks holds optional lifecycle callbacks invoked by the engine.
 	Hooks *Hooks
+	// Version is stamped onto every execution started by this flow (see
+	// WorkflowState.Version). It lets a resumed execution be matched against
+	// the workflow definition version it was started with. Empty means
+	// "unversioned".
+	Version string
 }
 
 // Hooks are optional lifecycle callbacks invoked by the flow engine.
@@ -163,6 +168,15 @@ func PoolSize(n int) Option {
 func WithHooks(h *Hooks) Option {
 	return func(o *Options) {
 		o.Hooks = h
+	}
+}
+
+// WorkflowVersion stamps the given version onto every execution started by
+// this flow (see WorkflowState.Version). It is used to match a resumed
+// execution against the workflow definition version it was started with.
+func WorkflowVersion(v string) Option {
+	return func(o *Options) {
+		o.Version = v
 	}
 }
 
@@ -326,6 +340,16 @@ type StepOptions struct {
 	// CompensateTimeout bounds a single compensation attempt. Zero means no
 	// timeout (the step context governs).
 	CompensateTimeout time.Duration
+	// Timeout bounds a single execution attempt. Zero means no timeout (the
+	// step context governs). When set, a slow attempt is canceled and, if a
+	// retry policy is configured, retried.
+	Timeout time.Duration
+	// Condition gates the step: when set and it returns false for the step's
+	// input, the step is skipped (not executed) and every transitive
+	// dependent is pruned as well (conditional branch). The decision is made
+	// once and persisted, so a resumed execution keeps the same branch.
+	// Returning an error fails the execution.
+	Condition func(ctx context.Context, req *Message) (bool, error)
 	// ExecuteFunc is the step's execution logic, set via StepExecute. It is
 	// used by steps created with NewStep.
 	ExecuteFunc func(ctx context.Context, req *Message, opts ...ExecuteOption) (*Message, error)
@@ -380,6 +404,25 @@ func StepCompensateRetry(p RetryPolicy) StepOption {
 func StepCompensateTimeout(d time.Duration) StepOption {
 	return func(o *StepOptions) {
 		o.CompensateTimeout = d
+	}
+}
+
+// StepTimeout sets the timeout of a single execution attempt. When an attempt
+// exceeds it, the attempt is canceled (and retried if a retry policy is set).
+func StepTimeout(d time.Duration) StepOption {
+	return func(o *StepOptions) {
+		o.Timeout = d
+	}
+}
+
+// StepCondition sets a predicate that gates the step. When it returns false
+// for the step's input, the step is skipped and its transitive dependents are
+// pruned (conditional branch). When it returns an error, the execution fails.
+// The decision is made once and persisted, so a resumed execution keeps the
+// same branch.
+func StepCondition(fn func(ctx context.Context, req *Message) (bool, error)) StepOption {
+	return func(o *StepOptions) {
+		o.Condition = fn
 	}
 }
 

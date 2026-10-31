@@ -134,6 +134,10 @@ const (
 	// StatusCompensated step was compensated (rolled back) after a failure.
 	// A compensated step is re-run on resume, since its effect was undone.
 	StatusCompensated
+	// StatusSkipped step was skipped by a conditional branch (its Condition
+	// returned false) or pruned as a dependent of a skipped step. A skipped
+	// step has no effect and is not compensated.
+	StatusSkipped
 )
 
 var (
@@ -146,6 +150,7 @@ var (
 		StatusAborted:     "StatusAborted",
 		StatusSuspended:   "StatusSuspended",
 		StatusCompensated: "StatusCompensated",
+		StatusSkipped:     "StatusSkipped",
 	}
 	// StringStatus contains map string => status
 	StringStatus = map[string]Status{
@@ -156,6 +161,7 @@ var (
 		"StatusAborted":     StatusAborted,
 		"StatusSuspended":   StatusSuspended,
 		"StatusCompensated": StatusCompensated,
+		"StatusSkipped":     StatusSkipped,
 	}
 )
 
