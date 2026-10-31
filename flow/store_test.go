@@ -131,6 +131,23 @@ func StateStoreConformance(t *testing.T, newStore func() StateStore) {
 		assert.Nil(t, st.Checkpoint)
 	})
 
+	t.Run("StepSetStatus", func(t *testing.T) {
+		require.NoError(t, ss.WorkflowSave(ctx, "eid-5", &WorkflowState{
+			EID: "eid-5", WorkflowID: "wf", Status: StatusRunning,
+		}))
+		require.NoError(t, ss.StepSave(ctx, "eid-5", "s", &StepState{
+			EID: "eid-5", StepID: "s", Status: StatusSuccess,
+			Rsp: []byte(`{"out":1}`),
+		}))
+
+		// A status-only update changes the status but keeps the other fields.
+		require.NoError(t, ss.StepSetStatus(ctx, "eid-5", "s", StatusCompensated))
+		st, err := ss.StepLoad(ctx, "eid-5", "s")
+		require.NoError(t, err)
+		assert.Equal(t, StatusCompensated, st.Status)
+		assert.Equal(t, []byte(`{"out":1}`), st.Rsp)
+	})
+
 	t.Run("WorkflowList", func(t *testing.T) {
 		lss := newStore()
 		require.NoError(t, lss.WorkflowSave(ctx, "l-eid-1", &WorkflowState{

@@ -69,7 +69,7 @@ func TestWorkflow(t *testing.T) {
 	// Test Suspend
 	err = w.Suspend(ctx, "test_workflow")
 	require.NoError(t, err)
-	assert.Equal(t, flow.StatusSuspend, w.Status())
+	assert.Equal(t, flow.StatusSuspended, w.Status())
 
 	// Test Resume
 	err = w.Resume(ctx, "test_workflow")
@@ -144,21 +144,21 @@ func TestStep(t *testing.T) {
 	assert.Equal(t, expectedRsp, s3.Response())
 
 	// Test Compensate
-	err = s.Compensate(ctx, &flow.Message{})
+	err = s.Compensate(ctx, &flow.CompensateInput{})
 	require.NoError(t, err)
 
 	// Test Compensate error
 	s4 := NewStep("test_step4")
 	s4.SetCompensateError(assert.AnError)
-	err = s4.Compensate(ctx, &flow.Message{})
+	err = s4.Compensate(ctx, &flow.CompensateInput{})
 	assert.Error(t, err)
 
 	// Test custom compensate function
 	s5 := NewStep("test_step5")
-	s5.SetCompensateFunc(func(ctx context.Context, req *flow.Message, opts ...flow.ExecuteOption) error {
+	s5.SetCompensateFunc(func(ctx context.Context, in *flow.CompensateInput, opts ...flow.ExecuteOption) error {
 		return assert.AnError
 	})
-	err = s5.Compensate(ctx, &flow.Message{})
+	err = s5.Compensate(ctx, &flow.CompensateInput{})
 	assert.Error(t, err)
 }
 

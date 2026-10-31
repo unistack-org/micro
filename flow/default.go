@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"runtime"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -32,6 +33,9 @@ type microFlow struct {
 
 	mu         sync.Mutex
 	executions map[string]*microExecution
+
+	eventsMu sync.Mutex
+	events   map[string][]chan *Message
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -136,7 +140,7 @@ func (w *microWorkflow) Abort(ctx context.Context, eid string) error {
 // Suspend suspends execution eid (see Abort). A suspended execution can be
 // resumed later with Resume from any process.
 func (w *microWorkflow) Suspend(ctx context.Context, eid string) error {
-	if err := w.f.stateStore().WorkflowSetStatus(ctx, eid, StatusSuspend); err != nil {
+	if err := w.f.stateStore().WorkflowSetStatus(ctx, eid, StatusSuspended); err != nil {
 		return err
 	}
 	w.f.cancelExecution(eid)
@@ -154,7 +158,18 @@ func (w *microWorkflow) Resume(ctx context.Context, eid string) error {
 		return err
 	}
 
-	// Only non-terminal executions can be resumed.
+	// Warn when the execution was started with a different workflow definition
+	// version than the one currently registered, so a versioned resume is
+	// visible (the execution is still resumed; the caller decides whether the
+	// version drift is acceptable).
+	if st.Version != "" && w.opts.Version != "" && st.Version != w.opts.Version {
+		w.opts.Logger.Warn(ctx, "resuming execution started with a different workflow version",
+			"eid", eid, "started", st.Version, "current", w.opts.Version)
+	}
+
+	// Only non-terminal executions can be resumed. StatusFailure is allowed so
+	// a failed execution (e.g. one left uncompensated via
+	// ExecuteCompensate(false)) can be retried from where it stopped.
 	switch st.Status {
 	case StatusRunning, StatusSuccess, StatusAborted:
 		return nil
@@ -165,7 +180,7 @@ func (w *microWorkflow) Resume(ctx context.Context, eid string) error {
 	}
 
 	go func() {
-		if err := w.handleWorkflow(context.Background(), eid, nil); err != nil {
+		if err := w.handleWorkflow(ctx, eid, nil, ExecuteContext(ctx)); err != nil {
 			w.opts.Logger.Error(context.Background(), "resume workflow execution failed", "error", err, "eid", eid)
 		}
 	}()
@@ -199,21 +214,24 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 		}
 	}
 
-	nopts := make([]ExecuteOption, 0, len(opts)+5)
+	nopts := make([]ExecuteOption, 0, len(opts)+6)
 
 	nopts = append(nopts,
 		ExecuteClient(w.opts.Client),
 		ExecuteTracer(w.opts.Tracer),
 		ExecuteLogger(w.opts.Logger),
 		ExecuteMeter(w.opts.Meter),
+		ExecuteContext(ctx),
 	)
 	nopts = append(nopts, opts...)
 
 	// Persist the execution record. The record is keyed by the execution id;
-	// WorkflowID references the workflow definition.
+	// WorkflowID references the workflow definition. Version stamps the
+	// workflow definition version the execution was started with.
 	if err := w.f.stateStore().WorkflowSave(ctx, eid, &WorkflowState{
 		EID:        eid,
 		WorkflowID: w.id,
+		Version:    w.opts.Version,
 		Status:     StatusRunning,
 		Graph:      w.graph(),
 		StartedAt:  startedAt,
@@ -276,19 +294,15 @@ func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Mes
 		return err
 	}
 
-	var executedSteps []string
-	var execMu sync.Mutex
-
-	// compensateSteps runs Compensate for all executed steps in reverse
-	// order (Saga pattern).
-	compensateSteps := func() {
-		execMu.Lock()
-		stepsToCompensate := make([]string, len(executedSteps))
-		copy(stepsToCompensate, executedSteps)
-		execMu.Unlock()
-
-		for i := len(stepsToCompensate) - 1; i >= 0; i-- {
-			w.compensateStep(ctx, eid, stepsToCompensate[i])
+	// execOrder assigns each step a stable start order (1-based) as it
+	// begins. It is seeded with the highest order persisted by a previous
+	// attempt of this execution, so steps re-run on resume are ordered after
+	// the ones that already completed. Compensation unwinds in reverse start
+	// order (see compensateSteps), mirroring Cloudflare Workflows.
+	var execOrder int64
+	for _, st := range prevSteps {
+		if st != nil && int64(st.Order) > execOrder {
+			execOrder = int64(st.Order)
 		}
 	}
 
@@ -311,29 +325,65 @@ func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Mes
 	var wg sync.WaitGroup
 	var aborted atomic.Bool
 
+	// pruned holds the step ids skipped by a conditional branch (a step whose
+	// Condition returned false) together with all their transitive dependents.
+	// It is shared across the per-step goroutines: a step pruned by an
+	// ancestor is skipped without executing.
+	var prunedMu sync.Mutex
+	pruned := make(map[string]struct{})
+
+	// pruneStep marks stepID and every transitive dependent as pruned.
+	pruneStep := func(stepID string) {
+		prunedMu.Lock()
+		defer prunedMu.Unlock()
+		pruned[stepID] = struct{}{}
+		if desc, err := w.g.GetDescendants(stepID); err == nil {
+			for d := range desc {
+				pruned[d] = struct{}{}
+			}
+		}
+	}
+
+	// isPruned reports whether stepID was pruned by a conditional branch.
+	isPruned := func(stepID string) bool {
+		prunedMu.Lock()
+		defer prunedMu.Unlock()
+		_, ok := pruned[stepID]
+		return ok
+	}
+
 	// Skip steps that completed successfully in a previous attempt of this
-	// execution: seed their results and mark them done.
+	// execution: seed their results and mark them done. Steps that were
+	// skipped by a conditional branch are re-marked done and their dependents
+	// re-pruned, so a resumed execution keeps the same branch.
 	for stepID := range vertices {
 		st := prevSteps[stepID]
-		if st == nil || st.Status != StatusSuccess {
+		if st == nil {
 			continue
 		}
-		if step, ok := w.steps[stepID]; ok {
-			step.SetStatus(StatusSuccess)
+		switch st.Status {
+		case StatusSuccess:
+			if step, ok := w.steps[stepID]; ok {
+				step.SetStatus(StatusSuccess)
+			}
+			resultsMu.Lock()
+			stepResults[stepID] = &Message{Body: st.Rsp}
+			resultsMu.Unlock()
+			close(doneChan[stepID])
+		case StatusSkipped:
+			if step, ok := w.steps[stepID]; ok {
+				step.SetStatus(StatusSkipped)
+			}
+			pruneStep(stepID)
+			close(doneChan[stepID])
 		}
-		resultsMu.Lock()
-		stepResults[stepID] = &Message{Body: st.Rsp}
-		resultsMu.Unlock()
-		execMu.Lock()
-		executedSteps = append(executedSteps, stepID)
-		execMu.Unlock()
-		close(doneChan[stepID])
 	}
 
 	for stepID := range vertices {
 		// Steps skipped above were already marked done and seeded, so they
 		// need no execution task.
-		if ps, ok := prevSteps[stepID]; ok && ps.Status == StatusSuccess {
+		if ps, ok := prevSteps[stepID]; ok &&
+			(ps.Status == StatusSuccess || ps.Status == StatusSkipped) {
 			continue
 		}
 		wg.Add(1)
@@ -368,8 +418,21 @@ func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Mes
 			// Cross-process abort/suspend check: the status may have been
 			// updated by another process while we were waiting.
 			if st, lerr := ss.WorkflowStatus(ctx, eid); lerr == nil &&
-				(st == StatusAborted || st == StatusSuspend) {
+				(st == StatusAborted || st == StatusSuspended) {
 				aborted.Store(true)
+				close(doneChan[id])
+				wg.Done()
+				return
+			}
+
+			// Pruned by a conditional branch (an ancestor's Condition returned
+			// false): skip without executing.
+			if isPruned(id) {
+				step.SetStatus(StatusSkipped)
+				_ = ss.StepSave(ctx, eid, id, &StepState{
+					EID: eid, StepID: id, Status: StatusSkipped,
+					FinishedAt: time.Now(),
+				})
 				close(doneChan[id])
 				wg.Done()
 				return
@@ -401,6 +464,34 @@ func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Mes
 					inputMsg = req
 				}
 
+				// Conditional branch: evaluate the step's Condition (if any)
+				// once, before any attempt. A false condition skips the step
+				// and prunes its transitive dependents; an error fails the
+				// execution.
+				if cond := step.Options().Condition; cond != nil {
+					ok, cerr := cond(execCtx, inputMsg)
+					if cerr != nil {
+						step.SetStatus(StatusFailure)
+						_ = ss.StepSave(ctx, eid, id, &StepState{
+							EID: eid, StepID: id, Status: StatusFailure,
+							Error:      cerr.Error(),
+							FinishedAt: time.Now(),
+						})
+						aborted.Store(true)
+						errChan <- cerr
+						return
+					}
+					if !ok {
+						pruneStep(id)
+						step.SetStatus(StatusSkipped)
+						_ = ss.StepSave(ctx, eid, id, &StepState{
+							EID: eid, StepID: id, Status: StatusSkipped,
+							FinishedAt: time.Now(),
+						})
+						return
+					}
+				}
+
 				maxAttempts := 1
 				backoff := time.Duration(0)
 				if rp := step.Options().Retry; rp != nil {
@@ -427,15 +518,19 @@ func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Mes
 					execErr error
 				)
 
+				// Assign this step a stable start order (once, at start) and
+				// persist it. Compensation unwinds in reverse start order.
+				order := int(atomic.AddInt64(&execOrder, 1))
+
 				for a := 0; a < maxAttempts; a++ {
 					attempt = a + 1
 
-					attemptCtx := context.WithValue(execCtx, stepCheckpointKey{}, cp)
+					attemptCtx := NewContext(context.WithValue(execCtx, stepCheckpointKey{}, cp), w.f)
 
 					step.SetStatus(StatusRunning)
 					if serr := ss.StepSave(ctx, eid, id, &StepState{
 						EID: eid, StepID: id, Status: StatusRunning,
-						Req: inputMsg.Body, Attempt: attempt,
+						Req: inputMsg.Body, Attempt: attempt, Order: order,
 						StartedAt: time.Now(),
 					}); serr != nil {
 						w.opts.Logger.Error(ctx, "failed to persist step status", "error", serr, "eid", eid, "step", id)
@@ -443,7 +538,16 @@ func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Mes
 
 					w.opts.Logger.Info(attemptCtx, "executing step: %s (attempt %d)", id, attempt)
 
-					rsp, execErr = step.Execute(attemptCtx, inputMsg, nopts...)
+					// Step-level execution timeout: bound a single attempt.
+					execAttemptCtx := attemptCtx
+					var cancelAttempt context.CancelFunc
+					if t := step.Options().Timeout; t > 0 {
+						execAttemptCtx, cancelAttempt = context.WithTimeout(attemptCtx, t)
+					}
+					rsp, execErr = step.Execute(execAttemptCtx, inputMsg, nopts...)
+					if cancelAttempt != nil {
+						cancelAttempt()
+					}
 					if execErr == nil {
 						break
 					}
@@ -485,17 +589,13 @@ func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Mes
 				if rsp != nil {
 					_ = ss.StepSave(ctx, eid, id, &StepState{
 						EID: eid, StepID: id, Status: StatusSuccess,
-						Rsp: rsp.Body, Attempt: attempt,
+						Rsp: rsp.Body, Attempt: attempt, Order: order,
 						FinishedAt: time.Now(),
 					})
 					resultsMu.Lock()
 					stepResults[id] = rsp
 					resultsMu.Unlock()
 				}
-
-				execMu.Lock()
-				executedSteps = append(executedSteps, id)
-				execMu.Unlock()
 
 				_ = ss.WorkflowSetLastStep(ctx, eid, id)
 
@@ -539,39 +639,208 @@ func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Mes
 		}
 	}
 
-	if runErr != nil {
-		compensateSteps()
+	if runErr != nil && options.Compensate {
+		w.compensateSteps(ctx, eid, runErr, nil)
 	}
 
 	return w.finishWorkflow(ctx, eid, runErr)
 }
 
+// Compensate runs the rollback of execution eid on demand: it unwinds all
+// successful steps in reverse start order (the same semantics as the
+// automatic rollback on failure). It is idempotent (already-compensated steps
+// are skipped) and is the way to compensate an execution that was left
+// uncompensated (see ExecuteCompensate(false)).
+func (w *microWorkflow) Compensate(ctx context.Context, eid string) error {
+	return w.CompensateSteps(ctx, eid)
+}
+
+// CompensateSteps runs the rollback of a subset of execution eid's steps.
+// When ids is empty, all successful steps are compensated (same as
+// Compensate). When ids is non-empty, only the given steps are compensated, in
+// reverse start order. Idempotent like Compensate.
+func (w *microWorkflow) CompensateSteps(ctx context.Context, eid string, ids ...string) error {
+	ss := w.f.stateStore()
+
+	st, err := ss.WorkflowLoad(ctx, eid)
+	if err != nil {
+		return err
+	}
+
+	// Only a finished execution can be compensated on demand: while it is
+	// running, the automatic rollback (if enabled) is the one that unwinds it.
+	switch st.Status {
+	case StatusSuccess, StatusFailure, StatusAborted:
+	default:
+		return fmt.Errorf("flow: cannot compensate execution %s in status %s", eid, st.Status.String())
+	}
+
+	var filter map[string]struct{}
+	if len(ids) > 0 {
+		filter = make(map[string]struct{}, len(ids))
+		for _, id := range ids {
+			filter[id] = struct{}{}
+		}
+	}
+
+	// Reset the execution to running so the in-process status watcher does not
+	// treat the on-demand rollback as a cross-process abort/suspend.
+	if err := ss.WorkflowSetStatus(ctx, eid, StatusRunning); err != nil {
+		return err
+	}
+
+	go func() {
+		w.compensateSteps(ctx, eid, nil, filter)
+
+		// Restore the execution's terminal status (the rollback does not
+		// change the outcome of the execution).
+		_ = ss.WorkflowSetStatus(ctx, eid, st.Status)
+	}()
+
+	return nil
+}
+
+// compensateSteps runs Compensate for every step whose effect is still
+// present (StatusSuccess), in reverse start order (Saga pattern). It stops at
+// the first failed compensation and reports whether any compensation failed
+// (Cloudflare Workflows semantics).
+//
+// When filter is non-nil, only the step ids it contains are compensated
+// (partial rollback); when nil, all successful steps are compensated.
+func (w *microWorkflow) compensateSteps(ctx context.Context, eid string, failErr error, filter map[string]struct{}) bool {
+	ss := w.f.stateStore()
+
+	steps, err := ss.StepList(ctx, eid)
+	if err != nil {
+		w.opts.Logger.Error(ctx, "failed to list steps for compensation", "error", err, "eid", eid)
+		return false
+	}
+	var toCompensate []string
+	for id, st := range steps {
+		if st == nil || st.Status != StatusSuccess {
+			continue
+		}
+		if filter != nil {
+			if _, ok := filter[id]; !ok {
+				continue
+			}
+		}
+		toCompensate = append(toCompensate, id)
+	}
+	// Reverse start order: highest Order first; tie-break by step id so
+	// the order is deterministic even for parallel steps.
+	sort.Slice(toCompensate, func(i, j int) bool {
+		oi, oj := steps[toCompensate[i]].Order, steps[toCompensate[j]].Order
+		if oi != oj {
+			return oi > oj
+		}
+		return toCompensate[i] > toCompensate[j]
+	})
+
+	failed := false
+	for _, id := range toCompensate {
+		if err := w.compensateStep(ctx, eid, id, failErr); err != nil {
+			failed = true
+			break
+		}
+	}
+	if h := w.opts.Hooks; h != nil && h.OnCompensateComplete != nil {
+		h.OnCompensateComplete(eid, failed)
+	}
+	return failed
+}
+
 // compensateStep runs Compensate for a single step (Saga pattern), reading
-// the step's persisted request from the state store. The step is reset to
-// Pending so a resumed execution re-runs it.
-func (w *microWorkflow) compensateStep(ctx context.Context, eid, stepID string) {
+// the step's persisted request and response from the state store.
+//
+// The compensation is durable and idempotent: a step already in
+// StatusCompensated is skipped, and a step is marked StatusCompensated once
+// its compensation succeeds, so a crash during the compensation phase does
+// not double-compensate on resume. Compensation runs with the step's
+// configured retry policy and timeout (see StepOptions.CompensateRetry /
+// CompensateTimeout). It returns an error when the compensation fails after
+// its retries, so the caller can stop the unwind (Cloudflare Workflows
+// semantics).
+func (w *microWorkflow) compensateStep(ctx context.Context, eid, stepID string, failErr error) error {
 	step, ok := w.steps[stepID]
 	if !ok {
-		return
+		return nil
 	}
 	ss := w.f.stateStore()
 
-	w.opts.Logger.Info(ctx, "compensating step: %s", stepID)
 	st, err := ss.StepLoad(ctx, eid, stepID)
 	if err != nil || st == nil {
 		w.opts.Logger.Error(ctx, "failed to load step state for compensation", "error", err, "eid", eid, "step", stepID)
-		return
+		return nil
 	}
 
-	req := &Message{Body: st.Req}
-	if cerr := step.Compensate(ctx, req); cerr != nil {
+	// Idempotency: a step already compensated (by a previous attempt of this
+	// execution) is not compensated again.
+	if st.Status == StatusCompensated {
+		return nil
+	}
+
+	in := &CompensateInput{Err: failErr}
+	if len(st.Req) > 0 {
+		in.Req = &Message{Body: st.Req}
+	}
+	if len(st.Rsp) > 0 {
+		in.Rsp = &Message{Body: st.Rsp}
+	}
+
+	maxAttempts := 1
+	backoff := time.Duration(0)
+	if rp := step.Options().CompensateRetry; rp != nil {
+		if rp.MaxAttempts > 1 {
+			maxAttempts = rp.MaxAttempts
+		}
+		backoff = rp.Backoff
+	}
+
+	w.opts.Logger.Info(ctx, "compensating step: %s", stepID)
+	if h := w.opts.Hooks; h != nil && h.OnCompensateStart != nil {
+		h.OnCompensateStart(eid, stepID)
+	}
+
+	var cerr error
+	for a := 0; a < maxAttempts; a++ {
+		cctx := ctx
+		var cancel context.CancelFunc
+		if t := step.Options().CompensateTimeout; t > 0 {
+			cctx, cancel = context.WithTimeout(ctx, t)
+		}
+		cerr = step.Compensate(cctx, in)
+		if cancel != nil {
+			cancel()
+		}
+		if cerr == nil {
+			break
+		}
+		if a < maxAttempts-1 && backoff > 0 {
+			select {
+			case <-time.After(backoff << a):
+			case <-ctx.Done():
+			}
+		}
+	}
+
+	if cerr != nil {
 		w.opts.Logger.Error(ctx, "compensation failed for step %s: %v", stepID, cerr)
-		return
+		if h := w.opts.Hooks; h != nil && h.OnCompensateFailure != nil {
+			h.OnCompensateFailure(eid, stepID, cerr)
+		}
+		return cerr
 	}
 
-	if werr := ss.StepSave(ctx, eid, stepID, &StepState{EID: eid, StepID: stepID, Status: StatusPending}); werr != nil {
-		w.opts.Logger.Error(ctx, "failed to reset step status after compensation", "error", werr, "eid", eid, "step", stepID)
+	// Mark the step compensated so a resumed execution re-runs it (its effect
+	// was undone) without compensating it twice.
+	if werr := ss.StepSave(ctx, eid, stepID, &StepState{EID: eid, StepID: stepID, Status: StatusCompensated}); werr != nil {
+		w.opts.Logger.Error(ctx, "failed to mark step compensated", "error", werr, "eid", eid, "step", stepID)
 	}
+	if h := w.opts.Hooks; h != nil && h.OnCompensateSuccess != nil {
+		h.OnCompensateSuccess(eid, stepID)
+	}
+	return nil
 }
 
 // finishWorkflow writes the terminal status of the execution. A status
@@ -634,6 +903,7 @@ func NewFlow(opts ...Option) Flow {
 		opts:       options,
 		pool:       p,
 		executions: make(map[string]*microExecution),
+		events:     make(map[string][]chan *Message),
 	}
 }
 
@@ -651,6 +921,49 @@ func (f *microFlow) Close() error {
 		f.pool = nil
 	}
 	return nil
+}
+
+// PublishEvent delivers payload to all steps currently waiting on topic
+// (see WaitForEvent). It is a no-op when no step is waiting.
+func (f *microFlow) PublishEvent(ctx context.Context, topic string, payload *Message) error {
+	f.eventsMu.Lock()
+	waiters := f.events[topic]
+	f.eventsMu.Unlock()
+
+	for _, ch := range waiters {
+		select {
+		case ch <- payload:
+		default:
+			// The waiter already received an event.
+		}
+	}
+	return nil
+}
+
+// waitEvent registers a one-shot waiter for topic and returns its channel.
+func (f *microFlow) waitEvent(topic string) chan *Message {
+	ch := make(chan *Message, 1)
+	f.eventsMu.Lock()
+	f.events[topic] = append(f.events[topic], ch)
+	f.eventsMu.Unlock()
+	return ch
+}
+
+// unwaitEvent removes a waiter registered by waitEvent.
+func (f *microFlow) unwaitEvent(topic string, ch chan *Message) {
+	f.eventsMu.Lock()
+	defer f.eventsMu.Unlock()
+
+	waiters := f.events[topic]
+	for i, w := range waiters {
+		if w == ch {
+			f.events[topic] = append(waiters[:i], waiters[i+1:]...)
+			break
+		}
+	}
+	if len(f.events[topic]) == 0 {
+		delete(f.events, topic)
+	}
 }
 
 func (f *microFlow) Init(opts ...Option) error {
@@ -725,6 +1038,27 @@ func (f *microFlow) stateStore() StateStore {
 	return noopStateStore{}
 }
 
+// newSubFlow creates a flow instance that shares the parent's options (client,
+// tracer, logger, meter, state store) but has its own worker pool. A
+// sub-workflow runs on such a sub-flow so its steps do not compete for the
+// parent's pool slots: a parent step already holds a slot, so a sub-workflow
+// submitted to the same pool would deadlock when the pool is saturated.
+func (f *microFlow) newSubFlow() *microFlow {
+	size := f.opts.PoolSize
+	if size <= 0 {
+		size = runtime.NumCPU() * 2
+	}
+	p, _ := ants.NewPool(size, ants.WithNonblocking(true))
+	sub := &microFlow{
+		opts:       f.opts,
+		pool:       p,
+		executions: make(map[string]*microExecution),
+		events:     make(map[string][]chan *Message),
+		ctx:        f.ctx,
+	}
+	return sub
+}
+
 // registerExecution registers an execution running in this process.
 func (f *microFlow) registerExecution(e *microExecution) {
 	f.mu.Lock()
@@ -754,7 +1088,7 @@ func (f *microFlow) subscribeExecution(e *microExecution) {
 	}
 	go func() {
 		for st := range ch {
-			if st == StatusAborted || st == StatusSuspend {
+			if st == StatusAborted || st == StatusSuspended {
 				e.cancel()
 				return
 			}
@@ -812,7 +1146,7 @@ func (f *microFlow) pollStatuses(ctx context.Context) {
 				if err != nil {
 					continue
 				}
-				if st == StatusAborted || st == StatusSuspend {
+				if st == StatusAborted || st == StatusSuspended {
 					e.cancel()
 				}
 			}
@@ -1034,7 +1368,7 @@ func (s *microCallStep) Execute(ctx context.Context, req *Message, opts ...Execu
 }
 
 // Compensate performs rollback for this step (default implementation returns nil)
-func (s *microCallStep) Compensate(ctx context.Context, req *Message, opts ...ExecuteOption) error {
+func (s *microCallStep) Compensate(ctx context.Context, in *CompensateInput, opts ...ExecuteOption) error {
 	// Default implementation does nothing - override in custom steps if compensation is needed
 	return nil
 }
@@ -1106,7 +1440,7 @@ func (s *microPublishStep) Execute(ctx context.Context, req *Message, opts ...Ex
 }
 
 // Compensate performs rollback for this step (default implementation returns nil)
-func (s *microPublishStep) Compensate(ctx context.Context, req *Message, opts ...ExecuteOption) error {
+func (s *microPublishStep) Compensate(ctx context.Context, in *CompensateInput, opts ...ExecuteOption) error {
 	// Default implementation does nothing - override in custom steps if compensation is needed
 	return nil
 }
@@ -1121,4 +1455,377 @@ func NewCallStep(service string, name string, method string, opts ...StepOption)
 func NewPublishStep(topic string, opts ...StepOption) Step {
 	options := NewStepOptions(opts...)
 	return &microPublishStep{topic: topic, opts: options}
+}
+
+// microFuncStep is a Step whose Execute/Compensate logic is supplied as
+// functions via StepExecute/StepCompensate. It is the concrete type returned
+// by NewStep.
+type microFuncStep struct {
+	opts   StepOptions
+	status Status
+}
+
+func (s *microFuncStep) ID() string {
+	return s.opts.ID
+}
+
+func (s *microFuncStep) Endpoint() string {
+	return s.opts.ID
+}
+
+func (s *microFuncStep) String() string {
+	return s.opts.ID
+}
+
+func (s *microFuncStep) Hashcode() interface{} {
+	return s.opts.ID
+}
+
+func (s *microFuncStep) Requires() []string {
+	return s.opts.Requires
+}
+
+func (s *microFuncStep) Require(steps ...Step) error {
+	for _, step := range steps {
+		s.opts.Requires = append(s.opts.Requires, step.String())
+	}
+	return nil
+}
+
+func (s *microFuncStep) Options() StepOptions {
+	return s.opts
+}
+
+func (s *microFuncStep) GetStatus() Status {
+	return s.status
+}
+
+func (s *microFuncStep) SetStatus(status Status) {
+	s.status = status
+}
+
+func (s *microFuncStep) Request() *Message {
+	return nil
+}
+
+func (s *microFuncStep) Response() *Message {
+	return nil
+}
+
+func (s *microFuncStep) Execute(ctx context.Context, req *Message, opts ...ExecuteOption) (*Message, error) {
+	if s.opts.ExecuteFunc == nil {
+		return nil, fmt.Errorf("flow: step %s has no Execute function", s.opts.ID)
+	}
+	return s.opts.ExecuteFunc(ctx, req, opts...)
+}
+
+func (s *microFuncStep) Compensate(ctx context.Context, in *CompensateInput, opts ...ExecuteOption) error {
+	if s.opts.CompensateFunc == nil {
+		return nil
+	}
+	return s.opts.CompensateFunc(ctx, in, opts...)
+}
+
+// NewStep creates a Step from functions, so callers do not have to implement
+// the whole Step interface to add a step with compensation. The step id is
+// required (StepID). Execute logic is required (StepExecute); compensation
+// is optional (StepCompensate).
+//
+// Example:
+//
+//	s := flow.NewStep("charge",
+//	    flow.StepID("charge"),
+//	    flow.StepExecute(func(ctx context.Context, req *flow.Message) (*flow.Message, error) {
+//	        return chargeCard(ctx, req)
+//	    }),
+//	    flow.StepCompensate(func(ctx context.Context, in *flow.CompensateInput) error {
+//	        if in.Rsp == nil {
+//	            return nil // step produced no effect to undo
+//	        }
+//	        return refundCharge(ctx, in.Rsp)
+//	    }),
+//	    flow.StepRetry(flow.RetryPolicy{MaxAttempts: 3, Backoff: time.Second}),
+//	    flow.StepCompensateRetry(flow.RetryPolicy{MaxAttempts: 5}),
+//	)
+func NewStep(id string, opts ...StepOption) Step {
+	options := NewStepOptions(opts...)
+	options.ID = id
+	return &microFuncStep{opts: options}
+}
+
+// microDelayStep is a Step that pauses the execution for a fixed duration.
+// The delay is durable: the deadline is checkpointed, so a step that is
+// retried or resumed after a crash only sleeps for the remaining time (the
+// total pause is still the configured duration).
+type microDelayStep struct {
+	duration time.Duration
+	opts     StepOptions
+	status   Status
+}
+
+func (s *microDelayStep) ID() string            { return s.opts.ID }
+func (s *microDelayStep) Endpoint() string      { return s.opts.ID }
+func (s *microDelayStep) String() string        { return s.opts.ID }
+func (s *microDelayStep) Hashcode() interface{} { return s.opts.ID }
+func (s *microDelayStep) Requires() []string    { return s.opts.Requires }
+func (s *microDelayStep) Options() StepOptions  { return s.opts }
+func (s *microDelayStep) GetStatus() Status     { return s.status }
+func (s *microDelayStep) SetStatus(status Status) {
+	s.status = status
+}
+func (s *microDelayStep) Request() *Message  { return nil }
+func (s *microDelayStep) Response() *Message { return nil }
+
+func (s *microDelayStep) Require(steps ...Step) error {
+	for _, step := range steps {
+		s.opts.Requires = append(s.opts.Requires, step.String())
+	}
+	return nil
+}
+
+func (s *microDelayStep) Execute(ctx context.Context, _ *Message, _ ...ExecuteOption) (*Message, error) {
+	// Durable delay: the deadline is checkpointed, so a resumed step only
+	// sleeps for the remaining time.
+	var deadline time.Time
+	if saved := StepLastCheckpoint(ctx); len(saved) > 0 {
+		if t, err := time.Parse(time.RFC3339Nano, string(saved)); err == nil {
+			deadline = t
+		}
+	}
+	if deadline.IsZero() {
+		deadline = time.Now().Add(s.duration)
+		// Non-fatal: the delay is still correct for this attempt if the
+		// checkpoint cannot be persisted.
+		_ = StepCheckpoint(ctx, []byte(deadline.Format(time.RFC3339Nano)))
+	}
+	remaining := time.Until(deadline)
+	if remaining < 0 {
+		remaining = 0
+	}
+	select {
+	case <-time.After(remaining):
+		return &Message{Body: []byte{}}, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+}
+
+// Compensate is a no-op: a delay has no external effect to undo.
+func (s *microDelayStep) Compensate(context.Context, *CompensateInput, ...ExecuteOption) error {
+	return nil
+}
+
+// Delay creates a step that pauses the execution for d. The delay is durable:
+// the deadline is checkpointed, so a step resumed after a crash only sleeps
+// for the remaining time.
+//
+// Example:
+//
+//	// wait 5 seconds before the next step
+//	flow.Delay("wait", 5*time.Second)
+func Delay(id string, d time.Duration, opts ...StepOption) Step {
+	options := NewStepOptions(opts...)
+	options.ID = id
+	return &microDelayStep{duration: d, opts: options}
+}
+
+// microWorkflowStep is a Step that runs a sub-workflow (the given steps) as
+// part of the parent workflow. The sub-workflow runs on a dedicated worker
+// pool (a sub-flow), so it does not deadlock the parent's pool. The step
+// response is the sub-workflow's last completed step response.
+type microWorkflowStep struct {
+	id       string
+	subSteps []Step
+	opts     StepOptions
+	status   Status
+}
+
+func (s *microWorkflowStep) ID() string            { return s.opts.ID }
+func (s *microWorkflowStep) Endpoint() string      { return s.opts.ID }
+func (s *microWorkflowStep) String() string        { return s.opts.ID }
+func (s *microWorkflowStep) Hashcode() interface{} { return s.opts.ID }
+func (s *microWorkflowStep) Requires() []string    { return s.opts.Requires }
+func (s *microWorkflowStep) Options() StepOptions  { return s.opts }
+func (s *microWorkflowStep) GetStatus() Status     { return s.status }
+func (s *microWorkflowStep) SetStatus(status Status) {
+	s.status = status
+}
+func (s *microWorkflowStep) Request() *Message  { return nil }
+func (s *microWorkflowStep) Response() *Message { return nil }
+
+func (s *microWorkflowStep) Require(steps ...Step) error {
+	for _, step := range steps {
+		s.opts.Requires = append(s.opts.Requires, step.String())
+	}
+	return nil
+}
+
+func (s *microWorkflowStep) Execute(ctx context.Context, req *Message, _ ...ExecuteOption) (*Message, error) {
+	f, ok := FromContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("flow: workflow step %s must run under the flow engine", s.opts.ID)
+	}
+	mf, ok := f.(*microFlow)
+	if !ok {
+		return nil, fmt.Errorf("flow: workflow step %s requires a microFlow", s.opts.ID)
+	}
+
+	// Run the sub-workflow on a sub-flow with its own pool, so it does not
+	// compete for the parent's pool slots (which would deadlock). The sub-flow
+	// pool is released once the sub-workflow finishes.
+	subFlow := mf.newSubFlow()
+	defer func() { _ = subFlow.Close() }()
+	subWf, err := subFlow.WorkflowCreate(ctx, s.opts.ID, s.subSteps...)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := subWf.Execute(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the sub-workflow's output: the response of its last completed
+	// step.
+	st, err := subFlow.stateStore().WorkflowLoad(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+	if st.LastStep != "" {
+		if stepSt, err := subFlow.stateStore().StepLoad(ctx, eid, st.LastStep); err == nil && stepSt != nil {
+			return &Message{Body: stepSt.Rsp}, nil
+		}
+	}
+	return &Message{Body: []byte{}}, nil
+}
+
+// Compensate is a no-op: the sub-workflow's own compensation (triggered on its
+// failure) handles its steps. Users who need to explicitly compensate the
+// sub-workflow from the parent should implement a custom step.
+func (s *microWorkflowStep) Compensate(context.Context, *CompensateInput, ...ExecuteOption) error {
+	return nil
+}
+
+// NewWorkflowStep creates a step that runs a sub-workflow (the given steps) as
+// part of the parent workflow. The sub-workflow must be self-contained: its
+// steps may only depend on each other, not on the parent workflow's steps.
+// The sub-workflow runs on a dedicated worker pool, so it does not deadlock
+// the parent's pool.
+//
+// Example:
+//
+//	// run a sub-workflow that creates a server and then configures it
+//	sub := flow.NewWorkflowStep("provision",
+//	    flow.NewStep("create-server", flow.StepExecute(createServer)),
+//	    flow.NewStep("configure", flow.StepExecute(configure), flow.Require(createServer)),
+//	)
+func NewWorkflowStep(id string, subSteps ...Step) Step {
+	options := NewStepOptions()
+	options.ID = id
+	return &microWorkflowStep{id: id, subSteps: subSteps, opts: options}
+}
+
+// eventWaiter is the part of a Flow implementation that WaitForEvent steps
+// use to block on published events. It is resolved from the step context, so
+// a wait step only works when it runs under the flow engine.
+type eventWaiter interface {
+	waitEvent(topic string) chan *Message
+	unwaitEvent(topic string, ch chan *Message)
+}
+
+// microWaitStep is a Step that blocks until an event is published on its
+// topic (see WaitForEvent) or the step context is done (abort/suspend).
+type microWaitStep struct {
+	topic  string
+	opts   StepOptions
+	status Status
+}
+
+func (s *microWaitStep) ID() string {
+	return s.opts.ID
+}
+
+func (s *microWaitStep) Endpoint() string {
+	return s.opts.ID
+}
+
+func (s *microWaitStep) String() string {
+	return s.opts.ID
+}
+
+func (s *microWaitStep) Hashcode() interface{} {
+	return s.opts.ID
+}
+
+func (s *microWaitStep) Requires() []string {
+	return s.opts.Requires
+}
+
+func (s *microWaitStep) Require(steps ...Step) error {
+	for _, step := range steps {
+		s.opts.Requires = append(s.opts.Requires, step.String())
+	}
+	return nil
+}
+
+func (s *microWaitStep) Options() StepOptions {
+	return s.opts
+}
+
+func (s *microWaitStep) GetStatus() Status {
+	return s.status
+}
+
+func (s *microWaitStep) SetStatus(status Status) {
+	s.status = status
+}
+
+func (s *microWaitStep) Request() *Message {
+	return nil
+}
+
+func (s *microWaitStep) Response() *Message {
+	return nil
+}
+
+func (s *microWaitStep) Execute(ctx context.Context, req *Message, opts ...ExecuteOption) (*Message, error) {
+	f, ok := FromContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("flow: wait step %s must run under the flow engine", s.opts.ID)
+	}
+	ep, ok := f.(eventWaiter)
+	if !ok {
+		return nil, fmt.Errorf("flow: flow does not support WaitForEvent for step %s", s.opts.ID)
+	}
+
+	ch := ep.waitEvent(s.topic)
+	defer ep.unwaitEvent(s.topic, ch)
+
+	select {
+	case payload := <-ch:
+		if payload == nil {
+			payload = &Message{}
+		}
+		return payload, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+}
+
+// Compensate is a no-op: waiting for an event has no external effect to undo.
+func (s *microWaitStep) Compensate(ctx context.Context, in *CompensateInput, opts ...ExecuteOption) error {
+	return nil
+}
+
+// WaitForEvent creates a step that blocks until an event is published on
+// topic via Flow.PublishEvent, or until the execution is aborted/suspended.
+// The step response is the event payload.
+//
+// The step must run under the flow engine (it resolves the Flow from the
+// step context). Delivery is live: an event published before the step starts
+// waiting is not delivered.
+func WaitForEvent(topic string, opts ...StepOption) Step {
+	options := NewStepOptions(opts...)
+	options.ID = topic
+	return &microWaitStep{topic: topic, opts: options}
 }

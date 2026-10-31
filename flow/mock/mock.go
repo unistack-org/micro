@@ -386,6 +386,11 @@ func (m *Flow) WorkflowList(ctx context.Context) ([]flow.Workflow, error) {
 	return result, nil
 }
 
+// PublishEvent is a no-op in the mock flow (events are not delivered).
+func (m *Flow) PublishEvent(ctx context.Context, topic string, payload *flow.Message) error {
+	return nil
+}
+
 // ExpectationsWereMet checks that all expected operations were called the expected number of times
 func (m *Flow) ExpectationsWereMet() error {
 	m.mutex.RLock()
@@ -503,7 +508,7 @@ func (w *Workflow) Execute(ctx context.Context, req *flow.Message, opts ...flow.
 func (w *Workflow) Suspend(ctx context.Context, id string) error {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
-	w.status = flow.StatusSuspend
+	w.status = flow.StatusSuspended
 	return nil
 }
 
@@ -523,13 +528,24 @@ func (w *Workflow) Abort(ctx context.Context, id string) error {
 	return nil
 }
 
+// Compensate is a no-op in the mock workflow (compensation is not simulated).
+func (w *Workflow) Compensate(ctx context.Context, id string) error {
+	return nil
+}
+
+// CompensateSteps is a no-op in the mock workflow (compensation is not
+// simulated).
+func (w *Workflow) CompensateSteps(ctx context.Context, id string, ids ...string) error {
+	return nil
+}
+
 // Step is a mock implementation of the flow.Step interface for testing
 type Step struct {
 	id             string
 	endpoint       string
 	requires       []string
 	executeFunc    func(ctx context.Context, req *flow.Message, opts ...flow.ExecuteOption) (*flow.Message, error)
-	compensateFunc func(ctx context.Context, req *flow.Message, opts ...flow.ExecuteOption) error
+	compensateFunc func(ctx context.Context, in *flow.CompensateInput, opts ...flow.ExecuteOption) error
 	executeErr     error
 	compensateErr  error
 	request        *flow.Message
@@ -671,7 +687,7 @@ func (s *Step) SetExecuteFunc(fn func(ctx context.Context, req *flow.Message, op
 }
 
 // SetCompensateFunc sets a custom compensate function
-func (s *Step) SetCompensateFunc(fn func(ctx context.Context, req *flow.Message, opts ...flow.ExecuteOption) error) {
+func (s *Step) SetCompensateFunc(fn func(ctx context.Context, in *flow.CompensateInput, opts ...flow.ExecuteOption) error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.compensateFunc = fn
@@ -702,13 +718,13 @@ func (s *Step) Execute(ctx context.Context, req *flow.Message, opts ...flow.Exec
 }
 
 // Compensate performs rollback for this step
-func (s *Step) Compensate(ctx context.Context, req *flow.Message, opts ...flow.ExecuteOption) error {
+func (s *Step) Compensate(ctx context.Context, in *flow.CompensateInput, opts ...flow.ExecuteOption) error {
 	s.mutex.Lock()
 
 	if s.compensateFunc != nil {
 		fn := s.compensateFunc
 		s.mutex.Unlock()
-		return fn(ctx, req, opts...)
+		return fn(ctx, in, opts...)
 	}
 
 	if s.compensateErr != nil {

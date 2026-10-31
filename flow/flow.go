@@ -1,4 +1,15 @@
-// Package flow is an interface used for saga pattern microservice workflow
+// Package flow is an interface used for saga pattern microservice workflow.
+//
+// Idempotency: steps and their compensations may be re-run (step retries,
+// execution resume after a crash), so both must be idempotent. Pass an
+// idempotency key derived from the execution id and step id to external
+// systems so that a re-execution does not duplicate side effects:
+//
+//	idempotencyKey := eid + ":" + stepID
+//
+// Compensation handlers receive the step's persisted response
+// (CompensateInput.Rsp) and should use it (e.g. a transaction or charge id)
+// to reverse exactly the effect the step produced.
 package flow // import "go.unistack.org/micro/v5/flow"
 
 import (
@@ -51,6 +62,22 @@ type FlowResult struct {
 	Error  error
 }
 
+// CompensateInput carries the context passed to Step.Compensate.
+//
+// It mirrors the rollback context of Cloudflare Workflows: the compensation
+// handler receives the step's persisted output (Rsp), the error that started
+// the rollback (Err) and the step's last request (Req).
+type CompensateInput struct {
+	// Req is the step's last request message.
+	Req *Message
+	// Rsp is the step's persisted response message. It is nil when the step
+	// failed before producing a response, in which case the compensation may
+	// be a no-op (the step likely created no external effect to undo).
+	Rsp *Message
+	// Err is the error that triggered the compensation.
+	Err error
+}
+
 // Step represents dedicated workflow step
 type Step interface {
 	// ID returns step id
@@ -75,10 +102,13 @@ type Step interface {
 	Request() *Message
 	// Response returns step response message
 	Response() *Message
-	// Compensate performs rollback for this step (Saga pattern)
-	// Should be called in reverse order if any subsequent step fails
-	// Return nil if step does not require compensation or compensation succeeded
-	Compensate(ctx context.Context, req *Message, opts ...ExecuteOption) error
+	// Compensate performs rollback for this step (Saga pattern).
+	// It is invoked in reverse start order when a subsequent step fails.
+	// in carries the step's last request (Req), its persisted response (Rsp,
+	// nil when the step failed before producing one) and the error that
+	// triggered the compensation (Err). Return nil if the step does not
+	// require compensation or the compensation succeeded.
+	Compensate(ctx context.Context, in *CompensateInput, opts ...ExecuteOption) error
 }
 
 // Status contains step current status
@@ -99,28 +129,39 @@ const (
 	StatusSuccess
 	// StatusAborted step aborted while it running
 	StatusAborted
-	// StatusSuspend step suspended
-	StatusSuspend
+	// StatusSuspended step suspended
+	StatusSuspended
+	// StatusCompensated step was compensated (rolled back) after a failure.
+	// A compensated step is re-run on resume, since its effect was undone.
+	StatusCompensated
+	// StatusSkipped step was skipped by a conditional branch (its Condition
+	// returned false) or pruned as a dependent of a skipped step. A skipped
+	// step has no effect and is not compensated.
+	StatusSkipped
 )
 
 var (
 	// StatusString contains map status => string
 	StatusString = map[Status]string{
-		StatusPending: "StatusPending",
-		StatusRunning: "StatusRunning",
-		StatusFailure: "StatusFailure",
-		StatusSuccess: "StatusSuccess",
-		StatusAborted: "StatusAborted",
-		StatusSuspend: "StatusSuspend",
+		StatusPending:     "StatusPending",
+		StatusRunning:     "StatusRunning",
+		StatusFailure:     "StatusFailure",
+		StatusSuccess:     "StatusSuccess",
+		StatusAborted:     "StatusAborted",
+		StatusSuspended:   "StatusSuspended",
+		StatusCompensated: "StatusCompensated",
+		StatusSkipped:     "StatusSkipped",
 	}
 	// StringStatus contains map string => status
 	StringStatus = map[string]Status{
-		"StatusPending": StatusPending,
-		"StatusRunning": StatusRunning,
-		"StatusFailure": StatusFailure,
-		"StatusSuccess": StatusSuccess,
-		"StatusAborted": StatusAborted,
-		"StatusSuspend": StatusSuspend,
+		"StatusPending":     StatusPending,
+		"StatusRunning":     StatusRunning,
+		"StatusFailure":     StatusFailure,
+		"StatusSuccess":     StatusSuccess,
+		"StatusAborted":     StatusAborted,
+		"StatusSuspended":   StatusSuspended,
+		"StatusCompensated": StatusCompensated,
+		"StatusSkipped":     StatusSkipped,
 	}
 )
 
@@ -142,6 +183,17 @@ type Workflow interface {
 	Resume(ctx context.Context, id string) error
 	// Abort abort execution
 	Abort(ctx context.Context, id string) error
+	// Compensate runs the rollback of execution id on demand: it unwinds all
+	// successful steps in reverse start order (the same semantics as the
+	// automatic rollback on failure). It is idempotent (already-compensated
+	// steps are skipped) and is the way to compensate an execution that was
+	// left uncompensated (see ExecuteCompensate(false)).
+	Compensate(ctx context.Context, id string) error
+	// CompensateSteps runs the rollback of a subset of execution id's steps.
+	// When ids is empty, all successful steps are compensated (same as
+	// Compensate). When ids is non-empty, only the given steps are
+	// compensated, in reverse start order. Idempotent like Compensate.
+	CompensateSteps(ctx context.Context, id string, ids ...string) error
 }
 
 // Flow the base interface to interact with workflows
@@ -158,6 +210,10 @@ type Flow interface {
 	WorkflowLoad(ctx context.Context, id string) (Workflow, error)
 	// WorkflowList lists all workflows
 	WorkflowList(ctx context.Context) ([]Workflow, error)
+	// PublishEvent delivers payload to all steps currently waiting on topic
+	// (see WaitForEvent). Steps that start waiting after the event was
+	// published do not receive it (live delivery only).
+	PublishEvent(ctx context.Context, topic string, payload *Message) error
 	// Close releases resources held by the flow (goroutine pool)
 	Close() error
 }

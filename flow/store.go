@@ -25,6 +25,9 @@ type WorkflowState struct {
 	EID string `json:"eid,omitempty"`
 	// WorkflowID references the workflow definition (Workflow.ID).
 	WorkflowID string `json:"workflow_id,omitempty"`
+	// Version is the workflow definition version the execution was started
+	// with (see Options.Version / WorkflowVersion). Empty means unversioned.
+	Version string `json:"version,omitempty"`
 	// Status is the execution status.
 	Status Status `json:"status"`
 	// Graph is the step dependency graph: step id -> required step ids.
@@ -53,6 +56,11 @@ type StepState struct {
 	Error string `json:"error,omitempty"`
 	// Attempt is the last attempt number (1-based).
 	Attempt int `json:"attempt,omitempty"`
+	// Order is the step's start order within the execution (1-based,
+	// assigned when the step first starts). Compensation runs in reverse
+	// start order, so Order is the stable source of truth for rollback
+	// sequencing (mirrors Cloudflare Workflows).
+	Order int `json:"order,omitempty"`
 	// StartedAt is the last attempt start time (UTC).
 	StartedAt time.Time `json:"started_at,omitempty"`
 	// FinishedAt is the last attempt finish time (UTC).
@@ -119,6 +127,8 @@ type StateStore interface {
 	StepList(ctx context.Context, eid string) (map[string]*StepState, error)
 	// StepSetCheckpoint updates only the checkpoint data of a step.
 	StepSetCheckpoint(ctx context.Context, eid, sid string, data []byte) error
+	// StepSetStatus updates only the status of a step.
+	StepSetStatus(ctx context.Context, eid, sid string, s Status) error
 }
 
 // WorkflowWatcher is an optional StateStore extension for pushing workflow
@@ -126,7 +136,7 @@ type StateStore interface {
 //
 // When the state store implements this interface, the engine subscribes to
 // every execution running in this process (on registration) and cancels it
-// as soon as the store reports a StatusAborted or StatusSuspend status.
+// as soon as the store reports a StatusAborted or StatusSuspended status.
 type WorkflowWatcher interface {
 	// WatchWorkflow subscribes to the status changes of the execution eid.
 	// The returned channel first receives the current status (when the
@@ -262,7 +272,11 @@ func statusFromString(s string) Status {
 	case "aborted":
 		return StatusAborted
 	case "suspend", "suspended":
-		return StatusSuspend
+		return StatusSuspended
+	case "compensated":
+		return StatusCompensated
+	case "skip", "skipped":
+		return StatusSkipped
 	default:
 		return StatusPending
 	}
@@ -293,6 +307,12 @@ func (k *kvStateStore) WorkflowLoad(ctx context.Context, eid string) (*WorkflowS
 		return nil, err
 	} else if ok {
 		st.WorkflowID = string(data)
+	}
+
+	if data, ok, err := k.readOpt(ctx, kvWorkflowKey(eid, "version")); err != nil {
+		return nil, err
+	} else if ok {
+		st.Version = string(data)
 	}
 
 	if data, ok, err := k.readOpt(ctx, kvWorkflowKey(eid, "last_step")); err != nil {
@@ -332,6 +352,11 @@ func (k *kvStateStore) WorkflowSave(ctx context.Context, eid string, st *Workflo
 	}
 	if st.WorkflowID != "" {
 		if err := k.write(ctx, kvWorkflowKey(eid, "workflow_id"), []byte(st.WorkflowID)); err != nil {
+			return err
+		}
+	}
+	if st.Version != "" {
+		if err := k.write(ctx, kvWorkflowKey(eid, "version"), []byte(st.Version)); err != nil {
 			return err
 		}
 	}
@@ -571,6 +596,16 @@ func (k *kvStateStore) StepLoad(ctx context.Context, eid, sid string) (*StepStat
 		st.Attempt = n
 	}
 
+	if data, ok, err := k.readOpt(ctx, base+"order"); err != nil {
+		return nil, err
+	} else if ok {
+		n, perr := strconv.Atoi(string(data))
+		if perr != nil {
+			return nil, perr
+		}
+		st.Order = n
+	}
+
 	if data, ok, err := k.readOpt(ctx, base+"started_at"); err != nil {
 		return nil, err
 	} else if ok {
@@ -614,6 +649,11 @@ func (k *kvStateStore) StepSave(ctx context.Context, eid, sid string, st *StepSt
 	}
 	if st.Attempt > 0 {
 		if err := k.write(ctx, base+"attempt", []byte(strconv.Itoa(st.Attempt))); err != nil {
+			return err
+		}
+	}
+	if st.Order > 0 {
+		if err := k.write(ctx, base+"order", []byte(strconv.Itoa(st.Order))); err != nil {
 			return err
 		}
 	}
@@ -676,6 +716,10 @@ func (k *kvStateStore) StepSetCheckpoint(ctx context.Context, eid, sid string, d
 	return k.write(ctx, kvStepKey(eid, sid, "checkpoint"), data)
 }
 
+func (k *kvStateStore) StepSetStatus(ctx context.Context, eid, sid string, s Status) error {
+	return k.write(ctx, kvStepKey(eid, sid, "status"), []byte(s.String()))
+}
+
 // noopStateStore is a StateStore that accepts and discards all data. It is
 // used when the flow is configured without a store, so execution state is
 // simply not persisted.
@@ -722,5 +766,9 @@ func (noopStateStore) StepList(ctx context.Context, eid string) (map[string]*Ste
 }
 
 func (noopStateStore) StepSetCheckpoint(ctx context.Context, eid, sid string, data []byte) error {
+	return nil
+}
+
+func (noopStateStore) StepSetStatus(ctx context.Context, eid, sid string, s Status) error {
 	return nil
 }

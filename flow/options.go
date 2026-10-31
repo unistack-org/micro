@@ -45,6 +45,29 @@ type Options struct {
 	PollInterval time.Duration
 	// PoolSize is the maximum number of concurrently executing workflow steps (0 = default: runtime.NumCPU()*2)
 	PoolSize int
+	// Hooks holds optional lifecycle callbacks invoked by the engine.
+	Hooks *Hooks
+	// Version is stamped onto every execution started by this flow (see
+	// WorkflowState.Version). It lets a resumed execution be matched against
+	// the workflow definition version it was started with. Empty means
+	// "unversioned".
+	Version string
+}
+
+// Hooks are optional lifecycle callbacks invoked by the flow engine.
+// They mirror the lifecycle events Cloudflare Workflows emits for rollbacks.
+// All callbacks are optional; nil callbacks are skipped.
+type Hooks struct {
+	// OnCompensateStart is called before a step's compensation begins.
+	OnCompensateStart func(eid, stepID string)
+	// OnCompensateSuccess is called after a step's compensation succeeds.
+	OnCompensateSuccess func(eid, stepID string)
+	// OnCompensateFailure is called after a step's compensation fails
+	// (after its configured retries).
+	OnCompensateFailure func(eid, stepID string, err error)
+	// OnCompensateComplete is called when the compensation phase finishes.
+	// failed is true if any step's compensation failed.
+	OnCompensateComplete func(eid string, failed bool)
 }
 
 // NewOptions returns new options struct with default or passed values
@@ -141,6 +164,22 @@ func PoolSize(n int) Option {
 	}
 }
 
+// WithHooks sets the lifecycle callbacks invoked by the engine (see Hooks).
+func WithHooks(h *Hooks) Option {
+	return func(o *Options) {
+		o.Hooks = h
+	}
+}
+
+// WorkflowVersion stamps the given version onto every execution started by
+// this flow (see WorkflowState.Version). It is used to match a resumed
+// execution against the workflow definition version it was started with.
+func WorkflowVersion(v string) Option {
+	return func(o *Options) {
+		o.Version = v
+	}
+}
+
 // WorkflowOption func signature
 type WorkflowOption func(*WorkflowOptions)
 
@@ -179,6 +218,15 @@ type ExecuteOptions struct {
 	// Reusing an existing execution id resumes that execution: steps that
 	// already completed successfully are skipped (see handleWorkflow).
 	EID string
+	// Compensate controls automatic rollback on failure.
+	//   true  (default) — on a step failure the engine unwinds all
+	//                      successful steps in reverse start order.
+	//   false           — on failure the engine stops, keeps every
+	//                      successful step's effect, and persists the
+	//                      execution as failed. The caller can later resume
+	//                      (retry) or compensate it explicitly (see
+	//                      Workflow.Compensate / CompensateSteps).
+	Compensate bool
 }
 
 // ExecuteOption func signature
@@ -242,14 +290,26 @@ func ExecuteEID(eid string) ExecuteOption {
 	}
 }
 
+// ExecuteCompensate controls automatic rollback on failure. When false, a
+// failed execution is left with its successful steps intact (no automatic
+// rollback) so the caller can later resume it (retry) or compensate it
+// explicitly (see Workflow.Compensate / CompensateSteps). The default is
+// true (automatic rollback on failure).
+func ExecuteCompensate(b bool) ExecuteOption {
+	return func(o *ExecuteOptions) {
+		o.Compensate = b
+	}
+}
+
 // NewExecuteOptions create new ExecuteOptions struct
 func NewExecuteOptions(opts ...ExecuteOption) ExecuteOptions {
 	options := ExecuteOptions{
-		Client:  client.DefaultClient,
-		Logger:  logger.DefaultLogger,
-		Tracer:  tracer.DefaultTracer,
-		Meter:   meter.DefaultMeter,
-		Context: context.Background(),
+		Client:     client.DefaultClient,
+		Logger:     logger.DefaultLogger,
+		Tracer:     tracer.DefaultTracer,
+		Meter:      meter.DefaultMeter,
+		Context:    context.Background(),
+		Compensate: true,
 	}
 	for _, o := range opts {
 		o(&options)
@@ -270,11 +330,32 @@ type RetryPolicy struct {
 // StepOptions holds step options
 type StepOptions struct {
 	Context  context.Context
-	Fallback string
 	ID       string
 	Requires []string
 	// Retry configures step-level retries. Nil means a single attempt.
 	Retry *RetryPolicy
+	// CompensateRetry configures retries of the step's compensation
+	// (rollback). Nil means a single compensation attempt.
+	CompensateRetry *RetryPolicy
+	// CompensateTimeout bounds a single compensation attempt. Zero means no
+	// timeout (the step context governs).
+	CompensateTimeout time.Duration
+	// Timeout bounds a single execution attempt. Zero means no timeout (the
+	// step context governs). When set, a slow attempt is canceled and, if a
+	// retry policy is configured, retried.
+	Timeout time.Duration
+	// Condition gates the step: when set and it returns false for the step's
+	// input, the step is skipped (not executed) and every transitive
+	// dependent is pruned as well (conditional branch). The decision is made
+	// once and persisted, so a resumed execution keeps the same branch.
+	// Returning an error fails the execution.
+	Condition func(ctx context.Context, req *Message) (bool, error)
+	// ExecuteFunc is the step's execution logic, set via StepExecute. It is
+	// used by steps created with NewStep.
+	ExecuteFunc func(ctx context.Context, req *Message, opts ...ExecuteOption) (*Message, error)
+	// CompensateFunc is the step's compensation logic, set via StepCompensate.
+	// It is used by steps created with NewStep.
+	CompensateFunc func(ctx context.Context, in *CompensateInput, opts ...ExecuteOption) error
 }
 
 // StepOption func signature
@@ -305,16 +386,57 @@ func StepRequires(steps ...string) StepOption {
 	}
 }
 
-// StepFallback set the step to run on error
-func StepFallback(step string) StepOption {
-	return func(o *StepOptions) {
-		o.Fallback = step
-	}
-}
-
 // StepRetry sets the retry policy of the step.
 func StepRetry(p RetryPolicy) StepOption {
 	return func(o *StepOptions) {
 		o.Retry = &p
+	}
+}
+
+// StepCompensateRetry sets the retry policy of the step's compensation.
+func StepCompensateRetry(p RetryPolicy) StepOption {
+	return func(o *StepOptions) {
+		o.CompensateRetry = &p
+	}
+}
+
+// StepCompensateTimeout sets the timeout of a single compensation attempt.
+func StepCompensateTimeout(d time.Duration) StepOption {
+	return func(o *StepOptions) {
+		o.CompensateTimeout = d
+	}
+}
+
+// StepTimeout sets the timeout of a single execution attempt. When an attempt
+// exceeds it, the attempt is canceled (and retried if a retry policy is set).
+func StepTimeout(d time.Duration) StepOption {
+	return func(o *StepOptions) {
+		o.Timeout = d
+	}
+}
+
+// StepCondition sets a predicate that gates the step. When it returns false
+// for the step's input, the step is skipped and its transitive dependents are
+// pruned (conditional branch). When it returns an error, the execution fails.
+// The decision is made once and persisted, so a resumed execution keeps the
+// same branch.
+func StepCondition(fn func(ctx context.Context, req *Message) (bool, error)) StepOption {
+	return func(o *StepOptions) {
+		o.Condition = fn
+	}
+}
+
+// StepExecute sets the execution logic of a step created with NewStep.
+func StepExecute(fn func(ctx context.Context, req *Message, opts ...ExecuteOption) (*Message, error)) StepOption {
+	return func(o *StepOptions) {
+		o.ExecuteFunc = fn
+	}
+}
+
+// StepCompensate sets the compensation (rollback) logic of a step created
+// with NewStep.
+func StepCompensate(fn func(ctx context.Context, in *CompensateInput, opts ...ExecuteOption) error) StepOption {
+	return func(o *StepOptions) {
+		o.CompensateFunc = fn
 	}
 }

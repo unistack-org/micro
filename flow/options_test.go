@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -40,7 +41,7 @@ func (s *simpleStep) Response() *Message  { return nil }
 func (s *simpleStep) Execute(_ context.Context, _ *Message, _ ...ExecuteOption) (*Message, error) {
 	return &Message{Body: []byte(`{}`)}, nil
 }
-func (s *simpleStep) Compensate(_ context.Context, _ *Message, _ ...ExecuteOption) error {
+func (s *simpleStep) Compensate(_ context.Context, _ *CompensateInput, _ ...ExecuteOption) error {
 	return nil
 }
 func (s *simpleStep) Name() string { return s.name }
@@ -275,7 +276,7 @@ func TestNewCallStep(t *testing.T) {
 	assert.Contains(t, s.Requires(), "dep")
 
 	// Compensate with nil client should still return nil
-	err := s.Compensate(context.Background(), &Message{Body: []byte{}})
+	err := s.Compensate(context.Background(), &CompensateInput{})
 	assert.NoError(t, err)
 }
 
@@ -314,7 +315,7 @@ func TestNewPublishStep(t *testing.T) {
 	assert.Nil(t, rsp)
 	assert.NoError(t, err)
 
-	err = s.Compensate(context.Background(), &Message{})
+	err = s.Compensate(context.Background(), &CompensateInput{})
 	assert.NoError(t, err)
 }
 
@@ -355,11 +356,25 @@ func TestStepOptionHelpers(t *testing.T) {
 	opts := NewStepOptions(
 		StepID("sid"),
 		StepRequires("a", "b"),
-		StepFallback("fallback"),
+		StepRetry(RetryPolicy{MaxAttempts: 3, Backoff: time.Millisecond}),
+		StepCompensateRetry(RetryPolicy{MaxAttempts: 5}),
+		StepCompensateTimeout(2*time.Second),
+		StepExecute(func(ctx context.Context, req *Message, opts ...ExecuteOption) (*Message, error) {
+			return &Message{}, nil
+		}),
+		StepCompensate(func(ctx context.Context, in *CompensateInput, opts ...ExecuteOption) error {
+			return nil
+		}),
 	)
 	assert.Equal(t, "sid", opts.ID)
 	assert.Equal(t, []string{"a", "b"}, opts.Requires)
-	assert.Equal(t, "fallback", opts.Fallback)
+	require.NotNil(t, opts.Retry)
+	assert.Equal(t, 3, opts.Retry.MaxAttempts)
+	require.NotNil(t, opts.CompensateRetry)
+	assert.Equal(t, 5, opts.CompensateRetry.MaxAttempts)
+	assert.Equal(t, 2*time.Second, opts.CompensateTimeout)
+	assert.NotNil(t, opts.ExecuteFunc)
+	assert.NotNil(t, opts.CompensateFunc)
 }
 
 // --- failingStep for error-path tests ---
@@ -390,7 +405,7 @@ func (s *failingStep) Response() *Message  { return nil }
 func (s *failingStep) Execute(_ context.Context, _ *Message, _ ...ExecuteOption) (*Message, error) {
 	return nil, fmt.Errorf("%s", s.errMsg)
 }
-func (s *failingStep) Compensate(_ context.Context, _ *Message, _ ...ExecuteOption) error {
+func (s *failingStep) Compensate(_ context.Context, _ *CompensateInput, _ ...ExecuteOption) error {
 	return nil
 }
 
@@ -516,7 +531,8 @@ func TestStatusString(t *testing.T) {
 	assert.Equal(t, "StatusFailure", StatusFailure.String())
 	assert.Equal(t, "StatusSuccess", StatusSuccess.String())
 	assert.Equal(t, "StatusAborted", StatusAborted.String())
-	assert.Equal(t, "StatusSuspend", StatusSuspend.String())
+	assert.Equal(t, "StatusSuspended", StatusSuspended.String())
+	assert.Equal(t, "StatusCompensated", StatusCompensated.String())
 }
 
 // --- RawMessage marshal/unmarshal ---
