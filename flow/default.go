@@ -158,7 +158,9 @@ func (w *microWorkflow) Resume(ctx context.Context, eid string) error {
 		return err
 	}
 
-	// Only non-terminal executions can be resumed.
+	// Only non-terminal executions can be resumed. StatusFailure is allowed so
+	// a failed execution (e.g. one left uncompensated via
+	// ExecuteCompensate(false)) can be retried from where it stopped.
 	switch st.Status {
 	case StatusRunning, StatusSuccess, StatusAborted:
 		return nil
@@ -169,7 +171,7 @@ func (w *microWorkflow) Resume(ctx context.Context, eid string) error {
 	}
 
 	go func() {
-		if err := w.handleWorkflow(context.Background(), eid, nil); err != nil {
+		if err := w.handleWorkflow(ctx, eid, nil, ExecuteContext(ctx)); err != nil {
 			w.opts.Logger.Error(context.Background(), "resume workflow execution failed", "error", err, "eid", eid)
 		}
 	}()
@@ -203,13 +205,14 @@ func (w *microWorkflow) Execute(ctx context.Context, req *Message, opts ...Execu
 		}
 	}
 
-	nopts := make([]ExecuteOption, 0, len(opts)+5)
+	nopts := make([]ExecuteOption, 0, len(opts)+6)
 
 	nopts = append(nopts,
 		ExecuteClient(w.opts.Client),
 		ExecuteTracer(w.opts.Tracer),
 		ExecuteLogger(w.opts.Logger),
 		ExecuteMeter(w.opts.Meter),
+		ExecuteContext(ctx),
 	)
 	nopts = append(nopts, opts...)
 
@@ -290,46 +293,6 @@ func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Mes
 		if st != nil && int64(st.Order) > execOrder {
 			execOrder = int64(st.Order)
 		}
-	}
-
-	// compensateSteps runs Compensate for every step whose effect is still
-	// present (StatusSuccess), in reverse start order (Saga pattern). It
-	// stops at the first failed compensation and reports whether any
-	// compensation failed (Cloudflare Workflows semantics).
-	compensateSteps := func(failErr error) bool {
-		steps, err := ss.StepList(ctx, eid)
-		if err != nil {
-			w.opts.Logger.Error(ctx, "failed to list steps for compensation", "error", err, "eid", eid)
-			return false
-		}
-		var toCompensate []string
-		for id, st := range steps {
-			if st == nil || st.Status != StatusSuccess {
-				continue
-			}
-			toCompensate = append(toCompensate, id)
-		}
-		// Reverse start order: highest Order first; tie-break by step id so
-		// the order is deterministic even for parallel steps.
-		sort.Slice(toCompensate, func(i, j int) bool {
-			oi, oj := steps[toCompensate[i]].Order, steps[toCompensate[j]].Order
-			if oi != oj {
-				return oi > oj
-			}
-			return toCompensate[i] > toCompensate[j]
-		})
-
-		failed := false
-		for _, id := range toCompensate {
-			if err := w.compensateStep(ctx, eid, id, failErr); err != nil {
-				failed = true
-				break
-			}
-		}
-		if h := w.opts.Hooks; h != nil && h.OnCompensateComplete != nil {
-			h.OnCompensateComplete(eid, failed)
-		}
-		return failed
 	}
 
 	stepResults := make(map[string]*Message)
@@ -576,11 +539,115 @@ func (w *microWorkflow) handleWorkflow(ctx context.Context, eid string, req *Mes
 		}
 	}
 
-	if runErr != nil {
-		compensateSteps(runErr)
+	if runErr != nil && options.Compensate {
+		w.compensateSteps(ctx, eid, runErr, nil)
 	}
 
 	return w.finishWorkflow(ctx, eid, runErr)
+}
+
+// Compensate runs the rollback of execution eid on demand: it unwinds all
+// successful steps in reverse start order (the same semantics as the
+// automatic rollback on failure). It is idempotent (already-compensated steps
+// are skipped) and is the way to compensate an execution that was left
+// uncompensated (see ExecuteCompensate(false)).
+func (w *microWorkflow) Compensate(ctx context.Context, eid string) error {
+	return w.CompensateSteps(ctx, eid)
+}
+
+// CompensateSteps runs the rollback of a subset of execution eid's steps.
+// When ids is empty, all successful steps are compensated (same as
+// Compensate). When ids is non-empty, only the given steps are compensated, in
+// reverse start order. Idempotent like Compensate.
+func (w *microWorkflow) CompensateSteps(ctx context.Context, eid string, ids ...string) error {
+	ss := w.f.stateStore()
+
+	st, err := ss.WorkflowLoad(ctx, eid)
+	if err != nil {
+		return err
+	}
+
+	// Only a finished execution can be compensated on demand: while it is
+	// running, the automatic rollback (if enabled) is the one that unwinds it.
+	switch st.Status {
+	case StatusSuccess, StatusFailure, StatusAborted:
+	default:
+		return fmt.Errorf("flow: cannot compensate execution %s in status %s", eid, st.Status.String())
+	}
+
+	var filter map[string]struct{}
+	if len(ids) > 0 {
+		filter = make(map[string]struct{}, len(ids))
+		for _, id := range ids {
+			filter[id] = struct{}{}
+		}
+	}
+
+	// Reset the execution to running so the in-process status watcher does not
+	// treat the on-demand rollback as a cross-process abort/suspend.
+	if err := ss.WorkflowSetStatus(ctx, eid, StatusRunning); err != nil {
+		return err
+	}
+
+	go func() {
+		w.compensateSteps(ctx, eid, nil, filter)
+
+		// Restore the execution's terminal status (the rollback does not
+		// change the outcome of the execution).
+		_ = ss.WorkflowSetStatus(ctx, eid, st.Status)
+	}()
+
+	return nil
+}
+
+// compensateSteps runs Compensate for every step whose effect is still
+// present (StatusSuccess), in reverse start order (Saga pattern). It stops at
+// the first failed compensation and reports whether any compensation failed
+// (Cloudflare Workflows semantics).
+//
+// When filter is non-nil, only the step ids it contains are compensated
+// (partial rollback); when nil, all successful steps are compensated.
+func (w *microWorkflow) compensateSteps(ctx context.Context, eid string, failErr error, filter map[string]struct{}) bool {
+	ss := w.f.stateStore()
+
+	steps, err := ss.StepList(ctx, eid)
+	if err != nil {
+		w.opts.Logger.Error(ctx, "failed to list steps for compensation", "error", err, "eid", eid)
+		return false
+	}
+	var toCompensate []string
+	for id, st := range steps {
+		if st == nil || st.Status != StatusSuccess {
+			continue
+		}
+		if filter != nil {
+			if _, ok := filter[id]; !ok {
+				continue
+			}
+		}
+		toCompensate = append(toCompensate, id)
+	}
+	// Reverse start order: highest Order first; tie-break by step id so
+	// the order is deterministic even for parallel steps.
+	sort.Slice(toCompensate, func(i, j int) bool {
+		oi, oj := steps[toCompensate[i]].Order, steps[toCompensate[j]].Order
+		if oi != oj {
+			return oi > oj
+		}
+		return toCompensate[i] > toCompensate[j]
+	})
+
+	failed := false
+	for _, id := range toCompensate {
+		if err := w.compensateStep(ctx, eid, id, failErr); err != nil {
+			failed = true
+			break
+		}
+	}
+	if h := w.opts.Hooks; h != nil && h.OnCompensateComplete != nil {
+		h.OnCompensateComplete(eid, failed)
+	}
+	return failed
 }
 
 // compensateStep runs Compensate for a single step (Saga pattern), reading

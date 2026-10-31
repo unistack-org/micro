@@ -177,6 +177,17 @@ type Workflow interface {
 	Resume(ctx context.Context, id string) error
 	// Abort abort execution
 	Abort(ctx context.Context, id string) error
+	// Compensate runs the rollback of execution id on demand: it unwinds all
+	// successful steps in reverse start order (the same semantics as the
+	// automatic rollback on failure). It is idempotent (already-compensated
+	// steps are skipped) and is the way to compensate an execution that was
+	// left uncompensated (see ExecuteCompensate(false)).
+	Compensate(ctx context.Context, id string) error
+	// CompensateSteps runs the rollback of a subset of execution id's steps.
+	// When ids is empty, all successful steps are compensated (same as
+	// Compensate). When ids is non-empty, only the given steps are
+	// compensated, in reverse start order. Idempotent like Compensate.
+	CompensateSteps(ctx context.Context, id string, ids ...string) error
 }
 
 // Flow the base interface to interact with workflows

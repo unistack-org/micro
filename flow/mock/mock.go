@@ -528,6 +528,17 @@ func (w *Workflow) Abort(ctx context.Context, id string) error {
 	return nil
 }
 
+// Compensate is a no-op in the mock workflow (compensation is not simulated).
+func (w *Workflow) Compensate(ctx context.Context, id string) error {
+	return nil
+}
+
+// CompensateSteps is a no-op in the mock workflow (compensation is not
+// simulated).
+func (w *Workflow) CompensateSteps(ctx context.Context, id string, ids ...string) error {
+	return nil
+}
+
 // Step is a mock implementation of the flow.Step interface for testing
 type Step struct {
 	id             string

@@ -399,6 +399,92 @@ func TestNewStepNoExecute(t *testing.T) {
 	assert.Contains(t, err.Error(), "no Execute function")
 }
 
+// TestExecuteCompensateFalse verifies that ExecuteCompensate(false) leaves the
+// successful steps intact on failure (no automatic rollback), so the caller can
+// later retry or compensate the execution explicitly.
+func TestExecuteCompensateFalse(t *testing.T) {
+	f, ss := newTestFlow(t)
+	ctx := context.Background()
+
+	var compA int32
+
+	a := NewStep("a",
+		StepExecute(func(ctx context.Context, req *Message, _ ...ExecuteOption) (*Message, error) {
+			return &Message{Body: []byte(`{"id":"a"}`)}, nil
+		}),
+		StepCompensate(func(ctx context.Context, in *CompensateInput, _ ...ExecuteOption) error {
+			atomic.AddInt32(&compA, 1)
+			return nil
+		}),
+	)
+	b := NewStep("b",
+		StepRequires("a"),
+		StepExecute(func(ctx context.Context, req *Message, _ ...ExecuteOption) (*Message, error) {
+			return nil, errors.New("boom")
+		}),
+	)
+
+	w, err := f.WorkflowCreate(ctx, "wf-nocomp", a, b)
+	require.NoError(t, err)
+	eid, err := w.Execute(ctx, nil, ExecuteCompensate(false))
+	require.Error(t, err)
+
+	// The execution failed, but a was NOT compensated (no automatic rollback).
+	st, err := ss.WorkflowLoad(ctx, eid)
+	require.NoError(t, err)
+	assert.Equal(t, StatusFailure, st.Status)
+
+	ast, err := ss.StepLoad(ctx, eid, "a")
+	require.NoError(t, err)
+	assert.Equal(t, StatusSuccess, ast.Status)
+	assert.EqualValues(t, 0, atomic.LoadInt32(&compA), "no automatic compensation")
+}
+
+// TestExecuteCompensateFalseThenCompensate verifies the on-demand Compensate
+// unwinds the successful steps of an execution that was left uncompensated.
+func TestExecuteCompensateFalseThenCompensate(t *testing.T) {
+	f, ss := newTestFlow(t)
+	ctx := context.Background()
+
+	var compA int32
+
+	a := NewStep("a",
+		StepExecute(func(ctx context.Context, req *Message, _ ...ExecuteOption) (*Message, error) {
+			return &Message{Body: []byte(`{"id":"a"}`)}, nil
+		}),
+		StepCompensate(func(ctx context.Context, in *CompensateInput, _ ...ExecuteOption) error {
+			atomic.AddInt32(&compA, 1)
+			return nil
+		}),
+	)
+	b := NewStep("b",
+		StepRequires("a"),
+		StepExecute(func(ctx context.Context, req *Message, _ ...ExecuteOption) (*Message, error) {
+			return nil, errors.New("boom")
+		}),
+	)
+
+	w, err := f.WorkflowCreate(ctx, "wf-nocomp2", a, b)
+	require.NoError(t, err)
+	eid, err := w.Execute(ctx, nil, ExecuteCompensate(false))
+	require.Error(t, err)
+	assert.EqualValues(t, 0, atomic.LoadInt32(&compA))
+
+	// On-demand compensation unwinds a.
+	require.NoError(t, w.Compensate(ctx, eid))
+	require.Eventually(t, func() bool {
+		return atomic.LoadInt32(&compA) == 1
+	}, 5*time.Second, 10*time.Millisecond)
+
+	ast, err := ss.StepLoad(ctx, eid, "a")
+	require.NoError(t, err)
+	assert.Equal(t, StatusCompensated, ast.Status)
+
+	// The execution's terminal status is restored (still failure).
+	wst := waitWorkflowStatus(t, ss, eid, StatusFailure)
+	assert.Equal(t, StatusFailure, wst.Status)
+}
+
 // TestCompensateInputFields verifies CompensateInput carries Rsp and Err.
 func TestCompensateInputFields(t *testing.T) {
 	f, _ := newTestFlow(t)

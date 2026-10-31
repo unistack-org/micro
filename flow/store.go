@@ -124,6 +124,8 @@ type StateStore interface {
 	StepList(ctx context.Context, eid string) (map[string]*StepState, error)
 	// StepSetCheckpoint updates only the checkpoint data of a step.
 	StepSetCheckpoint(ctx context.Context, eid, sid string, data []byte) error
+	// StepSetStatus updates only the status of a step.
+	StepSetStatus(ctx context.Context, eid, sid string, s Status) error
 }
 
 // WorkflowWatcher is an optional StateStore extension for pushing workflow
@@ -698,6 +700,10 @@ func (k *kvStateStore) StepSetCheckpoint(ctx context.Context, eid, sid string, d
 	return k.write(ctx, kvStepKey(eid, sid, "checkpoint"), data)
 }
 
+func (k *kvStateStore) StepSetStatus(ctx context.Context, eid, sid string, s Status) error {
+	return k.write(ctx, kvStepKey(eid, sid, "status"), []byte(s.String()))
+}
+
 // noopStateStore is a StateStore that accepts and discards all data. It is
 // used when the flow is configured without a store, so execution state is
 // simply not persisted.
@@ -744,5 +750,9 @@ func (noopStateStore) StepList(ctx context.Context, eid string) (map[string]*Ste
 }
 
 func (noopStateStore) StepSetCheckpoint(ctx context.Context, eid, sid string, data []byte) error {
+	return nil
+}
+
+func (noopStateStore) StepSetStatus(ctx context.Context, eid, sid string, s Status) error {
 	return nil
 }

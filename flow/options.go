@@ -204,6 +204,15 @@ type ExecuteOptions struct {
 	// Reusing an existing execution id resumes that execution: steps that
 	// already completed successfully are skipped (see handleWorkflow).
 	EID string
+	// Compensate controls automatic rollback on failure.
+	//   true  (default) — on a step failure the engine unwinds all
+	//                      successful steps in reverse start order.
+	//   false           — on failure the engine stops, keeps every
+	//                      successful step's effect, and persists the
+	//                      execution as failed. The caller can later resume
+	//                      (retry) or compensate it explicitly (see
+	//                      Workflow.Compensate / CompensateSteps).
+	Compensate bool
 }
 
 // ExecuteOption func signature
@@ -267,14 +276,26 @@ func ExecuteEID(eid string) ExecuteOption {
 	}
 }
 
+// ExecuteCompensate controls automatic rollback on failure. When false, a
+// failed execution is left with its successful steps intact (no automatic
+// rollback) so the caller can later resume it (retry) or compensate it
+// explicitly (see Workflow.Compensate / CompensateSteps). The default is
+// true (automatic rollback on failure).
+func ExecuteCompensate(b bool) ExecuteOption {
+	return func(o *ExecuteOptions) {
+		o.Compensate = b
+	}
+}
+
 // NewExecuteOptions create new ExecuteOptions struct
 func NewExecuteOptions(opts ...ExecuteOption) ExecuteOptions {
 	options := ExecuteOptions{
-		Client:  client.DefaultClient,
-		Logger:  logger.DefaultLogger,
-		Tracer:  tracer.DefaultTracer,
-		Meter:   meter.DefaultMeter,
-		Context: context.Background(),
+		Client:     client.DefaultClient,
+		Logger:     logger.DefaultLogger,
+		Tracer:     tracer.DefaultTracer,
+		Meter:      meter.DefaultMeter,
+		Context:    context.Background(),
+		Compensate: true,
 	}
 	for _, o := range opts {
 		o(&options)
