@@ -16,7 +16,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/atomic v1.11.0
 	go.unistack.org/micro-proto/v5 v5.0.0
-	golang.org/x/sync v0.23.0
+	golang.org/x/sync v0.24.0
 	golang.yandex/hasql/v2 v2.1.1
 	google.golang.org/grpc v1.85.0
 	google.golang.org/protobuf v1.36.12
