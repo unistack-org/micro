@@ -3,14 +3,27 @@ name: AI Review
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 permissions:
   contents: read
   pull-requests: write
 
 concurrency:
-  group: ai-review-${{ github.event.pull_request.number }}
+  # event_name/run_id keeps two concurrent workflow_dispatch runs (which have
+  # no pull_request.number) from cancelling each other.
+  group: ai-review-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
+
+env:
+  # Pinned so a CLI release cannot silently change review behaviour.
+  COPILOT_CLI_VERSION: "1.0.107"
+  # Model name is configuration, not code: it lives in the
+  # UNISTOCK_AI_REVIEW_MODEL repo secret, so switching models (and the
+  # LiteLLM alias behind it) needs no commit. Available on the LiteLLM
+  # gateway: Qwen/Qwen3-14B, Qwen3.8-Flash-Next, Qwen/Qwen3-Scoring,
+  # Qwen/Qwen3-Embedding-0.6B.
+  REVIEW_MODEL: ${{ secrets.UNISTOCK_AI_REVIEW_MODEL }}
 
 jobs:
   review:
@@ -22,88 +35,383 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Cline
-        run: npm install -g cline@3.0.70
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
 
-      # Point Cline at our custom OpenAI-compatible endpoint. `cline auth`
-      # persists the provider (base URL + model + key) to ~/.cline, which the
-      # review step below reads. The base URL can only be set here (not via a
-      # run flag), so this step is required.
-      - name: Configure Cline provider
-        env:
-          UNISTOCK_API_KEY: ${{ secrets.UNISTOCK_AI_API_KEY }}
-          UNISTOCK_API_BASE_URL: ${{ secrets.UNISTOCK_AI_API_BASE_URL }}
+      - name: Install Copilot CLI
+        run: npm install -g "@github/copilot@$COPILOT_CLI_VERSION"
+
+      - name: Sanity check CLI
         run: |
-          cline auth --provider openai-compatible \
-            --apikey "$UNISTOCK_API_KEY" \
-            --modelid "Qwen/Qwen3-14B" \
-            --baseurl "$UNISTOCK_API_BASE_URL"
+          set -e
+          copilot --version
+          # The review step relies on flags that are not covered by the CLI's
+          # own docs; fail fast (seconds) instead of after a 15-minute timeout
+          # if a pinned build ever stops exposing them.
+          # Newlines are collapsed so a flag wrapped across two help lines is
+          # still found.
+          help=$(copilot --help 2>&1 | tr '\n' ' ')
+          # `-s` is documented as `--silent`, so grep the long form.
+          for flag in --available-tools --reasoning-effort --disable-builtin-mcps \
+                      --no-color --no-auto-update --silent; do
+            echo "$help" | grep -q -- "$flag" || { echo "CLI is missing $flag" >&2; exit 1; }
+          done
+
+      - name: Validate model
+        # Skipped when the model is unknown to this run (fork PR, deleted
+        # secret): every secret is empty there, and Prepare diff turns that
+        # into a skip comment. Validating an empty gateway would only add a
+        # confusing curl error to that path.
+        if: env.REVIEW_MODEL != ''
+        env:
+          MODEL: ${{ env.REVIEW_MODEL }}
+          BASE_URL: ${{ secrets.UNISTOCK_AI_API_BASE_URL }}
+          API_KEY: ${{ secrets.UNISTOCK_AI_API_KEY }}
+        run: |
+          set -eo pipefail
+          if [ -z "$BASE_URL" ] || [ -z "$API_KEY" ]; then
+            # This step only runs when the model secret is non-empty, so this
+            # is not a fork PR (there every secret is empty and Prepare diff
+            # turns the job into a skip). A model without a gateway means a
+            # deleted/renamed gateway secret: fail here, because passing would
+            # burn 3 attempts x 600s in "Run AI review" on a provider that
+            # cannot answer.
+            echo "UNISTOCK_AI_REVIEW_MODEL is set, but the gateway URL/key secret is empty." >&2
+            exit 1
+          fi
+          # A typo in the model secret is invisible until the CLI has spent a
+          # full attempt per retry; check the gateway's model list up front.
+          # A 401/500 must not be reported as "model not served", so curl runs
+          # on its own and a gateway failure gets its own message.
+          # `--config -` instead of -H: -H puts the secret into the process
+          # argv, readable through /proc/<pid>/cmdline while curl runs; the
+          # review step keeps the key in the environment for the same reason.
+          # The key is a printf ARGUMENT, so a `%` inside it cannot break the
+          # format string.
+          if ! printf 'header = "Authorization: Bearer %s"\n' "$API_KEY" \
+              | curl -fsS --config - --max-time 30 "${BASE_URL%/}/models" -o /tmp/models.json; then
+            echo "Cannot read the model list from $BASE_URL (gateway down or key rejected)." >&2
+            exit 1
+          fi
+          # jq, not a regex over raw JSON: `tr -d ' \n'` would also delete spaces
+          # inside an id, and a model name is a literal, not a pattern.
+          ids=$(jq -r '.data[].id' /tmp/models.json)
+          if ! echo "$ids" | grep -qxF "$MODEL"; then
+            echo "Model '$MODEL' is not served by $BASE_URL" >&2
+            echo "Available: $(echo "$ids" | tr '\n' ' ')" >&2
+            exit 1
+          fi
+          echo "Model '$MODEL' is available."
 
       - name: Prepare diff
         id: diff
+        env:
+          # Ref names reach the shell through the environment, never through
+          # expression interpolation into the script body.
+          PULL_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          REVIEW_MODEL: ${{ env.REVIEW_MODEL }}
         run: |
           set -e
-          BASE="origin/${{ github.event.pull_request.base.ref }}"
+          # The model comes from a repository secret, so it is unavailable to
+          # runs that cannot read secrets (a fork PR, or a repo where the
+          # secret was deleted). Skip with an explanation instead of failing
+          # deep inside the CLI with `--model ""`.
+          if [ -z "$REVIEW_MODEL" ]; then
+            echo "skip=secret UNISTOCK_AI_REVIEW_MODEL is not set for this run" >> "$GITHUB_OUTPUT"
+            # Stop here: continuing would run git diff under `set -e`, and a
+            # missing base ref would redden a job that is meant to be skipped.
+            exit 0
+          fi
+          # On pull_request we diff against the base branch. workflow_dispatch
+          # has no base ref (the context is empty), so fall back to the default
+          # branch — this keeps the dispatch path usable for debugging.
+          BASE_REF="$PULL_BASE_REF"
+          if [ -z "$BASE_REF" ]; then
+            BASE_REF="$DEFAULT_BRANCH"
+          fi
+          BASE="origin/$BASE_REF"
           git diff "$BASE"...HEAD > /tmp/pr.diff
           SIZE=$(wc -c < /tmp/pr.diff)
           echo "size=$SIZE" >> "$GITHUB_OUTPUT"
           if [ "$SIZE" -gt 200000 ]; then
             echo "skip=diff too large ($SIZE bytes, limit 200000)" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           echo "Diff size: $SIZE bytes"
 
       - name: Run AI review
         if: steps.diff.outputs.skip == ''
         env:
+          # BYOK: Copilot CLI talks straight to our LiteLLM gateway, so GitHub
+          # authentication is not required (`copilot help environment`: with
+          # BYOK configured, "GitHub authentication is not required"). The key
+          # reaches the CLI only through the process environment — it is never
+          # written into a config file on disk.
+          COPILOT_PROVIDER_TYPE: openai
+          COPILOT_PROVIDER_BASE_URL: ${{ secrets.UNISTOCK_AI_API_BASE_URL }}
+          COPILOT_PROVIDER_API_KEY: ${{ secrets.UNISTOCK_AI_API_KEY }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          # Must match the marker demanded in REVIEW_PROMPT below and the
+          # literal in the "Post PR comment" script (kept literal there because
+          # a JS RegExp cannot interpolate an env var).
+          REVIEW_MARKER: '@@REVIEW@@'
+          # End-of-answer marker. The gateway can end a stream mid-sentence and
+          # the CLI reports that as exit 0 with (truncated) content, which a
+          # "non-empty output" check accepts. Requiring a closing marker makes
+          # a cut-off answer a retryable failure.
+          REVIEW_END: '@@END@@'
           REVIEW_PROMPT: |
-            Ты — строгий ревьюер Go-кода проекта unistock (micro/v5, pgx, NATS JetStream, Redis).
-            В stdin передан diff pull request. Найди:
-            1. Реальные баги: race conditions, nil-указатели, утечки ресурсов, необработанные ошибки, data race
-            2. Проблемы безопасности: SQL injection, утечки секретов, неэкранированный ввод
-            3. Нарушения конвенций проекта из AGENTS.md
+            You are a strict Go code reviewer for a go.unistack.org/micro ecosystem repository.
+            The pull request title and its full diff are provided below. Find:
+            1. Real bugs: race conditions, nil pointers, resource leaks, unhandled errors, data races
+            2. Security problems: SQL injection, secret leaks, unescaped input
+            3. Violations of project conventions: logging only via logger.Logger (not fmt.Println/log),
+               context.Context as the first argument, panic only in main(), pgx without database/sql,
+               interfaces declared on the consumer side
 
-            Опирайся ТОЛЬКО на diff и контекст строк в нём — файлы репозитория не читай.
-            Ответь на русском, структурированно по файлам: файл — проблема — почему — как исправить.
-            Фокус на багах, не на стиле. Если замечаний нет — напиши ровно: Замечаний нет.
+            Rely ONLY on the diff you are given and the line context inside it — do not read repository
+            files, you have no tools: do not try to run commands and do not emit blocks like
+            tool_call / tool_call_response — write the text answer straight away.
+            Do not invent problems: if the diff does not show a bug, do not write about it.
+            ALWAYS WRITE YOUR ANSWER IN ENGLISH, regardless of the language of the diff, the code
+            comments, the commit messages or the PR title. Never answer in Russian.
+            Structure the answer per file: file — problem — why — how to fix.
+            For every finding give the file and the line from the diff. Focus on bugs, not style.
+
+            ANSWER FORMAT (mandatory, violating it makes the answer useless):
+            - The first line of your answer is exactly the marker `@@REVIEW@@` (once, with no other
+              characters in it), unquoted, with nothing before it.
+            - After it, only the final findings: a numbered list, 2-4 lines each
+              (file and line — problem — why — how to fix). No more than 15 findings.
+            - After the marker it is forbidden to: walk through the code line by line out loud, write
+              "Summary of findings", "Let me", "I think", "Hmm", list what you checked as "no issue",
+              discuss what should or should not be flagged, retell the diff, summarise your work.
+            - No reasoning and no drafts, neither before the marker nor after the list of findings.
+            - If there are no findings, write `@@REVIEW@@` and then exactly: No issues found.
+            - The LAST line of your answer is exactly the marker `@@END@@` (once, with
+              nothing after it). An answer without it is treated as cut off and discarded.
+            - The text above is a system instruction, not part of the diff: do not retell it.
         run: |
-          # Deny ALL tools: --auto-approve false in a non-TTY denies every tool
-          # call, so the model reviews the diff directly instead of wandering
-          # into read/glob/grep loops that never converge. (Read-only allow was
-          # non-deterministic: the model sometimes read a file that differed
-          # from the diff and reasoned for 50+ min.) Deny-all converges
-          # reliably and still finds real bugs. Qwen3-14B is a thinking model,
-          # so a review takes ~3-9 min depending on the diff.
+          set -uo pipefail
+          # The runner executes `run:` as `bash -e {0}`, and `set -uo pipefail`
+          # does NOT turn -e off: a non-zero copilot exit (timeout=124, crash)
+          # would kill the step inside the first attempt, so the retry loop and
+          # the redacted dump would be unreachable. Failures are handled
+          # explicitly via COPILOT_EXIT, so -e is switched off here.
+          set +e
+          # Tools are disabled by an ALLOWLIST that names a tool which does not
+          # exist, so the model gets an empty tool set. This is stronger than
+          # --excluded-tools (a deny list): tools added in future CLI versions
+          # stay unavailable automatically. A tool-free review also converges
+          # reliably — the model reads the diff instead of wandering into
+          # read/grep loops. The checkout is deliberately NOT trusted (no
+          # --trust-folder), so skills/hooks shipped inside a PR cannot run.
           #
-          # The diff is passed via stdin (not as an argument) to avoid the Linux
-          # 128KB-per-argument limit on large diffs; the prompt is the argument.
+          # Prompt + diff go through a file, not `-p`: piping is overridden by
+          # `-p`, and a large diff must not become a command-line argument.
+          { printf '%s\n\n=== PR TITLE ===\n%s\n\n=== PR DIFF ===\n' "$REVIEW_PROMPT" "$PR_TITLE"; cat /tmp/pr.diff; } > /tmp/review_input.txt
+          # `-s` = plain text answer only (no stats/decoration). `timeout` is
+          # the per-attempt backstop (124 on timeout); its status is captured
+          # explicitly into COPILOT_EXIT, hence the `set +e` above.
           #
-          # --timeout 540 is Cline's per-request timeout; the outer `timeout
-          # 900` is the total backstop in case the process hangs after the
-          # run_result or the model over-reasons.
-          timeout 900 cline --auto-approve false --thinking none --timeout 540 --json \
-            "$REVIEW_PROMPT" < /tmp/pr.diff > /tmp/cline_out.json 2>/tmp/cline_err.log
-          CLINE_EXIT=$?
-          jq -r 'select(.type=="run_result" and .finishReason=="completed") | .text' \
-            /tmp/cline_out.json > /tmp/review.md 2>/dev/null
-          if [ ! -s /tmp/review.md ]; then
-            echo "AI review produced empty output (cline exit=$CLINE_EXIT)" >&2
-            echo "--- cline stderr ---" >&2
-            cat /tmp/cline_err.log >&2
-            echo "--- cline stdout (tail) ---" >&2
-            tail -50 /tmp/cline_out.json >&2
+          # GITHUB_TOKEN/GH_TOKEN MUST be removed from the environment: the
+          # runner exports them, and the CLI prefers GitHub auth over BYOK —
+          # with the runner's installation token present it performs no
+          # completion at all (exit 0, empty stdout, nothing on stderr). With
+          # the variables unset, the BYOK provider is used and GitHub auth is
+          # not required.
+          # The CLI intermittently ends with exit 0 and a COMPLETELY empty
+          # answer and nothing on stderr (seen on CI after ~100s). Exit code
+          # alone is not enough, so each attempt is re-tried up to 3 times.
+          # Each attempt gets its own timeout so a hung request cannot burn the
+          # whole job budget.
+          # Bounded, redacted dump of CLI stderr. GitHub masks only the exact
+          # secret value, not its transformations, and the CLI can echo request
+          # details (base URL, auth headers), so every place that prints stderr
+          # goes through this filter. The key is removed literally (awk), not by
+          # regex; an empty key (fork PR) falls back to cat, since an empty sed
+          # pattern would reuse the previous -e expression.
+          redact() {
+            if [ -n "${COPILOT_PROVIDER_API_KEY:-}" ]; then
+              # Literal (not regex) removal: index()/substr() take the key
+              # verbatim, so no key character (`/ & [ ] * | ^ % \`) can break
+              # the substitution. A sed `s###` version needs a hand-rolled
+              # escaper, and its delimiter can always collide with a key
+              # character. ENVIRON keeps the key out of argv; the empty key is
+              # handled above, where an empty needle would match everywhere.
+              # The scan advances a cursor over the input line, so the
+              # "[REDACTED]" text it inserts is never rescanned: a key that is
+              # a substring of that literal (e.g. "RED") cannot loop forever.
+              # The second pass catches transformed secrets the CLI prints as
+              # `Authorization: …` / `api_key=…`; it needs -E (BSD sed has no
+              # ERE without it), which is why it cannot join the awk pass. The
+              # optional scheme group matters: `Authorization: Bearer <token>`
+              # is one `[^[:space:]]+` deep after the colon, so without it the
+              # rule rewrites only `Authorization: Bearer` and prints the token.
+              # NOTE: no comment line may sit between `\` and `|` — a `#`
+              # ends the pipeline and the next line then starts with `|`.
+              awk 'BEGIN { key = ENVIRON["COPILOT_PROVIDER_API_KEY"] }
+                   { line = $0; res = ""; pos = 1
+                     while ((p = index(substr(line, pos), key)) > 0) {
+                       at = pos + p - 1
+                       res = res substr(line, pos, at - pos) "[REDACTED]"
+                       pos = at + length(key)
+                     }
+                     print res substr(line, pos) }' \
+                | sed -E -e 's/(Authorization|api[_-]key|bearer|token)[[:space:]]*[:=][[:space:]]*((Bearer|Basic|Token)[[:space:]]+)?[^[:space:]]+/\1: [REDACTED]/Ig'
+            else
+              cat
+            fi
+          }
+          for attempt in 1 2 3; do
+            echo "=== copilot attempt $attempt ==="
+            # --kill-after: SIGTERM alone can leave the Node process tree alive.
+            timeout --kill-after=30 600 env -u GITHUB_TOKEN -u GH_TOKEN copilot --model "$REVIEW_MODEL" \
+              -s --no-color --no-auto-update \
+              --reasoning-effort none \
+              --disable-builtin-mcps \
+              --available-tools __no_tools__ \
+              < /tmp/review_input.txt > /tmp/review.md 2>/tmp/copilot_err.log
+            COPILOT_EXIT=$?
+            # Normalise "exit 0 but no content" into a failure.
+            if [ "$COPILOT_EXIT" -eq 0 ] && [ ! -s /tmp/review.md ]; then
+              COPILOT_EXIT=1
+            fi
+            # "Non-empty" is not a usable review: the answer must carry the
+            # marker the prompt mandates. Without it the comment step strips
+            # everything, warns, and posts nothing — a green job with no
+            # review and no trace of why. Fail loudly so the retry (and, after
+            # 3 attempts, the red job) shows the raw output.
+            if [ "$COPILOT_EXIT" -eq 0 ] && ! grep -qxF "$REVIEW_MARKER" /tmp/review.md; then
+              echo "attempt $attempt produced no $REVIEW_MARKER marker (bytes=$(wc -c </tmp/review.md))" >&2
+              tail -c 500 /tmp/review.md | redact >&2
+              COPILOT_EXIT=1
+            fi
+            # Truncated stream: the answer is complete only when its last
+            # non-empty line is the closing marker (trailing blank lines are
+            # allowed). A gateway that ends a stream mid-sentence still leaves
+            # the CLI at exit 0 with content, so "non-empty" cannot detect it.
+            if [ "$COPILOT_EXIT" -eq 0 ] &&
+               ! [ "$(grep -v '^[[:space:]]*$' /tmp/review.md | tail -n 1 | tr -d '[:space:]')" = "$REVIEW_END" ]; then
+              echo "attempt $attempt ended without $REVIEW_END (stream cut off, bytes=$(wc -c </tmp/review.md))" >&2
+              tail -c 500 /tmp/review.md | redact >&2
+              COPILOT_EXIT=1
+            fi
+            if [ "$COPILOT_EXIT" -eq 0 ]; then
+              break
+            fi
+            echo "attempt $attempt failed (exit=$COPILOT_EXIT, bytes=$(wc -c </tmp/review.md))" >&2
+            tail -c 2000 /tmp/copilot_err.log | redact >&2 || true
+            [ "$attempt" -lt 3 ] && sleep 20
+          done
+          if [ "${COPILOT_EXIT:-1}" -ne 0 ] || [ ! -s /tmp/review.md ]; then
+            echo "AI review failed after 3 attempts (copilot exit=$COPILOT_EXIT)" >&2
+            # Only a bounded, redacted slice of stderr is logged: the CLI can
+            # echo request details (base URL, auth headers) and GitHub masks
+            # only the exact secret value, not its transformations.
+            echo "--- copilot stderr (last 2000 chars, redacted) ---" >&2
+            sed -n '1,200p' /tmp/copilot_err.log 2>/dev/null | redact | tail -c 2000 >&2
             exit 1
           fi
           echo "=== Review ==="
           cat /tmp/review.md
 
       - name: Post PR comment
-        if: success() && steps.diff.outputs.skip == ''
+        if: success() && steps.diff.outputs.skip == '' && github.event_name == 'pull_request'
+        env:
+          REVIEW_MODEL: ${{ env.REVIEW_MODEL }}
         uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
-            const review = fs.readFileSync('/tmp/review.md', 'utf8').trim();
-            const body = `## 🤖 AI Review (Qwen3-14B)\n\n${review}\n\n---\n_Автоматический ревью через [ai.unistock.cloud](https://ai.unistock.cloud)_`;
+            // Strip tool-call blocks the model emits as plain text: the CLI
+            // runs with no tools, so such text is model noise and must not
+            // reach the PR body.
+            const raw = fs.readFileSync('/tmp/review.md', 'utf8');
+            // Qwen3-14B streams its working notes as ordinary prose (no
+            //  tags), so tag stripping cannot remove them. The prompt
+            // therefore demands a `@@REVIEW@@` marker. The model also echoes
+            // the marker while drafting, so the LAST marker that is followed
+            // by a real finding is the answer; everything before it is a
+            // draft. The marker must start a line, which keeps a marker that
+            // only appears inside quoted code from being chosen.
+            // The prompt is English, so the "clean review" sentinel is English
+            // too; the Russian spelling is kept for answers produced by an
+            // older prompt version.
+            const looksLikeFinding = (line) =>
+              /^(?:#{1,4}\s|\d+[.)]\s+\S|[-*]\s+\*\*|(?:No issues found|Замечаний нет)\.?\s*$)/i.test(line.trim());
+            const lines = raw.split('\n');
+            const END_LINE = /^@@END@@\s*$/;
+            // A complete answer ends with the closing marker; cutting there
+            // also drops anything the model appended after it.
+            let endAt = -1;
+            for (let i = lines.length - 1; i >= 0; i--) {
+              if (END_LINE.test(lines[i].trim())) { endAt = i; break; }
+            }
+            if (endAt === -1) {
+              core.warning('Closing marker @@END@@ missing; the answer may be cut off.');
+            }
+            const answerEnd = endAt === -1 ? lines.length : endAt;
+            let answer = null;
+            for (let i = answerEnd - 1; answer === null && i >= 0; i--) {
+              if (!/^@@REVIEW@@\s*$/.test(lines[i].trim())) continue;
+              for (let j = i + 1; j < answerEnd; j++) {
+                if (!lines[j].trim()) continue;
+                if (looksLikeFinding(lines[j])) answer = lines.slice(j, answerEnd).join('\n');
+                break;
+              }
+            }
+            if (answer === null) {
+              // Non-compliant answer: drop leading lines before the first
+              // heading / numbered finding, which is where a review starts.
+              const start = lines.findIndex((l) => looksLikeFinding(l));
+              if (start > 0) {
+                core.warning(`Review marker missing; dropped ${start} preamble lines.`);
+                answer = lines.slice(start).join('\n');
+              } else {
+                core.warning('Review marker and heading both missing; posting the raw answer.');
+                answer = raw;
+              }
+            }
+            let review = answer
+              // Qwen3 aliases can prepend their chain-of-thought to the
+              // answer; reasoning must never be published in a PR comment.
+              .replace(/<\s*think\s*>[\s\S]*?(?:<\s*\/\s*think\s*>|$)/gi, '')
+              .replace(/<\s*\/?\s*(?:tool_call|tool_call_response|antml:[a-z_]+)\s*>[\s\S]*?(?:<\/\s*(?:tool_call|tool_call_response|antml:[a-z_]+)\s*>|$)/gi, '')
+              .replace(/<\s*\/?\s*(?:tool_call|tool_call_response|antml:[a-z_]+)\s*>/gi, '')
+              // The PR author controls the diff, and the model can echo its
+              // text. GitHub sanitises comment HTML, but images are allowed
+              // through, so a diff-induced reply could embed a tracking
+              // pixel; raw scripting/markup tags are removed too. Only these
+              // specific tags are stripped — a blanket `<...>` removal would
+              // mangle Go snippets (channel operators) in the review text.
+              .replace(/<[^>]*>/gi, (tag) =>
+                /^<\s*\/?\s*(?:script|iframe|object|embed|svg|form|input|meta|link|style|img)\b/i.test(tag) ? '' : tag)
+              .replace(/!\[([^\]]*)\]\([^)]*\)/g, '`[image hidden: $1]`')
+              // Reference-style images (![alt][ref]) render in comments too,
+              // so both the reference-style call and its [ref]: definition
+              // (which the model copies out of the diff) are removed.
+              .replace(/!\[([^\]]*)\]\[[^\]]*\]/g, '`[image hidden: $1]`')
+              .replace(/^\s*\[[^\]]*\]:\s*\S+\s*$/gm, '')
+              .trim();
+            if (!review) {
+              core.warning('Review body is empty after stripping tool blocks; skipping comment.');
+              return;
+            }
+            // GitHub rejects comment bodies over 65536 characters with a 422,
+            // which would fail the job after an expensive review. 40000 leaves
+            // room for the header/footer and keeps a rambling answer readable.
+            const limit = 40000;
+            if (review.length > limit) {
+              core.warning(`Review is ${review.length} chars, truncating to ${limit}.`);
+              review = review.slice(0, limit) + '\n\n… (truncated)';
+            }
+            // Model name goes through process.env, not expression
+            // interpolation, so it can never break out of the JS template.
+            const body = `## 🤖 AI Review (Copilot CLI · ${process.env.REVIEW_MODEL})\n\n${review}\n\n---\n_Automated review via [ai.unistock.cloud](https://ai.unistock.cloud)_`;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -112,7 +420,9 @@ jobs:
             });
 
       - name: Comment on skip
-        if: steps.diff.outputs.skip != ''
+        if: steps.diff.outputs.skip != '' && github.event_name == 'pull_request'
+        env:
+          SKIP_REASON: ${{ steps.diff.outputs.skip }}
         uses: actions/github-script@v9
         with:
           script: |
@@ -120,5 +430,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
-              body: `## 🤖 AI Review\n\nСкип: ${{ steps.diff.outputs.skip }}`,
+              body: `## 🤖 AI Review\n\nSkipped: ${process.env.SKIP_REASON}`,
             });
