@@ -14,7 +14,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.12.1
-	go.uber.org/atomic v1.11.0
+	go.uber.org/atomic v1.12.0
 	go.unistack.org/micro-proto/v5 v5.0.0
 	golang.org/x/sync v0.24.0
 	golang.yandex/hasql/v2 v2.1.1
