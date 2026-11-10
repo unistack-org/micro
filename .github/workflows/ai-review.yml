@@ -27,6 +27,13 @@ env:
 
 jobs:
   review:
+    # Dependabot PRs are never reviewed. They are mechanical version bumps, and
+    # a dependabot-triggered run gets no org-level secrets, so on such a PR the
+    # job could only ever post a "secret is not set" skip comment. The check is
+    # on the PR author, not on the actor: a PR opened by a human and later
+    # updated by dependabot keeps its author. workflow_dispatch has no
+    # pull_request context, so manual runs are unaffected.
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
