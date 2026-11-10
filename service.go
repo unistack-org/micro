@@ -2,6 +2,7 @@
 package micro
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"sync"
@@ -22,8 +23,8 @@ import (
 )
 
 func init() {
-	_, _ = memlimit.SetGoMemLimitWithOpts(
-		memlimit.WithRefreshInterval(1*time.Minute),
+	_, _ = memlimit.Set(
+		memlimit.WithRefreshInterval(context.Background(), 1*time.Minute),
 		memlimit.WithRatio(0.9),
 		memlimit.WithProvider(
 			memlimit.ApplyFallback(
